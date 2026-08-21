@@ -1,0 +1,140 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  BriefcaseBusiness,
+  CheckCircle2,
+  Clock3,
+  FileCheck2,
+  MessageSquareText,
+  ShieldCheck,
+  Sparkles,
+  UserRoundCheck,
+  AlertTriangle,
+  Milestone,
+  StickyNote
+} from 'lucide-react';
+import { Collaboration, DealDecision } from '../../types/majal';
+import { store } from '../../lib/store';
+import { roleLabel } from '../../lib/permissions';
+
+interface DealRoomProps {
+  collaboration: Collaboration;
+}
+
+export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
+  const [, setTick] = useState(0);
+  useEffect(() => store.subscribe(() => setTick(t => t + 1)), []);
+  const [message, setMessage] = useState('');
+  const [category, setCategory] = useState<DealDecision['category']>('DECISION');
+
+  const product = store.products.find(p => p.id === collaboration.productId);
+  const creator = store.creators.find(c => c.id === collaboration.creatorId);
+  const host = store.hosts.find(h => h.id === collaboration.hostBusinessId);
+  const gate = store.getLaunchGate(collaboration.id);
+  const recipeVersions = store.recipeVersions
+    .filter(v => v.productId === collaboration.productId)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const currentRecipe = recipeVersions.find(v => v.versionNumber === product?.currentRecipeVersion) || recipeVersions[0];
+
+  const decisions = useMemo(
+    () => store.dealDecisions
+      .filter(d => d.collaborationId === collaboration.id)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [collaboration.id, store.dealDecisions.length]
+  );
+
+  const tasks = [
+    { title: 'تثبيت نسخة الوصفة الحالية', done: !!currentRecipe, owner: 'المبدع + الشيف', detail: currentRecipe?.versionNumber || 'لا توجد نسخة' },
+    { title: 'تثبيت الشروط التجارية', done: collaboration.currentOffer?.status === 'ACCEPTED' || ['COMMERCIAL_AGREED','CONTRACT_DRAFTED','SIGNED','PRE_LAUNCH','LIVE','REVIEW','RENEWED'].includes(collaboration.stage), owner: 'الطرفان', detail: collaboration.currentOffer ? `V${collaboration.currentOffer.version}` : 'لا يوجد عرض' },
+    { title: 'توقيع العقد', done: collaboration.contract?.status === 'FULLY_SIGNED', owner: 'المبدع + مالك المنشأة', detail: collaboration.contract?.status || 'لم ينشأ' },
+    { title: 'اجتياز Launch Gate', done: !!gate?.allRequirementsPassed, owner: 'التشغيل + النظام', detail: gate ? `${Object.entries(gate).filter(([k,v]) => k !== 'allRequirementsPassed' && v).length}/11` : 'غير مهيأ' }
+  ];
+
+  const categoryMeta: Record<DealDecision['category'], { label: string; icon: React.ReactNode; cls: string }> = {
+    DECISION: { label: 'قرار', icon: <ShieldCheck className="w-4 h-4" />, cls: 'text-[#e8c880]' },
+    NOTE: { label: 'ملاحظة', icon: <StickyNote className="w-4 h-4" />, cls: 'text-sky-300' },
+    RISK: { label: 'مخاطرة', icon: <AlertTriangle className="w-4 h-4" />, cls: 'text-rose-300' },
+    MILESTONE: { label: 'محطة', icon: <Milestone className="w-4 h-4" />, cls: 'text-emerald-300' }
+  };
+
+  const addDecision = () => {
+    const created = store.addDealDecision(collaboration.id, message, category);
+    if (created) setMessage('');
+  };
+
+  return (
+    <section className="glass-panel rounded-3xl border border-white/10 p-5 md:p-6 space-y-5">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-400/20 flex items-center justify-center text-sky-300"><BriefcaseBusiness className="w-6 h-6" /></div>
+          <div>
+            <h3 className="text-lg font-black text-stone-100">Deal Room — غرفة الصفقة</h3>
+            <p className="text-xs text-stone-400 mt-1">{creator?.displayName || 'مبدع'} × {host?.commercialName || 'منشأة'} — {product?.publicName || 'منتج'}</p>
+          </div>
+        </div>
+        <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-sky-400/10 text-sky-300 border border-sky-400/20">المرحلة: {collaboration.stage}</span>
+      </div>
+
+      <div className="grid xl:grid-cols-[.9fr_1.1fr] gap-5">
+        <div className="space-y-3">
+          <div className="font-bold text-sm text-stone-100 flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-300" /> خط سير الصفقة</div>
+          {tasks.map((task, idx) => (
+            <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10 gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${task.done ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300'}`}>
+                  {task.done ? <CheckCircle2 className="w-4 h-4" /> : <Clock3 className="w-4 h-4" />}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-bold text-stone-200">{task.title}</div>
+                  <div className="text-[11px] text-stone-500 mt-1">المسؤول: {task.owner} — {task.detail}</div>
+                </div>
+              </div>
+              <span className={`text-[10px] font-bold shrink-0 ${task.done ? 'text-emerald-300' : 'text-amber-300'}`}>{task.done ? 'مكتمل' : 'قيد التنفيذ'}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="font-bold text-sm text-stone-100 flex items-center gap-2"><MessageSquareText className="w-4 h-4 text-fuchsia-300" /> Decision Ledger</div>
+            <span className="text-[10px] text-stone-500">{decisions.length} سجلات بشرية محفوظة</span>
+          </div>
+
+          <div className="rounded-2xl bg-slate-950/50 border border-white/10 p-4 space-y-3 max-h-72 overflow-auto">
+            {decisions.length === 0 ? (
+              <div className="p-6 text-center text-xs text-stone-500 leading-6">لا توجد قرارات بشرية مسجلة بعد. أضف أول قرار أو ملاحظة ليصبح جزءًا من سجل الصفقة المحفوظ.</div>
+            ) : decisions.map(decision => {
+              const meta = categoryMeta[decision.category];
+              return (
+                <div key={decision.id} className="rounded-xl p-3 bg-white/5 border border-white/10 text-xs leading-6 text-stone-300">
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <div className={`flex items-center gap-2 font-black ${meta.cls}`}>{meta.icon}{meta.label}</div>
+                    <span className="text-[9px] text-stone-600">{new Date(decision.createdAt).toLocaleString('ar-KW')}</span>
+                  </div>
+                  <div>{decision.text}</div>
+                  <div className="mt-2 text-[10px] text-stone-500">{decision.authorName} — {roleLabel(decision.authorRole)}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="grid sm:grid-cols-[140px_1fr_auto] gap-2">
+            <select value={category} onChange={e => setCategory(e.target.value as DealDecision['category'])} className="glass-input px-3 py-3 rounded-xl text-xs outline-none">
+              <option value="DECISION">قرار</option>
+              <option value="NOTE">ملاحظة</option>
+              <option value="RISK">مخاطرة</option>
+              <option value="MILESTONE">محطة</option>
+            </select>
+            <input value={message} onChange={e => setMessage(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addDecision(); }} placeholder="سجّل قرارًا أو ملاحظة مرتبطة بالصفقة..." className="glass-input px-4 py-3 rounded-xl text-xs outline-none text-stone-100" />
+            <button onClick={addDecision} disabled={message.trim().length < 3} className="px-4 py-3 rounded-xl bg-[#c7a55b] disabled:bg-white/5 disabled:text-stone-600 text-stone-950 font-black text-xs">حفظ</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-3 text-xs">
+        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><FileCheck2 className="w-4 h-4 text-sky-300 mb-2" /><div className="text-stone-400">العقد</div><div className="font-black text-stone-100 mt-1">{collaboration.contract?.status || 'لم ينشأ'}</div></div>
+        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><Sparkles className="w-4 h-4 text-[#e8c880] mb-2" /><div className="text-stone-400">آخر عرض</div><div className="font-black text-stone-100 mt-1">{collaboration.currentOffer ? `${collaboration.currentOffer.creatorRoyaltyRatePercent}% للمبدع — V${collaboration.currentOffer.version}` : 'لا يوجد'}</div></div>
+        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><UserRoundCheck className="w-4 h-4 text-emerald-300 mb-2" /><div className="text-stone-400">سلامة السجل</div><div className="font-black text-emerald-300 mt-1">محفوظ + مرتبط بـ Audit</div></div>
+      </div>
+    </section>
+  );
+};

@@ -1,0 +1,96 @@
+{
+  "entities": {
+    "User": {
+      "collection": "users",
+      "fields": {
+        "email": { "type": "string", "required": true },
+        "name": { "type": "string", "required": true },
+        "role": { "type": "string", "required": true },
+        "status": { "type": "string", "required": false },
+        "phone": { "type": "string", "required": false },
+        "createdAt": { "type": "string", "required": false }
+      },
+      "rules": {
+        "read": "request.auth != null && (request.auth.uid == resource.id || request.auth.token.role in ['ADMIN', 'SUPER_ADMIN'])",
+        "write": "request.auth != null && (request.auth.uid == resource.id || request.auth.token.role in ['ADMIN', 'SUPER_ADMIN'])"
+      }
+    },
+    "Creator": {
+      "collection": "creators",
+      "fields": {
+        "userId": { "type": "string", "required": true },
+        "displayName": { "type": "string", "required": true },
+        "creatorType": { "type": "string", "required": true },
+        "specialty": { "type": "string", "required": false },
+        "region": { "type": "string", "required": false },
+        "completionScore": { "type": "number", "required": false },
+        "badges": { "type": "array", "required": false },
+        "createdAt": { "type": "string", "required": false }
+      },
+      "rules": {
+        "read": "true",
+        "write": "request.auth != null"
+      }
+    },
+    "Host": {
+      "collection": "hosts",
+      "fields": {
+        "commercialName": { "type": "string", "required": true },
+        "businessType": { "type": "string", "required": true },
+        "verificationStatus": { "type": "string", "required": true },
+        "capabilities": { "type": "map", "required": false },
+        "createdAt": { "type": "string", "required": false }
+      },
+      "rules": {
+        "read": "true",
+        "write": "request.auth != null"
+      }
+    },
+    "Product": {
+      "collection": "products",
+      "fields": {
+        "creatorId": { "type": "string", "required": true },
+        "title": { "type": "string", "required": true },
+        "category": { "type": "string", "required": false },
+        "status": { "type": "string", "required": true },
+        "priceKwd": { "type": "number", "required": false },
+        "createdAt": { "type": "string", "required": false }
+      },
+      "rules": {
+        "read": "true",
+        "write": "request.auth != null"
+      }
+    },
+    "Order": {
+      "collection": "orders",
+      "fields": {
+        "consumerId": { "type": "string", "required": true },
+        "hostId": { "type": "string", "required": true },
+        "productId": { "type": "string", "required": true },
+        "quantity": { "type": "number", "required": true },
+        "totalKwd": { "type": "number", "required": true },
+        "status": { "type": "string", "required": true },
+        "createdAt": { "type": "string", "required": false }
+      },
+      "rules": {
+        "read": "request.auth != null",
+        "write": "request.auth != null"
+      }
+    },
+    "Contract": {
+      "collection": "contracts",
+      "fields": {
+        "creatorId": { "type": "string", "required": true },
+        "hostId": { "type": "string", "required": true },
+        "productId": { "type": "string", "required": true },
+        "status": { "type": "string", "required": true },
+        "royaltyPercentage": { "type": "number", "required": false },
+        "createdAt": { "type": "string", "required": false }
+      },
+      "rules": {
+        "read": "request.auth != null",
+        "write": "request.auth != null"
+      }
+    }
+  }
+}

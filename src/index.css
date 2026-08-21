@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+:root {
+  --majal-bg: #0b1220;
+  --majal-panel: rgba(15, 23, 42, 0.72);
+  --majal-card: rgba(19, 28, 45, 0.64);
+  --majal-border: rgba(255, 255, 255, 0.09);
+  --majal-gold: #c7a55b;
+  --majal-gold-soft: #e8c880;
+}
+
+@layer utilities {
+  .glass-panel {
+    background: var(--majal-panel);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--majal-border);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.24);
+  }
+
+  .glass-card {
+    background: var(--majal-card);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  }
+
+  .glass-card-hover {
+    transition: all 0.3s ease;
+  }
+
+  .glass-card-hover:hover {
+    background: rgba(22, 33, 53, 0.82);
+    border-color: rgba(199, 165, 91, 0.3);
+    box-shadow: 0 12px 36px rgba(199, 165, 91, 0.12);
+    transform: translateY(-2px);
+  }
+
+  .glass-nav {
+    background: rgba(8, 14, 27, 0.84);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .glass-input {
+    background: rgba(9, 16, 28, 0.56);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .glass-input:focus {
+    border-color: rgba(199, 165, 91, 0.55);
+    box-shadow: 0 0 0 4px rgba(199, 165, 91, 0.12);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--majal-bg);
+  background-image:
+    radial-gradient(at 8% 8%, rgba(199, 165, 91, 0.14) 0px, transparent 50%),
+    radial-gradient(at 92% 18%, rgba(74, 106, 163, 0.12) 0px, transparent 50%),
+    radial-gradient(at 50% 88%, rgba(122, 77, 127, 0.08) 0px, transparent 50%),
+    linear-gradient(180deg, #0a101b 0%, #0b1220 45%, #0b1322 100%);
+  background-attachment: fixed;
+  color: #f8fafc;
+}
+
+body, #root {
+  min-height: 100vh;
+}
+
+/* Accessibility & interaction polish */
+:focus-visible {
+  outline: 2px solid rgba(232, 200, 128, 0.95);
+  outline-offset: 3px;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+}
+
+::selection {
+  background: rgba(199, 165, 91, 0.9);
+  color: #07101f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

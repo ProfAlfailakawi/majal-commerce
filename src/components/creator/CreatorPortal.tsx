@@ -1,0 +1,212 @@
+import React, { useEffect, useState } from 'react';
+import {
+  BadgeDollarSign,
+  Boxes,
+  BriefcaseBusiness,
+  ChevronLeft,
+  FileSignature,
+  Lock,
+  Plus,
+  Radar,
+  Sparkles,
+  TrendingUp
+} from 'lucide-react';
+import { store } from '../../lib/store';
+import { CreatorProduct } from '../../types/majal';
+import { ProductSubmissionWizard } from './ProductSubmissionWizard';
+import { CreatorEarnings } from './CreatorEarnings';
+import { RecipeVaultModal } from '../common/RecipeVaultModal';
+import { ContractModal } from '../common/ContractModal';
+import { UnitEconomicsModal } from '../common/UnitEconomicsModal';
+import { OpportunityRadar } from './OpportunityRadar';
+import { CreatorPassport } from './CreatorPassport';
+import { DigitalTwinPanel } from '../common/DigitalTwinPanel';
+import { DealRoom } from '../common/DealRoom';
+import { RecipeAccessRequests } from './RecipeAccessRequests';
+
+export const CreatorPortal: React.FC = () => {
+  const [, setTick] = useState(0);
+  useEffect(() => store.subscribe(() => setTick(t => t + 1)), []);
+
+  const [activeTab, setActiveTab] = useState<'HOME' | 'RADAR' | 'PRODUCTS' | 'DEALS' | 'EARNINGS'>('HOME');
+  const [showWizard, setShowWizard] = useState(false);
+  const [selectedProductForVault, setSelectedProductForVault] = useState<CreatorProduct | null>(null);
+  const [selectedContract, setSelectedContract] = useState<any>(null);
+  const [showCalculator, setShowCalculator] = useState(false);
+  const [counterRate, setCounterRate] = useState(14);
+  const [counterNotes, setCounterNotes] = useState('');
+
+  const currentCreatorId = store.activeUser.creatorId || '';
+  const profile = store.creators.find(c => c.id === currentCreatorId);
+  const myProducts = store.products.filter(p => p.creatorId === currentCreatorId);
+  const myCollaborations = store.collaborations.filter(c => c.creatorId === currentCreatorId);
+  const activeCol = myCollaborations[0];
+  const activeOffer = activeCol?.currentOffer;
+
+  const tabs = [
+    { id: 'HOME', label: 'الرئيسية', icon: <Sparkles className="w-4 h-4" /> },
+    { id: 'RADAR', label: 'رادار الفرص', icon: <Radar className="w-4 h-4" /> },
+    { id: 'PRODUCTS', label: `منتجاتي (${myProducts.length})`, icon: <Boxes className="w-4 h-4" /> },
+    { id: 'DEALS', label: `تعاوناتي (${myCollaborations.length})`, icon: <BriefcaseBusiness className="w-4 h-4" /> },
+    { id: 'EARNINGS', label: 'مستحقاتي', icon: <BadgeDollarSign className="w-4 h-4" /> }
+  ] as const;
+
+  if (!profile) return <div className="max-w-3xl mx-auto p-8 text-center text-stone-400">لا يوجد ملف مبدع مرتبط بهذا الحساب. لا يتم استخدام ملف مبدع آخر كبديل.</div>;
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-stone-100">
+      <section className="glass-panel rounded-[30px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
+        <div className="absolute -top-28 -left-20 w-72 h-72 rounded-full bg-emerald-400/8 blur-3xl" />
+        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <img src={profile.avatarUrl} alt={profile.displayName} decoding="async" className="w-20 h-20 rounded-3xl object-cover ring-2 ring-[#e8c880]/35 shadow-xl" />
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-400/20 text-[10px] font-black">CREATOR SPACE</span>
+                <span className="text-xs text-stone-500">{profile.specialty}</span>
+              </div>
+              <h1 className="text-2xl md:text-3xl font-black mt-2">أهلًا {profile.displayName}، هذا مجال نموّك</h1>
+              <p className="text-sm text-stone-400 mt-2 max-w-2xl leading-7">كل ما تحتاجه من اكتشاف فرصة، حماية وصفة، تفاوض، عقد، إطلاق ومستحقات موجود في مسار واحد.</p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <button onClick={() => setShowCalculator(true)} className="px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-bold text-stone-300 hover:bg-white/10">حاسبة الاقتصاديات</button>
+            <button onClick={() => setShowWizard(true)} className="px-5 py-3 rounded-2xl bg-gradient-to-r from-[#c7a55b] to-[#e1c67b] text-stone-950 text-xs font-black flex items-center gap-2"><Plus className="w-4 h-4" /> تسجيل منتج جديد</button>
+          </div>
+        </div>
+      </section>
+
+      <div className="flex gap-2 overflow-x-auto no-scrollbar border-b border-white/10 pb-3">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2.5 rounded-xl whitespace-nowrap text-xs font-bold flex items-center gap-2 transition-colors ${activeTab === tab.id ? 'bg-[#c7a55b] text-stone-950' : 'bg-white/5 text-stone-300 hover:bg-white/10'}`}
+          >
+            {tab.icon}{tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'HOME' && (
+        <div className="space-y-6">
+          <CreatorPassport creatorId={currentCreatorId} />
+          <RecipeAccessRequests creatorId={currentCreatorId} />
+          <OpportunityRadar creatorId={currentCreatorId} />
+          {myProducts[0] && <DigitalTwinPanel product={myProducts[0]} />}
+        </div>
+      )}
+
+      {activeTab === 'RADAR' && <OpportunityRadar creatorId={currentCreatorId} />}
+
+      {activeTab === 'PRODUCTS' && (
+        <div className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-5">
+            {myProducts.map(product => (
+              <article key={product.id} className="glass-card rounded-3xl border border-white/10 overflow-hidden">
+                <img src={product.mediaUrls[0]} alt={product.publicName} loading="lazy" decoding="async" className="w-full h-48 object-cover" />
+                <div className="p-5 space-y-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-[11px] text-stone-500">{product.category}</div>
+                      <h3 className="text-lg font-black text-stone-100 mt-1">{product.publicName}</h3>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full bg-[#c7a55b]/10 border border-[#e8c880]/20 text-[#e8c880] text-[10px] font-black">{product.status}</span>
+                  </div>
+                  <p className="text-xs text-stone-400 leading-6">{product.shortDescription}</p>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-[10px] text-stone-500">التكلفة</div><div className="text-xs font-black mt-1">{product.estimatedUnitCostKwd.toFixed(3)}</div></div>
+                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-[10px] text-stone-500">السعر</div><div className="text-xs font-black mt-1">{product.targetSellingPriceKwd.toFixed(3)}</div></div>
+                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-[10px] text-stone-500">الوصفة</div><div className="text-xs font-black mt-1 text-[#e8c880]">{product.currentRecipeVersion}</div></div>
+                  </div>
+                  <button onClick={() => setSelectedProductForVault(product)} className="w-full py-3 rounded-xl bg-slate-950/50 border border-white/10 text-xs font-black text-[#e8c880] flex items-center justify-center gap-2"><Lock className="w-4 h-4" /> فتح خزنة الوصفة</button>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          {myProducts.map(product => <DigitalTwinPanel key={product.id} product={product} />)}
+        </div>
+      )}
+
+      {activeTab === 'DEALS' && (
+        <div className="space-y-6">
+          {myCollaborations.length === 0 ? (
+            <div className="glass-panel rounded-3xl p-12 border border-white/10 text-center text-stone-400">لا توجد تعاونات بعد. ابدأ من رادار الفرص.</div>
+          ) : myCollaborations.map(col => (
+            <div key={col.id} className="space-y-5">
+              <DealRoom collaboration={col} />
+
+              {col.currentOffer && (
+                <section className="glass-panel rounded-3xl border border-white/10 p-5 md:p-6 space-y-4">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 text-[#e8c880] font-bold"><FileSignature className="w-4 h-4" /> العرض التجاري الحالي</div>
+                      <div className="mt-2 text-2xl font-black">{col.currentOffer.creatorRoyaltyRatePercent}% <span className="text-sm text-stone-500">حصة المبدع</span></div>
+                    </div>
+                    <div className="text-xs text-stone-400">سعر البيع: <strong className="text-stone-100">{col.currentOffer.sellingPriceKwd.toFixed(3)} د.ك</strong> — مدة الاتفاق: <strong className="text-stone-100">{col.currentOffer.termMonths} أشهر</strong></div>
+                  </div>
+
+                  {col.currentOffer.status === 'PENDING' && (
+                    <div className="grid lg:grid-cols-[1fr_auto] gap-3">
+                      <div className="grid sm:grid-cols-[150px_1fr] gap-3">
+                        <input type="number" value={counterRate} onChange={e => setCounterRate(Number(e.target.value))} className="glass-input rounded-xl px-4 py-3 text-xs outline-none" />
+                        <input value={counterNotes} onChange={e => setCounterNotes(e.target.value)} placeholder="سبب التعديل أو الملاحظة التجارية..." className="glass-input rounded-xl px-4 py-3 text-xs outline-none" />
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={async () => { await Promise.resolve(store.acceptOffer(col.id, col.currentOffer!.id)); }} className="px-4 py-3 rounded-xl bg-emerald-500 text-stone-950 text-xs font-black">قبول العرض</button>
+                        <button
+                          onClick={async () => { await Promise.resolve(store.sendOffer(col.id, 'CREATOR', {
+                            sellingPriceKwd: col.currentOffer!.sellingPriceKwd,
+                            creatorRoyaltyModel: 'PERCENTAGE',
+                            creatorRoyaltyRatePercent: counterRate,
+                            fixedAmountPerUnitKwd: 0,
+                            platformFeePercent: col.currentOffer!.platformFeePercent,
+                            termMonths: col.currentOffer!.termMonths,
+                            exclusivityType: col.currentOffer!.exclusivityType,
+                            territory: col.currentOffer!.territory,
+                            channels: col.currentOffer!.channels,
+                            minimumCommitmentUnits: col.currentOffer!.minimumCommitmentUnits,
+                            notes: counterNotes || `مقترح تعديل النسبة إلى ${counterRate}%`
+                          })); }}
+                          className="px-4 py-3 rounded-xl bg-[#c7a55b] text-stone-950 text-xs font-black"
+                        >
+                          إرسال Counter
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {col.contract && (
+                    <button onClick={() => setSelectedContract(col.contract)} className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-xs font-black text-stone-200">فتح العقد <ChevronLeft className="w-4 h-4" /></button>
+                  )}
+                </section>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'EARNINGS' && <CreatorEarnings />}
+
+      <ProductSubmissionWizard isOpen={showWizard} onClose={() => setShowWizard(false)} />
+      {selectedProductForVault && (
+        <RecipeVaultModal
+          isOpen={!!selectedProductForVault}
+          onClose={() => setSelectedProductForVault(null)}
+          product={selectedProductForVault}
+          userDisclosureLevel={3}
+        />
+      )}
+      {selectedContract && <ContractModal isOpen={!!selectedContract} onClose={() => setSelectedContract(null)} contract={selectedContract} />}
+      <UnitEconomicsModal
+        isOpen={showCalculator}
+        onClose={() => setShowCalculator(false)}
+        initialTargetPrice={activeOffer?.sellingPriceKwd || myProducts[0]?.targetSellingPriceKwd}
+        initialUnitCost={myProducts[0]?.estimatedUnitCostKwd}
+        initialRoyaltyRate={activeOffer?.creatorRoyaltyRatePercent}
+      />
+    </div>
+  );
+};
