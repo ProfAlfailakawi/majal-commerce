@@ -3,7 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import dotenv from 'dotenv';
 import { generateProductCopyPolish, explainHostMatch } from './src/lib/gemini';
-import { createAuthConfig, createAuthRouter, purgeExpiredSessions, requireAuth, requireCsrf } from './server/auth';
+import { dealRoomCopilot, enrichSemanticMatch, groundOpportunityRadar, launchMarketReadout, defaultAiDeps, type AiAuditEvent } from './server/ai-intelligence';
+import { AuthenticatedRequest, createAuthConfig, createAuthRouter, purgeExpiredSessions, requireAuth, requireCsrf } from './server/auth';
 import { createCatalogRouter } from './server/catalog';
 import { databaseHealth, MajalDatabase, openMajalDatabase } from './server/database';
 import { createNotificationRouter } from './server/notifications';
@@ -127,6 +128,60 @@ async function initializeApplication(app: express.Express) {
     if (!productName || !category || !hostName || !Number.isFinite(marginScore) || marginScore < 0 || marginScore > 100) return jsonError(res, 400, 'بيانات المطابقة غير صالحة.');
     try { res.json({ explanation: await explainHostMatch(productName, category, hostName, equipment, marginScore) }); }
     catch { jsonError(res, 502, 'تعذّر الوصول إلى خدمة الذكاء الاصطناعي.'); }
+  });
+
+  // MAJAL Intelligence Layer — enrichment only, on top of deterministic + permission-filtered context.
+  const stringList = (value: unknown, maxItems: number, maxLen: number) =>
+    Array.isArray(value) ? value.map(item => textValue(item, 1, maxLen)).filter(Boolean).slice(0, maxItems) as string[] : [];
+  const auditSink = (req: Request) => (event: AiAuditEvent) => {
+    const auth = (req as AuthenticatedRequest).auth;
+    structuredLog('INFO', 'ai_action', { ...event, actorRole: auth?.user.role ?? 'UNKNOWN' });
+    defaultAiDeps.audit(event);
+  };
+  const tenantOf = (req: Request) => {
+    const user = (req as AuthenticatedRequest).auth!.user;
+    return { tenantId: user.hostBusinessId || user.creatorId || user.id, actorUserId: user.id };
+  };
+  const aiGuard = [authenticated, csrfProtected, requireAiAccess] as const;
+
+  app.post('/api/ai/semantic-match', rateLimit(10, 60_000, 'ai-semantic'), ...aiGuard, async (req, res) => {
+    const productName = textValue(req.body?.productName, 2, 120), category = textValue(req.body?.category, 2, 80), hostName = textValue(req.body?.hostName, 2, 120);
+    const deterministicReasons = stringList(req.body?.deterministicReasons, 8, 400);
+    const evidenceText = textValue(req.body?.evidenceText, 2, 2_000) || '';
+    if (!productName || !category || !hostName || !deterministicReasons.length) return jsonError(res, 400, 'سياق المطابقة غير صالح.');
+    try {
+      const { tenantId, actorUserId } = tenantOf(req);
+      res.json(await enrichSemanticMatch({ tenantId, actorUserId, productName, category, hostName, deterministicReasons, evidenceText }, { ...defaultAiDeps, audit: auditSink(req) }));
+    } catch { jsonError(res, 502, 'تعذّر الوصول إلى خدمة الذكاء الاصطناعي.'); }
+  });
+
+  app.post('/api/ai/opportunity-radar', rateLimit(10, 60_000, 'ai-radar'), ...aiGuard, async (req, res) => {
+    const query = textValue(req.body?.query, 4, 300);
+    if (!query) return jsonError(res, 400, 'استعلام السوق غير صالح.');
+    try {
+      const { tenantId, actorUserId } = tenantOf(req);
+      res.json(await groundOpportunityRadar({ tenantId, actorUserId, query }, { ...defaultAiDeps, audit: auditSink(req) }));
+    } catch { jsonError(res, 502, 'تعذّر جلب إشارات السوق.'); }
+  });
+
+  app.post('/api/ai/deal-room', rateLimit(10, 60_000, 'ai-deal'), ...aiGuard, async (req, res) => {
+    const stage = textValue(req.body?.stage, 2, 60), contractStatus = textValue(req.body?.contractStatus, 2, 60);
+    const optionSummaries = stringList(req.body?.optionSummaries, 5, 300);
+    const gatePassed = req.body?.gatePassed === true;
+    if (!stage || !contractStatus) return jsonError(res, 400, 'سياق الصفقة غير صالح.');
+    try {
+      const { tenantId, actorUserId } = tenantOf(req);
+      res.json(await dealRoomCopilot({ tenantId, actorUserId, stage, contractStatus, optionSummaries, gatePassed }, { ...defaultAiDeps, audit: auditSink(req) }));
+    } catch { jsonError(res, 502, 'تعذّر تلخيص الصفقة.'); }
+  });
+
+  app.post('/api/ai/launch-readout', rateLimit(10, 60_000, 'ai-launch'), ...aiGuard, async (req, res) => {
+    const query = textValue(req.body?.query, 4, 300);
+    if (!query) return jsonError(res, 400, 'استعلام الإطلاق غير صالح.');
+    try {
+      const { tenantId, actorUserId } = tenantOf(req);
+      res.json(await launchMarketReadout({ tenantId, actorUserId, query }, { ...defaultAiDeps, audit: auditSink(req) }));
+    } catch { jsonError(res, 502, 'تعذّر جلب قراءة السوق.'); }
   });
 
   app.get('/api/v1/compliance/jurisdiction-config', (_req, res) => res.json({
