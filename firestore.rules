@@ -19,7 +19,11 @@ service cloud.firestore {
     // Creators Collection
     match /creators/{creatorId} {
       allow read: if true;
-      allow write: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      allow update: if isAuthenticated() &&
+                    request.auth.uid == resource.data.userId &&
+                    request.auth.uid == request.resource.data.userId;
+      allow delete: if false; // Delete operations route through server
     }
 
     // Hosts Collection
@@ -31,7 +35,11 @@ service cloud.firestore {
     // Products Collection
     match /products/{productId} {
       allow read: if true;
-      allow write: if isAuthenticated() && request.auth.uid == request.resource.data.creatorId;
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.creatorId;
+      allow update: if isAuthenticated() &&
+                    request.auth.uid == resource.data.creatorId &&
+                    request.auth.uid == request.resource.data.creatorId;
+      allow delete: if false; // Delete operations route through server
     }
 
     // Orders Collection
