@@ -19,39 +19,55 @@ service cloud.firestore {
     // Creators Collection
     match /creators/{creatorId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      allow update: if isAuthenticated() &&
+                    request.auth.uid == resource.data.userId &&
+                    request.auth.uid == request.resource.data.userId;
+      allow delete: if false; // Delete operations route through server
     }
 
     // Hosts Collection
     match /hosts/{hostId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow write: if isAuthenticated() && request.auth.token.role in ['ADMIN', 'SUPER_ADMIN'];
     }
 
     // Products Collection
     match /products/{productId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.creatorId;
+      allow update: if isAuthenticated() &&
+                    request.auth.uid == resource.data.creatorId &&
+                    request.auth.uid == request.resource.data.creatorId;
+      allow delete: if false; // Delete operations route through server
     }
 
     // Orders Collection
     match /orders/{orderId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated();
+      // Consumers see their own orders; Hosts/Admins can see orders for their tenants.
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.consumerId ||
+        request.auth.uid == resource.data.hostId ||
+        request.auth.token.role in ['ADMIN', 'SUPER_ADMIN']
+      );
+      allow write: if false; // Deny direct client writes; must route through server
     }
 
     // Contracts Collection
     match /contracts/{contractId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      // Only the creator, the host, or admins can view the contract.
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.creatorId ||
+        request.auth.uid == resource.data.hostId ||
+        request.auth.token.role in ['ADMIN', 'SUPER_ADMIN']
+      );
+      allow write: if false; // Deny direct client writes; must route through server
     }
 
     // Audit logs (append-only by authenticated users, no deletion or modification)
     match /audit_logs/{logId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if false;
+      allow read: if isAuthenticated() && request.auth.token.role in ['ADMIN', 'SUPER_ADMIN'];
+      allow write: if false; // Server layer handles audit logging
     }
   }
 }
