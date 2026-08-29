@@ -1,32 +1,24 @@
 # Tebyan / MAJAL Absolute Edition — Production Architecture
 
-This repository operates on a hybrid architecture for its production environment, leveraging both modern database solutions and strict server-side enforcements for robust security.
+This repository operates on a phased architecture for its production environment, leveraging both modern database solutions and strict server-side enforcements for robust security.
 
-## Current Production Architecture
+## Architecture States
 
-### 1. Database & Persistence
-- **Primary Datastore:** The application currently uses `node:sqlite` as the local source of truth for authentication, sessions, notifications, and payment boundaries/limits (via `server/database.ts`).
-- **Target Datastore:** PostgreSQL is the intended multi-instance production target. The current schema, constraints, and indexes in SQLite are designed as migration nodes to facilitate a transition to PostgreSQL for full scalability and redundancy.
-- **Object Storage:** Deals with Recipe Vault contents, contracts, compliance documents, and proofs using encrypted-at-rest Object Storage and KMS.
+### Implemented Now
+- **Primary Datastore:** The application currently uses `node:sqlite` as the local source of truth for authentication, sessions, notifications, and payment boundaries/limits.
+- **API & Server Layer:** Express/Node.js based modular monolith routing under `/api/**`.
+- **Security Boundaries:** Zero implicit trust. Authentication relies on server-side HttpOnly/SameSite cookies, CSRF protections, MFA via TOTP (AES-256-GCM encrypted), and strict RBAC.
+- **Frontend / Web App:** React (Vite-based) PWA serving as a pure presentation layer.
+- **AI Integration:** Gemini AI endpoints isolated entirely within the server layer (`src/lib/gemini.ts` and `server/ai-intelligence.ts`). No API keys or configurations exposed to clients.
+- **Audit Trails:** Maintained for all sensitive events locally.
 
-### 2. API & Server Layer
-- **Framework:** Express/Node.js based modular monolith.
-- **Routing:** Production routing operates predominantly under `/api/**`.
-- **Security Boundaries:**
-  - Zero implicit trust for the browser/client.
-  - Authentication relies on server-side HttpOnly/SameSite cookies and CSRF protections.
-  - Multi-Factor Authentication (MFA) via TOTP, with secrets encrypted using AES-256-GCM.
-  - Strict Role-Based Access Control (RBAC), context-awareness, and sensitivity tiers (L1/L2/L3).
-- **Integrations:**
-  - PACI (Kuwait Mobile ID) and Payment gateways are interfaced via adapters that enforce idempotency, precise amounts (KWD minor units), and signature verifications.
+### Adapter/Code Ready but External Configuration Required
+- **Integrations:** PACI (Kuwait Mobile ID) and Payment gateways are interfaced via adapters that enforce idempotency, amounts, and signature verifications, but require official onboarding and external credentials to activate.
+- **Firebase:** Integrated for client-side configuration features/applets. App Check (ReCaptcha V3) is implemented but requires a valid production configuration key.
+- **Notifications:** Inbox/outbox infrastructure exists, but email/push providers require linkage and consent validation.
 
-### 3. Frontend / Web App
-- **Stack:** React (Vite-based) PWA.
-- **Role:** Pure presentation layer. Hidden UI elements or `sessionStorage` checks are not used for security controls. All state mutations and permission enforcements are verified purely on the server.
-- **Firebase:** Integrated primarily for client-side configuration features or specific applets, hardened with Firebase App Check (ReCaptcha V3).
-- **Gemini AI API:** AI endpoints are completely isolated in the server layer (`src/lib/gemini.ts` and `server/ai-intelligence.ts`). No API keys or sensitive retry configurations are exposed to the client.
-
-### 4. Background & Observability
-- Event buses and workers manage notification coalescing and delivery (email/push) without blocking critical paths.
-- Redis handles sessions, rate limiting, and temporary caching (not financial state).
-- Strict audit trails are maintained for all sensitive events, maintaining data lineage without exposing payloads.
+### Target / Not Yet Production-Verified
+- **Target Datastore:** PostgreSQL is the intended multi-instance production target. Current SQLite schema serves as a migration node.
+- **Object Storage / KMS:** Intended for Recipe Vault contents, contracts, compliance documents, and proofs.
+- **Redis / Distributed Systems:** Intended to handle sessions, distributed rate limiting, and caching.
+- **Event / Worker Infrastructure:** Full production observability, backup/restore mechanisms, security scanning, and incident operations remain outstanding.
