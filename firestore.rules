@@ -37,21 +37,19 @@ service cloud.firestore {
     // Orders Collection
     match /orders/{orderId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated();
+      allow write: if false; // Deny direct client writes; must route through server
     }
 
     // Contracts Collection
     match /contracts/{contractId} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow write: if false; // Deny direct client writes; must route through server
     }
 
     // Audit logs (append-only by authenticated users, no deletion or modification)
     match /audit_logs/{logId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if false;
+      allow read: if isAuthenticated() && request.auth.token.role in ['ADMIN', 'SUPER_ADMIN'];
+      allow write: if false; // Server layer handles audit logging
     }
   }
 }

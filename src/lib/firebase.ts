@@ -24,9 +24,9 @@ const app = hasFirebaseConfig
   ? (getApps().length === 0 ? initializeApp(firebaseConfig) : getApp())
   : null;
 
-if (app && typeof window !== 'undefined') {
+if (app && typeof window !== 'undefined' && firebaseConfigJson.recaptchaSiteKey) {
   initializeAppCheck(app, {
-    provider: new ReCaptchaV3Provider(firebaseConfigJson.recaptchaSiteKey || ''),
+    provider: new ReCaptchaV3Provider(firebaseConfigJson.recaptchaSiteKey),
     isTokenAutoRefreshEnabled: true
   });
 }

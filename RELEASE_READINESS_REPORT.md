@@ -3,11 +3,12 @@
 ## Audit Findings & Resolutions
 
 **1. Firebase & Firestore Security (RESOLVED)**
-- **Finding:** Firestore rules for `creators`, `hosts`, and `products` were overly permissive (`allow write: if isAuthenticated()`).
+- **Finding:** Firestore rules for `creators`, `hosts`, and `products` were overly permissive (`allow write: if isAuthenticated()`). `orders`, `contracts`, and `audit_logs` were accessible for client-side direct writes.
 - **Resolution:** Updated `firestore.rules` to enforce exact authorization logic.
   - Creators can only write if `request.auth.uid == request.resource.data.userId`.
   - Products can only be written to if `request.auth.uid == request.resource.data.creatorId`.
   - Hosts can only be written to by users with `ADMIN` or `SUPER_ADMIN` roles.
+  - Direct client writes for `orders`, `contracts`, and `audit_logs` have been explicitly denied (`allow write: if false`). Mutations to these entities are correctly routed through the trusted server layer.
 
 **2. Gemini API / Secret Exposures (VERIFIED - SAFE)**
 - **Finding:** Audited `src/lib/gemini.ts` to ensure no client-side API key leak.
@@ -18,8 +19,8 @@
 - **Resolution:** Extracted `SurfaceFallback` into a dedicated `src/components/common/SurfaceFallback.tsx` file for cleaner module loading.
 
 **4. Firebase App Check (RESOLVED)**
-- **Finding:** Missing implementation for Firebase App Check which prevents backend abuse.
-- **Resolution:** Added `initializeAppCheck` utilizing `ReCaptchaV3Provider` in `src/lib/firebase.ts` fetching keys from `firebase-applet-config.json`.
+- **Finding:** Missing implementation for Firebase App Check which prevents backend abuse, and attempting to initialize it with an empty key is invalid.
+- **Resolution:** Guarded App Check initialization in `src/lib/firebase.ts` so it only activates when a valid `recaptchaSiteKey` is present in configuration. This resolves runtime errors in staging but full protection requires actual production configuration mapping.
 
 **5. Architecture & Documentation Standardization (RESOLVED)**
 - **Finding:** Missing unified `AGENTS.md` covering correct architecture limits.
