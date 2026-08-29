@@ -19,19 +19,19 @@ service cloud.firestore {
     // Creators Collection
     match /creators/{creatorId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow write: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
     }
 
     // Hosts Collection
     match /hosts/{hostId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow write: if isAuthenticated() && request.auth.token.role in ['ADMIN', 'SUPER_ADMIN'];
     }
 
     // Products Collection
     match /products/{productId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow write: if isAuthenticated() && request.auth.uid == request.resource.data.creatorId;
     }
 
     // Orders Collection

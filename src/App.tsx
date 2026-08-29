@@ -22,7 +22,7 @@ const IntegrationHubModal = lazy(() => import('./components/common/IntegrationHu
 const AuthModal = lazy(() => import('./components/common/AuthModal').then(module => ({ default: module.AuthModal })));
 const AccountSecurityModal = lazy(() => import('./components/common/AccountSecurityModal').then(module => ({ default: module.AccountSecurityModal })));
 
-const SurfaceFallback = () => <div role="status" className="max-w-7xl mx-auto px-4 py-16 text-center text-xs text-stone-400">جاري تحميل مساحة العمل…</div>;
+import { SurfaceFallback } from './components/common/SurfaceFallback';
 
 export default function App() {
   const [, setTick] = useState(0);

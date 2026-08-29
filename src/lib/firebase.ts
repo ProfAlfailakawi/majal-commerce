@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 import firebaseConfigJson from '../../firebase-applet-config.json';
 
 const firebaseConfig = {
@@ -22,6 +23,13 @@ const hasFirebaseConfig = Boolean(
 const app = hasFirebaseConfig
   ? (getApps().length === 0 ? initializeApp(firebaseConfig) : getApp())
   : null;
+
+if (app && typeof window !== 'undefined') {
+  initializeAppCheck(app, {
+    provider: new ReCaptchaV3Provider(firebaseConfigJson.recaptchaSiteKey || ''),
+    isTokenAutoRefreshEnabled: true
+  });
+}
 
 const dbId = import.meta.env.VITE_FIREBASE_DATABASE_ID || firebaseConfigJson.firestoreDatabaseId || '(default)';
 
