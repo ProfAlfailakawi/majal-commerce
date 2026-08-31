@@ -1189,13 +1189,14 @@ async function installPostgresRecipeImmutability(db: MajalDatabase) {
 }
 
 export async function openMajalDatabase(options: OpenDatabaseOptions = {}): Promise<MajalDatabase> {
-  const databaseUrl = options.databaseUrl || process.env.DATABASE_URL;
+  const isMemory = options.filename === ':memory:';
+  const databaseUrl = options.databaseUrl || (isMemory ? undefined : process.env.DATABASE_URL);
   const production = process.env.NODE_ENV === 'production';
-  if (production && !options.forceSqlite && !databaseUrl) {
+  if (production && !options.forceSqlite && !databaseUrl && !isMemory) {
     throw new Error('DATABASE_URL is required in production. SQLite is development/test only.');
   }
 
-  if (databaseUrl && !options.forceSqlite) {
+  if (databaseUrl && !options.forceSqlite && !isMemory) {
     const pgModule = await import('pg');
     const Pool = (pgModule as unknown as { Pool: new (config: Record<string, unknown>) => PgPoolLike }).Pool;
     const sslMode = (process.env.PGSSLMODE || '').toLowerCase();
