@@ -3,5 +3,11 @@ dist
 server-dist
 .git
 .github
+.env*
+!*.example
+coverage
 *.log
 .DS_Store
+scripts
+*.md
+

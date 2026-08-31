@@ -26,4 +26,7 @@ COPY --from=builder /app/firestore.rules ./firestore.rules
 
 EXPOSE 3000
 
+USER node
+
 CMD ["node", "server-dist/server.cjs"]
+
