@@ -40,6 +40,40 @@ function isHost(req: AuthenticatedRequest, organizationId: string, ownerOnly = f
   if (req.auth?.user.hostBusinessId !== organizationId) return false;
   return ownerOnly ? req.auth.user.role === 'HOST_OWNER' : ['HOST_OWNER', 'HOST_OPERATIONS', 'HOST_FINANCE'].includes(req.auth!.user.role);
 }
+// Decrypted L3 recipe disclosure is limited to the collaborating org's HOST_CHEF only — a
+// faithful mirror of VIEW_RECIPE_L3 in the role matrix (src/lib/permissions.ts) and
+// SECURITY_MODEL.md, which grant full-secret visibility to no one else: not HOST_OWNER/
+// OPERATIONS/FINANCE (whom the old generic isHost() wrongly admitted), and deliberately NOT
+// platform ADMIN/SUPER_ADMIN either (permissions.test.ts asserts canViewFullRecipe(admin)===false;
+// "SUPER_ADMIN does not silently impersonate the creator"). The creator is the discloser, not a
+// reader of this endpoint, so is intentionally excluded here.
+export function canReadRecipeDisclosure(user: { role: string; hostBusinessId?: string | null }, organizationId: string): boolean {
+  return user.role === 'HOST_CHEF' && !!user.hostBusinessId && user.hostBusinessId === organizationId;
+}
+
+// Marks a settlement batch PAID exactly once. Every money side effect (accrual PAID, the
+// append-only SETTLEMENT_PAID ledger entry, and the audit row via onApplied) is gated on the
+// guarded state transition actually changing a row. A retried or raced reconciliation call
+// finds the batch already PAID (0 rows changed) and is a pure no-op — never a second,
+// unremovable payout entry on the tamper-evident ledger.
+export async function applySettlementPaid(
+  db: MajalDatabase,
+  batchId: string,
+  providerReference: string,
+  onApplied?: (tx: MajalDatabase, batch: Record<string, unknown>) => Promise<void>
+): Promise<{ applied: boolean; status: string }> {
+  return withTransaction(db, async tx => {
+    const batch = await tx.prepare('SELECT * FROM settlement_batches WHERE id=?').get<Record<string, unknown>>(batchId);
+    if (!batch) throw Object.assign(new Error('NOT_FOUND'), { status: 404 });
+    const updated = await tx.prepare("UPDATE settlement_batches SET status='PAID',provider_reference=?,updated_at=? WHERE id=? AND status IN ('APPROVED','PROCESSING')").run(providerReference, now(), batchId);
+    if (updated.changes !== 1) return { applied: false, status: String(batch.status) };
+    await tx.prepare("UPDATE accruals SET status='PAID',updated_at=? WHERE creator_id=? AND status='LOCKED'").run(now(), String(batch.creator_id));
+    await appendLedgerEntry(tx, { scope: 'SETTLEMENT', entryType: 'SETTLEMENT_PAID', entityType: 'SETTLEMENT_BATCH', entityId: batchId, amountFils: -Number(batch.total_fils), currency: 'KWD', meta: { creatorId: String(batch.creator_id), providerReference } });
+    if (onApplied) await onApplied(tx, batch);
+    return { applied: true, status: 'PAID' };
+  });
+}
+
 async function collaboration(db: MajalDatabase, id: string) {
   return db.prepare('SELECT * FROM collaborations WHERE id = ? LIMIT 1').get<CollabRow>(id);
 }
@@ -264,7 +298,7 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
   });
 
   router.post('/internal/settlements/:id/paid', requireRoles('ADMIN','SUPER_ADMIN'), async (req: AuthenticatedRequest,res)=>{
-    try{await assertKillSwitchClear(db,'SETTLEMENTS');const expected=process.env.SETTLEMENT_RECONCILIATION_SECRET?.trim();if(!expected||expected.length<32||req.header('x-reconciliation-secret')!==expected)return jsonError(res,403,'تأكيد الدفع يتطلب قناة تسوية موثقة.','RECONCILIATION_REQUIRED');const ref=text(req.body?.providerReference,4,200);if(!ref)return jsonError(res,400,'مرجع المزود مطلوب.','PROVIDER_REFERENCE_REQUIRED');const batch=await db.prepare('SELECT * FROM settlement_batches WHERE id=?').get<Record<string,unknown>>(req.params.id);if(!batch)return jsonError(res,404,'دفعة التسوية غير موجودة.','NOT_FOUND');await withTransaction(db,async tx=>{await tx.prepare("UPDATE settlement_batches SET status='PAID',provider_reference=?,updated_at=? WHERE id=? AND status IN ('APPROVED','PROCESSING')").run(ref,now(),req.params.id);await tx.prepare("UPDATE accruals SET status='PAID',updated_at=? WHERE creator_id=? AND status='LOCKED'").run(now(),String(batch.creator_id));await appendLedgerEntry(tx,{scope:'SETTLEMENT',entryType:'SETTLEMENT_PAID',entityType:'SETTLEMENT_BATCH',entityId:req.params.id,amountFils:-Number(batch.total_fils),currency:'KWD',meta:{creatorId:String(batch.creator_id),providerReference:ref}});await audit(tx,req,'SETTLEMENT_PAID','SETTLEMENT_BATCH',req.params.id,batch,{providerReference:ref});});res.json({id:req.params.id,status:'PAID',providerReference:ref});}catch(e){handleDomainError(res,e)}
+    try{await assertKillSwitchClear(db,'SETTLEMENTS');const expected=process.env.SETTLEMENT_RECONCILIATION_SECRET?.trim();if(!expected||expected.length<32||req.header('x-reconciliation-secret')!==expected)return jsonError(res,403,'تأكيد الدفع يتطلب قناة تسوية موثقة.','RECONCILIATION_REQUIRED');const ref=text(req.body?.providerReference,4,200);if(!ref)return jsonError(res,400,'مرجع المزود مطلوب.','PROVIDER_REFERENCE_REQUIRED');const result=await applySettlementPaid(db,req.params.id,ref,(tx,batch)=>audit(tx,req,'SETTLEMENT_PAID','SETTLEMENT_BATCH',req.params.id,batch,{providerReference:ref}));res.json({id:req.params.id,status:result.status,providerReference:ref,applied:result.applied});}catch(e){handleDomainError(res,e)}
   });
 
   // 1. Secret recipe seal: public commitment only; salt stays in encrypted storage.
@@ -291,7 +325,7 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
   // 6. Progressive Secret Escrow.
   router.post('/innovations/secret-escrows',async(req:AuthenticatedRequest,res)=>{try{const col=await collaboration(db,text(req.body?.collaborationId,3,120)||'');if(!col||!isCreator(req,col.creator_id))return jsonError(res,403,'إنشاء الإسكرو للمبدع المالك.','FORBIDDEN');const recipe=await db.prepare('SELECT id FROM recipe_versions WHERE id=? AND product_id=?').get<{id:string}>(text(req.body?.recipeVersionId,3,120)||'',col.product_id);if(!recipe)return jsonError(res,400,'نسخة الوصفة غير صالحة.','INVALID_RECIPE');const days=integer(req.body?.expiresInDays,1,365)??30,id=`esc_${randomUUID()}`,created=now(),expires=new Date(Date.now()+days*86400000).toISOString();await db.prepare("INSERT INTO progressive_secret_escrows(id,collaboration_id,recipe_version_id,status,current_stage,expires_at,policy_json,created_by_user_id,created_at,updated_at) VALUES(?,?,?,'ACTIVE',0,?,?,?, ?,?)").run(id,col.id,recipe.id,expires,JSON.stringify(req.body?.policy||{}),req.auth!.user.id,created,created);res.status(201).json({id,status:'ACTIVE',currentStage:0,expiresAt:expires});}catch(e){handleDomainError(res,e)}});
   router.post('/innovations/secret-escrows/:id/advance',async(req:AuthenticatedRequest,res)=>{try{const esc=await db.prepare('SELECT e.*,c.creator_id,c.organization_id FROM progressive_secret_escrows e JOIN collaborations c ON c.id=e.collaboration_id WHERE e.id=?').get<Record<string,unknown>>(req.params.id);if(!esc||!isCreator(req,String(esc.creator_id)))return jsonError(res,403,'الإسكرو غير متاح.','FORBIDDEN');if(esc.status!=='ACTIVE'||new Date(String(esc.expires_at)).getTime()<=Date.now())return jsonError(res,409,'الإسكرو منتهي أو غير نشط.','ESCROW_INACTIVE');const stage=Number(esc.current_stage)+1;if(stage>3)return jsonError(res,409,'اكتمل الكشف التدريجي.','ESCROW_COMPLETE');const fragment=req.body?.disclosure;if(fragment===undefined)return jsonError(res,400,'محتوى مرحلة الكشف مطلوب.','DISCLOSURE_REQUIRED');const disclosureId=`dis_${randomUUID()}`,receipt=await putEncryptedJson('escrow-disclosures',disclosureId,fragment),disclosed=now(),expires=String(esc.expires_at),conditionHash=sha256(canonical(req.body?.conditionEvidence||{}));await withTransaction(db,async tx=>{await tx.prepare('INSERT INTO progressive_secret_disclosures(id,escrow_id,stage_number,disclosure_object_key,condition_sha256,disclosed_to_organization_id,disclosed_by_user_id,disclosed_at,expires_at) VALUES(?,?,?,?,?,?,?,?,?)').run(disclosureId,req.params.id,stage,receipt.objectKey,conditionHash,String(esc.organization_id),req.auth!.user.id,disclosed,expires);await tx.prepare("UPDATE progressive_secret_escrows SET current_stage=?,status=?,updated_at=? WHERE id=?").run(stage,stage===3?'COMPLETED':'ACTIVE',disclosed,req.params.id);});res.json({id:req.params.id,currentStage:stage,status:stage===3?'COMPLETED':'ACTIVE',disclosureId,conditionSha256:conditionHash});}catch(e){handleDomainError(res,e)}});
-  router.get('/innovations/secret-escrows/:id/disclosures/:stage',async(req:AuthenticatedRequest,res)=>{try{await assertKillSwitchClear(db,'RECIPE_REVEALS');const esc=await db.prepare('SELECT e.*,c.organization_id FROM progressive_secret_escrows e JOIN collaborations c ON c.id=e.collaboration_id WHERE e.id=?').get<Record<string,unknown>>(req.params.id);if(!esc||!isHost(req,String(esc.organization_id))||new Date(String(esc.expires_at)).getTime()<=Date.now()||esc.status==='REVOKED')return jsonError(res,403,'لا يوجد كشف صالح لهذا الطرف.','DISCLOSURE_DENIED');const stage=integer(req.params.stage,1,3)!;if(stage>Number(esc.current_stage))return jsonError(res,403,'هذه المرحلة لم تُكشف بعد.','STAGE_LOCKED');const disclosure=await db.prepare('SELECT * FROM progressive_secret_disclosures WHERE escrow_id=? AND stage_number=?').get<Record<string,unknown>>(req.params.id,stage);if(!disclosure)return jsonError(res,404,'مرحلة الكشف غير موجودة.','NOT_FOUND');const value=await getEncryptedJson(String(disclosure.disclosure_object_key),'escrow-disclosures',String(disclosure.id));res.json({stage,expiresAt:disclosure.expires_at,disclosure:value});}catch(e){handleDomainError(res,e)}});
+  router.get('/innovations/secret-escrows/:id/disclosures/:stage',async(req:AuthenticatedRequest,res)=>{try{await assertKillSwitchClear(db,'RECIPE_REVEALS');const esc=await db.prepare('SELECT e.*,c.organization_id FROM progressive_secret_escrows e JOIN collaborations c ON c.id=e.collaboration_id WHERE e.id=?').get<Record<string,unknown>>(req.params.id);if(!esc||!canReadRecipeDisclosure(req.auth!.user,String(esc.organization_id))||new Date(String(esc.expires_at)).getTime()<=Date.now()||esc.status==='REVOKED')return jsonError(res,403,'لا يوجد كشف صالح لهذا الطرف.','DISCLOSURE_DENIED');const stage=integer(req.params.stage,1,3)!;if(stage>Number(esc.current_stage))return jsonError(res,403,'هذه المرحلة لم تُكشف بعد.','STAGE_LOCKED');const disclosure=await db.prepare('SELECT * FROM progressive_secret_disclosures WHERE escrow_id=? AND stage_number=?').get<Record<string,unknown>>(req.params.id,stage);if(!disclosure)return jsonError(res,404,'مرحلة الكشف غير موجودة.','NOT_FOUND');const value=await getEncryptedJson(String(disclosure.disclosure_object_key),'escrow-disclosures',String(disclosure.id));res.json({stage,expiresAt:disclosure.expires_at,disclosure:value});}catch(e){handleDomainError(res,e)}});
   router.post('/innovations/secret-escrows/:id/revoke',async(req:AuthenticatedRequest,res)=>{try{const esc=await db.prepare('SELECT e.*,c.creator_id FROM progressive_secret_escrows e JOIN collaborations c ON c.id=e.collaboration_id WHERE e.id=?').get<Record<string,unknown>>(req.params.id);if(!esc||!isCreator(req,String(esc.creator_id)))return jsonError(res,403,'الإلغاء للمبدع المالك.','FORBIDDEN');await db.prepare("UPDATE progressive_secret_escrows SET status='REVOKED',revoked_at=?,updated_at=? WHERE id=?").run(now(),now(),req.params.id);res.json({id:req.params.id,status:'REVOKED'});}catch(e){handleDomainError(res,e)}});
 
   // 7. Value Attribution Ledger: invariant requires exact sum to paid order total.
