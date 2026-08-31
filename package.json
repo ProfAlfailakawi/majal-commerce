@@ -8,7 +8,7 @@
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",
     "build:server": "esbuild server.ts --bundle --platform=node --format=cjs --packages=external --outfile=server-dist/server.cjs",
-    "start": "NODE_ENV=production node server-dist/server.cjs",
+    "start": "node server-dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist server-dist server.js",
     "lint": "tsc --noEmit",
@@ -19,7 +19,7 @@
     "deploy:cloudrun": "bash scripts/deploy-cloud-run.sh"
   },
   "engines": {
-    "node": ">=22.13.0"
+    "node": "22.x"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
