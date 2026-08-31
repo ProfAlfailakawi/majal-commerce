@@ -67,15 +67,16 @@ test('settlement paid on a missing batch fails closed', async () => {
  * admins) may read them — mirroring canViewFullRecipe / VIEW_RECIPE_L3. Generic host staff
  * (owner/operations/finance) must be denied; the intended HOST_CHEF must be allowed.
  */
-test('recipe disclosure is limited to the org HOST_CHEF and admins', () => {
+test('recipe disclosure is limited to the org HOST_CHEF, mirroring VIEW_RECIPE_L3', () => {
   const org = 'org_1';
   assert.equal(canReadRecipeDisclosure({ role: 'HOST_CHEF', hostBusinessId: org }, org), true);
-  assert.equal(canReadRecipeDisclosure({ role: 'ADMIN' }, org), true);
-  assert.equal(canReadRecipeDisclosure({ role: 'SUPER_ADMIN' }, org), true);
   // The roles the old generic isHost() wrongly admitted:
   assert.equal(canReadRecipeDisclosure({ role: 'HOST_FINANCE', hostBusinessId: org }, org), false);
   assert.equal(canReadRecipeDisclosure({ role: 'HOST_OPERATIONS', hostBusinessId: org }, org), false);
   assert.equal(canReadRecipeDisclosure({ role: 'HOST_OWNER', hostBusinessId: org }, org), false);
+  // Platform admins are denied full-secret visibility too (mirrors canViewFullRecipe(admin)===false):
+  assert.equal(canReadRecipeDisclosure({ role: 'ADMIN', hostBusinessId: null }, org), false);
+  assert.equal(canReadRecipeDisclosure({ role: 'SUPER_ADMIN', hostBusinessId: null }, org), false);
   // A HOST_CHEF of a different tenant must never read another org's disclosure:
   assert.equal(canReadRecipeDisclosure({ role: 'HOST_CHEF', hostBusinessId: 'org_2' }, org), false);
   assert.equal(canReadRecipeDisclosure({ role: 'HOST_CHEF', hostBusinessId: null }, org), false);

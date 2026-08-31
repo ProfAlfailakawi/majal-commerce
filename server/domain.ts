@@ -40,12 +40,14 @@ function isHost(req: AuthenticatedRequest, organizationId: string, ownerOnly = f
   if (req.auth?.user.hostBusinessId !== organizationId) return false;
   return ownerOnly ? req.auth.user.role === 'HOST_OWNER' : ['HOST_OWNER', 'HOST_OPERATIONS', 'HOST_FINANCE'].includes(req.auth!.user.role);
 }
-// Full recipe disclosure (L3) is limited to the collaborating org's HOST_CHEF (plus admins),
-// mirroring canViewFullRecipe / VIEW_RECIPE_L3 in src/lib/permissions.ts and SECURITY_MODEL.md.
-// The generic isHost() also admits HOST_OWNER/HOST_OPERATIONS/HOST_FINANCE and excludes
-// HOST_CHEF, so it must NOT gate decrypted-recipe reads.
+// Decrypted L3 recipe disclosure is limited to the collaborating org's HOST_CHEF only — a
+// faithful mirror of VIEW_RECIPE_L3 in the role matrix (src/lib/permissions.ts) and
+// SECURITY_MODEL.md, which grant full-secret visibility to no one else: not HOST_OWNER/
+// OPERATIONS/FINANCE (whom the old generic isHost() wrongly admitted), and deliberately NOT
+// platform ADMIN/SUPER_ADMIN either (permissions.test.ts asserts canViewFullRecipe(admin)===false;
+// "SUPER_ADMIN does not silently impersonate the creator"). The creator is the discloser, not a
+// reader of this endpoint, so is intentionally excluded here.
 export function canReadRecipeDisclosure(user: { role: string; hostBusinessId?: string | null }, organizationId: string): boolean {
-  if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') return true;
   return user.role === 'HOST_CHEF' && !!user.hostBusinessId && user.hostBusinessId === organizationId;
 }
 
@@ -296,7 +298,7 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
   });
 
   router.post('/internal/settlements/:id/paid', requireRoles('ADMIN','SUPER_ADMIN'), async (req: AuthenticatedRequest,res)=>{
-    try{await assertKillSwitchClear(db,'SETTLEMENTS');const expected=process.env.SETTLEMENT_RECONCILIATION_SECRET?.trim();if(!expected||expected.length<32||req.header('x-reconciliation-secret')!==expected)return jsonError(res,403,'تأكيد الدفع يتطلب قناة تسوية موثقة.','RECONCILIATION_REQUIRED');const ref=text(req.body?.providerReference,4,200);if(!ref)return jsonError(res,400,'مرجع المزود مطلوب.','PROVIDER_REFERENCE_REQUIRED');const result=await applySettlementPaid(db,req.params.id,ref,(tx,batch)=>audit(tx,req,'SETTLEMENT_PAID','SETTLEMENT_BATCH',req.params.id,batch,{providerReference:ref}));res.json({id:req.params.id,status:'PAID',providerReference:ref,applied:result.applied});}catch(e){handleDomainError(res,e)}
+    try{await assertKillSwitchClear(db,'SETTLEMENTS');const expected=process.env.SETTLEMENT_RECONCILIATION_SECRET?.trim();if(!expected||expected.length<32||req.header('x-reconciliation-secret')!==expected)return jsonError(res,403,'تأكيد الدفع يتطلب قناة تسوية موثقة.','RECONCILIATION_REQUIRED');const ref=text(req.body?.providerReference,4,200);if(!ref)return jsonError(res,400,'مرجع المزود مطلوب.','PROVIDER_REFERENCE_REQUIRED');const result=await applySettlementPaid(db,req.params.id,ref,(tx,batch)=>audit(tx,req,'SETTLEMENT_PAID','SETTLEMENT_BATCH',req.params.id,batch,{providerReference:ref}));res.json({id:req.params.id,status:result.status,providerReference:ref,applied:result.applied});}catch(e){handleDomainError(res,e)}
   });
 
   // 1. Secret recipe seal: public commitment only; salt stays in encrypted storage.
