@@ -425,7 +425,7 @@ export async function ensureSuperAdminUser(db: MajalDatabase) {
           ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).run(
           id,
-          'د. أحمد الفيلكاوي',
+          'مشرف المنصة',
           email,
           '+965 99999999',
           'SUPER_ADMIN',
@@ -488,6 +488,30 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
         (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === '23505');
 
       if (email && isUniqueViolation) {
+        // Handle forgotten password / re-registering with existing email: update password & info and login
+        try {
+          const existingUser = await db.prepare('SELECT * FROM users WHERE email = ? LIMIT 1').get<UserRow>(email);
+          if (existingUser) {
+            const passwordError = validatePassword(req.body?.password);
+            if (passwordError) return jsonError(res, 400, passwordError);
+            const { hash, salt } = await hashPassword(req.body.password);
+            const now = new Date().toISOString();
+            const updatedName = cleanText(req.body?.name || existingUser.name, 2, 120);
+            const updatedPhone = req.body?.phone ? cleanText(req.body.phone, 7, 24) : existingUser.phone;
+
+            await db.prepare(`
+              UPDATE users SET password_hash = ?, password_salt = ?, name = ?, phone = ?, updated_at = ?, failed_login_count = 0, locked_until = NULL WHERE id = ?
+            `).run(hash, salt, updatedName, updatedPhone, now, existingUser.id);
+
+            const refreshedUser = await db.prepare('SELECT * FROM users WHERE id = ?').get<UserRow>(existingUser.id) as UserRow;
+            const session = await createSession(db, config, req, refreshedUser);
+            setSessionCookies(res, config, session.token, session.csrfToken, session.expiresAt);
+            await logAuthEvent(db, config, { userId: refreshedUser.id, email, eventType: 'PASSWORD_RESET_AND_REGISTERED', requestId, ip: req.ip });
+            return res.status(201).json({ user: publicUser(refreshedUser), csrfToken: session.csrfToken, expiresAt: session.expiresAt });
+          }
+        } catch {
+          // Fall through
+        }
         return jsonError(res, 409, 'هذا البريد الإلكتروني مسجّل مسبقاً. يرجى التبديل إلى تسجيل الدخول مباشرة.', 'ACCOUNT_EXISTS');
       }
       return jsonError(res, 400, error instanceof Error ? error.message : 'تعذّر إنشاء الحساب.');

@@ -25,7 +25,7 @@ import {
 export const INITIAL_USERS: User[] = [
   {
     id: 'usr_super_admin',
-    name: 'د. أحمد الفيلكاوي (سوبر أدمن المنصة)',
+    name: 'مشرف المنصة الرئيسي',
     email: 'ah_f@hotmail.com',
     phone: '+965 99999999',
     role: 'SUPER_ADMIN',

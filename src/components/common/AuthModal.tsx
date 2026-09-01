@@ -11,7 +11,7 @@ interface AuthModalProps {
 }
 
 const DEMO_PRESETS = [
-  { role: 'SUPER_ADMIN', label: '👑 د. أحمد (سوبر أدمن)', email: 'ah_f@hotmail.com', pass: 'Admin123456!' },
+  { role: 'SUPER_ADMIN', label: '👑 سوبر أدمن المنصة', email: 'ah_f@hotmail.com', pass: 'Admin123456!' },
   { role: 'CREATOR', label: '✨ حساب مبدع', email: 'creator@example.test', pass: 'Creator123456!' },
   { role: 'HOST_OWNER', label: '🏢 منشأة حاضنة', email: 'host@example.test', pass: 'Host123456!' },
   { role: 'CONSUMER', label: '🛍️ حساب عميل', email: 'consumer@example.test', pass: 'Consumer123456!' }
@@ -148,7 +148,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
           {mode === 'REGISTER' && !needsMfa && (
             <label className="block space-y-1.5">
               <span className="text-xs font-bold text-slate-200">الاسم الكامل</span>
-              <input value={name} onChange={event => setName(event.target.value)} autoComplete="name" required minLength={2} maxLength={120} placeholder="مثال: د. أحمد الفيلكاوي" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-[#e8c880]/50" />
+              <input value={name} onChange={event => setName(event.target.value)} autoComplete="name" required minLength={2} maxLength={120} placeholder="مثال: محمد عبدالله" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-[#e8c880]/50" />
             </label>
           )}
 
