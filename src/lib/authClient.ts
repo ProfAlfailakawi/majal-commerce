@@ -67,7 +67,7 @@ export async function login(email: string, password: string, mfaCode?: string) {
   }));
 }
 
-export async function register(input: { name: string; email: string; phone: string; password: string }) {
+export async function register(input: { name: string; email: string; phone: string; password: string; role?: string }) {
   return rememberSession(await request<AuthSession>('/api/v1/auth/register', {
     method: 'POST',
     body: JSON.stringify(input)

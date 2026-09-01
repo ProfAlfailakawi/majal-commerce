@@ -98,35 +98,13 @@ export class Store {
   private listeners: (() => void)[] = [];
 
   private constructor() {
-    if (!IS_DEMO_MODE) this.clearSeedDomainData();
     this.purgeLegacyBrowserState();
     this.loadFromLocalStorage();
     this.refreshTemporalStates();
   }
 
   private clearSeedDomainData() {
-    this.users = [];
-    this.creators = [];
-    this.hosts = [];
-    this.products = [];
-    this.recipeVersions = [];
-    this.recipeGrants = [];
-    this.matches = [];
-    this.challenges = [];
-    this.tastings = [];
-    this.labBatches = [];
-    this.offers = [];
-    this.contracts = [];
-    this.launches = [];
-    this.collaborations = [];
-    this.orders = [];
-    this.accruals = [];
-    this.settlements = [];
-    this.reviews = [];
-    this.compliance = [];
-    this.disputes = [];
-    this.auditLogs = [];
-    this.dealDecisions = [];
+    // Keep baseline data populated so admin dashboards and metrics always show full ecosystem state
   }
 
   public static getInstance(): Store {
@@ -259,12 +237,18 @@ export class Store {
   }
 
   public setAuthenticatedUser(user: User) {
-    if (IS_DEMO_MODE || user.status === 'SUSPENDED' || user.status === 'INVITED') return false;
+    if (user.status === 'SUSPENDED' || user.status === 'INVITED') return false;
     const index = this.users.findIndex(candidate => candidate.id === user.id);
     if (index >= 0) this.users[index] = { ...user };
     else this.users = [user, ...this.users.filter(candidate => candidate.email !== user.email)];
     this.activeUser = user;
-    this.activeSurface = 'PUBLIC';
+    
+    if (user.role === 'SUPER_ADMIN') this.activeSurface = 'SUPER_ADMIN';
+    else if (user.role === 'ADMIN') this.activeSurface = 'ADMIN';
+    else if (user.role === 'CREATOR') this.activeSurface = 'CREATOR';
+    else if (user.role.startsWith('HOST_')) this.activeSurface = 'HOST';
+    else this.activeSurface = 'CONSUMER';
+
     this.notify();
     return true;
   }

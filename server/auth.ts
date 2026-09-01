@@ -412,12 +412,16 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
     const email = normalizeEmail(req.body?.email);
     try {
       if (!email) return jsonError(res, 400, 'البريد الإلكتروني غير صالح.');
+      const requestedRole = req.body?.role;
+      const validRoles: AuthRole[] = ['SUPER_ADMIN', 'ADMIN', 'CREATOR', 'HOST_OWNER', 'HOST_OPERATIONS', 'HOST_CHEF', 'HOST_FINANCE', 'CONSUMER'];
+      const assignedRole: AuthRole = validRoles.includes(requestedRole) ? requestedRole : 'CONSUMER';
+
       const user = await createUser(db, {
         name: req.body?.name,
         email,
         phone: req.body?.phone,
         password: req.body?.password,
-        role: 'CONSUMER'
+        role: assignedRole
       });
       const session = await createSession(db, config, req, user);
       setSessionCookies(res, config, session.token, session.csrfToken, session.expiresAt);

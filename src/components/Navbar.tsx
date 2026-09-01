@@ -217,11 +217,23 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>دخول</span>
             </button>}
 
-            {!IS_DEMO_MODE && authStatus === 'AUTHENTICATED' && <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
-              <span className="w-7 h-7 rounded-full bg-[#c7a55b]/15 text-[#e8c880] grid place-items-center font-black text-xs" aria-hidden="true">{activeUser.name.slice(0, 1)}</span>
-              <span className="max-w-32 truncate text-[11px] font-bold text-slate-200">{activeUser.name}</span>
-              <button onClick={onOpenSecurity} className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-300 hover:bg-emerald-500/10" aria-label="أمان الحساب والمصادقة الثنائية"><Shield className="w-4 h-4" /></button>
-              <button onClick={onLogout} className="p-1.5 rounded-lg text-slate-400 hover:text-rose-300 hover:bg-rose-500/10" aria-label="تسجيل الخروج"><LogOut className="w-4 h-4" /></button>
+            {!IS_DEMO_MODE && authStatus === 'AUTHENTICATED' && <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
+              <span className="w-7 h-7 rounded-full bg-[#c7a55b]/20 text-[#e8c880] grid place-items-center font-black text-xs" aria-hidden="true">{activeUser.name.slice(0, 1)}</span>
+              <div className="flex flex-col text-right">
+                <span className="max-w-28 truncate text-[11px] font-bold text-slate-100">{activeUser.name}</span>
+                <span className="text-[9px] text-[#e8c880] font-semibold">{roleLabels[activeUser.role]}</span>
+              </div>
+              {['SUPER_ADMIN', 'ADMIN'].includes(activeUser.role) && (
+                <button
+                  onClick={() => onSurfaceChange(activeUser.role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'ADMIN')}
+                  className="px-2 py-1 rounded-lg bg-[#c7a55b]/20 hover:bg-[#c7a55b]/30 text-[#e8c880] text-[10px] font-bold border border-[#e8c880]/30 transition cursor-pointer"
+                  title="الانتقال المباشر للوحة التحكم"
+                >
+                  لوحة الإدارة
+                </button>
+              )}
+              <button onClick={onOpenSecurity} className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-300 hover:bg-emerald-500/10 cursor-pointer" aria-label="أمان الحساب والمصادقة الثنائية"><Shield className="w-4 h-4" /></button>
+              <button onClick={onLogout} className="p-1.5 rounded-lg text-slate-400 hover:text-rose-300 hover:bg-rose-500/10 cursor-pointer" aria-label="تسجيل الخروج"><LogOut className="w-4 h-4" /></button>
             </div>}
 
             {INTEGRATION_SIMULATORS_ENABLED && <button

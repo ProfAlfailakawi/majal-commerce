@@ -96,11 +96,11 @@ export default function App() {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:right-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-[#c7a55b] focus:text-stone-950 focus:font-black">
         انتقل إلى المحتوى الرئيسي
       </a>
-      <div className="fixed inset-0 pointer-events-none opacity-60">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:48px_48px]" />
-        <div className="absolute -top-40 right-0 w-[34rem] h-[34rem] bg-[#c7a55b]/12 rounded-full blur-[140px]" />
-        <div className="absolute top-1/3 -left-20 w-[28rem] h-[28rem] bg-[#4b6aa3]/12 rounded-full blur-[140px]" />
-        <div className="absolute -bottom-24 right-1/3 w-[30rem] h-[30rem] bg-[#7a4d7f]/10 rounded-full blur-[140px]" />
+      <div className="fixed inset-0 pointer-events-none opacity-40 z-0 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:32px_32px]" />
+        <div className="absolute -top-24 right-0 w-96 h-96 bg-[#c7a55b]/10 rounded-full blur-3xl transform-gpu" />
+        <div className="absolute top-1/3 -left-16 w-80 h-80 bg-[#4b6aa3]/10 rounded-full blur-3xl transform-gpu" />
+        <div className="absolute -bottom-20 right-1/4 w-80 h-80 bg-[#7a4d7f]/08 rounded-full blur-3xl transform-gpu" />
       </div>
 
       <div className="relative z-10 flex-1 flex flex-col">
