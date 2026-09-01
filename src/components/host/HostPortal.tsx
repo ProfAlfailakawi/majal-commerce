@@ -74,7 +74,37 @@ export const HostPortal: React.FC = () => {
     { id: 'TEAM', label: 'الفريق والصلاحيات', icon: <Settings2 className="w-4 h-4" />, show: store.activeUser.role === 'HOST_OWNER' }
   ].filter(t => t.show) as { id: typeof activeTab; label: string; icon: React.ReactNode }[];
 
-  if (!host) return <div className="max-w-3xl mx-auto p-8 text-center text-stone-400">لا توجد منشأة مرتبطة بهذا الحساب. لا يتم استخدام منشأة أخرى كبديل.</div>;
+  if (!host) {
+    if (store.activeUser.role === 'HOST_OWNER') {
+      return (
+        <div className="max-w-3xl mx-auto p-8 text-center text-stone-400 space-y-4">
+          <Building2 className="w-12 h-12 mx-auto text-stone-500 opacity-50" />
+          <h2 className="text-xl font-bold text-stone-200">لا توجد منشأة مرتبطة بحسابك</h2>
+          <p>للبدء في استخدام منصة المنشآت، يرجى إنشاء ملف منشأتك.</p>
+          <button 
+            onClick={() => {
+              const newHost = {
+                id: 'hst_' + Math.random().toString(36).substr(2, 9),
+                commercialName: 'منشأة جديدة (تجريبية)',
+                licenseNumber: 'LIC-' + Math.floor(Math.random() * 10000),
+                paciNumber: 'PACI-' + Math.floor(Math.random() * 10000),
+                logoUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=200&h=200',
+                status: 'ACTIVE' as const,
+                createdAt: new Date().toISOString()
+              };
+              store.hosts = [...store.hosts, newHost];
+              store.activeUser = { ...store.activeUser, hostBusinessId: newHost.id };
+              setTick(t => t + 1);
+            }}
+            className="mt-4 px-6 py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-bold inline-flex items-center gap-2"
+          >
+            <Plus className="w-5 h-5" /> إنشاء منشأة افتراضية للبدء
+          </button>
+        </div>
+      );
+    }
+    return <div className="max-w-3xl mx-auto p-8 text-center text-stone-400">لا توجد منشأة مرتبطة بهذا الحساب. الرجاء التواصل مع المالك.</div>;
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-stone-100">
