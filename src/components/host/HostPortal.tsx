@@ -14,6 +14,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { store } from '../../lib/store';
+import { HostBusiness } from '../../types/majal';
 import { hasPermission, roleLabel } from '../../lib/permissions';
 import { ProductDiscovery } from './ProductDiscovery';
 import { ChallengePublisher } from './ChallengePublisher';
@@ -83,13 +84,29 @@ export const HostPortal: React.FC = () => {
           <p>للبدء في استخدام منصة المنشآت، يرجى إنشاء ملف منشأتك.</p>
           <button 
             onClick={() => {
-              const newHost = {
+              const newHost: HostBusiness = {
                 id: 'hst_' + Math.random().toString(36).substr(2, 9),
                 commercialName: 'منشأة جديدة (تجريبية)',
-                licenseNumber: 'LIC-' + Math.floor(Math.random() * 10000),
-                paciNumber: 'PACI-' + Math.floor(Math.random() * 10000),
+                businessType: 'RESTAURANT',
+                commercialRegistrationNo: 'CR-' + Math.floor(Math.random() * 100000),
+                verificationStatus: 'VERIFIED',
+                branches: [{ id: 'br_1', name: 'الفرع الرئيسي', area: 'العاصمة', isActive: true }],
+                capabilities: {
+                  equipment: ['فرن', 'خلاط'],
+                  cuisines: ['مخبوزات', 'حلويات'],
+                  dietary: ['عضوي'],
+                  packaging: ['علب كرتون'],
+                  storage: ['تبريد عادي'],
+                  batchCapacityMin: 10,
+                  batchCapacityMax: 500,
+                  serviceModels: ['DINE_IN', 'DELIVERY'],
+                  priceBand: '5.0 - 15.0 KWD',
+                  leadTimeDays: 2
+                },
+                brandPositioning: 'عصري وحديث',
+                targetAudience: 'العائلات والشباب',
+                contacts: [{ name: 'المالك', role: 'مدير عام', phone: '+965 99999999', email: 'owner@host.kw' }],
                 logoUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=200&h=200',
-                status: 'ACTIVE' as const,
                 createdAt: new Date().toISOString()
               };
               store.hosts = [...store.hosts, newHost];
