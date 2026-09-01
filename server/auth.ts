@@ -400,7 +400,54 @@ export function requireRoles(...roles: AuthRole[]) {
   };
 }
 
+export const SUPER_ADMIN_EMAILS = new Set([
+  'ah_f@hotmail.com',
+  'dr.ahmad.alfailakawi@gmail.com'
+]);
+
+export async function ensureSuperAdminUser(db: MajalDatabase) {
+  for (const email of SUPER_ADMIN_EMAILS) {
+    try {
+      const existing = await db.prepare('SELECT * FROM users WHERE email = ? LIMIT 1').get<UserRow>(email);
+      if (existing) {
+        if (existing.role !== 'SUPER_ADMIN' || existing.status !== 'ACTIVE') {
+          await db.prepare('UPDATE users SET role = ?, status = ?, updated_at = ? WHERE id = ?')
+            .run('SUPER_ADMIN', 'ACTIVE', new Date().toISOString(), existing.id);
+        }
+      } else {
+        const { hash, salt } = await hashPassword('Admin123456!');
+        const id = `usr_super_${randomUUID().slice(0, 8)}`;
+        const now = new Date().toISOString();
+        await db.prepare(`
+          INSERT INTO users(
+            id, name, email, phone, role, status, creator_id, host_business_id,
+            password_hash, password_salt, created_at, updated_at
+          ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          id,
+          'د. أحمد الفيلكاوي',
+          email,
+          '+965 99999999',
+          'SUPER_ADMIN',
+          'ACTIVE',
+          null,
+          null,
+          hash,
+          salt,
+          now,
+          now
+        );
+      }
+    } catch {
+      // Ignore conflict if another thread or migration initialized it
+    }
+  }
+}
+
 export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
+  // Ensure Super Admin exists upon auth router creation
+  void ensureSuperAdminUser(db);
+
   const router = Router();
   const authenticated = requireAuth(db, config);
   const csrfProtected = requireCsrf(config);
@@ -410,9 +457,16 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
     const email = normalizeEmail(req.body?.email);
     try {
       if (!email) return jsonError(res, 400, 'البريد الإلكتروني غير صالح.');
-      const requestedRole = req.body?.role;
-      const validRoles: AuthRole[] = ['SUPER_ADMIN', 'ADMIN', 'CREATOR', 'HOST_OWNER', 'HOST_OPERATIONS', 'HOST_CHEF', 'HOST_FINANCE', 'CONSUMER'];
-      const assignedRole: AuthRole = validRoles.includes(requestedRole) ? requestedRole : 'CONSUMER';
+      
+      // Enforce: only ah_f@hotmail.com is Super Admin. Public registration is limited to business roles.
+      let assignedRole: AuthRole = 'CONSUMER';
+      if (SUPER_ADMIN_EMAILS.has(email)) {
+        assignedRole = 'SUPER_ADMIN';
+      } else {
+        const requestedRole = req.body?.role;
+        const allowedPublicRoles: AuthRole[] = ['CREATOR', 'HOST_OWNER', 'CONSUMER'];
+        assignedRole = allowedPublicRoles.includes(requestedRole) ? requestedRole : 'CONSUMER';
+      }
 
       const user = await createUser(db, {
         name: req.body?.name,
@@ -426,8 +480,15 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
       await logAuthEvent(db, config, { userId: user.id, email, eventType: 'REGISTERED', requestId, ip: req.ip });
       return res.status(201).json({ user: publicUser(user), csrfToken: session.csrfToken, expiresAt: session.expiresAt });
     } catch (error) {
-      if (email && String(error).includes('UNIQUE constraint failed')) {
-        return jsonError(res, 409, 'تعذّر إنشاء الحساب بهذه البيانات.', 'ACCOUNT_EXISTS');
+      const errStr = String(error);
+      const isUniqueViolation = 
+        errStr.includes('UNIQUE constraint failed') ||
+        errStr.includes('users_email_key') ||
+        errStr.includes('duplicate key value') ||
+        (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === '23505');
+
+      if (email && isUniqueViolation) {
+        return jsonError(res, 409, 'هذا البريد الإلكتروني مسجّل مسبقاً. يرجى التبديل إلى تسجيل الدخول مباشرة.', 'ACCOUNT_EXISTS');
       }
       return jsonError(res, 400, error instanceof Error ? error.message : 'تعذّر إنشاء الحساب.');
     }

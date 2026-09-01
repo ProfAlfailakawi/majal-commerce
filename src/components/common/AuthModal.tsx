@@ -11,8 +11,7 @@ interface AuthModalProps {
 }
 
 const DEMO_PRESETS = [
-  { role: 'SUPER_ADMIN', label: '👑 سوبر أدمن المنصة', email: 'super-admin@example.test', pass: 'Admin123456!' },
-  { role: 'ADMIN', label: '🛡️ أدمن تشغيلي', email: 'admin@example.test', pass: 'Admin123456!' },
+  { role: 'SUPER_ADMIN', label: '👑 د. أحمد (سوبر أدمن)', email: 'ah_f@hotmail.com', pass: 'Admin123456!' },
   { role: 'CREATOR', label: '✨ حساب مبدع', email: 'creator@example.test', pass: 'Creator123456!' },
   { role: 'HOST_OWNER', label: '🏢 منشأة حاضنة', email: 'host@example.test', pass: 'Host123456!' },
   { role: 'CONSUMER', label: '🛍️ حساب عميل', email: 'consumer@example.test', pass: 'Consumer123456!' }
@@ -21,7 +20,7 @@ const DEMO_PRESETS = [
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthenticated }) => {
   const dialogRef = useDialogBehavior<HTMLDivElement>(isOpen, onClose);
   const [mode, setMode] = useState<'LOGIN' | 'REGISTER'>('LOGIN');
-  const [role, setRole] = useState<UserRole>('SUPER_ADMIN');
+  const [role, setRole] = useState<UserRole>('CREATOR');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -121,20 +120,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
 
           {mode === 'REGISTER' && !needsMfa && (
             <div className="space-y-2">
-              <span className="text-xs font-bold text-slate-200 block">اختر نوع الحساب / الصلاحية:</span>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <span className="text-xs font-bold text-slate-200 block">اختر نوع الحساب في المنصة:</span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {[
-                  { id: 'SUPER_ADMIN', label: '👑 سوبر أدمن', desc: 'كل الإحصائيات والتحكم' },
-                  { id: 'ADMIN', label: '🛡️ أدمن تشغيلي', desc: 'الامتثال والرقابة' },
-                  { id: 'CREATOR', label: '✨ مبدع', desc: 'ابتكار الوصفات' },
-                  { id: 'HOST_OWNER', label: '🏢 منشأة', desc: 'تشغيل المطابخ' },
-                  { id: 'CONSUMER', label: '🛍️ عميل', desc: 'تصفح وشراء' }
+                  { id: 'CREATOR', label: '✨ مبدع وصفات', desc: 'ابتكار وحفظ أسرار الأطباق' },
+                  { id: 'HOST_OWNER', label: '🏢 منشأة حاضنة', desc: 'تشغيل وإنتاج المطابخ' },
+                  { id: 'CONSUMER', label: '🛍️ متذوق / عميل', desc: 'تصفح وتجربة وشراء الأطباق' }
                 ].map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => setRole(item.id as UserRole)}
-                    className={`p-2.5 rounded-xl border text-right transition cursor-pointer ${
+                    className={`p-3 rounded-xl border text-right transition cursor-pointer ${
                       role === item.id
                         ? 'bg-[#c7a55b]/15 border-[#e8c880] text-slate-100 shadow-sm'
                         : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'

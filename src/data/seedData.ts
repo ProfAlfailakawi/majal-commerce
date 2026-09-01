@@ -24,30 +24,21 @@ import {
 
 export const INITIAL_USERS: User[] = [
   {
+    id: 'usr_super_admin',
+    name: 'د. أحمد الفيلكاوي (سوبر أدمن المنصة)',
+    email: 'ah_f@hotmail.com',
+    phone: '+965 99999999',
+    role: 'SUPER_ADMIN',
+    status: 'ACTIVE',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200'
+  },
+  {
     id: 'usr_consumer_demo',
     name: 'زائر مجال',
     email: 'consumer@example.test',
     phone: '+965 50000000',
     role: 'CONSUMER',
     status: 'ACTIVE'
-  },
-  {
-    id: 'usr_super_admin',
-    name: 'مشرف المنصة التجريبي',
-    email: 'super-admin@example.test',
-    phone: '+965 50000001',
-    role: 'SUPER_ADMIN',
-    status: 'ACTIVE',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200'
-  },
-  {
-    id: 'usr_admin',
-    name: 'فريق مجال — الإدارة والامتثال',
-    email: 'admin@example.test',
-    phone: '+965 50000002',
-    role: 'ADMIN',
-    status: 'ACTIVE',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200'
   },
   {
     id: 'usr_creator_main',
