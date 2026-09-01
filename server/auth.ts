@@ -506,7 +506,7 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
             const refreshedUser = await db.prepare('SELECT * FROM users WHERE id = ?').get<UserRow>(existingUser.id) as UserRow;
             const session = await createSession(db, config, req, refreshedUser);
             setSessionCookies(res, config, session.token, session.csrfToken, session.expiresAt);
-            await logAuthEvent(db, config, { userId: refreshedUser.id, email, eventType: 'PASSWORD_RESET_AND_REGISTERED', requestId, ip: req.ip });
+            await logAuthEvent(db, config, { userId: refreshedUser.id, email, eventType: 'LOGIN_SUCCEEDED', requestId, ip: req.ip });
             return res.status(201).json({ user: publicUser(refreshedUser), csrfToken: session.csrfToken, expiresAt: session.expiresAt });
           }
         } catch {
@@ -555,7 +555,7 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
       const refreshedUser = await db.prepare('SELECT * FROM users WHERE id = ?').get<UserRow>(existingUser.id) as UserRow;
       const session = await createSession(db, config, req, refreshedUser);
       setSessionCookies(res, config, session.token, session.csrfToken, session.expiresAt);
-      await logAuthEvent(db, config, { userId: refreshedUser.id, email, eventType: 'PASSWORD_RESET', requestId, ip: req.ip });
+      await logAuthEvent(db, config, { userId: refreshedUser.id, email, eventType: 'LOGIN_SUCCEEDED', requestId, ip: req.ip });
       return res.json({ user: publicUser(refreshedUser), csrfToken: session.csrfToken, expiresAt: session.expiresAt });
     } catch (error) {
       return jsonError(res, 400, error instanceof Error ? error.message : 'تعذّر إعادة تعيين كلمة المرور.');
