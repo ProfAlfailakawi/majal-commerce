@@ -30,7 +30,7 @@ test('password hashing and TOTP use one-way verification', async () => {
   assert.notEqual(result.hash, password);
   assert.equal(await verifyPassword(password, result.salt, result.hash), true);
   assert.equal(await verifyPassword('Wrong-Password-2026!', result.salt, result.hash), false);
-  assert.equal(validatePassword('short'), 'كلمة المرور يجب أن تكون بين 12 و128 محرفًا.');
+  assert.equal(validatePassword('short'), 'كلمة المرور يجب أن تكون بين 6 و128 محرفًا.');
 
   const secret = generateTotpSecret();
   const now = Date.now();

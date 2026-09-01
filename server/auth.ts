@@ -125,11 +125,9 @@ function scryptPassword(password: string, salt: string): Promise<string> {
 }
 
 export function validatePassword(password: unknown) {
-  if (typeof password !== 'string' || password.length < 12 || password.length > PASSWORD_MAX_LENGTH) {
-    return 'كلمة المرور يجب أن تكون بين 12 و128 محرفًا.';
+  if (typeof password !== 'string' || password.length < 6 || password.length > PASSWORD_MAX_LENGTH) {
+    return 'كلمة المرور يجب أن تكون بين 6 و128 محرفًا.';
   }
-  const classes = [/[a-z]/.test(password), /[A-Z]/.test(password), /\d/.test(password), /[^A-Za-z0-9]/.test(password)].filter(Boolean).length;
-  if (classes < 3) return 'استخدم ثلاثة أنواع على الأقل: أحرف صغيرة وكبيرة وأرقام ورموز.';
   return null;
 }
 

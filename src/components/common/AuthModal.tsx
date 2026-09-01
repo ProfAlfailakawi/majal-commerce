@@ -1,5 +1,5 @@
 import React, { FormEvent, useState } from 'react';
-import { Building2, Crown, KeyRound, LogIn, ShieldCheck, Sparkles, UserPlus, Users, X } from 'lucide-react';
+import { Building2, Crown, Eye, EyeOff, KeyRound, LogIn, ShieldCheck, Sparkles, UserPlus, Users, X } from 'lucide-react';
 import { AuthApiError, AuthSession, login, register } from '../../lib/authClient';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { UserRole } from '../../types/majal';
@@ -26,6 +26,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
   const [needsMfa, setNeedsMfa] = useState(false);
   const [error, setError] = useState('');
@@ -169,11 +170,37 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
           )}
 
           {!needsMfa ? (
-            <label className="block space-y-1.5">
-              <span className="text-xs font-bold text-slate-200">كلمة المرور</span>
-              <input type="password" value={password} onChange={event => setPassword(event.target.value)} autoComplete={mode === 'LOGIN' ? 'current-password' : 'new-password'} required minLength={8} maxLength={128} placeholder="••••••••••••" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-[#e8c880]/50" />
-              {mode === 'REGISTER' && <span className="block text-[10px] text-slate-500 leading-4">8 محارف على الأقل، تشمل أرقاماً ورموزاً وحروفاً.</span>}
-            </label>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-200">كلمة المرور</span>
+                {mode === 'REGISTER' && (
+                  <span className="text-[10px] text-slate-400">6 محارف على الأقل</span>
+                )}
+              </div>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={event => setPassword(event.target.value)}
+                  autoComplete={mode === 'LOGIN' ? 'current-password' : 'new-password'}
+                  required
+                  minLength={6}
+                  maxLength={128}
+                  placeholder="••••••••"
+                  className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 pl-11 text-sm text-slate-100 outline-none focus:border-[#e8c880]/50 text-left"
+                  dir="ltr"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-1 cursor-pointer"
+                  title={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
           ) : (
             <label className="block space-y-1.5">
               <span className="text-xs font-bold text-slate-200">رمز المصادقة (MFA)</span>
