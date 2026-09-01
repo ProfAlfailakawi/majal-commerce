@@ -67,6 +67,13 @@ export async function login(email: string, password: string, mfaCode?: string) {
   }));
 }
 
+export async function resetPassword(email: string, newPassword: string) {
+  return rememberSession(await request<AuthSession>('/api/v1/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ email, newPassword })
+  }));
+}
+
 export async function register(input: { name: string; email: string; phone: string; password: string; role?: string }) {
   return rememberSession(await request<AuthSession>('/api/v1/auth/register', {
     method: 'POST',

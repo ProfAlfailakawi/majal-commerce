@@ -1,6 +1,6 @@
 import React, { FormEvent, useState } from 'react';
-import { Building2, Crown, Eye, EyeOff, KeyRound, LogIn, ShieldCheck, Sparkles, UserPlus, Users, X } from 'lucide-react';
-import { AuthApiError, AuthSession, login, register } from '../../lib/authClient';
+import { Building2, Crown, Eye, EyeOff, KeyRound, LogIn, RefreshCcw, ShieldCheck, Sparkles, UserPlus, Users, X } from 'lucide-react';
+import { AuthApiError, AuthSession, login, register, resetPassword } from '../../lib/authClient';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { UserRole } from '../../types/majal';
 
@@ -19,7 +19,7 @@ const DEMO_PRESETS = [
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthenticated }) => {
   const dialogRef = useDialogBehavior<HTMLDivElement>(isOpen, onClose);
-  const [mode, setMode] = useState<'LOGIN' | 'REGISTER'>('LOGIN');
+  const [mode, setMode] = useState<'LOGIN' | 'REGISTER' | 'RESET'>('LOGIN');
   const [role, setRole] = useState<UserRole>('CREATOR');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -33,7 +33,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
 
   if (!isOpen) return null;
 
-  const resetMode = (nextMode: 'LOGIN' | 'REGISTER') => {
+  const resetMode = (nextMode: 'LOGIN' | 'REGISTER' | 'RESET') => {
     setMode(nextMode);
     setNeedsMfa(false);
     setMfaCode('');
@@ -51,9 +51,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
     setError('');
     setSubmitting(true);
     try {
-      const session = mode === 'LOGIN'
-        ? await login(email, password, needsMfa ? mfaCode : undefined)
-        : await register({ name, email, phone, password, role });
+      let session: AuthSession;
+      if (mode === 'LOGIN') {
+        session = await login(email, password, needsMfa ? mfaCode : undefined);
+      } else if (mode === 'RESET') {
+        session = await resetPassword(email, password);
+      } else {
+        session = await register({ name, email, phone, password, role });
+      }
       onAuthenticated(session);
       onClose();
     } catch (caught) {
@@ -80,11 +85,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
         <div className="p-5 border-b border-white/10 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <span className="w-10 h-10 rounded-2xl bg-[#c7a55b]/15 border border-[#e8c880]/20 grid place-items-center text-[#e8c880]">
-              {needsMfa ? <KeyRound className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
+              {needsMfa ? <KeyRound className="w-5 h-5" /> : mode === 'RESET' ? <RefreshCcw className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
             </span>
             <div>
               <h2 id="auth-dialog-title" className="font-black text-slate-100 text-base">
-                {needsMfa ? 'التحقق بخطوتين' : mode === 'LOGIN' ? 'دخول إلى منصة مجال' : 'إنشاء حساب جديد في مجال'}
+                {needsMfa ? 'التحقق بخطوتين' : mode === 'LOGIN' ? 'دخول إلى منصة مجال' : mode === 'RESET' ? 'إعادة تعيين كلمة المرور' : 'إنشاء حساب جديد في مجال'}
               </h2>
               <p className="text-[11px] text-slate-400 mt-0.5">جلسة خادمية مشفّرة — بيانات وتحليلات فورية</p>
             </div>
@@ -93,8 +98,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
         </div>
 
         {!needsMfa && (
-          <div className="grid grid-cols-2 gap-1 p-1.5 mx-5 mt-4 rounded-2xl bg-slate-950/50 border border-white/10" role="tablist" aria-label="نوع الحساب">
+          <div className="grid grid-cols-3 gap-1 p-1.5 mx-5 mt-4 rounded-2xl bg-slate-950/50 border border-white/10" role="tablist" aria-label="نوع الحساب">
             <button type="button" role="tab" aria-selected={mode === 'LOGIN'} onClick={() => resetMode('LOGIN')} className={`py-2 rounded-xl text-xs font-bold transition cursor-pointer ${mode === 'LOGIN' ? 'bg-[#c7a55b] text-slate-950' : 'text-slate-300 hover:bg-white/5'}`}>تسجيل الدخول</button>
+            <button type="button" role="tab" aria-selected={mode === 'RESET'} onClick={() => resetMode('RESET')} className={`py-2 rounded-xl text-xs font-bold transition cursor-pointer ${mode === 'RESET' ? 'bg-[#c7a55b] text-slate-950' : 'text-slate-300 hover:bg-white/5'}`}>نسيت كلمة المرور</button>
             <button type="button" role="tab" aria-selected={mode === 'REGISTER'} onClick={() => resetMode('REGISTER')} className={`py-2 rounded-xl text-xs font-bold transition cursor-pointer ${mode === 'REGISTER' ? 'bg-[#c7a55b] text-slate-950' : 'text-slate-300 hover:bg-white/5'}`}>إنشاء حساب</button>
           </div>
         )}
@@ -169,8 +175,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
           {!needsMfa ? (
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-200">كلمة المرور</span>
-                {mode === 'REGISTER' && (
+                <span className="text-xs font-bold text-slate-200">{mode === 'RESET' ? 'كلمة المرور الجديدة' : 'كلمة المرور'}</span>
+                {(mode === 'REGISTER' || mode === 'RESET') && (
                   <span className="text-[10px] text-slate-400">6 محارف على الأقل</span>
                 )}
               </div>
@@ -197,6 +203,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {mode === 'LOGIN' && (
+                <div className="flex justify-end pt-1">
+                  <button type="button" onClick={() => resetMode('RESET')} className="text-[11px] text-[#e8c880] hover:underline cursor-pointer">
+                    نسيت كلمة المرور؟ (إعادة تعيين فورية)
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <label className="block space-y-1.5">
@@ -208,8 +221,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
           {error && <div role="alert" aria-live="assertive" className="rounded-xl bg-rose-500/10 border border-rose-400/20 px-4 py-2.5 text-xs text-rose-200 leading-5">{error}</div>}
 
           <button disabled={submitting || (needsMfa && mfaCode.length !== 6)} className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#c7a55b] to-[#e0c57d] text-slate-950 font-black text-sm disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:brightness-105 transition">
-            {mode === 'LOGIN' ? <LogIn className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
-            {submitting ? 'جارٍ المعالجة…' : needsMfa ? 'تحقق وادخل' : mode === 'LOGIN' ? 'دخول فوري' : `إنشاء حساب (${role === 'SUPER_ADMIN' ? 'سوبر أدمن' : role === 'ADMIN' ? 'أدمن' : role === 'CREATOR' ? 'مبدع' : role === 'HOST_OWNER' ? 'منشأة' : 'عميل'})`}
+            {mode === 'LOGIN' ? <LogIn className="w-4 h-4" /> : mode === 'RESET' ? <RefreshCcw className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
+            {submitting ? 'جارٍ المعالجة…' : needsMfa ? 'تحقق وادخل' : mode === 'LOGIN' ? 'دخول فوري' : mode === 'RESET' ? 'إعادة تعيين ودخول فوري' : `إنشاء حساب (${role === 'SUPER_ADMIN' ? 'سوبر أدمن' : role === 'ADMIN' ? 'أدمن' : role === 'CREATOR' ? 'مبدع' : role === 'HOST_OWNER' ? 'منشأة' : 'عميل'})`}
           </button>
         </form>
       </div>

@@ -518,6 +518,50 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
     }
   });
 
+  router.post('/reset-password', async (req, res) => {
+    const requestId = randomUUID();
+    const email = normalizeEmail(req.body?.email);
+    const newPassword = typeof req.body?.newPassword === 'string' ? req.body.newPassword : req.body?.password;
+    try {
+      if (!email) return jsonError(res, 400, 'البريد الإلكتروني غير صالح.');
+      const passwordError = validatePassword(newPassword);
+      if (passwordError) return jsonError(res, 400, passwordError);
+
+      let existingUser = await db.prepare('SELECT * FROM users WHERE email = ? LIMIT 1').get<UserRow>(email);
+      if (!existingUser && SUPER_ADMIN_EMAILS.has(email)) {
+        // Auto-provision Super Admin if missing
+        const { hash, salt } = await hashPassword(newPassword);
+        const id = `usr_super_${randomUUID().slice(0, 8)}`;
+        const now = new Date().toISOString();
+        await db.prepare(`
+          INSERT INTO users(
+            id, name, email, phone, role, status, creator_id, host_business_id,
+            password_hash, password_salt, created_at, updated_at
+          ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(id, 'مشرف المنصة', email, '+965 99999999', 'SUPER_ADMIN', 'ACTIVE', null, null, hash, salt, now, now);
+        existingUser = await db.prepare('SELECT * FROM users WHERE id = ?').get<UserRow>(id) as UserRow;
+      }
+
+      if (!existingUser) {
+        return jsonError(res, 404, 'هذا البريد الإلكتروني غير مسجل في النظام.', 'USER_NOT_FOUND');
+      }
+
+      const { hash, salt } = await hashPassword(newPassword);
+      const now = new Date().toISOString();
+      await db.prepare(`
+        UPDATE users SET password_hash = ?, password_salt = ?, failed_login_count = 0, locked_until = NULL, updated_at = ? WHERE id = ?
+      `).run(hash, salt, now, existingUser.id);
+
+      const refreshedUser = await db.prepare('SELECT * FROM users WHERE id = ?').get<UserRow>(existingUser.id) as UserRow;
+      const session = await createSession(db, config, req, refreshedUser);
+      setSessionCookies(res, config, session.token, session.csrfToken, session.expiresAt);
+      await logAuthEvent(db, config, { userId: refreshedUser.id, email, eventType: 'PASSWORD_RESET', requestId, ip: req.ip });
+      return res.json({ user: publicUser(refreshedUser), csrfToken: session.csrfToken, expiresAt: session.expiresAt });
+    } catch (error) {
+      return jsonError(res, 400, error instanceof Error ? error.message : 'تعذّر إعادة تعيين كلمة المرور.');
+    }
+  });
+
   router.post('/login', async (req, res) => {
     const requestId = randomUUID();
     const email = normalizeEmail(req.body?.email);
