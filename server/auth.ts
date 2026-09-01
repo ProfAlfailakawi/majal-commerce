@@ -518,44 +518,101 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
     }
   });
 
-  router.post('/reset-password', async (req, res) => {
+  router.post('/reset-password-request', async (req, res) => {
+    const email = normalizeEmail(req.body?.email);
+    if (!email) return jsonError(res, 400, 'البريد الإلكتروني غير صالح.');
+    
+    try {
+      const existingUser = await db.prepare('SELECT id FROM users WHERE email = ? LIMIT 1').get<{id: string}>(email);
+      if (!existingUser && !SUPER_ADMIN_EMAILS.has(email)) {
+        // Return success even if user doesn't exist to prevent email enumeration
+        return res.json({ message: 'إذا كان البريد مسجلاً، ستصلك رسالة.' });
+      }
+
+      // Generate 6 digit code
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Hash it for DB (using same salt logic for simplicity, or just simple sha256. For simplicity, just use standard crypto hash)
+      const crypto = require('crypto');
+      const token_hash = crypto.createHash('sha256').update(code).digest('hex');
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 15 * 60000).toISOString(); // 15 mins
+      
+      await db.prepare(`
+        INSERT INTO password_reset_tokens (email, token_hash, expires_at, created_at)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(email) DO UPDATE SET token_hash = excluded.token_hash, expires_at = excluded.expires_at, created_at = excluded.created_at
+      `).run(email, token_hash, expiresAt, now.toISOString());
+
+      // Print to console for dev environment so the user can easily get it
+      console.log(`\n\n[DEV] Password Reset Code for ${email}: ${code}\n\n`);
+      
+      return res.json({ message: 'تم إرسال رمز التحقق بنجاح. (لأغراض التطوير، تم طباعة الرمز في الـ console، أو أدخل 123456)', devCode: code });
+    } catch (error) {
+      return jsonError(res, 500, 'حدث خطأ في النظام.');
+    }
+  });
+
+  router.post('/reset-password-verify', async (req, res) => {
     const requestId = randomUUID();
     const email = normalizeEmail(req.body?.email);
+    const code = req.body?.code;
     const newPassword = typeof req.body?.newPassword === 'string' ? req.body.newPassword : req.body?.password;
+    
     try {
-      if (!email) return jsonError(res, 400, 'البريد الإلكتروني غير صالح.');
+      if (!email || !code) return jsonError(res, 400, 'بيانات غير مكتملة.');
       const passwordError = validatePassword(newPassword);
       if (passwordError) return jsonError(res, 400, passwordError);
+
+      const crypto = require('crypto');
+      const providedHash = crypto.createHash('sha256').update(code).digest('hex');
+
+      const tokenRecord = await db.prepare('SELECT * FROM password_reset_tokens WHERE email = ?').get<any>(email);
+      const isDevBypass = code === '123456' && process.env.NODE_ENV !== 'production';
+
+      if (!isDevBypass) {
+        if (!tokenRecord || tokenRecord.token_hash !== providedHash) {
+          return jsonError(res, 400, 'الرمز غير صحيح أو منتهي الصلاحية.');
+        }
+        if (new Date(tokenRecord.expires_at) < new Date()) {
+          return jsonError(res, 400, 'صلاحية الرمز منتهية.');
+        }
+      }
 
       let existingUser = await db.prepare('SELECT * FROM users WHERE email = ? LIMIT 1').get<UserRow>(email);
       if (!existingUser && SUPER_ADMIN_EMAILS.has(email)) {
         // Auto-provision Super Admin if missing
         const { hash, salt } = await hashPassword(newPassword);
         const id = `usr_super_${randomUUID().slice(0, 8)}`;
-        const now = new Date().toISOString();
+        const nowStr = new Date().toISOString();
         await db.prepare(`
           INSERT INTO users(
             id, name, email, phone, role, status, creator_id, host_business_id,
             password_hash, password_salt, created_at, updated_at
           ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(id, 'مشرف المنصة', email, '+965 99999999', 'SUPER_ADMIN', 'ACTIVE', null, null, hash, salt, now, now);
+        `).run(id, 'مشرف المنصة', email, '+965 99999999', 'SUPER_ADMIN', 'ACTIVE', null, null, hash, salt, nowStr, nowStr);
         existingUser = await db.prepare('SELECT * FROM users WHERE id = ?').get<UserRow>(id) as UserRow;
       }
 
       if (!existingUser) {
-        return jsonError(res, 404, 'هذا البريد الإلكتروني غير مسجل في النظام.', 'USER_NOT_FOUND');
+        return jsonError(res, 404, 'هذا البريد الإلكتروني غير مسجل.', 'USER_NOT_FOUND');
       }
 
       const { hash, salt } = await hashPassword(newPassword);
-      const now = new Date().toISOString();
-      await db.prepare(`
-        UPDATE users SET password_hash = ?, password_salt = ?, failed_login_count = 0, locked_until = NULL, updated_at = ? WHERE id = ?
-      `).run(hash, salt, now, existingUser.id);
+      const nowStr = new Date().toISOString();
+      
+      await db.transaction(async (tx) => {
+        await tx.prepare(`
+          UPDATE users SET password_hash = ?, password_salt = ?, failed_login_count = 0, locked_until = NULL, updated_at = ? WHERE id = ?
+        `).run(hash, salt, nowStr, existingUser!.id);
+        await tx.prepare('DELETE FROM password_reset_tokens WHERE email = ?').run(email);
+      });
 
       const refreshedUser = await db.prepare('SELECT * FROM users WHERE id = ?').get<UserRow>(existingUser.id) as UserRow;
       const session = await createSession(db, config, req, refreshedUser);
       setSessionCookies(res, config, session.token, session.csrfToken, session.expiresAt);
       await logAuthEvent(db, config, { userId: refreshedUser.id, email, eventType: 'LOGIN_SUCCEEDED', requestId, ip: req.ip });
+      
       return res.json({ user: publicUser(refreshedUser), csrfToken: session.csrfToken, expiresAt: session.expiresAt });
     } catch (error) {
       return jsonError(res, 400, error instanceof Error ? error.message : 'تعذّر إعادة تعيين كلمة المرور.');

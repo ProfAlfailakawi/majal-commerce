@@ -1145,6 +1145,17 @@ const migrations = [
       );
       CREATE INDEX IF NOT EXISTS idx_sealed_compute_product ON sealed_compute_profiles(product_id, status, id);
     `
+  },
+  {
+    version: 12,
+    sql: `
+      CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        email TEXT PRIMARY KEY COLLATE NOCASE,
+        token_hash TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );
+    `
   }
 ] as const;
 

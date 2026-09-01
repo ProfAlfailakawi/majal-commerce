@@ -1,6 +1,6 @@
 import React, { FormEvent, useState } from 'react';
 import { Building2, Crown, Eye, EyeOff, KeyRound, LogIn, RefreshCcw, ShieldCheck, Sparkles, UserPlus, Users, X } from 'lucide-react';
-import { AuthApiError, AuthSession, login, register, resetPassword } from '../../lib/authClient';
+import { AuthApiError, AuthSession, login, register } from '../../lib/authClient';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { UserRole } from '../../types/majal';
 
@@ -19,7 +19,7 @@ const DEMO_PRESETS = [
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthenticated }) => {
   const dialogRef = useDialogBehavior<HTMLDivElement>(isOpen, onClose);
-  const [mode, setMode] = useState<'LOGIN' | 'REGISTER' | 'RESET'>('LOGIN');
+  const [mode, setMode] = useState<'LOGIN' | 'REGISTER' | 'RESET_REQUEST' | 'RESET_VERIFY'>('LOGIN');
   const [role, setRole] = useState<UserRole>('CREATOR');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -27,17 +27,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
+  const [resetCode, setResetCode] = useState('');
   const [needsMfa, setNeedsMfa] = useState(false);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const resetMode = (nextMode: 'LOGIN' | 'REGISTER' | 'RESET') => {
+  const resetMode = (nextMode: 'LOGIN' | 'REGISTER' | 'RESET_REQUEST') => {
     setMode(nextMode);
     setNeedsMfa(false);
     setMfaCode('');
+    setResetCode('');
     setError('');
+    setSuccessMsg('');
   };
 
   const handleQuickFill = (presetEmail: string, presetPass: string) => {
@@ -49,18 +53,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError('');
+    setSuccessMsg('');
     setSubmitting(true);
     try {
-      let session: AuthSession;
       if (mode === 'LOGIN') {
-        session = await login(email, password, needsMfa ? mfaCode : undefined);
-      } else if (mode === 'RESET') {
-        session = await resetPassword(email, password);
+        const session = await login(email, password, needsMfa ? mfaCode : undefined);
+        onAuthenticated(session);
+        onClose();
+      } else if (mode === 'RESET_REQUEST') {
+        const { requestPasswordReset } = await import('../../lib/authClient');
+        const res = await requestPasswordReset(email);
+        setSuccessMsg(res.message);
+        setMode('RESET_VERIFY');
+      } else if (mode === 'RESET_VERIFY') {
+        const { verifyPasswordReset } = await import('../../lib/authClient');
+        const session = await verifyPasswordReset(email, resetCode, password);
+        onAuthenticated(session);
+        onClose();
       } else {
-        session = await register({ name, email, phone, password, role });
+        const session = await register({ name, email, phone, password, role });
+        onAuthenticated(session);
+        onClose();
       }
-      onAuthenticated(session);
-      onClose();
     } catch (caught) {
       if (caught instanceof AuthApiError && caught.code === 'MFA_REQUIRED') {
         setNeedsMfa(true);
@@ -85,11 +99,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
         <div className="p-5 border-b border-white/10 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <span className="w-10 h-10 rounded-2xl bg-[#c7a55b]/15 border border-[#e8c880]/20 grid place-items-center text-[#e8c880]">
-              {needsMfa ? <KeyRound className="w-5 h-5" /> : mode === 'RESET' ? <RefreshCcw className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
+              {needsMfa ? <KeyRound className="w-5 h-5" /> : (mode === 'RESET_REQUEST' || mode === 'RESET_VERIFY') ? <RefreshCcw className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
             </span>
             <div>
               <h2 id="auth-dialog-title" className="font-black text-slate-100 text-base">
-                {needsMfa ? 'التحقق بخطوتين' : mode === 'LOGIN' ? 'دخول إلى منصة مجال' : mode === 'RESET' ? 'إعادة تعيين كلمة المرور' : 'إنشاء حساب جديد في مجال'}
+                {needsMfa ? 'التحقق بخطوتين' : mode === 'LOGIN' ? 'دخول إلى منصة مجال' : (mode === 'RESET_REQUEST' || mode === 'RESET_VERIFY') ? 'إعادة تعيين كلمة المرور' : 'إنشاء حساب جديد في مجال'}
               </h2>
               <p className="text-[11px] text-slate-400 mt-0.5">جلسة خادمية مشفّرة — بيانات وتحليلات فورية</p>
             </div>
@@ -97,10 +111,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
           <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 cursor-pointer" aria-label="إغلاق نافذة الدخول"><X className="w-5 h-5" /></button>
         </div>
 
-        {!needsMfa && (
+        {!needsMfa && mode !== 'RESET_VERIFY' && (
           <div className="grid grid-cols-3 gap-1 p-1.5 mx-5 mt-4 rounded-2xl bg-slate-950/50 border border-white/10" role="tablist" aria-label="نوع الحساب">
             <button type="button" role="tab" aria-selected={mode === 'LOGIN'} onClick={() => resetMode('LOGIN')} className={`py-2 rounded-xl text-xs font-bold transition cursor-pointer ${mode === 'LOGIN' ? 'bg-[#c7a55b] text-slate-950' : 'text-slate-300 hover:bg-white/5'}`}>تسجيل الدخول</button>
-            <button type="button" role="tab" aria-selected={mode === 'RESET'} onClick={() => resetMode('RESET')} className={`py-2 rounded-xl text-xs font-bold transition cursor-pointer ${mode === 'RESET' ? 'bg-[#c7a55b] text-slate-950' : 'text-slate-300 hover:bg-white/5'}`}>نسيت كلمة المرور</button>
+            <button type="button" role="tab" aria-selected={mode === 'RESET_REQUEST'} onClick={() => resetMode('RESET_REQUEST')} className={`py-2 rounded-xl text-xs font-bold transition cursor-pointer ${mode === 'RESET_REQUEST' ? 'bg-[#c7a55b] text-slate-950' : 'text-slate-300 hover:bg-white/5'}`}>نسيت كلمة المرور</button>
             <button type="button" role="tab" aria-selected={mode === 'REGISTER'} onClick={() => resetMode('REGISTER')} className={`py-2 rounded-xl text-xs font-bold transition cursor-pointer ${mode === 'REGISTER' ? 'bg-[#c7a55b] text-slate-950' : 'text-slate-300 hover:bg-white/5'}`}>إنشاء حساب</button>
           </div>
         )}
@@ -158,7 +172,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
             </label>
           )}
 
-          {!needsMfa && (
+          {!needsMfa && mode !== 'RESET_VERIFY' && (
             <label className="block space-y-1.5">
               <span className="text-xs font-bold text-slate-200">البريد الإلكتروني</span>
               <input type="email" value={email} onChange={event => setEmail(event.target.value)} autoComplete="email" required maxLength={254} dir="ltr" placeholder="name@domain.com" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-[#e8c880]/50 text-left" />
@@ -172,11 +186,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
             </label>
           )}
 
-          {!needsMfa ? (
+          {mode === 'RESET_VERIFY' && (
+            <label className="block space-y-1.5">
+              <span className="text-xs font-bold text-slate-200">رمز التوثيق (المرسل للبريد)</span>
+              <input type="text" inputMode="numeric" pattern="[0-9]{6}" value={resetCode} onChange={event => setResetCode(event.target.value.replace(/\D/g, '').slice(0, 6))} required maxLength={6} dir="ltr" placeholder="123456" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-3 text-xl tracking-[0.4em] text-center text-slate-100 outline-none focus:border-[#e8c880]/50" />
+            </label>
+          )}
+
+          {!needsMfa && mode !== 'RESET_REQUEST' ? (
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-200">{mode === 'RESET' ? 'كلمة المرور الجديدة' : 'كلمة المرور'}</span>
-                {(mode === 'REGISTER' || mode === 'RESET') && (
+                <span className="text-xs font-bold text-slate-200">{mode === 'RESET_VERIFY' ? 'كلمة المرور الجديدة' : 'كلمة المرور'}</span>
+                {(mode === 'REGISTER' || mode === 'RESET_VERIFY') && (
                   <span className="text-[10px] text-slate-400">6 محارف على الأقل</span>
                 )}
               </div>
@@ -205,24 +226,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
               </div>
               {mode === 'LOGIN' && (
                 <div className="flex justify-end pt-1">
-                  <button type="button" onClick={() => resetMode('RESET')} className="text-[11px] text-[#e8c880] hover:underline cursor-pointer">
-                    نسيت كلمة المرور؟ (إعادة تعيين فورية)
+                  <button type="button" onClick={() => resetMode('RESET_REQUEST')} className="text-[11px] text-[#e8c880] hover:underline cursor-pointer">
+                    نسيت كلمة المرور؟
                   </button>
                 </div>
               )}
             </div>
-          ) : (
+          ) : needsMfa ? (
             <label className="block space-y-1.5">
               <span className="text-xs font-bold text-slate-200">رمز المصادقة (MFA)</span>
               <input inputMode="numeric" pattern="[0-9]{6}" value={mfaCode} onChange={event => setMfaCode(event.target.value.replace(/\D/g, '').slice(0, 6))} autoComplete="one-time-code" required maxLength={6} dir="ltr" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-3 text-xl tracking-[0.4em] text-center text-slate-100 outline-none focus:border-[#e8c880]/50" />
             </label>
-          )}
+          ) : null}
 
           {error && <div role="alert" aria-live="assertive" className="rounded-xl bg-rose-500/10 border border-rose-400/20 px-4 py-2.5 text-xs text-rose-200 leading-5">{error}</div>}
+          {successMsg && <div role="alert" aria-live="polite" className="rounded-xl bg-emerald-500/10 border border-emerald-400/20 px-4 py-2.5 text-xs text-emerald-200 leading-5">{successMsg}</div>}
 
-          <button disabled={submitting || (needsMfa && mfaCode.length !== 6)} className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#c7a55b] to-[#e0c57d] text-slate-950 font-black text-sm disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:brightness-105 transition">
-            {mode === 'LOGIN' ? <LogIn className="w-4 h-4" /> : mode === 'RESET' ? <RefreshCcw className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
-            {submitting ? 'جارٍ المعالجة…' : needsMfa ? 'تحقق وادخل' : mode === 'LOGIN' ? 'دخول فوري' : mode === 'RESET' ? 'إعادة تعيين ودخول فوري' : `إنشاء حساب (${role === 'SUPER_ADMIN' ? 'سوبر أدمن' : role === 'ADMIN' ? 'أدمن' : role === 'CREATOR' ? 'مبدع' : role === 'HOST_OWNER' ? 'منشأة' : 'عميل'})`}
+          <button disabled={submitting || (needsMfa && mfaCode.length !== 6) || (mode === 'RESET_VERIFY' && resetCode.length !== 6)} className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#c7a55b] to-[#e0c57d] text-slate-950 font-black text-sm disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:brightness-105 transition">
+            {mode === 'LOGIN' ? <LogIn className="w-4 h-4" /> : (mode === 'RESET_REQUEST' || mode === 'RESET_VERIFY') ? <RefreshCcw className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
+            {submitting ? 'جارٍ المعالجة…' : needsMfa ? 'تحقق وادخل' : mode === 'LOGIN' ? 'دخول فوري' : mode === 'RESET_REQUEST' ? 'إرسال رمز التوثيق للبريد' : mode === 'RESET_VERIFY' ? 'توثيق الرمز وتعيين كلمة المرور' : `إنشاء حساب (${role === 'SUPER_ADMIN' ? 'سوبر أدمن' : role === 'ADMIN' ? 'أدمن' : role === 'CREATOR' ? 'مبدع' : role === 'HOST_OWNER' ? 'منشأة' : 'عميل'})`}
           </button>
         </form>
       </div>
