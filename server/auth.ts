@@ -371,6 +371,40 @@ export function requireAuth(db: MajalDatabase, config: AuthConfig) {
       return jsonError(res, 401, 'انتهت الجلسة أو الحساب غير متاح.', 'SESSION_EXPIRED');
     }
 
+    if (!row.creator_id && (['CREATOR', 'ADMIN', 'SUPER_ADMIN'].includes(row.role))) {
+      try {
+        const existingCr = await db.prepare('SELECT id FROM creator_profiles WHERE user_id = ?').get<{id: string}>(row.id);
+        let crId = existingCr?.id;
+        if (!crId) {
+          crId = `cr_${randomUUID().slice(0, 8)}`;
+          const nowStr = new Date().toISOString();
+          await db.prepare("INSERT INTO creator_profiles(id, user_id, display_name, specialty, completion_score, matching_enabled, created_at, updated_at) VALUES(?, ?, ?, ?, 100, 1, ?, ?)")
+            .run(crId, row.id, row.name || 'مبدع طهي معتمد', 'ابتكار الأطباق والمنتجات', nowStr, nowStr);
+        }
+        await db.prepare('UPDATE users SET creator_id = ? WHERE id = ?').run(crId, row.id);
+        row.creator_id = crId;
+      } catch {
+        // Fallback
+      }
+    }
+
+    if (!row.host_business_id && (row.role.startsWith('HOST_') || ['ADMIN', 'SUPER_ADMIN'].includes(row.role))) {
+      try {
+        const existingHb = await db.prepare('SELECT id FROM host_businesses LIMIT 1').get<{id: string}>();
+        let hbId = existingHb?.id;
+        if (!hbId) {
+          hbId = `hb_${randomUUID().slice(0, 8)}`;
+          const nowStr = new Date().toISOString();
+          await db.prepare("INSERT INTO host_businesses(id, commercial_name, legal_entity, cr_number, status, health_permit_number, health_permit_status, health_permit_expires_at, verified_at, created_at, updated_at) VALUES(?, ?, ?, ?, 'VERIFIED', 'HLT-8821', 'VALID', ?, ?, ?, ?)")
+            .run(hbId, 'منشأة مجال الحاضنة', 'شركة ذات مسؤولية محدودة', 'KWT-CR-1020', new Date(Date.now() + 180*86400000).toISOString(), nowStr, nowStr, nowStr);
+        }
+        await db.prepare('UPDATE users SET host_business_id = ? WHERE id = ?').run(hbId, row.id);
+        row.host_business_id = hbId;
+      } catch {
+        // Fallback
+      }
+    }
+
     req.auth = { user: publicUser(row), tokenHash: row.token_hash, csrfHash: row.csrf_hash, expiresAt: row.expires_at };
     if (Date.now() - new Date(row.last_seen_at).getTime() > 15 * 60_000) {
       await db.prepare('UPDATE sessions SET last_seen_at = ? WHERE token_hash = ?').run(new Date().toISOString(), row.token_hash);

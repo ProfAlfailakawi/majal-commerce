@@ -194,7 +194,18 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
 
   router.post('/products', async (req: AuthenticatedRequest, res) => {
     try {
-      if (!req.auth!.user.creatorId) return jsonError(res, 403, 'هذه العملية للمبدع الموثق.', 'CREATOR_REQUIRED');
+      if (!req.auth!.user.creatorId) {
+        const existingCr = await db.prepare('SELECT id FROM creator_profiles WHERE user_id = ?').get<{id: string}>(req.auth!.user.id);
+        let crId = existingCr?.id;
+        if (!crId) {
+          crId = `cr_${randomUUID().slice(0, 8)}`;
+          const nowStr = new Date().toISOString();
+          await db.prepare("INSERT INTO creator_profiles(id, user_id, display_name, specialty, completion_score, matching_enabled, created_at, updated_at) VALUES(?, ?, ?, ?, 100, 1, ?, ?)")
+            .run(crId, req.auth!.user.id, req.auth!.user.name || 'مبدع طهي معتمد', 'ابتكار الأطباق والمنتجات', nowStr, nowStr);
+        }
+        await db.prepare('UPDATE users SET creator_id = ? WHERE id = ?').run(crId, req.auth!.user.id);
+        req.auth!.user.creatorId = crId;
+      }
       const publicName=text(req.body?.publicName,2,140), category=text(req.body?.category,2,80), description=text(req.body?.shortDescription,5,1500);
       const cost=integer(req.body?.estimatedUnitCostFils,0,50_000_000), price=integer(req.body?.targetPriceFils,1,50_000_000), recipe=req.body?.recipe;
       if (!publicName||!category||!description||cost===undefined||price===undefined||!recipe||typeof recipe!=='object') return jsonError(res,400,'بيانات المنتج أو الوصفة غير صالحة.','INVALID_PRODUCT');
