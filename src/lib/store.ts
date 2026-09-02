@@ -229,8 +229,44 @@ export class Store {
 
   public setUser(user: User) {
     if (!IS_DEMO_MODE) return false;
-    const trustedDemoUser = this.users.find(candidate => candidate.id === user.id);
+    let trustedDemoUser = this.users.find(candidate => candidate.id === user.id);
     if (!trustedDemoUser || trustedDemoUser.status === 'SUSPENDED') return false;
+
+    if (trustedDemoUser.role === 'CREATOR' && !trustedDemoUser.creatorId) {
+      let profile = this.creators.find(c => c.userId === trustedDemoUser.id);
+      if (!profile) {
+        profile = {
+          id: 'cr_' + Math.random().toString(36).substr(2, 9),
+          userId: trustedDemoUser.id,
+          displayName: trustedDemoUser.name,
+          legalName: trustedDemoUser.name,
+          creatorType: 'CREATOR',
+          specialty: 'ابتكار الوصفات والمنتجات العصرية',
+          bio: 'مبدع معتمد في منصة مجال للابتكار والإنتاج التجاري.',
+          region: 'العاصمة، الكويت',
+          completionScore: 100,
+          badges: ['SIGNATURE_CREATOR'],
+          unitsSold: 0,
+          repeatPurchaseRate: 0,
+          story: 'شغف ابتكار الأطباق والمنتجات المبتكرة.',
+          isAvailableForMatching: true,
+          hasSecretRecipe: true,
+          avatarUrl: trustedDemoUser.avatar || 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&q=80&w=200',
+          createdAt: new Date().toISOString()
+        };
+        this.creators.push(profile);
+      }
+      trustedDemoUser = { ...trustedDemoUser, creatorId: profile.id };
+      const idx = this.users.findIndex(u => u.id === trustedDemoUser.id);
+      if (idx >= 0) this.users[idx] = trustedDemoUser;
+    } else if (trustedDemoUser.role.startsWith('HOST_') && !trustedDemoUser.hostBusinessId) {
+      if (this.hosts.length > 0) {
+        trustedDemoUser = { ...trustedDemoUser, hostBusinessId: this.hosts[0].id };
+        const idx = this.users.findIndex(u => u.id === trustedDemoUser.id);
+        if (idx >= 0) this.users[idx] = trustedDemoUser;
+      }
+    }
+
     this.activeUser = trustedDemoUser;
     this.notify();
     return true;
@@ -238,15 +274,48 @@ export class Store {
 
   public setAuthenticatedUser(user: User) {
     if (user.status === 'SUSPENDED' || user.status === 'INVITED') return false;
-    const index = this.users.findIndex(candidate => candidate.id === user.id);
-    if (index >= 0) this.users[index] = { ...user };
-    else this.users = [user, ...this.users.filter(candidate => candidate.email !== user.email)];
-    this.activeUser = user;
     
-    if (user.role === 'SUPER_ADMIN') this.activeSurface = 'SUPER_ADMIN';
-    else if (user.role === 'ADMIN') this.activeSurface = 'ADMIN';
-    else if (user.role === 'CREATOR') this.activeSurface = 'CREATOR';
-    else if (user.role.startsWith('HOST_')) this.activeSurface = 'HOST';
+    let updatedUser = { ...user };
+    if (updatedUser.role === 'CREATOR' && !updatedUser.creatorId) {
+      let profile = this.creators.find(c => c.userId === updatedUser.id || c.id === 'cr_main');
+      if (!profile) {
+        profile = {
+          id: 'cr_' + Math.random().toString(36).substr(2, 9),
+          userId: updatedUser.id,
+          displayName: updatedUser.name,
+          legalName: updatedUser.name,
+          creatorType: 'CREATOR',
+          specialty: 'ابتكار الوصفات والمنتجات العصرية',
+          bio: 'مبدع معتمد في منصة مجال للابتكار والإنتاج التجاري.',
+          region: 'العاصمة، الكويت',
+          completionScore: 100,
+          badges: ['SIGNATURE_CREATOR'],
+          unitsSold: 0,
+          repeatPurchaseRate: 0,
+          story: 'شغف ابتكار الأطباق والمنتجات المبتكرة.',
+          isAvailableForMatching: true,
+          hasSecretRecipe: true,
+          avatarUrl: updatedUser.avatar || 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&q=80&w=200',
+          createdAt: new Date().toISOString()
+        };
+        this.creators.push(profile);
+      }
+      updatedUser.creatorId = profile.id;
+    } else if (updatedUser.role.startsWith('HOST_') && !updatedUser.hostBusinessId) {
+      if (this.hosts.length > 0) {
+        updatedUser.hostBusinessId = this.hosts[0].id;
+      }
+    }
+
+    const index = this.users.findIndex(candidate => candidate.id === updatedUser.id);
+    if (index >= 0) this.users[index] = { ...updatedUser };
+    else this.users = [updatedUser, ...this.users.filter(candidate => candidate.email !== updatedUser.email)];
+    this.activeUser = updatedUser;
+    
+    if (updatedUser.role === 'SUPER_ADMIN') this.activeSurface = 'SUPER_ADMIN';
+    else if (updatedUser.role === 'ADMIN') this.activeSurface = 'ADMIN';
+    else if (updatedUser.role === 'CREATOR') this.activeSurface = 'CREATOR';
+    else if (updatedUser.role.startsWith('HOST_')) this.activeSurface = 'HOST';
     else this.activeSurface = 'CONSUMER';
 
     this.notify();

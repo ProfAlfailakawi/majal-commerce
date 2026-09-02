@@ -12,7 +12,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { store } from '../../lib/store';
-import { CreatorProduct } from '../../types/majal';
+import { CreatorProduct, CreatorProfile } from '../../types/majal';
 import { ProductSubmissionWizard } from './ProductSubmissionWizard';
 import { CreatorEarnings } from './CreatorEarnings';
 import { RecipeVaultModal } from '../common/RecipeVaultModal';
@@ -51,7 +51,52 @@ export const CreatorPortal: React.FC = () => {
     { id: 'EARNINGS', label: 'مستحقاتي', icon: <BadgeDollarSign className="w-4 h-4" /> }
   ] as const;
 
-  if (!profile) return <div className="max-w-3xl mx-auto p-8 text-center text-stone-400">لا يوجد ملف مبدع مرتبط بهذا الحساب. لا يتم استخدام ملف مبدع آخر كبديل.</div>;
+  if (!profile) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-16 text-center space-y-6">
+        <div className="w-16 h-16 rounded-3xl bg-[#c7a55b]/15 text-[#e8c880] grid place-items-center mx-auto shadow-2xl">
+          <Sparkles className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-stone-100">مرحباً بك في مساحة المبدعين منصة مجال</h2>
+          <p className="text-sm text-stone-400 max-w-lg mx-auto leading-6">
+            لم يتم تفعيل ملف المبدع الخاص بحسابك بعد. انقر على الزر أدناه لإنشاء ملف المبدع والبدء باكتشاف الفرص، تقديم المنتجات، وتوقيع العقود التجارية.
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            const newCreator: CreatorProfile = {
+              id: 'cr_' + Math.random().toString(36).substr(2, 9),
+              userId: store.activeUser.id,
+              displayName: store.activeUser.name || 'المبدع المبتكر',
+              legalName: store.activeUser.name || 'مبدع طهي معتمد',
+              creatorType: 'CREATOR',
+              specialty: 'ابتكار الأطباق والمأكولات العصرية',
+              bio: 'صانع محتوى وطاهي مبتكر للمنتجات التجارية الحصرية.',
+              region: 'العاصمة، الكويت',
+              completionScore: 100,
+              badges: ['SIGNATURE_CREATOR'],
+              unitsSold: 0,
+              repeatPurchaseRate: 0,
+              story: 'شغف تحويل الوصفات المنزلية والسرية إلى خطوط إنتاج وتجارب ناجحة.',
+              isAvailableForMatching: true,
+              hasSecretRecipe: true,
+              avatarUrl: store.activeUser.avatar || 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&q=80&w=200',
+              createdAt: new Date().toISOString()
+            };
+            store.creators = [...store.creators, newCreator];
+            store.activeUser = { ...store.activeUser, creatorId: newCreator.id };
+            store.setUser(store.activeUser);
+            setTick(t => t + 1);
+          }}
+          className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#c7a55b] to-[#e1c67b] text-stone-950 text-sm font-black inline-flex items-center gap-2 shadow-xl hover:scale-105 transition-transform cursor-pointer"
+        >
+          <Plus className="w-5 h-5" />
+          <span>إنشاء وتفعيل ملف المبدع الآن</span>
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-stone-100">
