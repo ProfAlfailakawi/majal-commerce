@@ -221,7 +221,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
 
           <button
             onClick={() => onDismiss(intent, true)}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-[11px] font-bold text-slate-400 hover:text-slate-100 hover:bg-white/5 border border-white/10 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-bold text-slate-400 hover:text-slate-100 hover:bg-white/5 border border-white/10 transition-colors"
           >
             <span>تخطّي التعريف</span>
             <X className="w-3.5 h-3.5" />
@@ -271,7 +271,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                 {['سرّك يفتح بإذنك فقط', 'إنتاج عبر منشأة مرخّصة', 'مستحقات تتابعها بنفسك'].map(item => (
                   <li
                     key={item}
-                    className="px-3.5 py-2 rounded-full glass-card border border-white/10 text-slate-300 flex items-center gap-2"
+                    className="px-3 py-1.5 rounded-full glass-card border border-white/10 text-slate-300 flex items-center gap-2"
                   >
                     <Check className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
                     <span>{item}</span>

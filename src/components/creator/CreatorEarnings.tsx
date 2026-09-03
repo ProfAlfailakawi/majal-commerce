@@ -47,7 +47,7 @@ export const CreatorEarnings: React.FC = () => {
         <div className="flex items-center gap-3">
           <div className="p-3 bg-gold-500/10 text-gold-300 rounded-2xl border border-gold-300/20"><Wallet className="w-6 h-6" /></div>
           <div>
-            <h2 className="text-xl font-black">مستحقاتي — Earnings Ledger</h2>
+            <h2 className="text-xl font-black">مستحقاتي</h2>
             <p className="text-xs text-slate-400 mt-1 leading-6">سجل محاسبي للحقوق الناتجة عن المبيعات. الاعتماد داخل مجال منفصل عن تأكيد التحويل البنكي الخارجي.</p>
           </div>
         </div>
@@ -56,7 +56,7 @@ export const CreatorEarnings: React.FC = () => {
         </button>
       </section>
 
-      {exported && <div className="p-3 bg-emerald-500/10 border border-emerald-400/20 text-emerald-300 font-bold text-xs rounded-xl">✓ تم إنشاء كشف فعلي من البيانات الحالية وتنزيله بصيغة CSV.</div>}
+      {exported && <div className="p-3 bg-emerald-500/10 border border-emerald-400/20 text-emerald-300 font-bold text-xs rounded-xl">تم إنشاء كشف فعلي من البيانات الحالية وتنزيله بصيغة CSV.</div>}
 
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="glass-card p-5 rounded-2xl border border-white/10"><div className="text-xs text-slate-400">إجمالي الحقوق المسجلة</div><div className="text-2xl font-black text-gold-300 font-mono mt-2">{totals.lifetime.toFixed(3)} <span className="text-xs">د.ك</span></div></div>

@@ -34,7 +34,7 @@ export const TeamPermissions: React.FC<TeamPermissionsProps> = ({ hostBusinessId
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-400/20 flex items-center justify-center text-fuchsia-300"><Settings2 className="w-6 h-6" /></div>
         <div>
-          <h3 className="text-lg font-black text-slate-100">Team & Permissions — فريق المنشأة</h3>
+          <h3 className="text-lg font-black text-slate-100">فريق المنشأة</h3>
           <p className="text-xs text-slate-400 mt-1">لا يرى كل موظف كل شيء. الصلاحيات تتبع الدور، والسياق، وحساسية البيانات.</p>
         </div>
       </div>
@@ -53,7 +53,7 @@ export const TeamPermissions: React.FC<TeamPermissionsProps> = ({ hostBusinessId
               </div>
               <div className="flex flex-wrap gap-2">
                 {permissions.slice(0, 7).map(permission => (
-                  <span key={permission} className="px-2 py-1 rounded-lg bg-slate-950/50 border border-white/10 text-[10px] text-slate-400">{permission}</span>
+                  <span key={permission} className="px-2.5 py-1 rounded-lg bg-slate-950/50 border border-white/10 text-[10px] text-slate-400">{permission}</span>
                 ))}
               </div>
               <div className="rounded-xl p-3 bg-emerald-500/5 border border-emerald-400/15 text-[11px] text-slate-400 leading-6 flex gap-2"><ShieldCheck className="w-4 h-4 shrink-0 text-emerald-300" /> صلاحيات هذا العضو لا تتجاوز نطاق منشأته.</div>

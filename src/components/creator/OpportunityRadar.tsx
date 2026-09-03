@@ -82,8 +82,8 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId })
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-center text-emerald-300"><Radar className="w-6 h-6" /></div>
           <div>
-            <h3 className="text-lg font-black text-stone-100">Opportunity Radar — رادار الفرص</h3>
-            <p className="text-xs text-stone-400 mt-1">أفضل فرص التعاون الآن بناءً على المعدات، الهامش، الفئة، السعر والقدرة التشغيلية.</p>
+            <h3 className="text-lg font-black text-slate-100">رادار الفرص</h3>
+            <p className="text-xs text-slate-400 mt-1">أفضل فرص التعاون الآن بناءً على المعدات، الهامش، الفئة، السعر والقدرة التشغيلية.</p>
           </div>
         </div>
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-400/20 text-xs font-bold">
@@ -94,29 +94,29 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId })
       {hasOpportunities ? (
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
           {opportunities.map(({ product, matchScore, host, key }) => (
-            <div key={key} className="rounded-2xl p-5 bg-white/5 border border-white/10 hover:border-[#e8c880]/25 transition-colors space-y-4">
+            <div key={key} className="rounded-2xl p-5 bg-white/5 border border-white/10 hover:border-gold-300/25 transition-colors space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-[11px] text-stone-500">{product.publicName}</div>
-                  <h4 className="font-black text-stone-100 mt-1">{host?.commercialName || 'منشأة مرخّصة'}</h4>
+                  <div className="text-[11px] text-slate-500">{product.publicName}</div>
+                  <h4 className="font-black text-slate-100 mt-1">{host?.commercialName || 'منشأة مرخّصة'}</h4>
                 </div>
                 <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 flex flex-col items-center justify-center">
                   <span className="text-xl font-black text-emerald-300">{matchScore.overallScore}</span>
-                  <span className="text-[9px] text-emerald-400">MATCH</span>
+                  <span className="text-[9px] text-emerald-400">تطابق</span>
                 </div>
               </div>
 
               <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between"><span className="text-stone-400 flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" /> توافق التشغيل</span><strong className="text-stone-100">{matchScore.equipmentFit}%</strong></div>
-                <div className="flex items-center justify-between"><span className="text-stone-400 flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5" /> توافق الهامش</span><strong className="text-stone-100">{matchScore.marginFit}%</strong></div>
-                <div className="flex items-center justify-between"><span className="text-stone-400 flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /> توافق العلامة</span><strong className="text-stone-100">{matchScore.brandFit}%</strong></div>
+                <div className="flex items-center justify-between"><span className="text-slate-400 flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" /> توافق التشغيل</span><strong className="text-slate-100">{matchScore.equipmentFit}%</strong></div>
+                <div className="flex items-center justify-between"><span className="text-slate-400 flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5" /> توافق الهامش</span><strong className="text-slate-100">{matchScore.marginFit}%</strong></div>
+                <div className="flex items-center justify-between"><span className="text-slate-400 flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /> توافق العلامة</span><strong className="text-slate-100">{matchScore.brandFit}%</strong></div>
               </div>
 
-              <div className="rounded-xl p-3 bg-slate-950/45 border border-white/10 text-[11px] leading-6 text-stone-400">
+              <div className="rounded-xl p-3 bg-slate-950/45 border border-white/10 text-[11px] leading-6 text-slate-400">
                 {matchScore.explanationAr}
               </div>
 
-              <button className="w-full py-2.5 rounded-xl bg-[#c7a55b] hover:bg-[#d9b86b] text-stone-950 text-xs font-black flex items-center justify-center gap-2">
+              <button className="w-full py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-slate-950 text-xs font-black flex items-center justify-center gap-2">
                 <Sparkles className="w-4 h-4" /> ابدأ فرصة التعاون <ChevronLeft className="w-4 h-4" />
               </button>
             </div>
@@ -127,8 +127,8 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId })
           <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-center text-emerald-300">
             <Radar className="w-7 h-7" />
           </div>
-          <h4 className="font-black text-stone-100">لا توجد فرص مطابقة الآن</h4>
-          <p className="text-xs text-stone-400 leading-6 max-w-md mx-auto">
+          <h4 className="font-black text-slate-100">لا توجد فرص مطابقة الآن</h4>
+          <p className="text-xs text-slate-400 leading-6 max-w-md mx-auto">
             سجّل منتجًا متاحًا للمطابقة، أو انتظر انضمام منشأة مرخّصة جديدة. الرادار يحسب الفرص حيًّا فور توفر منتج متاح ومنشأة متحققة، ولا يعرض بطاقات وهمية.
           </p>
         </div>
@@ -137,9 +137,9 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId })
       {(signals.length > 0 || signalNote) && (
         <div className="rounded-2xl p-4 bg-emerald-500/5 border border-emerald-400/15 space-y-3">
           <div className="flex items-center gap-2 text-xs font-black text-emerald-300"><Globe className="w-4 h-4" /> إشارات سوق مرتبطة بمصدر (Google Search)</div>
-          {signalNote && <div className="text-[11px] text-stone-400 leading-6">{signalNote}</div>}
+          {signalNote && <div className="text-[11px] text-slate-400 leading-6">{signalNote}</div>}
           {signals.map((signal, idx) => (
-            <div key={idx} className="rounded-xl p-3 bg-slate-950/45 border border-white/10 text-[11px] leading-6 text-stone-300 space-y-2">
+            <div key={idx} className="rounded-xl p-3 bg-slate-950/45 border border-white/10 text-[11px] leading-6 text-slate-300 space-y-2">
               <div>{signal.summary}</div>
               {signal.citations.length > 0 && (
                 <div className="flex flex-wrap gap-2 pt-1 border-t border-white/5">
@@ -155,7 +155,7 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId })
         </div>
       )}
 
-      <div className="rounded-2xl p-4 bg-sky-500/5 border border-sky-400/15 text-xs text-stone-300 leading-6 flex gap-2">
+      <div className="rounded-2xl p-4 bg-sky-500/5 border border-sky-400/15 text-xs text-slate-300 leading-6 flex gap-2">
         <ShieldCheck className="w-4 h-4 shrink-0 mt-1 text-sky-300" />
         رادار الفرص لا يكشف الوصفة السرية. المطابقة تعتمد على البيانات التجارية والتشغيلية المتاحة فقط، ويظل كشف التفاصيل الحساسة خاضعًا لأذونات Recipe Vault.
       </div>

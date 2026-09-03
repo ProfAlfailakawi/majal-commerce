@@ -1,11 +1,23 @@
 import React, { useState } from 'react';
-import { CreditCard, CheckCircle2, ShieldCheck, RefreshCw, Send, Smartphone, Server, Zap, ExternalLink } from 'lucide-react';
+import {
+  CheckCircle2,
+  CreditCard,
+  ExternalLink,
+  RefreshCw,
+  Send,
+  Server,
+  ShieldCheck,
+  Smartphone,
+  X,
+  Zap
+} from 'lucide-react';
 import { store } from '../../lib/store';
 import { PaymentGatewayProvider, PosSystemProvider } from '../../types/majal';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { authCsrfToken } from '../../lib/authClient';
 import { paciClient } from '../../lib/paciClient';
 import { IS_DEMO_MODE } from '../../lib/runtime';
+import { StatusPill } from './StatusPill';
 
 export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   const dialogRef = useDialogBehavior<HTMLDivElement>(isOpen, onClose);
@@ -119,7 +131,7 @@ export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => voi
             aria-label="إغلاق مختبر التكاملات"
             className="text-neutral-400 hover:text-white p-2 rounded-lg hover:bg-neutral-800 transition"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -227,7 +239,7 @@ export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => voi
                   </div>
                   <div className="text-xs space-y-1 text-emerald-200/80 font-mono">
                     <p>المبلغ: {paymentResult.amountKwd} د.ك | المزود: {paymentResult.provider}</p>
-                    <p>الحالة: {paymentResult.status} | الوقت: {new Date(paymentResult.createdAt).toLocaleTimeString('ar-KW')}</p>
+                    <p className="flex items-center gap-2"><StatusPill status={paymentResult.status} prefix="الحالة" /><span>الوقت: {new Date(paymentResult.createdAt).toLocaleTimeString('ar-KW')}</span></p>
                   </div>
                 </div>
               )}
@@ -284,7 +296,7 @@ export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => voi
                 <div className="bg-neutral-800/80 border border-neutral-700 rounded-xl p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-neutral-300">رمز المطابقة في تطبيق هويتي:</span>
-                    <span className="text-lg font-bold text-amber-400 font-mono tracking-widest bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/30">
+                    <span className="text-lg font-bold text-amber-400 font-mono tracking-widest bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/30">
                       {paciRequest.requestId || '—'}
                     </span>
                   </div>
@@ -381,10 +393,10 @@ export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => voi
 
         {/* Footer */}
         <div className="p-4 border-t border-neutral-800 bg-neutral-950/80 flex items-center justify-between text-xs text-neutral-400">
-          <span>حالة البنية التحتية: <strong className="text-emerald-400">Firestore & Server APIs Active</strong></span>
+          <span>حالة البنية التحتية: <strong className="text-emerald-400">Firestore وواجهات الخادم تعمل</strong></span>
           <button
             onClick={onClose}
-            className="bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded-lg font-medium transition cursor-pointer"
+            className="bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2.5 rounded-xl font-medium transition cursor-pointer"
           >
             إغلاق المركز
           </button>

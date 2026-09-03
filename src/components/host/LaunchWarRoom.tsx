@@ -39,7 +39,7 @@ export const LaunchWarRoom: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) 
     return (
       <section className="glass-panel rounded-3xl border border-white/10 p-8 text-center">
         <Rocket className="w-8 h-8 text-slate-600 mx-auto" />
-        <h3 className="font-black mt-3">لا يوجد إطلاق LIVE لهذه المنشأة الآن</h3>
+        <h3 className="font-black mt-3">ما فيه إطلاق حيّ لهذه المنشأة الآن</h3>
         <p className="text-xs text-slate-500 mt-2">تظهر غرفة القيادة فقط عند وجود إطلاق فعلي تابع لنفس المنشأة.</p>
       </section>
     );
@@ -73,9 +73,9 @@ export const LaunchWarRoom: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) 
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-400/20 flex items-center justify-center text-rose-300"><Rocket className="w-6 h-6" /></div>
-          <div><div className="flex items-center gap-2 flex-wrap"><h3 className="text-lg font-black">Launch War Room — غرفة قيادة الإطلاق</h3><StatusPill status={launch.status} /></div><p className="text-xs text-slate-400 mt-1">{product?.publicName} — بيانات هذا الإطلاق فقط، بلا خلط مع منشآت أخرى.</p></div>
+          <div><div className="flex items-center gap-2 flex-wrap"><h3 className="text-lg font-black">غرفة قيادة الإطلاق</h3><StatusPill status={launch.status} /></div><p className="text-xs text-slate-400 mt-1">{product?.publicName} — بيانات هذا الإطلاق فقط، بلا خلط مع منشآت أخرى.</p></div>
         </div>
-        <div className="flex items-center gap-2 text-xs font-bold text-emerald-300"><Activity className="w-4 h-4" /> Live operational view</div>
+        <div className="flex items-center gap-2 text-xs font-bold text-emerald-300"><Activity className="w-4 h-4" /> عرض تشغيلي حي</div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
@@ -107,7 +107,7 @@ export const LaunchWarRoom: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) 
 
       <div className="rounded-2xl p-4 bg-gradient-to-l from-gold-500/8 via-white/[0.03] to-fuchsia-500/8 border border-white/10 space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div><div className="font-black">Growth Attribution</div><div className="text-xs text-slate-500 mt-1">النسب تظهر فقط من الطلبات التي تحمل acquisitionSource فعلية؛ لا توجد نسب مختلقة.</div></div>
+          <div><div className="font-black">إسناد النمو</div><div className="text-xs text-slate-500 mt-1">النسب تظهر فقط من الطلبات التي تحمل acquisitionSource فعلية؛ لا توجد نسب مختلقة.</div></div>
           <button onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/drop/${launch.id}`)} className="px-3 py-2 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center gap-2"><Link2 className="w-4 h-4" /> نسخ رابط الإطلاق</button>
         </div>
         <div className="grid md:grid-cols-4 gap-3 text-xs">

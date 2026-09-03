@@ -16,6 +16,7 @@ import {
 import { store } from '../../lib/store';
 import { CreatorProduct } from '../../types/majal';
 import { hasPermission } from '../../lib/permissions';
+import { StatusPill } from './StatusPill';
 
 interface DigitalTwinPanelProps {
   product: CreatorProduct;
@@ -85,18 +86,18 @@ export const DigitalTwinPanel: React.FC<DigitalTwinPanelProps> = ({ product, hos
         className="w-full flex items-center justify-between p-5 md:p-6 text-right hover:bg-white/[0.03] transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#c7a55b]/10 border border-[#e8c880]/20 flex items-center justify-center text-[#e8c880]">
+          <div className="w-12 h-12 rounded-2xl bg-gold-500/10 border border-gold-300/20 flex items-center justify-center text-gold-300">
             <Boxes className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-black text-lg text-stone-100">Digital Twin — التوأم الرقمي للمنتج</h3>
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 border border-emerald-400/20 text-emerald-300">LIVE RECORD</span>
+              <h3 className="font-black text-lg text-slate-100">التوأم الرقمي للمنتج</h3>
+              <StatusPill status="LIVE" prefix="السجل" />
             </div>
-            <p className="text-xs text-stone-400 mt-1">كل حياة المنتج في سجل واحد: الوصفة، العقد، الإطلاق، المبيعات، الأذونات والتاريخ.</p>
+            <p className="text-xs text-slate-400 mt-1">كل حياة المنتج في سجل واحد: الوصفة، العقد، الإطلاق، المبيعات، الأذونات والتاريخ.</p>
           </div>
         </div>
-        {expanded ? <ChevronUp className="w-5 h-5 text-stone-400" /> : <ChevronDown className="w-5 h-5 text-stone-400" />}
+        {expanded ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
       </button>
 
       {expanded && (
@@ -109,8 +110,8 @@ export const DigitalTwinPanel: React.FC<DigitalTwinPanelProps> = ({ product, hos
               { label: 'مستحقات المبدع', value: canSeeFinancials ? `${twin.creatorRoyalty.toFixed(3)} د.ك` : 'محجوب حسب الدور', icon: <Wallet className="w-4 h-4" /> }
             ].map((item, idx) => (
               <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10">
-                <div className="flex items-center gap-2 text-[#e8c880]">{item.icon}<span className="text-[11px] text-stone-400">{item.label}</span></div>
-                <div className="mt-2 font-black text-stone-100 text-sm font-mono">{item.value}</div>
+                <div className="flex items-center gap-2 text-gold-300">{item.icon}<span className="text-[11px] text-slate-400">{item.label}</span></div>
+                <div className="mt-2 font-black text-slate-100 text-sm font-mono">{item.value}</div>
               </div>
             ))}
           </div>
@@ -118,20 +119,20 @@ export const DigitalTwinPanel: React.FC<DigitalTwinPanelProps> = ({ product, hos
           <div className="grid lg:grid-cols-[1.15fr_.85fr] gap-4">
             <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-4">
               <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 font-bold text-stone-100">
+                <div className="flex items-center gap-2 font-bold text-slate-100">
                   <GitCompareArrows className="w-5 h-5 text-sky-300" />
-                  <span>Time Travel Compare</span>
+                  <span>مقارنة بين إصدارين</span>
                 </div>
                 <button
                   onClick={() => setCompareMode(v => !v)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold ${compareMode ? 'bg-sky-400 text-slate-950' : 'bg-white/5 text-stone-300 border border-white/10'}`}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold ${compareMode ? 'bg-sky-400 text-slate-950' : 'bg-white/5 text-slate-300 border border-white/10'}`}
                 >
                   {compareMode ? 'إغلاق المقارنة' : 'قارن نسختين'}
                 </button>
               </div>
 
               {!canSeeRecipeDerived ? (
-                <div className="rounded-xl p-4 bg-fuchsia-500/5 border border-fuchsia-400/15 text-xs text-stone-300 leading-6 flex gap-2">
+                <div className="rounded-xl p-4 bg-fuchsia-500/5 border border-fuchsia-400/15 text-xs text-slate-300 leading-6 flex gap-2">
                   <LockKeyhole className="w-4 h-4 text-fuchsia-300 shrink-0 mt-1" />
                   تفاصيل التكلفة والعائد وسجل تغييرات الوصفة محجوبة حتى يمنح المبدع إذن L2 صالحًا لهذه المنشأة.
                 </div>
@@ -139,41 +140,41 @@ export const DigitalTwinPanel: React.FC<DigitalTwinPanelProps> = ({ product, hos
                 <div className="grid md:grid-cols-2 gap-3 text-xs">
                   <div className="rounded-xl p-4 bg-slate-950/60 border border-white/10">
                     <div className="font-black text-sky-300">الحالية — {currentRecipe?.versionNumber || product.currentRecipeVersion}</div>
-                    <div className="mt-3 space-y-2 text-stone-400">
-                      <div>تكلفة المكونات/حصة من هذه النسخة: <strong className="text-stone-100">{currentRecipeUnitCost !== undefined ? `${currentRecipeUnitCost.toFixed(3)} د.ك` : 'غير مسجل'}</strong></div>
-                      <div>حجم الدفعة: <strong className="text-stone-100">{currentRecipe?.batchSize || 'غير مسجل'}</strong></div>
-                      <div>العائد المعياري: <strong className="text-stone-100">{currentRecipe?.yield ?? 'غير مسجل'} حصة</strong></div>
-                      <div>ملاحظة النسخة: <strong className="text-stone-100">{currentRecipe?.changeLogNote || 'لا توجد ملاحظة'}</strong></div>
+                    <div className="mt-3 space-y-2 text-slate-400">
+                      <div>تكلفة المكونات/حصة من هذه النسخة: <strong className="text-slate-100">{currentRecipeUnitCost !== undefined ? `${currentRecipeUnitCost.toFixed(3)} د.ك` : 'غير مسجل'}</strong></div>
+                      <div>حجم الدفعة: <strong className="text-slate-100">{currentRecipe?.batchSize || 'غير مسجل'}</strong></div>
+                      <div>العائد المعياري: <strong className="text-slate-100">{currentRecipe?.yield ?? 'غير مسجل'} حصة</strong></div>
+                      <div>ملاحظة النسخة: <strong className="text-slate-100">{currentRecipe?.changeLogNote || 'لا توجد ملاحظة'}</strong></div>
                     </div>
                   </div>
                   <div className="rounded-xl p-4 bg-slate-950/60 border border-white/10">
-                    <div className="font-black text-stone-300">السابقة — {previousRecipe?.versionNumber || 'V0.9'}</div>
-                    <div className="mt-3 space-y-2 text-stone-400">
-                      <div>تكلفة المكونات/حصة: <strong className="text-stone-100">{previousRecipeUnitCost !== undefined ? `${previousRecipeUnitCost.toFixed(3)} د.ك` : 'غير مسجل'}</strong></div>
-                      <div>حجم الدفعة: <strong className="text-stone-100">{previousRecipe?.batchSize || 'غير مسجل'}</strong></div>
-                      <div>العائد المعياري: <strong className="text-stone-100">{previousRecipe?.yield ?? 'غير مسجل'} حصة</strong></div>
-                      <div>ملاحظة النسخة: <strong className="text-stone-100">{previousRecipe?.changeLogNote || 'لا توجد نسخة سابقة قابلة للمقارنة'}</strong></div>
+                    <div className="font-black text-slate-300">السابقة — {previousRecipe?.versionNumber || 'V0.9'}</div>
+                    <div className="mt-3 space-y-2 text-slate-400">
+                      <div>تكلفة المكونات/حصة: <strong className="text-slate-100">{previousRecipeUnitCost !== undefined ? `${previousRecipeUnitCost.toFixed(3)} د.ك` : 'غير مسجل'}</strong></div>
+                      <div>حجم الدفعة: <strong className="text-slate-100">{previousRecipe?.batchSize || 'غير مسجل'}</strong></div>
+                      <div>العائد المعياري: <strong className="text-slate-100">{previousRecipe?.yield ?? 'غير مسجل'} حصة</strong></div>
+                      <div>ملاحظة النسخة: <strong className="text-slate-100">{previousRecipe?.changeLogNote || 'لا توجد نسخة سابقة قابلة للمقارنة'}</strong></div>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="text-xs text-stone-400 leading-6">
+                <div className="text-xs text-slate-400 leading-6">
                   فعّل المقارنة لترى كيف تطورت تكلفة المنتج، نسخة الوصفة، وقت التحضير والسعر التجاري من إصدار سابق إلى الإصدار الحالي.
                 </div>
               )}
             </div>
 
             <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3 text-xs">
-              <div className="font-bold text-stone-100 flex items-center gap-2"><Activity className="w-4 h-4 text-emerald-300" /> صحة التوأم الرقمي</div>
+              <div className="font-bold text-slate-100 flex items-center gap-2"><Activity className="w-4 h-4 text-emerald-300" /> صحة التوأم الرقمي</div>
               {[
                 [<LockKeyhole className="w-4 h-4 text-fuchsia-300" />, 'أذونات الوصفة', `${twin.grants.length} Grant`],
                 [<PackageCheck className="w-4 h-4 text-sky-300" />, 'الإطلاق', twin.launch?.status || 'غير مباشر'],
-                [<ShieldCheck className="w-4 h-4 text-emerald-300" />, 'Launch Gate', twin.launch?.gateChecklist.allRequirementsPassed ? 'مكتمل' : 'يحتاج مراجعة'],
-                [<Store className="w-4 h-4 text-[#e8c880]" />, 'Keep It', `${twin.keepVotes}%`]
+                [<ShieldCheck className="w-4 h-4 text-emerald-300" />, 'بوابة الإطلاق', twin.launch?.gateChecklist.allRequirementsPassed ? 'مكتمل' : 'يحتاج مراجعة'],
+                [<Store className="w-4 h-4 text-gold-300" />, 'نسبة التكرار', `${twin.keepVotes}%`]
               ].map(([icon, label, value], idx) => (
                 <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-white/10">
-                  <div className="flex items-center gap-2">{icon as React.ReactNode}<span className="text-stone-400">{label as string}</span></div>
-                  <strong className="text-stone-100">{value as string}</strong>
+                  <div className="flex items-center gap-2">{icon as React.ReactNode}<span className="text-slate-400">{label as string}</span></div>
+                  <strong className="text-slate-100">{value as string}</strong>
                 </div>
               ))}
             </div>

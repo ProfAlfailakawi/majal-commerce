@@ -125,14 +125,14 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
                 <div className="grid grid-cols-4 gap-2 text-center">
                   <div className="rounded-xl p-3 bg-white/5"><Star className="w-4 h-4 text-gold-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.rating.toFixed(1)}</div><div className="text-[9px] text-slate-500">الطعم</div></div>
                   <div className="rounded-xl p-3 bg-white/5"><Repeat2 className="w-4 h-4 text-emerald-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.repeat}%</div><div className="text-[9px] text-slate-500">يكرر</div></div>
-                  <div className="rounded-xl p-3 bg-white/5"><Users className="w-4 h-4 text-sky-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.keep}%</div><div className="text-[9px] text-slate-500">Keep It</div></div>
+                  <div className="rounded-xl p-3 bg-white/5"><Users className="w-4 h-4 text-sky-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.keep}%</div><div className="text-[9px] text-slate-500">نسبة التكرار</div></div>
                   <div className="rounded-xl p-3 bg-white/5"><PackageOpen className="w-4 h-4 text-rose-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.remaining}</div><div className="text-[9px] text-slate-500">متبقي</div></div>
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => { setSelectedLaunch(featured); setSelectedBranchId(featured.branches[0] || ''); }} className="flex-1 py-3 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center justify-center gap-2"><ShoppingBag className="w-4 h-4" /> اطلب التجربة</button>
-                  <button onClick={handleKeepVote} className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-xs font-black text-emerald-300 flex items-center gap-2"><Heart className="w-4 h-4" /> خلوه</button>
+                  <button onClick={handleKeepVote} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black text-emerald-300 flex items-center gap-2"><Heart className="w-4 h-4" /> خلوه</button>
                 </div>
-                {voteMessage && <div className="rounded-xl p-3 bg-emerald-500/10 border border-emerald-400/20 text-xs text-emerald-300 font-bold">✓ {voteMessage}</div>}
+                {voteMessage && <div className="rounded-xl p-3 bg-emerald-500/10 border border-emerald-400/20 text-xs text-emerald-300 font-bold">{voteMessage}</div>}
               </div>
             </div>
           )}

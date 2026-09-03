@@ -49,7 +49,7 @@ export const SuperAdminDashboard: React.FC = () => {
     ['LIQUIDITY', 'سيولة السوق'],
     ['TRUST', 'الثقة والمخاطر'],
     ['SYSTEM', 'النظام'],
-    ['AUDIT', 'Audit Log']
+    ['AUDIT', 'سجل التدقيق']
   ] as const;
 
   return (
@@ -59,14 +59,14 @@ export const SuperAdminDashboard: React.FC = () => {
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
           <div className="space-y-3 max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-fuchsia-500/10 border border-fuchsia-400/20 text-fuchsia-200 text-xs font-black"><Crown className="w-4 h-4" /> MAJAL SUPER ADMIN</div>
-            <h1 className="text-2xl md:text-4xl font-black">Command Center — مركز قيادة «مجال»</h1>
+            <h1 className="text-2xl md:text-4xl font-black">مركز قيادة «مجال»</h1>
             <p className="text-sm text-slate-400 leading-7">السوبر أدمن لا يدير شاشة فقط؛ يدير السوق نفسه: الأدوار، السياسات، المخاطر، سيولة العرض والطلب، سلامة الوصول والبيانات، ومؤشرات الشركة العليا.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 min-w-[320px]">
-            <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-[11px] text-slate-500">GMV</div><div className="mt-2 text-2xl font-black text-gold-300 font-mono">{metrics.gmv.toFixed(3)}</div></div>
+            <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-[11px] text-slate-500">إجمالي المبيعات</div><div className="mt-2 text-2xl font-black text-gold-300 font-mono">{metrics.gmv.toFixed(3)}</div></div>
             <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-[11px] text-slate-500">رسوم مجال</div><div className="mt-2 text-2xl font-black text-emerald-300 font-mono">{metrics.platform.toFixed(3)}</div></div>
-            <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-[11px] text-slate-500">إطلاقات LIVE</div><div className="mt-2 text-2xl font-black text-sky-300 font-mono">{metrics.live}</div></div>
+            <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-[11px] text-slate-500">إطلاقات حيّة</div><div className="mt-2 text-2xl font-black text-sky-300 font-mono">{metrics.live}</div></div>
             <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-[11px] text-slate-500">عقود موقعة</div><div className="mt-2 text-2xl font-black text-fuchsia-300 font-mono">{metrics.signed}</div></div>
           </div>
         </div>
@@ -104,7 +104,7 @@ export const SuperAdminDashboard: React.FC = () => {
 
           <div className="grid xl:grid-cols-[1.1fr_.9fr] gap-6">
             <section className="glass-panel rounded-3xl p-6 border border-white/10 space-y-4">
-              <div className="flex items-center gap-2"><Activity className="w-5 h-5 text-emerald-300" /><h2 className="text-lg font-black">Executive Pulse</h2></div>
+              <div className="flex items-center gap-2"><Activity className="w-5 h-5 text-emerald-300" /><h2 className="text-lg font-black">النبض التنفيذي</h2></div>
               {[
                 ['حركة السوق', 'المنصة تملك عرضًا من المبدعين وطلبات من المنشآت ويمكن قياس التوازن في Liquidity Center.'],
                 ['حماية الحقوق', 'كل Recipe Grant وسجل عقد وتغيير حساس يدخل في Audit Trail.'],
@@ -114,7 +114,7 @@ export const SuperAdminDashboard: React.FC = () => {
             </section>
 
             <section className="glass-panel rounded-3xl p-6 border border-white/10 space-y-4">
-              <div className="flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-gold-300" /><h2 className="text-lg font-black">Governance Guardrails</h2></div>
+              <div className="flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-gold-300" /><h2 className="text-lg font-black">حواجز الحوكمة</h2></div>
               {[
                 'لا يمكن للأدمن منح نفسه صلاحية سوبر أدمن.',
                 'الوصفة الكاملة لا تُعرض للسوبر أدمن افتراضيًا لمجرد امتلاكه الإدارة.',
@@ -129,14 +129,14 @@ export const SuperAdminDashboard: React.FC = () => {
 
       {activeTab === 'PERMISSIONS' && (
         <section className="glass-panel rounded-3xl p-5 md:p-6 border border-white/10 space-y-5">
-          <div className="flex items-center gap-3"><div className="w-12 h-12 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-400/20 flex items-center justify-center text-fuchsia-300"><KeyRound className="w-6 h-6" /></div><div><h3 className="text-lg font-black">Permission Matrix</h3><p className="text-xs text-slate-400 mt-1">الصلاحيات العليا محسوبة حسب الدور والسياق، وليست قائمة واحدة مشتركة.</p></div></div>
+          <div className="flex items-center gap-3"><div className="w-12 h-12 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-400/20 flex items-center justify-center text-fuchsia-300"><KeyRound className="w-6 h-6" /></div><div><h3 className="text-lg font-black">مصفوفة الصلاحيات</h3><p className="text-xs text-slate-400 mt-1">الصلاحيات العليا محسوبة حسب الدور والسياق، وليست قائمة واحدة مشتركة.</p></div></div>
           <div className="space-y-3">
             {roleRows.map(role => (
               <div key={role} className="rounded-2xl p-4 bg-white/5 border border-white/10">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                   <div><div className="font-black text-slate-100">{roleLabel(role)}</div><div className="text-[10px] text-slate-500 mt-1">{role}</div></div>
                   <div className="flex flex-wrap gap-2 lg:justify-end">
-                    {getRolePermissions(role).map(permission => <span key={permission} className="px-2 py-1 rounded-lg bg-slate-950/50 border border-white/10 text-[10px] text-slate-400">{permission}</span>)}
+                    {getRolePermissions(role).map(permission => <span key={permission} className="px-2.5 py-1 rounded-lg bg-slate-950/50 border border-white/10 text-[10px] text-slate-400">{permission}</span>)}
                   </div>
                 </div>
               </div>
@@ -186,7 +186,7 @@ export const SuperAdminDashboard: React.FC = () => {
               { icon: <Database className="w-5 h-5 text-sky-300" />, title: 'Production Data Path', body: 'المصادقة والجلسات وصندوق القرارات وسجلات التكامل أصبحت خادمية ودائمة. عمليات المجال الحساسة تبقى مقفلة إنتاجيًا حتى نقلها بالكامل إلى API وPostgreSQL وObject Storage مشفّر.' },
               { icon: <FileKey2 className="w-5 h-5 text-fuchsia-300" />, title: 'Sensitive Domains', body: 'الوصفات والعقود والأذونات تعامل كبيانات حساسة؛ الوصول الكامل سياقي ومؤقت، وليس نتيجة رتبة إدارية فقط.' },
               { icon: <Settings2 className="w-5 h-5 text-gold-300" />, title: 'Policy Layer', body: 'القيم التشغيلية العليا أصبحت سياسة فعلية قابلة للتحكم من السوبر أدمن وتنعكس مباشرة على منطق المتجر.' },
-              { icon: <ShieldCheck className="w-5 h-5 text-emerald-300" />, title: 'Compliance Layer', body: 'Launch Gate وحالة المستندات والنزاعات وأذونات الوصفة Records صريحة ومشتقة من بيانات حقيقية.' },
+              { icon: <ShieldCheck className="w-5 h-5 text-emerald-300" />, title: 'Compliance Layer', body: 'بوابة الإطلاق وحالة المستندات والنزاعات وأذونات الوصفة Records صريحة ومشتقة من بيانات حقيقية.' },
               { icon: <Activity className="w-5 h-5 text-rose-300" />, title: 'Observability', body: 'العمليات الحرجة—الوصول، التوقيع، المختبر، الإطلاق، الطلب، التقييم، السياسة والتسوية—تُصدر أحداث Audit واضحة.' }
             ].map((card, idx) => <section key={idx} className="glass-card rounded-3xl p-5 border border-white/10"><div>{card.icon}</div><h3 className="font-black mt-4">{card.title}</h3><p className="text-xs text-slate-400 leading-6 mt-2">{card.body}</p></section>)}
           </div>

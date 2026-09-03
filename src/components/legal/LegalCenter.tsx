@@ -234,7 +234,7 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-2">
-          <span className="text-[10px] font-black tracking-[0.2em] text-[#e8c880] uppercase">MAJAL LEGAL</span>
+          <span className="text-[10px] font-black tracking-[0.2em] text-gold-300 uppercase">MAJAL LEGAL</span>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-100">المركز القانوني والامتثال</h1>
         </div>
         <button onClick={onBack} className="px-4 py-2.5 rounded-xl glass-card border border-white/10 text-xs font-bold text-slate-200 hover:bg-white/5 flex items-center gap-2">
@@ -243,7 +243,7 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
         </button>
       </div>
 
-      <div className="rounded-2xl border border-[#e8c880]/20 bg-[#c7a55b]/[0.06] p-4 text-[11px] leading-6 text-slate-300">
+      <div className="rounded-2xl border border-gold-300/20 bg-gold-500/[0.06] p-4 text-[11px] leading-6 text-slate-300">
         هذه المستندات إطار تشغيلي معلن وقابل للمراجعة. اكتمال الاعتماد القانوني والتنظيمي في دولة الكويت شرط مسبق لأي معاملة تجارية حقيقية، ولا تُغني هذه الصفحات عن اعتماد مستشار مختص.
       </div>
 
@@ -255,7 +255,7 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
             aria-selected={active === item.id}
             onClick={() => setActive(item.id)}
             className={`shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${
-              active === item.id ? 'bg-[#c7a55b] text-slate-950' : 'glass-card border border-white/10 text-slate-300 hover:bg-white/5'
+              active === item.id ? 'bg-gold-500 text-slate-950' : 'glass-card border border-white/10 text-slate-300 hover:bg-white/5'
             }`}
           >
             {item.icon}
@@ -272,7 +272,7 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
 
         {doc.sections.map(section => (
           <section key={section.heading} className="space-y-3">
-            <h3 className="text-sm font-black text-[#e8c880]">{section.heading}</h3>
+            <h3 className="text-sm font-black text-gold-300">{section.heading}</h3>
             {section.body.map((paragraph, index) => (
               <p key={index} className="text-xs sm:text-[13px] text-slate-300 leading-8">{paragraph}</p>
             ))}
@@ -280,9 +280,9 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
         ))}
 
         <footer className="pt-5 border-t border-white/10 flex flex-wrap items-center gap-3 text-[11px] text-slate-400">
-          <Mail className="w-4 h-4 text-[#e8c880]" />
+          <Mail className="w-4 h-4 text-gold-300" />
           <span>للاستفسارات القانونية أو طلبات البيانات:</span>
-          <a href={`mailto:${SUPPORT_EMAIL}`} dir="ltr" className="text-[#e8c880] font-bold hover:underline">{SUPPORT_EMAIL}</a>
+          <a href={`mailto:${SUPPORT_EMAIL}`} dir="ltr" className="text-gold-300 font-bold hover:underline">{SUPPORT_EMAIL}</a>
         </footer>
       </article>
     </div>

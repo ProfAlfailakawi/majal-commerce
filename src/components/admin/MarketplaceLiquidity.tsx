@@ -33,7 +33,7 @@ export const MarketplaceLiquidity: React.FC = () => {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-400/20 flex items-center justify-center text-sky-300"><CircleGauge className="w-6 h-6" /></div>
-          <div><h3 className="text-lg font-black text-slate-100">Marketplace Liquidity — سيولة السوق</h3><p className="text-xs text-slate-400 mt-1">مؤشر تشغيلي مبني على المنتجات القابلة للمطابقة والتحديات المفتوحة، وليس على كل السجلات المؤرشفة.</p></div>
+          <div><h3 className="text-lg font-black text-slate-100">سيولة السوق</h3><p className="text-xs text-slate-400 mt-1">مؤشر تشغيلي مبني على المنتجات القابلة للمطابقة والتحديات المفتوحة، وليس على كل السجلات المؤرشفة.</p></div>
         </div>
         <div className="flex gap-2 text-xs flex-wrap"><span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-300">متوسط Match: <strong className="text-sky-300">{avgMatch}%</strong></span><span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-300">تحديات مفتوحة: <strong className="text-gold-300">{openChallenges.length}</strong></span></div>
       </div>

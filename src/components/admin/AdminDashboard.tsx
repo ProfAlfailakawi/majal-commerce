@@ -4,6 +4,7 @@ import {
   BadgeCheck,
   Banknote,
   Building2,
+  CircleCheck,
   FileCheck2,
   Gavel,
   KeyRound,
@@ -57,7 +58,7 @@ export const AdminDashboard: React.FC = () => {
           <div className="space-y-3 max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold-500/10 border border-gold-300/20 text-gold-300 text-xs font-bold">
               <ShieldCheck className="w-4 h-4" />
-              <span>Majal Admin Control Center</span>
+              <span>مركز تحكّم أدمن مجال</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black">مركز التحكم التشغيلي والامتثال — مجال</h1>
             <p className="text-sm text-slate-300 leading-7">
@@ -77,13 +78,13 @@ export const AdminDashboard: React.FC = () => {
 
       {notice && (
         <div className="p-4 bg-emerald-500 text-slate-950 rounded-2xl text-sm font-bold">
-          ✓ {notice}
+          <CircleCheck className="w-4 h-4 shrink-0" /> {notice}
         </div>
       )}
 
       <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
         {[
-          { label: 'GMV', value: `${totals.totalGmv.toFixed(3)} د.ك`, icon: <Wallet className="w-5 h-5 text-gold-300" /> },
+          { label: 'إجمالي المبيعات', value: `${totals.totalGmv.toFixed(3)} د.ك`, icon: <Wallet className="w-5 h-5 text-gold-300" /> },
           { label: 'رسوم المنصة', value: `${totals.totalPlatformFees.toFixed(3)} د.ك`, icon: <BadgeCheck className="w-5 h-5 text-emerald-300" /> },
           { label: 'عقود موقعة', value: `${totals.signedContractsCount}`, icon: <FileCheck2 className="w-5 h-5 text-sky-300" /> },
           { label: 'منشآت مرخّصة', value: `${totals.verifiedHosts}`, icon: <Building2 className="w-5 h-5 text-fuchsia-300" /> },
@@ -142,7 +143,7 @@ export const AdminDashboard: React.FC = () => {
               'يستطيع اعتماد العقود النموذجية ومراجعة الأذونات والطلبات.',
               'لا يملك الأدمن تغيير سياسات النظام العليا أو منح نفسه صلاحيات السوبر أدمن.',
               'لا يستطيع الأدمن الاطلاع على كل الأسرار إلا وفق سياسة الوصول المعتمدة.',
-              'كل إجراء حساس للأدمن يسجل في Audit Log.'
+              'كل إجراء حساس للأدمن يسجل في سجل التدقيق.'
             ].map((item, idx) => (
               <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10 text-sm text-slate-300 leading-7">
                 {item}
@@ -164,7 +165,7 @@ export const AdminDashboard: React.FC = () => {
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-bold text-slate-100">{host.commercialName}</span>
-                    <span className="px-2 py-1 rounded-full text-[11px] bg-emerald-500/10 border border-emerald-400/20 text-emerald-300">
+                    <span className="px-2.5 py-1 rounded-full text-[11px] bg-emerald-500/10 border border-emerald-400/20 text-emerald-300">
                       {host.verificationStatus === 'VERIFIED' ? 'مرخّص ومتحقق' : host.verificationStatus}
                     </span>
                   </div>
@@ -180,8 +181,8 @@ export const AdminDashboard: React.FC = () => {
           </div>
 
           <div className="pt-5 border-t border-white/10 space-y-3">
-            <div className="flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-rose-300" /><h3 className="font-black text-slate-100">Emergency Product Control</h3></div>
-            <p className="text-xs text-slate-400">إيقاف أو إعادة منتج مباشر عند وجود مشكلة جودة، امتثال أو سلامة. كل إجراء يسجل في Audit Log.</p>
+            <div className="flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-rose-300" /><h3 className="font-black text-slate-100">التحكّم الطارئ بالمنتجات</h3></div>
+            <p className="text-xs text-slate-400">إيقاف أو إعادة منتج مباشر عند وجود مشكلة جودة، امتثال أو سلامة. كل إجراء يسجل في سجل التدقيق.</p>
             {store.products.filter(p => p.status === 'LIVE_DROP' || p.status === 'LIVE_TRIAL' || p.status === 'LIVE_PERMANENT' || p.status === 'PAUSED').map(product => (
               <div key={product.id} className="rounded-2xl p-4 bg-slate-950/40 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3">
                 <div><div className="font-bold text-slate-100">{product.publicName}</div><div className="mt-1.5"><StatusPill status={product.status} prefix="الحالة" /></div></div>
@@ -240,7 +241,7 @@ export const AdminDashboard: React.FC = () => {
         <section className="glass-panel rounded-3xl p-6 border border-white/10 space-y-5">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
             <div>
-              <div className="flex items-center gap-2"><Wallet className="w-5 h-5 text-gold-300" /><h2 className="text-lg font-black">Settlement Control — دورة المستحقات</h2></div>
+              <div className="flex items-center gap-2"><Wallet className="w-5 h-5 text-gold-300" /><h2 className="text-lg font-black">دورة المستحقات</h2></div>
               <p className="text-xs text-slate-400 mt-2 leading-6">الاعتماد الداخلي لا يعني أن التحويل تم. التأكيد مقفول حتى وصول مرجع دفع موثّق إلى الخادم.</p>
             </div>
             <div className="text-xs text-slate-500">{store.settlements.length} دفعات مسجلة</div>

@@ -55,7 +55,7 @@ export const PredictiveInterventionRadar: React.FC<{ onNavigate: (target: RadarT
     }] : []),
     ...(complianceRisk.length ? [{
       id: 'compliance', severity: 'HIGH' as const, title: `${complianceRisk.length} مستند امتثال قد يعطل إطلاقًا قريبًا`,
-      evidence: 'الرادار يقرأ حالة المستند الحالية قبل أن تصل المشكلة إلى Launch Gate.',
+      evidence: 'الرادار يقرأ حالة المستند الحالية قبل أن تصل المشكلة إلى بوابة الإطلاق.',
       nextAction: 'رتّب التجديد حسب أقرب إطلاق متأثر.', target: 'TRUST' as const,
       icon: <FileWarning className="w-5 h-5" />
     }] : []),
@@ -102,7 +102,7 @@ export const PredictiveInterventionRadar: React.FC<{ onNavigate: (target: RadarT
                     <div className="w-10 h-10 rounded-xl bg-slate-950/35 flex items-center justify-center shrink-0">{signal.icon}</div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] font-black px-2 py-1 rounded-lg bg-slate-950/35">{meta.label}</span>
+                        <span className="text-[10px] font-black px-2.5 py-1 rounded-lg bg-slate-950/35">{meta.label}</span>
                         <h3 className="font-black text-sm">{signal.title}</h3>
                       </div>
                       <p className="text-xs opacity-75 leading-6 mt-2">{signal.evidence}</p>

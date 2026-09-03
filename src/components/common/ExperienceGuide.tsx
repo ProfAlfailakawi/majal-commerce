@@ -54,7 +54,7 @@ function deriveNextMove(activeSurface: SurfaceType) {
     const complianceIssues = store.compliance.filter(item => item.hostBusinessId === user.hostBusinessId && ['EXPIRED', 'EXPIRING_SOON'].includes(item.status)).length;
     const pendingLaunches = store.collaborations.filter(item => item.hostBusinessId === user.hostBusinessId && ['SIGNED', 'PRE_LAUNCH'].includes(item.stage)).length;
     const creatorOffers = store.collaborations.filter(item => item.hostBusinessId === user.hostBusinessId && item.currentOffer?.status === 'PENDING' && item.currentOffer.senderRole === 'CREATOR').length;
-    if (complianceIssues) return { eyebrow: 'يحمي الإطلاق', title: `عالج ${complianceIssues} مستند امتثال`, reason: 'المستند الناقص قد يوقف Launch Gate حتى لو كان المنتج جاهزاً.', action: 'راجع الجاهزية', surface: 'HOST' as SurfaceType, signal: complianceIssues };
+    if (complianceIssues) return { eyebrow: 'يحمي الإطلاق', title: `عالج ${complianceIssues} مستند امتثال`, reason: 'المستند الناقص قد يوقف بوابة الإطلاق حتى لو كان المنتج جاهزاً.', action: 'راجع الجاهزية', surface: 'HOST' as SurfaceType, signal: complianceIssues };
     if (pendingLaunches) return { eyebrow: 'أقرب قيمة للإيراد', title: `أكمل ${pendingLaunches} بوابة إطلاق`, reason: 'هذه التعاونات تجاوزت التفاوض؛ إغلاق المتطلبات ينقلها إلى السوق.', action: 'أكمل الإطلاق', surface: 'HOST' as SurfaceType, signal: pendingLaunches };
     if (creatorOffers) return { eyebrow: 'قرار ينتظرك', title: `راجع ${creatorOffers} عرض مقابل`, reason: 'الرد السريع يحافظ على زخم الصفقة ويقلل دورة التفاوض.', action: 'راجع العرض', surface: 'HOST' as SurfaceType, signal: creatorOffers };
     return { eyebrow: 'أفضل خطوة الآن', title: 'اكتشف منتجاً مناسباً لقدراتك', reason: 'ابدأ من القدرة التشغيلية والهامش، ثم افتح الوصفة بالمستوى اللازم فقط.', action: 'افتح الاكتشاف', surface: 'HOST' as SurfaceType, signal: store.matches.length };
@@ -152,7 +152,7 @@ export const ExperienceGuide: React.FC<ExperienceGuideProps> = ({ activeSurface,
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button onClick={cycleMode} className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white" aria-label={`تغيير مستوى التفاصيل، الحالي ${mode}`} title="مبسّط / موجّه / خبير"><Gauge className="w-4 h-4" /></button>
-            <button onClick={() => setPaletteOpen(true)} className="px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white text-[10px] font-bold flex items-center gap-2"><Command className="w-4 h-4" /><span>⌘K</span></button>
+            <button onClick={() => setPaletteOpen(true)} className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white text-[10px] font-bold flex items-center gap-2"><Command className="w-4 h-4" /><span>⌘K</span></button>
             <button onClick={() => onSurfaceChange(nextMove.surface)} className="px-4 py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center gap-2 hover:bg-gold-400"><span>{nextMove.action}</span><ArrowLeft className="w-4 h-4" /></button>
           </div>
         </div>

@@ -44,8 +44,8 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
           <Avatar name={profile.displayName} src={profile.avatarUrl} size={64} shape="squircle" />
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-xl font-black text-slate-100">Creator Passport</h3>
-              <span className="px-3 py-1 rounded-full bg-gold-500/10 text-gold-300 border border-gold-300/20 text-[11px] font-black">{stage}</span>
+              <h3 className="text-xl font-black text-slate-100">جواز المبدع</h3>
+              <span className="px-2.5 py-1 rounded-full bg-gold-500/10 text-gold-300 border border-gold-300/20 text-[11px] font-black">{stage}</span>
             </div>
             <p className="text-xs text-slate-400 mt-1">جواز تجاري حي يلخص ما أثبته المبدع فعليًا داخل «مجال».</p>
           </div>
@@ -61,7 +61,7 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
           { label: 'منتجات مسجلة', value: products.length, icon: <PackageCheck className="w-4 h-4 text-sky-300" /> },
           { label: 'تعاونات تجارية', value: collaborations.length, icon: <Building2 className="w-4 h-4 text-fuchsia-300" /> },
           { label: 'مبيعات مسجلة', value: `${stats.revenue.toFixed(3)} د.ك`, icon: <TrendingUp className="w-4 h-4 text-emerald-300" /> },
-          { label: 'Keep It', value: `${stats.keepRate}%`, icon: <Repeat2 className="w-4 h-4 text-gold-300" /> }
+          { label: 'نسبة التكرار', value: `${stats.keepRate}%`, icon: <Repeat2 className="w-4 h-4 text-gold-300" /> }
         ].map((item, idx) => (
           <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10">
             <div className="flex items-center gap-2 text-[11px] text-slate-400">{item.icon}{item.label}</div>
@@ -87,7 +87,7 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
         </div>
 
         <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3">
-          <div className="flex items-center gap-2 font-bold text-slate-100"><Crown className="w-4 h-4 text-gold-300" /> Graduation Path</div>
+          <div className="flex items-center gap-2 font-bold text-slate-100"><Crown className="w-4 h-4 text-gold-300" /> مسار الترقّي</div>
           {[
             { label: 'Discovered', done: true, icon: <Sparkles className="w-4 h-4" /> },
             { label: 'Tested', done: profile.badges.includes('TESTED'), icon: <BookOpenCheck className="w-4 h-4" /> },

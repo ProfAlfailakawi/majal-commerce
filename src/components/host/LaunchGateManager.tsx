@@ -76,8 +76,8 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/10 pb-5">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Rocket className="w-5 h-5 text-[#e8c880]" />
-            <h3 className="font-black text-lg text-slate-100">Launch Gate — بوابة الإطلاق الحقيقية</h3>
+            <Rocket className="w-5 h-5 text-gold-300" />
+            <h3 className="font-black text-lg text-slate-100">بوابة الإطلاق الحقيقية</h3>
           </div>
           <p className="text-xs text-slate-400 leading-6 max-w-3xl">
             الشروط الرقابية تُشتق من البيانات الفعلية، والشروط التشغيلية فقط يمكن اعتمادها يدويًا. لا يوجد زر قادر على تجاوز العقد أو الترخيص أو بيانات الحساسية.
@@ -87,7 +87,7 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
         <div className="flex items-center gap-3">
           <div className="glass-card px-4 py-3 rounded-2xl border border-white/10 min-w-[130px] text-center">
             <span className="text-[10px] text-slate-500 block">الجاهزية</span>
-            <span className="text-base font-black text-[#e8c880]">{completedItems} / {itemsConfig.length}</span>
+            <span className="text-base font-black text-gold-300">{completedItems} / {itemsConfig.length}</span>
             <span className="text-[10px] text-slate-400 block mt-1">{readinessLabel}</span>
           </div>
           {!hasLaunch && canOperate && (
@@ -118,7 +118,7 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
                   checked
                     ? 'bg-emerald-500/8 border-emerald-400/20 text-slate-100'
                     : 'bg-white/4 border-white/8 text-slate-400'
-                } ${interactive ? 'hover:border-[#e8c880]/30 cursor-pointer' : 'cursor-default'}`}
+                } ${interactive ? 'hover:border-gold-300/30 cursor-pointer' : 'cursor-default'}`}
               >
                 <div className="mt-0.5">
                   {checked ? <CheckCircle2 className="w-5 h-5 text-emerald-300" /> : <Circle className="w-5 h-5 text-slate-600" />}
@@ -126,7 +126,7 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
                 <div className="space-y-1 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="block font-bold text-xs text-slate-100">{item.label}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black border ${manual ? 'bg-[#c7a55b]/10 border-[#e8c880]/20 text-[#e8c880]' : 'bg-sky-500/10 border-sky-400/20 text-sky-300'}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black border ${manual ? 'bg-gold-500/10 border-gold-300/20 text-gold-300' : 'bg-sky-500/10 border-sky-400/20 text-sky-300'}`}>
                       {manual ? 'قرار تشغيلي' : 'مشتق آليًا'}
                     </span>
                   </div>
@@ -151,9 +151,9 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
         <button
           onClick={handleLaunch}
           disabled={!isAllReady || !canOperate}
-          className={`px-6 py-3 rounded-2xl font-black text-xs transition-all flex items-center gap-2 ${
+          className={`px-6 py-3.5 rounded-2xl font-black text-xs transition-all flex items-center gap-2 ${
             isAllReady && canOperate
-              ? 'bg-gradient-to-r from-emerald-500 to-emerald-400 text-slate-950 hover:scale-[1.02] shadow-xl'
+              ? 'bg-gradient-to-r from-emerald-500 to-emerald-400 text-slate-950 hover:brightness-110 shadow-xl'
               : 'bg-white/5 text-slate-600 cursor-not-allowed border border-white/10'
           }`}
         >

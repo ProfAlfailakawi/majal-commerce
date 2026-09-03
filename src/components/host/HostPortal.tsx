@@ -28,6 +28,7 @@ import { LaunchWarRoom } from './LaunchWarRoom';
 import { TeamPermissions } from './TeamPermissions';
 import { StatusPill } from '../common/StatusPill';
 import { SurfaceTabs } from '../common/SurfaceTabs';
+import { EmptyState } from '../common/EmptyState';
 
 export const HostPortal: React.FC = () => {
   const [, setTick] = useState(0);
@@ -115,14 +116,22 @@ export const HostPortal: React.FC = () => {
               store.activeUser = { ...store.activeUser, hostBusinessId: newHost.id };
               setTick(t => t + 1);
             }}
-            className="mt-4 px-6 py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-bold inline-flex items-center gap-2"
+            className="mt-4 px-6 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-bold inline-flex items-center gap-2"
           >
             <Plus className="w-5 h-5" /> إنشاء منشأة افتراضية للبدء
           </button>
         </div>
       );
     }
-    return <div className="max-w-3xl mx-auto p-8 text-center text-slate-400">لا توجد منشأة مرتبطة بهذا الحساب. الرجاء التواصل مع المالك.</div>;
+    return (
+    <div className="max-w-2xl mx-auto px-4 py-16">
+      <EmptyState
+        icon={<Building2 className="w-6 h-6" />}
+        title="حسابك مو مرتبط بمنشأة"
+        body="صلاحيتك جاهزة، بس ناقص ربط الحساب بمنشأة مرخّصة. مالك المنشأة هو اللي يقدر يضيفك من «الفريق والصلاحيات»."
+      />
+    </div>
+  );
   }
 
   return (
@@ -143,7 +152,7 @@ export const HostPortal: React.FC = () => {
           </div>
 
           {hasPermission(store.activeUser, 'MANAGE_CHALLENGES') && (
-            <button onClick={() => setShowPublisher(true)} className="px-5 py-3 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 text-xs font-black flex items-center gap-2"><Plus className="w-4 h-4" /> نشر تحدي ابتكار</button>
+            <button onClick={() => setShowPublisher(true)} className="px-6 py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 text-xs font-black flex items-center gap-2"><Plus className="w-4 h-4" /> نشر تحدي ابتكار</button>
           )}
         </div>
       </section>
@@ -156,7 +165,7 @@ export const HostPortal: React.FC = () => {
             {[
               { label: 'التعاونات', value: myCollaborations.length, icon: <Sparkles className="w-4 h-4 text-fuchsia-300" /> },
               { label: 'الفروع', value: host.branches.length, icon: <Building2 className="w-4 h-4 text-sky-300" /> },
-              { label: canSeeFinance ? 'GMV' : 'الإطلاقات', value: canSeeFinance ? `${finance.gmv.toFixed(3)} د.ك` : store.launches.filter(l => l.hostBusinessId === currentHostId && ['LIVE','PERMANENT'].includes(l.status)).length, icon: <Activity className="w-4 h-4 text-emerald-300" /> },
+              { label: canSeeFinance ? 'إجمالي المبيعات' : 'الإطلاقات', value: canSeeFinance ? `${finance.gmv.toFixed(3)} د.ك` : store.launches.filter(l => l.hostBusinessId === currentHostId && ['LIVE','PERMANENT'].includes(l.status)).length, icon: <Activity className="w-4 h-4 text-emerald-300" /> },
               { label: canSeeFinance ? 'صافي المنشأة' : 'المنتجات النشطة', value: canSeeFinance ? `${finance.hostNet.toFixed(3)} د.ك` : store.products.filter(p => myCollaborations.some(c => c.productId === p.id) && !['PAUSED','COMPLETED'].includes(p.status)).length, icon: <CircleDollarSign className="w-4 h-4 text-gold-300" /> }
             ].map((item, idx) => (
               <div key={idx} className="glass-card rounded-2xl p-4 border border-white/10"><div className="flex items-center gap-2 text-[11px] text-slate-400">{item.icon}{item.label}</div><div className="mt-2 text-xl font-black text-slate-100 font-mono">{item.value}</div></div>
@@ -201,7 +210,7 @@ export const HostPortal: React.FC = () => {
           {hasPermission(store.activeUser, 'MANAGE_LAB') && <LabWorkspace collaboration={activeCol} />}
           {hasPermission(store.activeUser, 'MANAGE_OFFERS') && <OfferBuilder collaboration={activeCol} />}
           <LaunchGateManager collaboration={activeCol} />
-          {activeCol.contract && <button onClick={() => setSelectedContract(activeCol.contract)} className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-xs font-black">فتح العقد التجاري</button>}
+          {activeCol.contract && <button onClick={() => setSelectedContract(activeCol.contract)} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black">فتح العقد التجاري</button>}
         </div>
       )}
 
@@ -209,7 +218,7 @@ export const HostPortal: React.FC = () => {
 
       {activeTab === 'FINANCE' && (
         <section className="glass-panel rounded-3xl p-5 md:p-6 border border-white/10 space-y-5">
-          <div className="flex items-center gap-3"><div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-center text-emerald-300"><CircleDollarSign className="w-6 h-6" /></div><div><h3 className="text-lg font-black">Finance Surface</h3><p className="text-xs text-slate-400 mt-1">هذه الشاشة تظهر فقط للأدوار المصرح لها ماليًا.</p></div></div>
+          <div className="flex items-center gap-3"><div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-center text-emerald-300"><CircleDollarSign className="w-6 h-6" /></div><div><h3 className="text-lg font-black">المالية والتسويات</h3><p className="text-xs text-slate-400 mt-1">هذه الشاشة تظهر فقط للأدوار المصرح لها ماليًا.</p></div></div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
               ['GMV', finance.gmv], ['صافي المنشأة', finance.hostNet], ['حقوق المبدعين', finance.creatorRoyalties], ['رسوم مجال', finance.platformFees]

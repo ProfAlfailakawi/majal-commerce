@@ -112,7 +112,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       const cols = store.collaborations.filter(c => c.hostBusinessId === activeUser.hostBusinessId);
       const prelaunch = cols.filter(c => c.stage === 'PRE_LAUNCH' || c.stage === 'SIGNED').length;
       const creatorOffers = cols.filter(c => c.currentOffer?.status === 'PENDING' && c.currentOffer.senderRole === 'CREATOR').length;
-      if (prelaunch) items.push(`${prelaunch} تعاون قريب من الإطلاق ويحتاج إكمال Launch Gate.`);
+      if (prelaunch) items.push(`${prelaunch} تعاون قريب من الإطلاق ويحتاج إكمال بوابة الإطلاق.`);
       if (creatorOffers) items.push(`${creatorOffers} عرض مقابل من مبدع ينتظر قرار المنشأة.`);
     }
     if (activeUser.role === 'ADMIN' || activeUser.role === 'SUPER_ADMIN') {
@@ -187,7 +187,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </button>
 
-            <span className="hidden md:inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-semibold bg-gold-500/10 text-gold-300 border border-gold-300/15">
+            <span className="hidden md:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-gold-500/10 text-gold-300 border border-gold-300/15">
               <LayoutGrid className="w-3.5 h-3.5" />
               {IS_DEMO_MODE ? 'عرض محلي آمن' : 'منصة مجال'}
             </span>
@@ -200,7 +200,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   key={s.id}
                   onClick={() => onSurfaceChange(s.id)}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium transition-all ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
                     isActive ? 'bg-gold-500 text-slate-950 font-black shadow-sm' : 'text-slate-300 hover:text-slate-100 hover:bg-white/5'
                   }`}
                 >
@@ -222,7 +222,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>دخول</span>
             </button>}
 
-            {!IS_DEMO_MODE && authStatus === 'AUTHENTICATED' && <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
+            {!IS_DEMO_MODE && authStatus === 'AUTHENTICATED' && <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
               <span className="w-7 h-7 rounded-full bg-gold-500/20 text-gold-300 grid place-items-center font-black text-xs" aria-hidden="true">{activeUser.name.slice(0, 1)}</span>
               <div className="flex flex-col text-right">
                 <span className="max-w-28 truncate text-[11px] font-bold text-slate-100">{activeUser.name}</span>
@@ -231,7 +231,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               {['SUPER_ADMIN', 'ADMIN'].includes(activeUser.role) && (
                 <button
                   onClick={() => onSurfaceChange(activeUser.role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'ADMIN')}
-                  className="px-2 py-1 rounded-lg bg-gold-500/20 hover:bg-gold-500/30 text-gold-300 text-[10px] font-bold border border-gold-300/30 transition cursor-pointer"
+                  className="px-2.5 py-1 rounded-lg bg-gold-500/20 hover:bg-gold-500/30 text-gold-300 text-[10px] font-bold border border-gold-300/30 transition cursor-pointer"
                   title="الانتقال المباشر للوحة التحكم"
                 >
                   لوحة الإدارة

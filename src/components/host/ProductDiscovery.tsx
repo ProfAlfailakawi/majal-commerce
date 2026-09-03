@@ -5,6 +5,8 @@ import { CreatorProduct, HostBusiness, DisclosureLevel } from '../../types/majal
 import { RecipeVaultModal } from '../common/RecipeVaultModal';
 import { hasPermission } from '../../lib/permissions';
 import { PRODUCT_CATEGORIES } from '../../data/catalog';
+import { EmptyState } from '../common/EmptyState';
+import { Building2 } from 'lucide-react';
 
 export const ProductDiscovery: React.FC = () => {
   const currentHostId = store.activeUser.hostBusinessId || '';
@@ -25,7 +27,13 @@ export const ProductDiscovery: React.FC = () => {
     setTimeout(() => setRequestSentNotice(null), 4000);
   };
 
-  if (!host) return <div className="glass-panel rounded-2xl p-6 text-center text-slate-500">لا توجد منشأة صالحة لهذا الحساب.</div>;
+  if (!host) return (
+    <EmptyState
+      icon={<Building2 className="w-6 h-6" />}
+      title="ما فيه منشأة مرتبطة بحسابك"
+      body="الاكتشاف يعتمد على قدرة منشأتك التشغيلية وهامشها، فيحتاج حساب مربوط بمنشأة مرخّصة أول."
+    />
+  );
 
   return (
     <div className="space-y-6 text-slate-100">

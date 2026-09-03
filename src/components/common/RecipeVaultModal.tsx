@@ -102,8 +102,8 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
   const watermarkText = `نسخة حساسة من مجال — مشاهدة بواسطة: ${store.activeUser.name} — ${product.id} — ${currentRecipe?.versionNumber || 'NO-VERSION'} — ${new Date().toLocaleDateString('ar-KW')}`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/85 backdrop-blur-md animate-in fade-in">
-      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="recipe-vault-title" className="bg-stone-900 border border-stone-800 rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl text-stone-100 flex flex-col max-h-[92vh] relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="recipe-vault-title" className="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl text-slate-100 flex flex-col max-h-[92vh] relative">
         
         {/* Dynamic Security Watermark Overlay for Confidential Levels */}
         {effectiveDisclosureLevel >= 2 && (
@@ -115,44 +115,44 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
         )}
 
         {/* Header */}
-        <div className="p-5 bg-stone-800/90 border-b border-stone-700 flex items-center justify-between z-20">
+        <div className="p-5 bg-slate-800/90 border-b border-slate-700 flex items-center justify-between z-20">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl border border-amber-500/30">
               <Lock className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 id="recipe-vault-title" className="font-black text-lg text-stone-100">
+                <h3 id="recipe-vault-title" className="font-black text-lg text-slate-100">
                   خزنة الوصفة السرية Recipe Vault
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
                   مستوى الإفصاح الفعلي: {effectiveDisclosureLevel}
                 </span>
               </div>
-              <p className="text-xs text-stone-400">
+              <p className="text-xs text-slate-400">
                 المنتج: <span className="text-amber-300 font-semibold">{product.publicName}</span> ({product.internalName})
               </p>
             </div>
           </div>
 
-          <button onClick={onClose} aria-label="إغلاق خزنة الوصفة" className="p-2 text-stone-400 hover:text-stone-100 rounded-lg hover:bg-stone-700">
+          <button onClick={onClose} aria-label="إغلاق خزنة الوصفة" className="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-700">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Versions selector bar */}
-        <div className="px-6 py-2.5 bg-stone-950 border-b border-stone-800 flex items-center justify-between text-xs z-20">
+        <div className="px-6 py-2.5 bg-slate-950 border-b border-slate-800 flex items-center justify-between text-xs z-20">
           <div className="flex items-center gap-2">
             <History className="w-4 h-4 text-amber-400" />
-            <span className="text-stone-400 font-medium">سجل النسخ والاعتمادات:</span>
+            <span className="text-slate-400 font-medium">سجل النسخ والاعتمادات:</span>
             {productRecipes.map(r => (
               <button
                 key={r.id}
                 onClick={() => setSelectedVersionNum(r.versionNumber)}
-                className={`px-3 py-1 rounded-lg font-bold transition-colors ${
+                className={`px-2.5 py-1 rounded-lg font-bold transition-colors ${
                   selectedVersionNum === r.versionNumber
-                    ? 'bg-amber-500 text-stone-950 shadow-sm'
-                    : 'bg-stone-800 text-stone-300 hover:bg-stone-700'
+                    ? 'bg-amber-500 text-slate-950 shadow-sm'
+                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                 }`}
               >
                 {r.versionNumber} {r.versionNumber === product.currentRecipeVersion && '(الحالية)'}
@@ -163,7 +163,7 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
           {effectiveDisclosureLevel >= 3 && (
             <button
               onClick={handleExportControlledCopy}
-              className="flex items-center gap-1.5 px-3 py-1 bg-stone-800 hover:bg-stone-700 text-amber-300 rounded-lg border border-stone-700 font-semibold transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-lg border border-slate-700 font-semibold transition-colors"
             >
               <Download className="w-3.5 h-3.5" />
               <span>تصدير نسخة مراقبة</span>
@@ -173,8 +173,8 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
 
         {/* Export Notification Toast */}
         {showWatermarkNotice && (
-          <div className="bg-emerald-600 text-stone-950 px-4 py-2 text-xs font-bold flex items-center justify-between z-30 animate-in slide-in-from-top">
-            <span>✓ تم إنشاء نسخة مراقبة فعلية وتسجيل حدث التصدير ومعرف التتبع في Audit Log.</span>
+          <div className="bg-emerald-600 text-slate-950 px-4 py-2 text-xs font-bold flex items-center justify-between z-30 animate-in slide-in-from-top">
+            <span>تم إنشاء نسخة مراقبة فعلية وتسجيل حدث التصدير ومعرف التتبع في سجل التدقيق.</span>
             <X className="w-4 h-4 cursor-pointer" onClick={() => setShowWatermarkNotice(false)} />
           </div>
         )}
@@ -184,24 +184,24 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
 
           {/* Level 0 / Level 1: Basic View */}
           {effectiveDisclosureLevel < 2 ? (
-            <div className="bg-stone-950/80 p-6 rounded-2xl border border-stone-800 text-center space-y-4">
+            <div className="bg-slate-950/80 p-6 rounded-2xl border border-slate-800 text-center space-y-4">
               <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center mx-auto border border-amber-500/20">
                 <Lock className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-stone-200">
+                <h4 className="text-sm font-bold text-slate-200">
                   الوصفة التشغيلية السرية محمية
                 </h4>
-                <p className="text-stone-400 text-xs max-w-md mx-auto mt-1">
+                <p className="text-slate-400 text-xs max-w-md mx-auto mt-1">
                   أنت تطالع الآن البيانات العامة للمنتج. لاستعراض المكونات التشغيلية الدقيقة، خطوات التحضير والسر التجاري، يلزم تقديم طلب وصول مسجل والموافقة عليه من صاحب المنتج.
                 </p>
               </div>
 
-              <div className="p-4 bg-stone-900 rounded-xl text-right max-w-lg mx-auto space-y-2 border border-stone-800">
+              <div className="p-4 bg-slate-900 rounded-xl text-right max-w-lg mx-auto space-y-2 border border-slate-800">
                 <p className="font-bold text-amber-400">المكونات العامة الظاهرة:</p>
                 <div className="flex flex-wrap gap-1.5">
                   {product.generalIngredients.map((ing, i) => (
-                    <span key={i} className="px-2.5 py-1 rounded-md bg-stone-800 text-stone-200 border border-stone-700">
+                    <span key={i} className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-200 border border-slate-700">
                       {ing}
                     </span>
                   ))}
@@ -222,8 +222,8 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
               </div>
 
               {/* Ingredients List */}
-              <div className="bg-stone-950 p-4 rounded-xl border border-stone-800 space-y-3">
-                <h4 className="font-bold text-stone-200 text-sm flex items-center gap-2">
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                <h4 className="font-bold text-slate-200 text-sm flex items-center gap-2">
                   <FileCheck className="w-4 h-4 text-amber-400" />
                   <span>المكونات والنسب الدقيقة (تكفي لـ {currentRecipe?.yield} حصص)</span>
                 </h4>
@@ -231,7 +231,7 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
                 <div className="overflow-x-auto">
                   <table className="w-full text-right">
                     <thead>
-                      <tr className="border-b border-stone-800 text-stone-400">
+                      <tr className="border-b border-slate-800 text-slate-400">
                         <th className="py-2 px-3 font-semibold">المكون</th>
                         <th className="py-2 px-3 font-semibold">الكمية</th>
                         <th className="py-2 px-3 font-semibold">الوحدة</th>
@@ -239,12 +239,12 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
                         <th className="py-2 px-3 font-semibold">خاصية السرية</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-stone-800/60">
+                    <tbody className="divide-y divide-slate-800/60">
                       {currentRecipe?.ingredients.map((ing, idx) => (
                         <tr key={idx} className={ing.isSecretPart ? 'bg-amber-500/5' : ''}>
-                          <td className="py-2 px-3 font-medium text-stone-200">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? 'مكوّن سري محجوب' : ing.name}</td>
-                          <td className="py-2 px-3 text-stone-300 font-bold">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? '•••' : ing.quantity}</td>
-                          <td className="py-2 px-3 text-stone-400">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? 'L3' : ing.unit}</td>
+                          <td className="py-2 px-3 font-medium text-slate-200">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? 'مكوّن سري محجوب' : ing.name}</td>
+                          <td className="py-2 px-3 text-slate-300 font-bold">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? '•••' : ing.quantity}</td>
+                          <td className="py-2 px-3 text-slate-400">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? 'L3' : ing.unit}</td>
                           <td className="py-2 px-3 text-amber-400 font-mono">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? 'محجوب' : `${ing.estimatedCostKwd.toFixed(3)} د.ك`}</td>
                           <td className="py-2 px-3">
                             {ing.isSecretPart ? (
@@ -252,7 +252,7 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
                                 عنصر سري
                               </span>
                             ) : (
-                              <span className="text-stone-500 text-[10px]">قياسي</span>
+                              <span className="text-slate-500 text-[10px]">قياسي</span>
                             )}
                           </td>
                         </tr>
@@ -269,18 +269,18 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
                     <AlertTriangle className="w-4 h-4 text-amber-400" />
                     <span>السر التجاري المعياري (الخاصية السحرية)</span>
                   </div>
-                  <p className="text-stone-200 text-xs leading-relaxed pl-2 font-medium">
+                  <p className="text-slate-200 text-xs leading-relaxed pl-2 font-medium">
                     {currentRecipe.criticalSecrets}
                   </p>
                 </div>
               )}
 
               {/* Preparation Steps */}
-              <div className="bg-stone-950 p-4 rounded-xl border border-stone-800 space-y-3">
-                <h4 className="font-bold text-stone-200 text-sm">خطوات التحضير والطهي التشغيلي</h4>
-                <ol className="space-y-2 list-decimal list-inside text-stone-300 leading-relaxed">
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                <h4 className="font-bold text-slate-200 text-sm">خطوات التحضير والطهي التشغيلي</h4>
+                <ol className="space-y-2 list-decimal list-inside text-slate-300 leading-relaxed">
                   {currentRecipe?.preparationSteps.map((step, idx) => (
-                    <li key={idx} className="p-2 rounded bg-stone-900/60 border border-stone-800">
+                    <li key={idx} className="p-2 rounded bg-slate-900/60 border border-slate-800">
                       {step}
                     </li>
                   ))}
@@ -293,13 +293,13 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-stone-800/80 border-t border-stone-700 flex justify-between items-center text-xs z-20">
-          <span className="text-stone-400 font-mono">
+        <div className="p-4 bg-slate-800/80 border-t border-slate-700 flex justify-between items-center text-xs z-20">
+          <span className="text-slate-400 font-mono">
             ID: {currentRecipe?.id || product.id}
           </span>
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-stone-700 hover:bg-stone-600 text-stone-100 font-bold rounded-xl transition-colors"
+            className="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-slate-100 font-bold rounded-xl transition-colors"
           >
             إغلاق الخزنة
           </button>

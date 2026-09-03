@@ -22,7 +22,7 @@ export const PlatformPolicyCenter: React.FC = () => {
       strongMatchThreshold: Number(draft.strongMatchThreshold),
       settlementCycleDays: Number(draft.settlementCycleDays)
     });
-    setNotice(result ? 'تم اعتماد سياسة المنصة وتسجيل التغيير في Audit Log.' : 'تعذر حفظ السياسة. راجع الحدود المسموحة.');
+    setNotice(result ? 'تم اعتماد سياسة المنصة وتسجيل التغيير في سجل التدقيق.' : 'تعذر حفظ السياسة. راجع الحدود المسموحة.');
     setTimeout(() => setNotice(null), 3500);
   };
 
@@ -49,13 +49,13 @@ export const PlatformPolicyCenter: React.FC = () => {
     <section className="glass-panel rounded-3xl p-5 md:p-6 border border-white/10 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#e8c880]/10 border border-[#e8c880]/20 flex items-center justify-center text-[#e8c880]"><Settings2 className="w-6 h-6" /></div>
+          <div className="w-12 h-12 rounded-2xl bg-gold-300/10 border border-gold-300/20 flex items-center justify-center text-gold-300"><Settings2 className="w-6 h-6" /></div>
           <div>
-            <h2 className="text-lg font-black">Platform Policy Center</h2>
-            <p className="text-xs text-stone-400 mt-1">سياسات تشغيل عالمية لا يمكن تعديلها إلا من السوبر أدمن.</p>
+            <h2 className="text-lg font-black">مركز سياسات المنصة</h2>
+            <p className="text-xs text-slate-400 mt-1">سياسات تشغيل عالمية لا يمكن تعديلها إلا من السوبر أدمن.</p>
           </div>
         </div>
-        <div className="text-[11px] text-stone-500 leading-5">
+        <div className="text-[11px] text-slate-500 leading-5">
           آخر تحديث: {new Date(store.policy.updatedAt).toLocaleString('ar-KW')}<br />
           بواسطة: {store.policy.updatedBy}
         </div>
@@ -66,7 +66,7 @@ export const PlatformPolicyCenter: React.FC = () => {
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
         {fields.map(field => (
           <label key={field.key} className="rounded-2xl p-4 bg-slate-950/40 border border-white/10 space-y-3">
-            <div className="flex items-center gap-2 text-stone-200 font-bold text-sm">{field.icon}<span>{field.label}</span></div>
+            <div className="flex items-center gap-2 text-slate-200 font-bold text-sm">{field.icon}<span>{field.label}</span></div>
             <div className="flex items-center gap-2">
               <input
                 type="number"
@@ -76,9 +76,9 @@ export const PlatformPolicyCenter: React.FC = () => {
                 onChange={e => update(field.key, Number(e.target.value))}
                 className="glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none font-mono"
               />
-              <span className="text-xs text-stone-500 whitespace-nowrap">{field.suffix}</span>
+              <span className="text-xs text-slate-500 whitespace-nowrap">{field.suffix}</span>
             </div>
-            <p className="text-[11px] text-stone-500 leading-5">{field.help}</p>
+            <p className="text-[11px] text-slate-500 leading-5">{field.help}</p>
           </label>
         ))}
       </div>
@@ -94,13 +94,13 @@ export const PlatformPolicyCenter: React.FC = () => {
       </div>}
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4 border-t border-white/10">
-        <div className="flex items-start gap-2 text-xs text-stone-400 leading-6 max-w-2xl">
+        <div className="flex items-start gap-2 text-xs text-slate-400 leading-6 max-w-2xl">
           <ShieldCheck className="w-4 h-4 mt-1 shrink-0 text-emerald-300" />
           <span>تعديل هذه القيم يغيّر منطق النظام نفسه، وليس مجرد نص في الواجهة. كل تغيير يُسجل باسم السوبر أدمن في سجل التدقيق.</span>
         </div>
         <div className="flex items-center gap-2">
           {changes.length > 0 && <button onClick={() => setDraft({ ...store.policy })} className="px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-slate-300 hover:text-white text-xs font-bold flex items-center gap-2"><Undo2 className="w-4 h-4" /> إلغاء المسودة</button>}
-          <button onClick={save} disabled={!changes.length} className="px-5 py-3 rounded-2xl bg-[#e8c880] hover:bg-[#f0d590] disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-black text-xs flex items-center justify-center gap-2">
+          <button onClick={save} disabled={!changes.length} className="px-6 py-3.5 rounded-2xl bg-gold-300 hover:bg-gold-200 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-black text-xs flex items-center justify-center gap-2">
             <Save className="w-4 h-4" /> اعتماد {changes.length || 0} تغييرات
           </button>
         </div>

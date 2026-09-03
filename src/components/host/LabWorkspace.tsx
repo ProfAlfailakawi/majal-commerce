@@ -67,7 +67,7 @@ export const LabWorkspace: React.FC<LabWorkspaceProps> = ({ collaboration }) => 
       <section className="glass-panel p-6 rounded-3xl border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-gold-500/10 text-gold-300 rounded-2xl border border-gold-300/20"><FlaskConical className="w-6 h-6" /></div>
-          <div><h3 className="text-lg font-black">Lab Workspace — مختبر تطوير المنتج</h3><p className="text-xs text-slate-400 mt-1 leading-6">كل دفعة محفوظة كبيانات تشغيلية قابلة للمراجعة؛ لا توجد أرقام افتراضية عند تسجيل تجربة جديدة.</p></div>
+          <div><h3 className="text-lg font-black">مختبر تطوير المنتج</h3><p className="text-xs text-slate-400 mt-1 leading-6">كل دفعة محفوظة كبيانات تشغيلية قابلة للمراجعة؛ لا توجد أرقام افتراضية عند تسجيل تجربة جديدة.</p></div>
         </div>
         <button onClick={() => setShowCalculator(true)} className="px-4 py-2.5 bg-gold-500 hover:bg-gold-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-2"><Calculator className="w-4 h-4" /> حاسبة الجدوى</button>
       </section>
@@ -76,7 +76,7 @@ export const LabWorkspace: React.FC<LabWorkspaceProps> = ({ collaboration }) => 
 
       {tastingSession && (
         <section className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
-          <div className="flex items-center justify-between gap-3 flex-wrap"><div className="flex items-center gap-2 text-gold-300 font-bold text-sm"><Award className="w-5 h-5" /><span>جلسة التذوق المسجلة — Blind Tasting</span></div><span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-300 border border-emerald-400/20 font-mono">{tastingSession.aggregateOverallScore} / 10</span></div>
+          <div className="flex items-center justify-between gap-3 flex-wrap"><div className="flex items-center gap-2 text-gold-300 font-bold text-sm"><Award className="w-5 h-5" /><span>جلسة التذوق المسجلة — Blind Tasting</span></div><span className="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-300 border border-emerald-400/20 font-mono">{tastingSession.aggregateOverallScore} / 10</span></div>
           <div className="grid md:grid-cols-2 gap-4 text-xs">{tastingSession.scorecards.map((sc, i) => <div key={i} className="p-4 rounded-xl bg-slate-950/45 border border-white/10"><div className="flex items-center justify-between font-bold"><span>{sc.evaluatorName} — {sc.evaluatorRole}</span><span className="text-gold-300">{sc.overallScore}/10</span></div><p className="text-slate-400 text-[11px] leading-6 mt-2">{sc.notes}</p></div>)}</div>
         </section>
       )}

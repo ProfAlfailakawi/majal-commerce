@@ -121,7 +121,7 @@ export const CreatorPortal: React.FC = () => {
 
           <div className="flex flex-wrap gap-3">
             <button onClick={() => setShowCalculator(true)} className="px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-bold text-slate-300 hover:bg-white/10">حاسبة الاقتصاديات</button>
-            <button onClick={() => setShowWizard(true)} className="px-5 py-3 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 text-xs font-black flex items-center gap-2"><Plus className="w-4 h-4" /> تسجيل منتج جديد</button>
+            <button onClick={() => setShowWizard(true)} className="px-6 py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 text-xs font-black flex items-center gap-2"><Plus className="w-4 h-4" /> تسجيل منتج جديد</button>
           </div>
         </div>
       </section>
@@ -199,7 +199,7 @@ export const CreatorPortal: React.FC = () => {
                         <input value={counterNotes} onChange={e => setCounterNotes(e.target.value)} placeholder="سبب التعديل أو الملاحظة التجارية..." className="glass-input rounded-xl px-4 py-3 text-xs outline-none" />
                       </div>
                       <div className="flex gap-2">
-                        <button onClick={async () => { await Promise.resolve(store.acceptOffer(col.id, col.currentOffer!.id)); }} className="px-4 py-3 rounded-xl bg-emerald-500 text-slate-950 text-xs font-black">قبول العرض</button>
+                        <button onClick={async () => { await Promise.resolve(store.acceptOffer(col.id, col.currentOffer!.id)); }} className="px-4 py-2.5 rounded-xl bg-emerald-500 text-slate-950 text-xs font-black">قبول العرض</button>
                         <button
                           onClick={async () => { await Promise.resolve(store.sendOffer(col.id, 'CREATOR', {
                             sellingPriceKwd: col.currentOffer!.sellingPriceKwd,
@@ -214,16 +214,16 @@ export const CreatorPortal: React.FC = () => {
                             minimumCommitmentUnits: col.currentOffer!.minimumCommitmentUnits,
                             notes: counterNotes || `مقترح تعديل النسبة إلى ${counterRate}%`
                           })); }}
-                          className="px-4 py-3 rounded-xl bg-gold-500 text-slate-950 text-xs font-black"
+                          className="px-4 py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black"
                         >
-                          إرسال Counter
+                          إرسال عرض مقابل
                         </button>
                       </div>
                     </div>
                   )}
 
                   {col.contract && (
-                    <button onClick={() => setSelectedContract(col.contract)} className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-xs font-black text-slate-200">فتح العقد <ChevronLeft className="w-4 h-4" /></button>
+                    <button onClick={() => setSelectedContract(col.contract)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black text-slate-200">فتح العقد <ChevronLeft className="w-4 h-4" /></button>
                   )}
                 </section>
               )}

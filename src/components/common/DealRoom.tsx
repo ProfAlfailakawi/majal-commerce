@@ -19,6 +19,7 @@ import { buildDealRoomCopilot } from '../../lib/intelligence';
 import { intelligenceClient, type DealRoomEnrichment } from '../../lib/intelligenceClient';
 import { Bot } from 'lucide-react';
 import { StatusPill } from './StatusPill';
+import { EmptyState } from './EmptyState';
 
 interface DealRoomProps {
   collaboration: Collaboration;
@@ -50,7 +51,7 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
     { title: 'تثبيت نسخة الوصفة الحالية', done: !!currentRecipe, owner: 'المبدع + الشيف', detail: currentRecipe?.versionNumber || 'لا توجد نسخة' },
     { title: 'تثبيت الشروط التجارية', done: collaboration.currentOffer?.status === 'ACCEPTED' || ['COMMERCIAL_AGREED','CONTRACT_DRAFTED','SIGNED','PRE_LAUNCH','LIVE','REVIEW','RENEWED'].includes(collaboration.stage), owner: 'الطرفان', detail: collaboration.currentOffer ? `V${collaboration.currentOffer.version}` : 'لا يوجد عرض' },
     { title: 'توقيع العقد', done: collaboration.contract?.status === 'FULLY_SIGNED', owner: 'المبدع + مالك المنشأة', detail: collaboration.contract?.status || 'لم ينشأ' },
-    { title: 'اجتياز Launch Gate', done: !!gate?.allRequirementsPassed, owner: 'التشغيل + النظام', detail: gate ? `${Object.entries(gate).filter(([k,v]) => k !== 'allRequirementsPassed' && v).length}/11` : 'غير مهيأ' }
+    { title: 'اجتياز بوابة الإطلاق', done: !!gate?.allRequirementsPassed, owner: 'التشغيل + النظام', detail: gate ? `${Object.entries(gate).filter(([k,v]) => k !== 'allRequirementsPassed' && v).length}/11` : 'غير مهيأ' }
   ];
 
   const categoryMeta: Record<DealDecision['category'], { label: string; icon: React.ReactNode; cls: string }> = {
@@ -99,7 +100,7 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-400/20 flex items-center justify-center text-sky-300"><BriefcaseBusiness className="w-6 h-6" /></div>
           <div>
-            <h3 className="text-lg font-black text-slate-100">Deal Room — غرفة الصفقة</h3>
+            <h3 className="text-lg font-black text-slate-100">غرفة الصفقة</h3>
             <p className="text-xs text-slate-400 mt-1">{creator?.displayName || 'مبدع'} × {host?.commercialName || 'منشأة'} — {product?.publicName || 'منتج'}</p>
           </div>
         </div>
@@ -127,13 +128,18 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
 
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
-            <div className="font-bold text-sm text-slate-100 flex items-center gap-2"><MessageSquareText className="w-4 h-4 text-fuchsia-300" /> Decision Ledger</div>
+            <div className="font-bold text-sm text-slate-100 flex items-center gap-2"><MessageSquareText className="w-4 h-4 text-fuchsia-300" /> سجل القرارات</div>
             <span className="text-[10px] text-slate-500">{decisions.length} سجلات بشرية محفوظة</span>
           </div>
 
           <div className="rounded-2xl bg-slate-950/50 border border-white/10 p-4 space-y-3 max-h-72 overflow-auto">
             {decisions.length === 0 ? (
-              <div className="p-6 text-center text-xs text-slate-500 leading-6">لا توجد قرارات بشرية مسجلة بعد. أضف أول قرار أو ملاحظة ليصبح جزءًا من سجل الصفقة المحفوظ.</div>
+              <EmptyState
+                    variant="inline"
+                    icon={<MessageSquareText className="w-6 h-6" />}
+                    title="ما فيه قرارات مسجّلة بعد"
+                    body="كل قرار أو ملاحظة تتسجّل هنا بصاحبها ووقتها، فتصير الصفقة قابلة للمراجعة بدل ما تعتمد على الذاكرة."
+                  />
             ) : decisions.map(decision => {
               const meta = categoryMeta[decision.category];
               return (
@@ -150,20 +156,20 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
           </div>
 
           <div className="grid sm:grid-cols-[140px_1fr_auto] gap-2">
-            <select value={category} onChange={e => setCategory(e.target.value as DealDecision['category'])} className="glass-input px-3 py-3 rounded-xl text-xs outline-none">
+            <select value={category} onChange={e => setCategory(e.target.value as DealDecision['category'])} className="glass-input px-3 py-2 rounded-xl text-xs outline-none">
               <option value="DECISION">قرار</option>
               <option value="NOTE">ملاحظة</option>
               <option value="RISK">مخاطرة</option>
               <option value="MILESTONE">محطة</option>
             </select>
-            <input value={message} onChange={e => setMessage(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addDecision(); }} placeholder="سجّل قرارًا أو ملاحظة مرتبطة بالصفقة..." className="glass-input px-4 py-3 rounded-xl text-xs outline-none text-slate-100" />
-            <button onClick={addDecision} disabled={message.trim().length < 3} className="px-4 py-3 rounded-xl bg-gold-500 disabled:bg-white/5 disabled:text-slate-600 text-slate-950 font-black text-xs">حفظ</button>
+            <input value={message} onChange={e => setMessage(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addDecision(); }} placeholder="سجّل قرارًا أو ملاحظة مرتبطة بالصفقة..." className="glass-input px-4 py-2.5 rounded-xl text-xs outline-none text-slate-100" />
+            <button onClick={addDecision} disabled={message.trim().length < 3} className="px-4 py-2.5 rounded-xl bg-gold-500 disabled:bg-white/5 disabled:text-slate-600 text-slate-950 font-black text-xs">حفظ</button>
           </div>
         </div>
       </div>
 
       <div className="rounded-2xl p-4 bg-indigo-500/5 border border-indigo-400/15 space-y-3">
-        <div className="flex items-center gap-2 text-sm font-black text-indigo-200"><Bot className="w-4 h-4" /> Deal Copilot — يلخّص ولا يقرّر</div>
+        <div className="flex items-center gap-2 text-sm font-black text-indigo-200"><Bot className="w-4 h-4" /> يلخّص ولا يقرّر</div>
         <p className="text-[11px] text-slate-400 leading-6">{aiNarrative?.narrative || copilot.summary}</p>
         <div className="grid md:grid-cols-2 gap-3">
           <div className="space-y-2">
@@ -184,7 +190,7 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
         </div>
         <div className="flex flex-wrap gap-2 pt-2 border-t border-white/5">
           {copilot.blockedActions.map((guard, idx) => (
-            <span key={idx} className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-full bg-slate-950/50 border border-white/10 text-slate-400">
+            <span key={idx} className="inline-flex items-center gap-1 text-[10px] px-2.5 py-1 rounded-full bg-slate-950/50 border border-white/10 text-slate-400">
               <ShieldCheck className="w-3 h-3 text-emerald-300" /> {guard.label}
             </span>
           ))}

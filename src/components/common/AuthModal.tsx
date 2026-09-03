@@ -1,5 +1,5 @@
 import React, { FormEvent, useState } from 'react';
-import { Building2, Crown, Eye, EyeOff, KeyRound, LogIn, RefreshCcw, ShieldCheck, Sparkles, UserPlus, Users, X } from 'lucide-react';
+import { Building2, Crown, Eye, EyeOff, KeyRound, LogIn, RefreshCcw, ShieldCheck, Sparkles, Store, UserPlus, Users, X } from 'lucide-react';
 import { AuthApiError, AuthSession, login, register } from '../../lib/authClient';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { UserRole } from '../../types/majal';
@@ -115,9 +115,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
               <span className="text-xs font-bold text-slate-200 block">اختر نوع الحساب في المنصة:</span>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {[
-                  { id: 'CREATOR', label: '✨ مبدع وصفات', desc: 'ابتكار وحفظ أسرار الأطباق' },
-                  { id: 'HOST_OWNER', label: '🏢 منشأة حاضنة', desc: 'تشغيل وإنتاج المطابخ' },
-                  { id: 'CONSUMER', label: '🛍️ متذوق / عميل', desc: 'تصفح وتجربة وشراء الأطباق' }
+                  { id: 'CREATOR', label: 'مبدع وصفات', icon: <Sparkles className="w-4 h-4" />, desc: 'ابتكار وحفظ أسرار الأطباق' },
+                  { id: 'HOST_OWNER', label: 'منشأة حاضنة', icon: <Building2 className="w-4 h-4" />, desc: 'تشغيل وإنتاج المطابخ' },
+                  { id: 'CONSUMER', label: 'متذوق / عميل', icon: <Store className="w-4 h-4" />, desc: 'تصفح وتجربة وشراء الأطباق' }
                 ].map((item) => (
                   <button
                     key={item.id}
@@ -129,7 +129,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
                         : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
                     }`}
                   >
-                    <div className="text-xs font-black text-slate-100">{item.label}</div>
+                    <div className="text-xs font-black text-slate-100 flex items-center gap-1.5">{item.icon}<span>{item.label}</span></div>
                     <div className="text-[10px] text-slate-400 mt-0.5">{item.desc}</div>
                   </button>
                 ))}
