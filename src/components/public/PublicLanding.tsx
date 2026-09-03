@@ -15,10 +15,19 @@ import { SurfaceType, UserRole } from '../../types/majal';
 import { store } from '../../lib/store';
 import { IS_DEMO_MODE } from '../../lib/runtime';
 import { JourneyInfographic } from './JourneyInfographic';
+import { MajalMark } from '../brand/MajalMark';
 
 interface PublicLandingProps {
   onSurfaceChange: (surface: SurfaceType) => void;
 }
+
+/** The four movements of the model, orbiting the mark in the hero. */
+const phases = [
+  { icon: <Sparkles className="w-5 h-5" />, label: 'ابتكار', tone: 'text-[#e8c880] border-[#e8c880]/25 bg-[#c7a55b]/10' },
+  { icon: <Lock className="w-5 h-5" />, label: 'حماية', tone: 'text-fuchsia-300 border-fuchsia-400/25 bg-fuchsia-500/10' },
+  { icon: <Building2 className="w-5 h-5" />, label: 'إنتاج', tone: 'text-sky-300 border-sky-400/25 bg-sky-500/10' },
+  { icon: <Store className="w-5 h-5" />, label: 'إطلاق', tone: 'text-emerald-300 border-emerald-400/25 bg-emerald-500/10' }
+];
 
 export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange }) => {
   const openDemoRole = (role: UserRole, surface: SurfaceType) => {
@@ -30,6 +39,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
     if (!user || !store.setUser(user)) return;
     onSurfaceChange(surface);
   };
+
   const stats = [
     { value: '٤', label: IS_DEMO_MODE ? 'تجارب أدوار' : 'أطراف تشغيل' },
     { value: '٣', label: 'مستويات إفصاح' },
@@ -39,31 +49,66 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
-      <div className="glass-panel rounded-[32px] p-8 sm:p-12 relative overflow-hidden text-center sm:text-right border border-white/10 shadow-2xl">
+      <div className="glass-panel majal-grain rounded-[32px] p-8 sm:p-12 relative overflow-hidden text-center sm:text-right border border-white/10 elev-3">
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#c7a55b]/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#4b6aa3]/10 rounded-full blur-3xl pointer-events-none" />
 
-        <aside aria-label="رحلة مجال المختصرة" className="hidden xl:grid absolute left-10 top-1/2 -translate-y-1/2 w-64 grid-cols-2 gap-3">
-          {[
-            { icon: <Sparkles className="w-6 h-6" />, label: 'ابتكار', tone: 'text-[#e8c880]' },
-            { icon: <Lock className="w-6 h-6" />, label: 'حماية', tone: 'text-fuchsia-300' },
-            { icon: <Building2 className="w-6 h-6" />, label: 'إنتاج', tone: 'text-sky-300' },
-            { icon: <Store className="w-6 h-6" />, label: 'إطلاق', tone: 'text-emerald-300' }
-          ].map(item => (
-            <div key={item.label} className="aspect-square rounded-3xl bg-slate-950/45 border border-white/10 grid place-items-center text-center shadow-xl">
-              <div><span className={`w-12 h-12 mx-auto rounded-2xl bg-white/5 border border-white/10 grid place-items-center ${item.tone}`}>{item.icon}</span><span className="block mt-2 text-xs font-black text-stone-200">{item.label}</span></div>
-            </div>
-          ))}
+        {/*
+          The brand monument. The previous version put four flat tiles here, which said
+          the same thing as the journey section further down the page and said it worse.
+          This instead seats the mark itself at the centre of the four movements, so the
+          logo's own metaphor — a licensed gate holding a protected idea — is the first
+          explanation of the model a visitor gets, before a single paragraph.
+        */}
+        <aside aria-label="رحلة مجال المختصرة" className="hidden xl:block absolute left-12 top-1/2 -translate-y-1/2">
+          <div className="relative w-[17rem] h-[17rem] grid place-items-center">
+            <span aria-hidden="true" className="absolute inset-0 rounded-full border border-[#c7a55b]/12" />
+            <span aria-hidden="true" className="absolute inset-[13%] rounded-full border border-[#c7a55b]/[0.08]" />
+            <span
+              aria-hidden="true"
+              className="absolute inset-[-6%] rounded-full majal-orbit"
+              style={{
+                background: 'conic-gradient(from 0deg, transparent 0deg, rgba(199,165,91,0.22) 75deg, transparent 185deg)',
+                filter: 'blur(24px)'
+              }}
+            />
+
+            <MajalMark size={92} withGround />
+
+            {/* Positioned on the ring rather than in a grid: the four movements are a
+                cycle around the platform, not a stack of features. */}
+            {phases.map((phase, index) => {
+              // Counter-clockwise from the top, so the cycle advances right-to-left the
+              // way the rest of the page reads. Clockwise would run the journey backwards
+              // for an Arabic reader.
+              const angle = -90 - index * 90;
+              const radius = 8.5;
+              const x = Math.cos((angle * Math.PI) / 180) * radius;
+              const y = Math.sin((angle * Math.PI) / 180) * radius;
+              return (
+                <span
+                  key={phase.label}
+                  className="absolute flex flex-col items-center gap-1.5"
+                  style={{ transform: `translate(${x}rem, ${y}rem)` }}
+                >
+                  <span className={`w-11 h-11 rounded-2xl border grid place-items-center backdrop-blur-sm ${phase.tone}`}>
+                    {phase.icon}
+                  </span>
+                  <span className="text-[10px] font-black text-stone-300">{phase.label}</span>
+                </span>
+              );
+            })}
+          </div>
         </aside>
 
-        <div className="relative z-10 max-w-4xl xl:mr-auto xl:ml-[19rem] space-y-6">
+        <div className="relative z-10 max-w-4xl xl:mr-auto xl:ml-[21rem] space-y-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-card border border-[#e8c880]/20 text-[#e8c880] text-xs font-semibold">
             <LayoutPanelTop className="w-4 h-4" />
             <span>مجال — منصة تشغيل الشراكات التجارية بين المبدعين والمنشآت المرخّصة</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black text-slate-100 leading-tight">
-            حوّل الموهبة إلى <span className="bg-gradient-to-r from-[#f4e1b0] via-[#e8c880] to-[#f7e8c6] bg-clip-text text-transparent">منتج تجاري حقيقي</span>{' '}
+            حوّل الموهبة إلى <span className="majal-wordmark">منتج تجاري حقيقي</span>{' '}
             <br className="hidden sm:block" />
             داخل منظومة احترافية واضحة الصلاحيات
           </h1>
@@ -75,7 +120,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
           {IS_DEMO_MODE ? <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-4">
             <button
               onClick={() => openDemoRole('CREATOR', 'CREATOR')}
-              className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#c7a55b] to-[#dfc377] hover:from-[#d4b86b] hover:to-[#e9cf84] text-slate-950 font-black text-sm shadow-xl hover:shadow-[#c7a55b]/20 transition-all flex items-center gap-2"
+              className="px-6 py-3.5 rounded-2xl bg-gradient-to-l from-[#c7a55b] to-[#dfc377] hover:brightness-110 text-slate-950 font-black text-sm shadow-[0_14px_40px_rgba(199,165,91,0.24)] transition-all flex items-center gap-2"
             >
               <span>استعرض تجربة المبدع</span>
               <ChevronLeft className="w-4 h-4" />
@@ -105,7 +150,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
               <span>استكشف السوبر أدمن</span>
             </button>
           </div> : <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-4">
-            <button onClick={() => onSurfaceChange('CONSUMER')} className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#c7a55b] to-[#dfc377] text-slate-950 font-black text-sm shadow-xl flex items-center gap-2">
+            <button onClick={() => onSurfaceChange('CONSUMER')} className="px-6 py-3.5 rounded-2xl bg-gradient-to-l from-[#c7a55b] to-[#dfc377] hover:brightness-110 text-slate-950 font-black text-sm shadow-[0_14px_40px_rgba(199,165,91,0.24)] transition-all flex items-center gap-2">
               <Store className="w-4 h-4" /> استكشف السوق
             </button>
             <span className="px-4 py-3 rounded-2xl bg-emerald-500/5 border border-emerald-400/15 text-emerald-200 text-xs flex items-center gap-2">
@@ -115,11 +160,14 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      {/* One panel rather than four floating cards: these are facets of a single claim,
+          and a hairline between them reads as a spec plate instead of four unrelated
+          numbers competing for the same attention. */}
+      <div className="glass-card rounded-3xl border border-white/10 grid grid-cols-2 lg:grid-cols-4 divide-x divide-x-reverse divide-white/[0.07] overflow-hidden">
         {stats.map((st, i) => (
-          <div key={i} className="glass-card rounded-2xl p-6 border border-white/10 text-center space-y-2 hover:-translate-y-1 transition-transform">
-            <div className="text-2xl sm:text-3xl font-black text-[#e8c880]">{st.value}</div>
-            <div className="text-xs text-slate-300 font-medium leading-6">{st.label}</div>
+          <div key={i} className="p-6 sm:p-7 text-center space-y-2">
+            <div className="text-2xl sm:text-3xl font-black majal-wordmark">{st.value}</div>
+            <div className="text-xs text-slate-400 font-medium leading-6">{st.label}</div>
           </div>
         ))}
       </div>
@@ -132,8 +180,8 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
           { icon: <Coins className="w-5 h-5" />, title: 'مستحقات شفافة', body: 'المبدع يتابع مبيعاته ومستحقاته، والمنشأة تتابع الهوامش والإطلاقات، والأدمن يراقب دورة التسوية.' },
           { icon: <Store className="w-5 h-5" />, title: 'سوق قابل للتوسع', body: 'المنصة تبدأ بالطعام، لكن بنيتها تصلح لاحقًا لقطاعات أخرى مع نفس منطق الحاضن التجاري.' }
         ].map((item, idx) => (
-          <div key={idx} className="glass-card rounded-2xl p-6 border border-white/10 space-y-4">
-            <div className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[#e8c880]">{item.icon}</div>
+          <div key={idx} className="glass-card glass-card-hover rounded-2xl p-6 border border-white/10 space-y-4">
+            <div className="w-11 h-11 rounded-xl bg-[#c7a55b]/10 border border-[#e8c880]/20 flex items-center justify-center text-[#e8c880]">{item.icon}</div>
             <h3 className="font-bold text-slate-100 text-base">{item.title}</h3>
             <p className="text-xs text-slate-300 leading-7">{item.body}</p>
           </div>

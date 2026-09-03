@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="مجال">
+  <!-- iOS masks home-screen icons to a squircle and does not honour transparency, so this
+       variant ships an opaque bleed and a wider optical margin than the browser favicon. -->
+  <defs>
+    <linearGradient id="majal-touch-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#070d18"/>
+    </linearGradient>
+    <linearGradient id="majal-touch-gold" x1="1" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#a8843c"/>
+      <stop offset="45%" stop-color="#c7a55b"/>
+      <stop offset="100%" stop-color="#f4e1b0"/>
+    </linearGradient>
+  </defs>
+  <rect width="180" height="180" fill="url(#majal-touch-bg)"/>
+  <circle cx="90" cy="86" r="70" fill="#c7a55b" opacity="0.07"/>
+  <g transform="translate(90 90) scale(1.62) translate(-32 -34)" fill="none" stroke="url(#majal-touch-gold)" stroke-linecap="round">
+    <path d="M11 53 V33 A21 21 0 0 1 53 33 V53" stroke-width="6.5"/>
+    <circle cx="32" cy="34" r="9" stroke-width="6"/>
+  </g>
+</svg>

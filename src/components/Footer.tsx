@@ -1,5 +1,6 @@
 import React from 'react';
-import { Shield, FileText, Lock, Globe, Scale, Crown, Mail } from 'lucide-react';
+import { Shield, FileText, Lock, Globe, Scale, Crown, Mail, PlayCircle } from 'lucide-react';
+import { MajalMark } from './brand/MajalMark';
 import { SurfaceType } from '../types/majal';
 import { store } from '../lib/store';
 import { canAccessSurface } from '../lib/permissions';
@@ -8,6 +9,8 @@ import type { LegalDocumentId } from './legal/LegalCenter';
 interface FooterProps {
   onSurfaceChange: (surface: SurfaceType) => void;
   onOpenLegal: (document: LegalDocumentId) => void;
+  /** Re-opens the first-run introduction. */
+  onReplayOnboarding: () => void;
 }
 
 const SUPPORT_EMAIL = 'support@majal.app';
@@ -19,7 +22,7 @@ const legalLinks: { id: LegalDocumentId; label: string }[] = [
   { id: 'COMPLIANCE', label: 'سجل الامتثال والتتبع' }
 ];
 
-export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal }) => {
+export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, onReplayOnboarding }) => {
   const surfaces: { id: SurfaceType; label: string }[] = [
     { id: 'CONSUMER', label: 'السوق والإطلاقات' },
     { id: 'CREATOR', label: 'بوابة المبدعين' },
@@ -34,11 +37,12 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal }) 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#c7a55b] to-[#ecd28c] text-slate-950 flex items-center justify-center font-black text-sm">
-                م
-              </div>
-              <span className="text-lg font-black text-slate-100 tracking-wide">مجال</span>
+            <div className="flex items-center gap-2.5">
+              <MajalMark size={34} />
+              <span className="min-w-0">
+                <span className="block text-lg font-black majal-wordmark leading-none">مجال</span>
+                <span className="block text-[9px] font-semibold tracking-[0.42em] text-[#c7a55b]/60 leading-none mt-1.5" dir="ltr">MAJAL</span>
+              </span>
             </div>
             <p className="text-slate-400 text-xs leading-relaxed">
               من الابتكار إلى منتج قابل للإطلاق، عبر رحلة مرئية وصلاحيات واضحة لكل طرف.
@@ -47,6 +51,14 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal }) 
               <Shield className="w-4 h-4" />
               <span>بيئة كويتية — تشغيل آمن افتراضيًا</span>
             </div>
+
+            <button
+              onClick={onReplayOnboarding}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl glass-card border border-white/10 text-[11px] font-bold text-slate-300 hover:text-[#e8c880] hover:border-[#e8c880]/25 transition-colors"
+            >
+              <PlayCircle className="w-3.5 h-3.5" />
+              <span>أعد جولة التعريف</span>
+            </button>
           </div>
 
           <div className="space-y-2">

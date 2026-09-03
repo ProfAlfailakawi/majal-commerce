@@ -12,6 +12,8 @@ import { AI_ASSISTANT_ENABLED, INTEGRATION_SIMULATORS_ENABLED, IS_DEMO_MODE } fr
 import { AuthSession, logout, restoreAuthSession } from './lib/authClient';
 import { ExperienceGuide } from './components/common/ExperienceGuide';
 import { ConnectionSentinel } from './components/common/ConnectionSentinel';
+import { OnboardingExperience } from './components/onboarding/OnboardingExperience';
+import { OnboardingIntent, hasSeenOnboarding, markOnboardingSeen } from './lib/onboarding';
 
 const CreatorPortal = lazy(() => import('./components/creator/CreatorPortal').then(module => ({ default: module.CreatorPortal })));
 const HostPortal = lazy(() => import('./components/host/HostPortal').then(module => ({ default: module.HostPortal })));
@@ -40,6 +42,21 @@ export default function App() {
   // The legal surface sits outside the role/permission surfaces on purpose: it is public,
   // has no permission model, and must stay reachable from every state of the app.
   const [legalDocument, setLegalDocument] = useState<LegalDocumentId | null>(null);
+
+  // The first-run introduction. It is held back until the session question is settled:
+  // opening it over a still-resolving auth state would show a returning operator the
+  // "who are you" screen for a moment before their own portal appears.
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  useEffect(() => {
+    if (authStatus === 'LOADING') return;
+    if (hasSeenOnboarding()) return;
+    setShowOnboarding(true);
+  }, [authStatus]);
+
+  const closeOnboarding = (intent: OnboardingIntent | null, skipped: boolean) => {
+    markOnboardingSeen(intent, skipped);
+    setShowOnboarding(false);
+  };
 
   useEffect(() => {
     if (IS_DEMO_MODE) return;
@@ -109,12 +126,11 @@ export default function App() {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:right-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-[#c7a55b] focus:text-stone-950 focus:font-black">
         انتقل إلى المحتوى الرئيسي
       </a>
-      <div className="ambient-bg fixed inset-0 pointer-events-none opacity-40 z-0 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:32px_32px]" />
-        <div className="absolute -top-24 right-0 w-96 h-96 bg-[#c7a55b]/10 rounded-full blur-3xl transform-gpu" />
-        <div className="absolute top-1/3 -left-16 w-80 h-80 bg-[#4b6aa3]/10 rounded-full blur-3xl transform-gpu" />
-        <div className="absolute -bottom-20 right-1/4 w-80 h-80 bg-[#7a4d7f]/08 rounded-full blur-3xl transform-gpu" />
-      </div>
+      {/* The ambient field is drawn entirely by .ambient-bg's own background gradients —
+          see src/index.css. It has no children on purpose: the nested opacity wrapper and
+          blurred circles this replaced were what every glass panel had to sample as its
+          backdrop on each scroll. */}
+      <div className="ambient-bg" aria-hidden="true" />
 
       <div className="relative z-10 flex-1 flex flex-col">
         <Navbar
@@ -165,7 +181,19 @@ export default function App() {
         {!IS_DEMO_MODE && authStatus === 'AUTHENTICATED' && showSecurity && <AccountSecurityModal isOpen onClose={() => setShowSecurity(false)} />}
       </Suspense>
 
-      <Footer onSurfaceChange={handleSurfaceChange} onOpenLegal={handleOpenLegal} />
+      <OnboardingExperience
+        open={showOnboarding}
+        activeUser={store.activeUser}
+        onDismiss={closeOnboarding}
+        onSurfaceChange={handleSurfaceChange}
+        onRequestAuth={IS_DEMO_MODE ? undefined : () => setShowAuth(true)}
+      />
+
+      <Footer
+        onSurfaceChange={handleSurfaceChange}
+        onOpenLegal={handleOpenLegal}
+        onReplayOnboarding={() => setShowOnboarding(true)}
+      />
       <ConnectionSentinel />
     </div>
     </AppErrorBoundary>

@@ -20,6 +20,7 @@ import {
   LoaderCircle
 } from 'lucide-react';
 import { SurfaceType, User, UserRole } from '../types/majal';
+import { MajalMark } from './brand/MajalMark';
 import { store } from '../lib/store';
 import { AI_ASSISTANT_ENABLED, INTEGRATION_SIMULATORS_ENABLED, IS_DEMO_MODE } from '../lib/runtime';
 import { fetchNotifications, markAllNotificationsRead, markNotificationRead, NotificationItem } from '../lib/notificationClient';
@@ -171,12 +172,12 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <button onClick={() => onSurfaceChange('PUBLIC')} className="flex items-center gap-3 text-right group focus:outline-none min-w-0">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#c7a55b] to-[#ecd28c] flex items-center justify-center font-black text-lg text-slate-950 shadow-lg group-hover:scale-105 transition-transform">
-                م
-              </div>
+            <button onClick={() => onSurfaceChange('PUBLIC')} className="flex items-center gap-3 text-right group focus:outline-none min-w-0" aria-label="العودة إلى صفحة مجال العامة">
+              <span className="grid place-items-center w-11 h-11 rounded-2xl bg-white/[0.04] border border-[#e8c880]/15 shrink-0 transition-all duration-200 group-hover:border-[#e8c880]/35 group-hover:bg-[#c7a55b]/10">
+                <MajalMark size={26} />
+              </span>
               <div className="min-w-0">
-                <span className="text-2xl font-black tracking-wide bg-gradient-to-r from-[#f4e1b0] via-[#e8c880] to-[#f7e8c6] bg-clip-text text-transparent block truncate">
+                <span className="text-2xl font-black majal-wordmark block truncate leading-tight">
                   مجال
                 </span>
                 <span className="block text-[11px] text-slate-400 font-medium truncate">

@@ -1,47 +1,91 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   MAJAL — design tokens
+
+   The palette used to be four hex values, so every component reached for raw
+   `#c7a55b` / `#e8c880` literals and there was no way to express "one step darker"
+   or "the disabled version of gold". These ramps give the UI a vocabulary: tone is
+   chosen by role (line, edge, text, fill) rather than by eyeballing a hex.
+   ───────────────────────────────────────────────────────────────────────────── */
 :root {
-  --majal-bg: #0b1220;
+  /* Gold — identity, primary decisions, the journey direction. */
+  --gold-100: #f8ecd0;
+  --gold-200: #f4e1b0;
+  --gold-300: #e8c880;
+  --gold-400: #d4b46a;
+  --gold-500: #c7a55b;
+  --gold-600: #a8843c;
+  --gold-700: #7d612b;
+
+  /* Ink — the governed, institutional ground the whole product sits on. */
+  --ink-900: #070d18;
+  --ink-850: #0a101b;
+  --ink-800: #0b1220;
+  --ink-700: #0f172a;
+  --ink-600: #131c2d;
+  --ink-500: #18243a;
+
+  /* Back-compat aliases: existing components read these. */
+  --majal-bg: var(--ink-800);
   --majal-panel: rgba(15, 23, 42, 0.88);
   --majal-card: rgba(19, 28, 45, 0.82);
   --majal-border: rgba(255, 255, 255, 0.09);
-  --majal-gold: #c7a55b;
-  --majal-gold-soft: #e8c880;
+  --majal-gold: var(--gold-500);
+  --majal-gold-soft: var(--gold-300);
+
+  /* Elevation. Dark UIs read depth from a light top edge, not just a drop shadow —
+     the highlight is what makes a panel feel like a physical sheet rather than a
+     lighter rectangle, so every level carries both. */
+  --edge-hi: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  --elev-1: 0 2px 8px rgba(0, 0, 0, 0.22), var(--edge-hi);
+  --elev-2: 0 8px 24px rgba(0, 0, 0, 0.28), var(--edge-hi);
+  --elev-3: 0 20px 52px rgba(0, 0, 0, 0.42), var(--edge-hi);
+  --elev-gold: 0 12px 36px rgba(199, 165, 91, 0.16);
+
+  /* Motion. One easing for entrances, one for exits — mixing curves is what makes
+     an interface feel assembled by different people. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 140ms;
+  --dur-base: 240ms;
+  --dur-slow: 420ms;
 }
 
 @layer utilities {
   .glass-panel {
     background: var(--majal-panel);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(14px) saturate(1.15);
+    -webkit-backdrop-filter: blur(14px) saturate(1.15);
     border: 1px solid var(--majal-border);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+    box-shadow: var(--elev-2);
   }
 
   .glass-card {
     background: var(--majal-card);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(10px) saturate(1.1);
+    -webkit-backdrop-filter: blur(10px) saturate(1.1);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--elev-1);
   }
 
   .glass-card-hover {
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: transform var(--dur-base) var(--ease-out), background-color var(--dur-base) ease,
+      border-color var(--dur-base) ease, box-shadow var(--dur-base) ease;
     cursor: pointer !important;
   }
 
   .glass-card-hover:hover {
     background: rgba(24, 36, 58, 0.92);
     border-color: rgba(199, 165, 91, 0.35);
-    box-shadow: 0 10px 28px rgba(199, 165, 91, 0.12);
+    box-shadow: var(--elev-2), var(--elev-gold);
     transform: translateY(-2px);
   }
 
   .glass-nav {
     background: rgba(8, 14, 27, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
 
@@ -64,17 +108,172 @@
     scrollbar-width: none;
   }
 
-  /* The full-viewport decorative background layers (opacity + multiple blur-3xl glows)
-     sit behind many backdrop-filter panels. During fast scrolling, Chrome re-rasterizes
-     that stack and momentarily paints blank bands. Pinning the layer to its own stable
-     GPU compositing layer keeps it painted continuously without changing its look. */
+  /* The full-viewport decorative backdrop.
+   *
+   * It used to be four nested elements — an `opacity: .40` wrapper around a dot grid and
+   * three `blur-3xl` circles. That shape is expensive for a reason that is easy to miss:
+   * the opacity wrapper forces the whole group into an offscreen buffer, each blurred
+   * circle is its own filter pass, and then every one of the app's many backdrop-filter
+   * panels has to READ that composited stack as its backdrop. Cost scales with the number
+   * of glass surfaces on screen, which is why it showed up as blank bands while scrolling
+   * a dense portal. Forcing the layer to stay resident (the previous fix) treated the
+   * symptom; the stack still had to be sampled.
+   *
+   * A Gaussian-blurred disc is analytically a radial falloff, so the identical image is
+   * reproducible as plain background gradients: stops sample
+   *     alpha(d) = base * ½(1 + erf((r − d) / (σ√2)))
+   * with σ = 64px (CSS `blur(64px)` is feGaussianBlur stdDeviation=64) and the wrapper's
+   * 0.40 folded into `base`. Verified against the old markup with difference blending:
+   * residual under 0.3/255.
+   *
+   * Result: one element, no children, no filter passes, no opacity group. The backdrop
+   * every glass panel samples is now a single flat paint. */
   .ambient-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    /* Static content in its own layer: promoted once, never re-rasterised on scroll.
+       Deliberately not `will-change`, which would advertise changes that never come. */
     transform: translateZ(0);
-    backface-visibility: hidden;
-    will-change: transform;
-    contain: strict;
+    background-image:
+      radial-gradient(circle 384px at calc(100% - 192px) 96px,
+        rgba(199,165,91,0.0399) 0%,
+        rgba(199,165,91,0.0398) 8%,
+        rgba(199,165,91,0.0391) 17%,
+        rgba(199,165,91,0.0373) 25%,
+        rgba(199,165,91,0.0337) 33%,
+        rgba(199,165,91,0.0277) 42%,
+        rgba(199,165,91,0.0200) 50%,
+        rgba(199,165,91,0.0123) 58%,
+        rgba(199,165,91,0.0063) 67%,
+        rgba(199,165,91,0.0027) 75%,
+        rgba(199,165,91,0.0009) 83%,
+        rgba(199,165,91,0) 92%,
+        rgba(199,165,91,0) 100%),
+      radial-gradient(circle 352px at 96px calc(33.333% + 160px),
+        rgba(75,106,163,0.0398) 0%,
+        rgba(75,106,163,0.0392) 8%,
+        rgba(75,106,163,0.0377) 17%,
+        rgba(75,106,163,0.0348) 25%,
+        rgba(75,106,163,0.0299) 33%,
+        rgba(75,106,163,0.0233) 42%,
+        rgba(75,106,163,0.0161) 50%,
+        rgba(75,106,163,0.0096) 58%,
+        rgba(75,106,163,0.0049) 67%,
+        rgba(75,106,163,0.0021) 75%,
+        rgba(75,106,163,0.0007) 83%,
+        rgba(75,106,163,0) 92%,
+        rgba(75,106,163,0) 100%),
+      radial-gradient(circle 352px at calc(75% - 160px) calc(100% - 80px),
+        rgba(122,77,127,0.0318) 0%,
+        rgba(122,77,127,0.0313) 8%,
+        rgba(122,77,127,0.0302) 17%,
+        rgba(122,77,127,0.0278) 25%,
+        rgba(122,77,127,0.0239) 33%,
+        rgba(122,77,127,0.0186) 42%,
+        rgba(122,77,127,0.0128) 50%,
+        rgba(122,77,127,0.0077) 58%,
+        rgba(122,77,127,0.0039) 67%,
+        rgba(122,77,127,0.0017) 75%,
+        rgba(122,77,127,0.0006) 83%,
+        rgba(122,77,127,0) 92%,
+        rgba(122,77,127,0) 100%),
+      radial-gradient(rgba(255,255,255,0.0125) 1px, transparent 1px);
+    background-size: auto, auto, auto, 32px 32px;
   }
+
+  /* The wordmark. Arabic is a connected script, so the optical treatment is a vertical
+     gold wash rather than tracking, which would sever the joins between letters. */
+  .majal-wordmark {
+    background: linear-gradient(180deg, var(--gold-100) 0%, var(--gold-300) 55%, var(--gold-500) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    /* Gradient text loses the glyph's own antialiasing hints; a hairline shadow keeps
+       the Arabic strokes from thinning out on low-DPI displays. */
+    text-shadow: 0 1px 12px rgba(199, 165, 91, 0.18);
+  }
+
+  /* A rule that fades at both ends — a hard 1px line across a dark panel always looks
+     like a seam, this reads as a considered divider. */
+  .majal-hairline {
+    height: 1px;
+    border: 0;
+    background: linear-gradient(90deg, transparent, rgba(199, 165, 91, 0.28), transparent);
+  }
+
+  /* Flat dark fills band badly on wide gradients. A very low-opacity noise layer breaks
+     the banding without ever being visible as texture. */
+  .majal-grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .elev-1 { box-shadow: var(--elev-1); }
+  .elev-2 { box-shadow: var(--elev-2); }
+  .elev-3 { box-shadow: var(--elev-3); }
 }
+
+/* ── Brand mark motion ─────────────────────────────────────────────────────────
+   Every stroke carries pathLength="1", so one dashoffset tween draws any of them
+   regardless of its real arc length. The gate draws first, the idea it protects
+   appears inside it second — the sequence is the story the mark tells. */
+@keyframes majal-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes majal-core-in {
+  from { stroke-dashoffset: 1; opacity: 0; }
+  60% { opacity: 1; }
+  to { stroke-dashoffset: 0; opacity: 1; }
+}
+
+.majal-mark-draw .majal-mark-gate,
+.majal-mark-draw .majal-mark-core,
+.majal-mark-draw .majal-mark-ground {
+  stroke-dasharray: 1;
+}
+
+.majal-mark-draw .majal-mark-gate {
+  animation: majal-draw 900ms var(--ease-out) forwards;
+}
+
+.majal-mark-draw .majal-mark-core {
+  animation: majal-core-in 700ms var(--ease-out) 480ms both;
+}
+
+.majal-mark-draw .majal-mark-ground {
+  animation: majal-draw 600ms var(--ease-out) 900ms both;
+}
+
+/* ── Onboarding & ambient motion ───────────────────────────────────────────────
+   One entrance curve for every element that enters a step, driven by an inline
+   animation-delay so a step can stagger its children without a JS timeline. The two
+   drift fields are deliberately far below the contrast threshold: they give the
+   full-screen flow depth, and are never something the eye has to fight. */
+@keyframes majal-onboard-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes majal-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-3%, 4%, 0) scale(1.06); }
+}
+
+@keyframes majal-orbit {
+  to { transform: rotate(360deg); }
+}
+
+.majal-drift { animation: majal-drift 18s var(--ease-in-out) infinite; }
+.majal-drift-slow { animation: majal-drift 26s var(--ease-in-out) infinite reverse; }
+.majal-orbit { animation: majal-orbit 5.5s linear infinite; }
 
 html {
   scroll-behavior: smooth;
@@ -95,7 +294,7 @@ body {
   background-image:
     radial-gradient(circle at 10% 10%, rgba(199, 165, 91, 0.12) 0, transparent 40%),
     radial-gradient(circle at 90% 20%, rgba(74, 106, 163, 0.1) 0, transparent 40%),
-    linear-gradient(180deg, #0a101b 0%, #0b1220 50%, #0b1322 100%);
+    linear-gradient(180deg, var(--ink-850) 0%, var(--ink-800) 50%, #0b1322 100%);
   color: #f8fafc;
   min-height: 100vh;
 }
@@ -113,6 +312,34 @@ body {
 /* Long unbroken strings (emails, ids, urls) must wrap rather than widen the page. */
 body {
   overflow-wrap: anywhere;
+}
+
+/* The default scrollbar renders as a bright system-grey slab on this dark ground and
+   is the single most obvious "unfinished" tell on a dark UI. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(199, 165, 91, 0.28) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(199, 165, 91, 0.22);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(199, 165, 91, 0.42);
+  background-clip: content-box;
 }
 
 /* مؤشر اليد لجميع الأزرار والعناصر التفاعلية */
@@ -138,6 +365,15 @@ header button {
 :focus-visible {
   outline: 2px solid rgba(232, 200, 128, 0.95);
   outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Headings inside the onboarding are focused programmatically, purely so a screen
+   reader announces each new step. They are not interactive targets, so Chrome's
+   :focus-visible ring on them reads as a stray box around the title. */
+[data-focus-silent]:focus,
+[data-focus-silent]:focus-visible {
+  outline: none;
 }
 
 button:disabled,
@@ -159,5 +395,29 @@ textarea:disabled {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-}
 
+  /* The mark is drawn by a dashoffset animation. Killing the animation duration alone
+     would freeze it at offset 1 — i.e. an invisible logo — so the dashes are removed
+     outright and the finished glyph is what renders. */
+  .majal-mark-draw .majal-mark-gate,
+  .majal-mark-draw .majal-mark-core,
+  .majal-mark-draw .majal-mark-ground {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+
+  /* Same trap for the staggered onboarding entrances: a near-zero duration would
+     leave each element parked on its `from` keyframe, i.e. invisible. */
+  .majal-drift,
+  .majal-drift-slow,
+  .majal-orbit {
+    animation: none !important;
+  }
+
+  [style*="majal-onboard-rise"] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
