@@ -227,6 +227,24 @@
 
     <div id="root"></div>
 
+    <!-- Revealed only when the bundle never executed. Plain markup and inline styles on
+         purpose: whatever broke may well have been the stylesheet or the network. -->
+    <div id="majal-boot-failed" hidden style="position:fixed;inset:0;z-index:9998;display:grid;place-items:center;padding:2rem;text-align:center;font-family:'IBM Plex Sans Arabic',system-ui,Tahoma,sans-serif;color:#f8fafc;background:linear-gradient(180deg,#0a101b,#070d18)">
+      <div style="max-width:26rem">
+        <svg viewBox="0 0 64 64" width="64" height="64" fill="none" aria-hidden="true" style="margin:0 auto 1.25rem">
+          <path d="M11 53 V33 A21 21 0 0 1 53 33 V53" stroke="#c7a55b" stroke-width="6.5" stroke-linecap="round"/>
+          <circle cx="32" cy="34" r="9" stroke="#c7a55b" stroke-width="6"/>
+        </svg>
+        <h1 style="font-size:1.25rem;font-weight:700;margin:0 0 .75rem">تعذّر تحميل مجال</h1>
+        <p style="font-size:.875rem;line-height:1.9;color:#94a3b8;margin:0 0 1.5rem">
+          ما قدرنا نجيب ملفات المنصة. تأكد من اتصالك بالإنترنت وأعد المحاولة، وإذا تكرر الأمر تواصل مع الدعم.
+        </p>
+        <button onclick="location.reload()" style="cursor:pointer;padding:.75rem 1.5rem;border-radius:.875rem;border:0;background:#c7a55b;color:#020617;font-weight:800;font-size:.8125rem;font-family:inherit">
+          أعد المحاولة
+        </button>
+      </div>
+    </div>
+
     <noscript>
       <div style="padding:2rem;font-family:system-ui,sans-serif;color:#f8fafc;background:#0b1220;text-align:center;position:fixed;inset:0;z-index:10000">
         منصة مجال تحتاج إلى تفعيل JavaScript في المتصفح لعرض المحتوى.
@@ -239,12 +257,21 @@
       window.__majalBootAt = Date.now();
 
       // Failsafe. If the bundle 404s, throws before mounting, or is blocked by an
-      // extension, nothing else would ever clear this layer and the visitor would be
-      // stuck on an animation forever. After 8s the splash lifts regardless, which at
-      // worst reveals the app's own error boundary — an explainable screen instead of
-      // a permanent one.
+      // extension or a dead connection, nothing else would ever clear this layer and the
+      // visitor would be stuck on an animation forever.
+      //
+      // Lifting the splash is only half the job: the app's error boundary lives inside the
+      // very bundle that failed, so clearing the splash on its own just reveals a blank
+      // page. Verified by pointing the module script at a missing file — the splash lifted
+      // correctly and left nothing behind. So if React has not mounted by then, say so in
+      // plain HTML and offer the one action that helps.
       window.setTimeout(function () {
         document.documentElement.classList.add('majal-ready');
+        var root = document.getElementById('root');
+        if (root && root.childElementCount === 0) {
+          var fallback = document.getElementById('majal-boot-failed');
+          if (fallback) fallback.hidden = false;
+        }
       }, 8000);
     </script>
     <script type="module" src="/src/main.tsx"></script>
