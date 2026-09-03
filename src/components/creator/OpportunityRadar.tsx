@@ -21,6 +21,13 @@ interface OpportunityRadarProps {
 }
 
 export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId }) => {
+  // Real-time ranking: subscribe to the store so the radar re-ranks the instant its
+  // inputs change — a host clearing verification, a product entering matching, or a
+  // freshly persisted/re-scored match row. Without this, the memo below computed once
+  // on mount and the panel silently went stale as the marketplace moved underneath it.
+  const [storeTick, setStoreTick] = useState(0);
+  useEffect(() => store.subscribe(() => setStoreTick(t => t + 1)), []);
+
   const opportunities = useMemo(() => {
     // The creator radar runs the SAME interpreted matching engine the host discovery
     // surface uses (store.calculateMatchScore), scored live against every verified
@@ -47,7 +54,7 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId })
     return rows
       .sort((a, b) => b.matchScore.overallScore - a.matchScore.overallScore)
       .slice(0, 6);
-  }, [creatorId]);
+  }, [creatorId, storeTick]);
 
   // Grounded market signals: optional Google-Search-backed enrichment. Absent
   // (never fabricated) when AI is disabled or no citation-backed source exists.
