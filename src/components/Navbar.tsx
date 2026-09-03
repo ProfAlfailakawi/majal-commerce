@@ -23,6 +23,7 @@ import { SurfaceType, User, UserRole } from '../types/majal';
 import { store } from '../lib/store';
 import { AI_ASSISTANT_ENABLED, INTEGRATION_SIMULATORS_ENABLED, IS_DEMO_MODE } from '../lib/runtime';
 import { fetchNotifications, markAllNotificationsRead, markNotificationRead, NotificationItem } from '../lib/notificationClient';
+import { usePopoverDismiss } from '../hooks/usePopoverDismiss';
 
 interface NavbarProps {
   activeSurface: SurfaceType;
@@ -73,6 +74,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const notificationsRef = usePopoverDismiss<HTMLDivElement>(showNotifications, () => setShowNotifications(false));
+  const roleMenuRef = usePopoverDismiss<HTMLDivElement>(showRoleDropdown, () => setShowRoleDropdown(false));
   const [serverNotifications, setServerNotifications] = useState<NotificationItem[]>([]);
   const [serverUnreadCount, setServerUnreadCount] = useState(0);
 
@@ -254,12 +257,15 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="hidden sm:inline">مساعد مجال</span>
             </button>}
 
-            {(IS_DEMO_MODE || authStatus === 'AUTHENTICATED') && <div className="relative">
+            {(IS_DEMO_MODE || authStatus === 'AUTHENTICATED') && <div className="relative" ref={notificationsRef}>
               <button
                 onClick={() => {
                   const next = !showNotifications;
                   setShowNotifications(next);
-                  if (next) refreshServerNotifications();
+                  if (next) {
+                    setShowRoleDropdown(false);
+                    refreshServerNotifications();
+                  }
                 }}
                 className="p-2.5 rounded-xl text-stone-300 hover:text-stone-100 hover:bg-white/5 transition-colors relative"
                 aria-label="فتح التنبيهات"
@@ -295,9 +301,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>}
 
-            {IS_DEMO_MODE && <div className="relative">
+            {IS_DEMO_MODE && <div className="relative" ref={roleMenuRef}>
               <button
-                onClick={() => setShowRoleDropdown(!showRoleDropdown)}
+                onClick={() => {
+                  const next = !showRoleDropdown;
+                  setShowRoleDropdown(next);
+                  if (next) setShowNotifications(false);
+                }}
                 className="flex items-center gap-2 p-1.5 pr-2.5 rounded-2xl bg-[#0f172a]/80 hover:bg-[#162031] border border-white/10 text-xs font-medium transition-colors"
                 aria-label="تبديل هوية العرض المحلية"
                 aria-expanded={showRoleDropdown}
@@ -311,7 +321,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
 
               {showRoleDropdown && (
-                <div className="absolute left-0 mt-2 w-80 max-w-[90vw] bg-[#0f172a]/96 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 text-xs text-stone-200">
+                <div role="menu" aria-label="تبديل هوية العرض المحلية" className="absolute left-0 mt-2 w-80 max-w-[90vw] bg-[#0f172a]/96 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 text-xs text-stone-200 max-h-[70vh] overflow-y-auto">
                   <div className="px-2 py-2 text-[10px] text-stone-400 font-bold uppercase tracking-wider border-b border-white/10 mb-1">
                     تبديل أدوار العرض — Creator / Host / Admin / Super Admin
                   </div>

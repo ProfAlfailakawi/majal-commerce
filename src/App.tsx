@@ -23,6 +23,9 @@ const AuthModal = lazy(() => import('./components/common/AuthModal').then(module
 const AccountSecurityModal = lazy(() => import('./components/common/AccountSecurityModal').then(module => ({ default: module.AccountSecurityModal })));
 
 import { SurfaceFallback } from './components/common/SurfaceFallback';
+import type { LegalDocumentId } from './components/legal/LegalCenter';
+
+const LegalCenter = lazy(() => import('./components/legal/LegalCenter').then(module => ({ default: module.LegalCenter })));
 
 export default function App() {
   const [, setTick] = useState(0);
@@ -34,6 +37,9 @@ export default function App() {
   const [showAuth, setShowAuth] = useState(false);
   const [showSecurity, setShowSecurity] = useState(false);
   const [authStatus, setAuthStatus] = useState<'LOADING' | 'AUTHENTICATED' | 'ANONYMOUS'>(IS_DEMO_MODE ? 'AUTHENTICATED' : 'LOADING');
+  // The legal surface sits outside the role/permission surfaces on purpose: it is public,
+  // has no permission model, and must stay reachable from every state of the app.
+  const [legalDocument, setLegalDocument] = useState<LegalDocumentId | null>(null);
 
   useEffect(() => {
     if (IS_DEMO_MODE) return;
@@ -77,10 +83,17 @@ export default function App() {
       store.clearAuthenticatedUser();
       setAuthStatus('ANONYMOUS');
       setActiveSurface('PUBLIC');
+      setLegalDocument(null);
     }
   };
 
+  const handleOpenLegal = (document: LegalDocumentId) => {
+    setLegalDocument(document);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleSurfaceChange = (surface: SurfaceType) => {
+    setLegalDocument(null);
     if (!canAccessSurface(store.activeUser, surface)) {
       setActiveSurface('PUBLIC');
       store.setSurface('PUBLIC');
@@ -121,12 +134,14 @@ export default function App() {
 
         <main id="main-content" tabIndex={-1} className="animate-in fade-in duration-300 flex-1 pb-10 outline-none">
           <Suspense fallback={<SurfaceFallback />}>
-            {activeSurface === 'PUBLIC' && <PublicLanding onSurfaceChange={handleSurfaceChange} />}
-            {activeSurface === 'CONSUMER' && <ConsumerDashboard onSurfaceChange={handleSurfaceChange} />}
-            {activeSurface === 'CREATOR' && <CreatorPortal />}
-            {activeSurface === 'HOST' && <HostPortal />}
-            {activeSurface === 'ADMIN' && <AdminDashboard />}
-            {activeSurface === 'SUPER_ADMIN' && <SuperAdminDashboard />}
+            {legalDocument ? <LegalCenter initialDocument={legalDocument} onBack={() => setLegalDocument(null)} /> : <>
+              {activeSurface === 'PUBLIC' && <PublicLanding onSurfaceChange={handleSurfaceChange} />}
+              {activeSurface === 'CONSUMER' && <ConsumerDashboard onSurfaceChange={handleSurfaceChange} />}
+              {activeSurface === 'CREATOR' && <CreatorPortal />}
+              {activeSurface === 'HOST' && <HostPortal />}
+              {activeSurface === 'ADMIN' && <AdminDashboard />}
+              {activeSurface === 'SUPER_ADMIN' && <SuperAdminDashboard />}
+            </>}
           </Suspense>
         </main>
       </div>
@@ -150,7 +165,7 @@ export default function App() {
         {!IS_DEMO_MODE && authStatus === 'AUTHENTICATED' && showSecurity && <AccountSecurityModal isOpen onClose={() => setShowSecurity(false)} />}
       </Suspense>
 
-      <Footer onSurfaceChange={handleSurfaceChange} />
+      <Footer onSurfaceChange={handleSurfaceChange} onOpenLegal={handleOpenLegal} />
       <ConnectionSentinel />
     </div>
     </AppErrorBoundary>

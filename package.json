@@ -46,5 +46,8 @@
     "tsx": "^4.21.0",
     "typescript": "~5.8.2"
   },
-  "description": "MAJAL Absolute Edition — secure creator-to-business commercialization platform"
+  "description": "MAJAL Absolute Edition — secure creator-to-business commercialization platform",
+  "overrides": {
+    "qs": "^6.16.0"
+  }
 }

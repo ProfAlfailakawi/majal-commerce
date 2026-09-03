@@ -41,6 +41,19 @@ export const INITIAL_USERS: User[] = [
     status: 'ACTIVE'
   },
   {
+    // The public landing offers an "explore the admin layer" entry, and the demo role
+    // switcher lists every role it finds here. Without an ADMIN account both silently
+    // fall back to PUBLIC, because canAccessSurface('ADMIN') is evaluated against the
+    // user that never changed. ADMIN is deliberately tenant-less: it governs compliance
+    // and settlements across the platform and owns no creator or host record.
+    id: 'usr_admin_ops',
+    name: 'أدمن التشغيل والامتثال',
+    email: 'admin@example.test',
+    phone: '+965 50000001',
+    role: 'ADMIN',
+    status: 'ACTIVE'
+  },
+  {
     id: 'usr_creator_main',
     name: 'المبدع التجريبي',
     email: 'creator@example.test',

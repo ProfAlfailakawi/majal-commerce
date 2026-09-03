@@ -2,13 +2,41 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="مجال — منصة كويتية لتحويل ابتكارات المبدعين إلى منتجات تجارية عبر منشآت مرخّصة." />
-    <meta name="theme-color" content="#0f172a" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>مجال | من الفكرة إلى منتج تجاري</title>
+    <meta name="description" content="مجال — منصة كويتية لتحويل ابتكارات المبدعين إلى منتجات تجارية عبر منشآت مرخّصة: اكتشاف، حماية، مختبر، تعاقد، إطلاق ومستحقات في مسار واحد." />
+    <meta name="theme-color" content="#0b1220" />
+    <meta name="color-scheme" content="dark" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Arabic type. Preconnect first so the font handshake overlaps the bundle fetch;
+         display=swap keeps the first paint readable if the font is slow or blocked. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Link previews (WhatsApp, X, LinkedIn) render from these, not from the page body. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="مجال — MAJAL Platform" />
+    <meta property="og:locale" content="ar_KW" />
+    <meta property="og:title" content="مجال | من الفكرة إلى منتج تجاري" />
+    <meta property="og:description" content="حوّل الموهبة إلى منتج تجاري حقيقي داخل منظومة احترافية واضحة الصلاحيات — عبر منشآت كويتية مرخّصة." />
+    <meta property="og:image" content="/og-cover.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="مجال | من الفكرة إلى منتج تجاري" />
+    <meta name="twitter:description" content="حوّل الموهبة إلى منتج تجاري حقيقي داخل منظومة احترافية واضحة الصلاحيات." />
+    <meta name="twitter:image" content="/og-cover.svg" />
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <div style="padding:2rem;font-family:system-ui,sans-serif;color:#f8fafc;background:#0b1220;text-align:center">
+        منصة مجال تحتاج إلى تفعيل JavaScript في المتصفح لعرض المحتوى.
+      </div>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

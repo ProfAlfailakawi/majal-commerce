@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /$
+Allow: /index.html
+
+# Operational surfaces are permission-gated and carry no public value in an index.
+Disallow: /api/

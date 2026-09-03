@@ -69,6 +69,14 @@ html {
   scroll-behavior: smooth;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  /* Arabic numerals stay Latin-shaped so KWD amounts read consistently. */
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* IBM Plex Sans Arabic carries the whole Arabic UI; the stack below keeps the page
+   legible on every platform if the webfont is blocked or still loading. */
+html, body, #root {
+  font-family: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, 'Noto Sans Arabic', system-ui, -apple-system, sans-serif;
 }
 
 body {
@@ -83,6 +91,17 @@ body {
 
 body, #root {
   min-height: 100vh;
+}
+
+body {
+  /* Notched phones: keep fixed corner affordances clear of the home indicator. */
+  padding-bottom: env(safe-area-inset-bottom);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Long unbroken strings (emails, ids, urls) must wrap rather than widen the page. */
+body {
+  overflow-wrap: anywhere;
 }
 
 /* مؤشر اليد لجميع الأزرار والعناصر التفاعلية */

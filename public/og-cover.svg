@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="مجال — من الفكرة إلى منتج تجاري">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a101b"/>
+      <stop offset="55%" stop-color="#0b1220"/>
+      <stop offset="100%" stop-color="#0b1322"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f4e1b0"/>
+      <stop offset="50%" stop-color="#e8c880"/>
+      <stop offset="100%" stop-color="#c7a55b"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c7a55b" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#c7a55b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="1010" cy="120" r="300" fill="url(#glow)"/>
+  <circle cx="180" cy="560" r="260" fill="url(#glow)" opacity="0.7"/>
+
+  <rect x="984" y="56" width="104" height="104" rx="28" fill="url(#gold)"/>
+  <text x="1036" y="130" font-family="'IBM Plex Sans Arabic', system-ui, Tahoma, sans-serif" font-size="62" font-weight="700" fill="#0b1220" text-anchor="middle">م</text>
+
+  <text x="1120" y="250" font-family="'IBM Plex Sans Arabic', system-ui, Tahoma, sans-serif" font-size="76" font-weight="700" fill="#f8fafc" text-anchor="end">حوّل الموهبة إلى</text>
+  <text x="1120" y="346" font-family="'IBM Plex Sans Arabic', system-ui, Tahoma, sans-serif" font-size="76" font-weight="700" fill="url(#gold)" text-anchor="end">منتج تجاري حقيقي</text>
+  <text x="1120" y="416" font-family="'IBM Plex Sans Arabic', system-ui, Tahoma, sans-serif" font-size="31" fill="#94a3b8" text-anchor="end">منصة تشغيل الشراكات بين المبدعين والمنشآت المرخّصة</text>
+
+  <g font-family="'IBM Plex Sans Arabic', system-ui, Tahoma, sans-serif" font-size="25" font-weight="600" text-anchor="middle">
+    <rect x="856" y="486" width="264" height="66" rx="20" fill="#c7a55b" fill-opacity="0.10" stroke="#e8c880" stroke-opacity="0.30"/>
+    <text x="988" y="527" fill="#e8c880">ابتكار ← حماية</text>
+    <rect x="568" y="486" width="264" height="66" rx="20" fill="#ffffff" fill-opacity="0.05" stroke="#ffffff" stroke-opacity="0.12"/>
+    <text x="700" y="527" fill="#cbd5e1">مختبر ← عقد</text>
+    <rect x="280" y="486" width="264" height="66" rx="20" fill="#10b981" fill-opacity="0.08" stroke="#34d399" stroke-opacity="0.28"/>
+    <text x="412" y="527" fill="#6ee7b7">إطلاق ← مستحقات</text>
+  </g>
+</svg>

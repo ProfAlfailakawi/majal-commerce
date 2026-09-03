@@ -14,6 +14,7 @@ import {
 import { SurfaceType, UserRole } from '../../types/majal';
 import { store } from '../../lib/store';
 import { IS_DEMO_MODE } from '../../lib/runtime';
+import { JourneyInfographic } from './JourneyInfographic';
 
 interface PublicLandingProps {
   onSurfaceChange: (surface: SurfaceType) => void;
@@ -23,7 +24,10 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
   const openDemoRole = (role: UserRole, surface: SurfaceType) => {
     if (!IS_DEMO_MODE) return;
     const user = store.users.find(u => u.role === role && u.status !== 'SUSPENDED');
-    if (user) store.setUser(user);
+    // Navigate only once the identity actually changed. Calling onSurfaceChange after a
+    // failed switch evaluates the permission check against the OLD user, which silently
+    // bounces back to PUBLIC and reads to the visitor as a dead button.
+    if (!user || !store.setUser(user)) return;
     onSurfaceChange(surface);
   };
   const stats = [
@@ -120,46 +124,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
         ))}
       </div>
 
-      <div className="space-y-8">
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-black text-slate-100">كيف تعمل رحلة «مجال»؟</h2>
-            <p className="text-xs text-slate-400">ست محطات مرئية، بلا تعقيد</p>
-        </div>
-
-        <div className="grid md:grid-cols-4 gap-6">
-          <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-4">
-            <div className="w-12 h-12 rounded-xl bg-[#c7a55b]/10 border border-[#e8c880]/20 flex items-center justify-center text-[#e8c880]">
-              <Lock className="w-6 h-6" />
-            </div>
-            <h3 className="font-bold text-slate-100 text-base">١. المبدع</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">ابتكار ووصفة محمية</p>
-          </div>
-
-          <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-4">
-            <div className="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-400/20 flex items-center justify-center text-sky-300">
-              <Building2 className="w-6 h-6" />
-            </div>
-            <h3 className="font-bold text-slate-100 text-base">٢. المنشأة</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">اختبار وإنتاج مرخّص</p>
-          </div>
-
-          <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-4">
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-center text-emerald-300">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <h3 className="font-bold text-slate-100 text-base">٣. الأدمن</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">امتثال وعمليات</p>
-          </div>
-
-          <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-4">
-            <div className="w-12 h-12 rounded-xl bg-fuchsia-500/10 border border-fuchsia-400/20 flex items-center justify-center text-fuchsia-300">
-              <Crown className="w-6 h-6" />
-            </div>
-            <h3 className="font-bold text-slate-100 text-base">٤. السوبر أدمن</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">حوكمة بلا كشف الأسرار</p>
-          </div>
-        </div>
-      </div>
+      <JourneyInfographic />
 
       <div className="grid md:grid-cols-3 gap-6">
         {[

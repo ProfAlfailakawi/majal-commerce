@@ -1,0 +1,14 @@
+{
+  "name": "مجال — MAJAL Platform",
+  "short_name": "مجال",
+  "description": "منصة كويتية لتحويل ابتكارات المبدعين إلى منتجات تجارية عبر منشآت مرخّصة.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

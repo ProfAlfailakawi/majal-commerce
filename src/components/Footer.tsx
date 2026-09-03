@@ -1,14 +1,25 @@
 import React from 'react';
-import { Shield, FileText, Lock, Globe, Scale, Crown } from 'lucide-react';
+import { Shield, FileText, Lock, Globe, Scale, Crown, Mail } from 'lucide-react';
 import { SurfaceType } from '../types/majal';
 import { store } from '../lib/store';
 import { canAccessSurface } from '../lib/permissions';
+import type { LegalDocumentId } from './legal/LegalCenter';
 
 interface FooterProps {
   onSurfaceChange: (surface: SurfaceType) => void;
+  onOpenLegal: (document: LegalDocumentId) => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onSurfaceChange }) => {
+const SUPPORT_EMAIL = 'support@majal.app';
+
+const legalLinks: { id: LegalDocumentId; label: string }[] = [
+  { id: 'TERMS', label: 'الشروط والأحكام' },
+  { id: 'PRIVACY', label: 'سياسة الخصوصية' },
+  { id: 'REFUND', label: 'سياسة الاسترجاع' },
+  { id: 'COMPLIANCE', label: 'سجل الامتثال والتتبع' }
+];
+
+export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal }) => {
   const surfaces: { id: SurfaceType; label: string }[] = [
     { id: 'CONSUMER', label: 'السوق والإطلاقات' },
     { id: 'CREATOR', label: 'بوابة المبدعين' },
@@ -42,7 +53,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange }) => {
             <h4 className="font-bold text-slate-200 text-sm mb-3 border-b border-slate-800 pb-1">أسطح النظام</h4>
             <ul className="space-y-2">
               {visibleSurfaces.map(surface => (
-                <li key={surface.id}><button onClick={() => onSurfaceChange(surface.id)} className="hover:text-[#e8c880] transition-colors">{surface.label}</button></li>
+                <li key={surface.id}><button onClick={() => onSurfaceChange(surface.id)} className="py-1.5 -my-1.5 inline-flex items-center hover:text-[#e8c880] transition-colors">{surface.label}</button></li>
               ))}
             </ul>
           </div>
@@ -69,12 +80,22 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange }) => {
         </div>
 
         <div className="pt-6 border-t border-slate-800/80 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
-          <div>© {new Date().getFullYear()} منصة مجال (MAJAL Platform) — جميع الحقوق محفوظة.</div>
-          <div className="flex gap-4 flex-wrap justify-center">
-            <span>الشروط والأحكام</span>
-            <span>سياسة الخصوصية</span>
-            <span>سجل الامتثال والتتبع</span>
-          </div>
+          <div className="text-center md:text-right">© {new Date().getFullYear()} منصة مجال (MAJAL Platform) — جميع الحقوق محفوظة.</div>
+          <nav aria-label="روابط قانونية" className="flex gap-x-5 gap-y-2 flex-wrap justify-center">
+            {legalLinks.map(link => (
+              <button
+                key={link.id}
+                onClick={() => onOpenLegal(link.id)}
+                className="py-1.5 -my-1.5 inline-flex items-center hover:text-[#e8c880] transition-colors"
+              >
+                {link.label}
+              </button>
+            ))}
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="py-1.5 -my-1.5 inline-flex items-center gap-1.5 hover:text-[#e8c880] transition-colors">
+              <Mail className="w-3.5 h-3.5" />
+              <span dir="ltr">{SUPPORT_EMAIL}</span>
+            </a>
+          </nav>
         </div>
       </div>
     </footer>

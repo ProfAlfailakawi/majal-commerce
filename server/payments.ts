@@ -175,31 +175,210 @@ class MyFatoorahGateway implements PaymentGateway {
   }
 }
 
+/**
+ * Lemon Squeezy adapter.
+ *
+ * Two facts shape this adapter and are enforced rather than hidden:
+ *
+ * 1. Lemon Squeezy does not settle in KWD. The platform ledger is KWD-only
+ *    (`payment_intents.currency CHECK(currency = 'KWD')`), so the operator must
+ *    declare a settlement currency and an explicit KWD conversion rate. The rate
+ *    is configuration, never a guess, and never fetched at runtime — a silently
+ *    moving rate would make the charged amount unverifiable after the fact.
+ *
+ * 2. Lemon Squeezy webhooks identify an *order*, not the checkout that produced
+ *    it. The correlation key is therefore minted here (`ls_<intentId>`), sent as
+ *    signed checkout custom data, and echoed back inside the HMAC-protected
+ *    payload. Because the whole body is signed, the echoed key and the echoed
+ *    KWD amount are as trustworthy as the signature itself.
+ *
+ * Integrity check on every event: the provider's own charged total (settlement
+ * minor units) must equal the amount derived from the echoed KWD fils at the
+ * configured rate. A signature alone proves origin; this proves the customer was
+ * charged the KWD amount this platform recorded.
+ */
+type LemonSqueezyWebhook = {
+  meta?: { event_name?: string; custom_data?: Record<string, unknown> };
+  data?: {
+    type?: string;
+    id?: string | number;
+    attributes?: { status?: string; total?: number; currency?: string; refunded?: boolean };
+  };
+};
+
+const LEMONSQUEEZY_MINOR_UNITS = 100;
+
+class LemonSqueezyGateway implements PaymentGateway {
+  readonly provider = 'LEMONSQUEEZY';
+  readonly configured: boolean;
+  private readonly apiKey = process.env.LEMONSQUEEZY_API_KEY?.trim() || '';
+  private readonly storeId = process.env.LEMONSQUEEZY_STORE_ID?.trim() || '';
+  private readonly variantId = process.env.LEMONSQUEEZY_VARIANT_ID?.trim() || '';
+  private readonly webhookSecret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET?.trim() || '';
+  private readonly settlementCurrency = (process.env.LEMONSQUEEZY_SETTLEMENT_CURRENCY || 'USD').trim().toUpperCase();
+  private readonly kwdRate = Number(process.env.LEMONSQUEEZY_KWD_RATE || 0);
+  private readonly baseUrl = (process.env.LEMONSQUEEZY_BASE_URL || 'https://api.lemonsqueezy.com').replace(/\/$/, '');
+
+  constructor() {
+    this.configured =
+      this.apiKey.length >= 20 &&
+      /^\d+$/.test(this.storeId) &&
+      /^\d+$/.test(this.variantId) &&
+      this.webhookSecret.length >= 16 &&
+      /^[A-Z]{3}$/.test(this.settlementCurrency) &&
+      Number.isFinite(this.kwdRate) && this.kwdRate > 0;
+  }
+
+  /** KWD fils -> settlement-currency minor units, at the operator-declared rate. */
+  private settlementMinorUnits(amountFils: number) {
+    const value = Math.round((amountFils / 1000) * this.kwdRate * LEMONSQUEEZY_MINOR_UNITS);
+    if (!Number.isSafeInteger(value) || value <= 0) throw new Error('LEMONSQUEEZY_AMOUNT_CONVERSION_INVALID');
+    return value;
+  }
+
+  async createIntent(input: PaymentCreateInput): Promise<PaymentCreateResult> {
+    if (!this.configured) throw new Error('PAYMENT_PROVIDER_NOT_CONFIGURED');
+    const redirect = new URL(input.returnUrl);
+    if (redirect.protocol !== 'https:' && process.env.NODE_ENV === 'production') throw new Error('PAYMENT_RETURN_URL_MUST_BE_HTTPS');
+    const reference = `ls_${input.intentId}`;
+    const customPrice = this.settlementMinorUnits(input.amountFils);
+
+    const response = await fetch(`${this.baseUrl}/v1/checkouts`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${this.apiKey}`,
+        'content-type': 'application/vnd.api+json',
+        accept: 'application/vnd.api+json'
+      },
+      body: JSON.stringify({
+        data: {
+          type: 'checkouts',
+          attributes: {
+            custom_price: customPrice,
+            checkout_data: {
+              custom: {
+                majal_reference: reference,
+                majal_intent_id: input.intentId,
+                majal_order_public_id: input.orderPublicId,
+                majal_amount_fils: String(input.amountFils)
+              }
+            },
+            product_options: { redirect_url: input.returnUrl }
+          },
+          relationships: {
+            store: { data: { type: 'stores', id: this.storeId } },
+            variant: { data: { type: 'variants', id: this.variantId } }
+          }
+        }
+      }),
+      signal: AbortSignal.timeout(12_000)
+    });
+
+    const payload = await response.json().catch(() => ({})) as { data?: { id?: string; attributes?: { url?: string } } };
+    const checkoutUrl = payload.data?.attributes?.url;
+    if (!response.ok || !payload.data?.id || !checkoutUrl) throw new Error(`LEMONSQUEEZY_CREATE_FAILED_${response.status}`);
+    const checkout = new URL(checkoutUrl);
+    if (checkout.protocol !== 'https:') throw new Error('LEMONSQUEEZY_INVALID_CHECKOUT_URL');
+
+    return { providerReference: reference, status: 'REDIRECT_REQUIRED', checkoutUrl: checkout.toString() };
+  }
+
+  async verifyWebhook(rawBody: Buffer, headers: Request['headers']): Promise<VerifiedPaymentEvent> {
+    if (!this.configured) throw new Error('PAYMENT_PROVIDER_NOT_CONFIGURED');
+
+    // Signature first: nothing in the body is trusted until the HMAC matches.
+    const suppliedHeader = headers['x-signature'];
+    const supplied = Array.isArray(suppliedHeader) ? suppliedHeader[0] : suppliedHeader;
+    const expected = createHmac('sha256', this.webhookSecret).update(rawBody).digest('hex');
+    if (!supplied || !paymentSafeEqual(String(supplied).trim().toLowerCase(), expected)) throw new Error('LEMONSQUEEZY_SIGNATURE_INVALID');
+
+    let payload: LemonSqueezyWebhook;
+    try {
+      payload = JSON.parse(rawBody.toString('utf8')) as LemonSqueezyWebhook;
+    } catch {
+      throw new Error('LEMONSQUEEZY_WEBHOOK_INVALID_JSON');
+    }
+
+    const eventName = String(payload.meta?.event_name || '');
+    if (!['order_created', 'order_refunded'].includes(eventName)) throw new Error('LEMONSQUEEZY_EVENT_NOT_SUPPORTED');
+
+    const custom = payload.meta?.custom_data ?? {};
+    const reference = typeof custom.majal_reference === 'string' ? custom.majal_reference.trim() : '';
+    if (!/^ls_pay_[0-9a-f-]{36}$/.test(reference)) throw new Error('LEMONSQUEEZY_REFERENCE_MISSING');
+
+    const amountFils = parseFilsInteger(custom.majal_amount_fils);
+    if (!amountFils) throw new Error('LEMONSQUEEZY_AMOUNT_INVALID');
+
+    const attributes = payload.data?.attributes;
+    const orderId = payload.data?.id;
+    if (!orderId || !attributes || typeof attributes.total !== 'number') throw new Error('LEMONSQUEEZY_WEBHOOK_INVALID_PAYLOAD');
+    if (String(attributes.currency || '').toUpperCase() !== this.settlementCurrency) throw new Error('LEMONSQUEEZY_CURRENCY_MISMATCH');
+    // The provider must have charged exactly what the recorded KWD amount converts to.
+    if (attributes.total !== this.settlementMinorUnits(amountFils)) throw new Error('LEMONSQUEEZY_AMOUNT_MISMATCH');
+
+    const orderStatus = String(attributes.status || '').toLowerCase();
+    const status: VerifiedPaymentEvent['status'] = eventName === 'order_refunded' || orderStatus === 'refunded'
+      ? 'REFUNDED'
+      : orderStatus === 'paid'
+        ? 'PAID'
+        : orderStatus === 'pending'
+          ? 'AUTHORIZED'
+          : 'FAILED';
+
+    return {
+      provider: this.provider,
+      // Unique per (event type, order): a redelivered order_created dedupes, while a
+      // later refund of the same order is still a distinct, processable event.
+      eventId: `${eventName}:${orderId}`,
+      providerReference: reference,
+      status,
+      amountFils,
+      currency: 'KWD'
+    };
+  }
+}
+
 export interface PaymentRegistry {
   active: PaymentGateway;
   readiness: {
     configured: boolean;
     provider: string | null;
     missing: string[];
+    /** KWD unless the active provider settles elsewhere (Lemon Squeezy does not support KWD). */
+    settlementCurrency: string;
     contractVersion: string;
   };
 }
 
 export function createPaymentRegistry(): PaymentRegistry {
   const requestedProvider = (process.env.PAYMENT_PROVIDER || '').trim().toUpperCase();
-  const active: PaymentGateway = requestedProvider === 'MYFATOORAH' ? new MyFatoorahGateway() : new DisabledPaymentGateway();
+  const active: PaymentGateway =
+    requestedProvider === 'MYFATOORAH' ? new MyFatoorahGateway()
+      : requestedProvider === 'LEMONSQUEEZY' ? new LemonSqueezyGateway()
+        : new DisabledPaymentGateway();
   const missing = active.configured ? [] : requestedProvider === 'MYFATOORAH'
     ? ['MYFATOORAH_API_TOKEN', 'MYFATOORAH_WEBHOOK_SECRET', 'MYFATOORAH_PAYMENT_METHOD_ID']
-    : ['PAYMENT_PROVIDER=MYFATOORAH', 'MERCHANT_CREDENTIALS'];
+    : requestedProvider === 'LEMONSQUEEZY'
+      ? ['LEMONSQUEEZY_API_KEY', 'LEMONSQUEEZY_STORE_ID', 'LEMONSQUEEZY_VARIANT_ID', 'LEMONSQUEEZY_WEBHOOK_SECRET', 'LEMONSQUEEZY_SETTLEMENT_CURRENCY', 'LEMONSQUEEZY_KWD_RATE']
+      : ['PAYMENT_PROVIDER=MYFATOORAH|LEMONSQUEEZY', 'MERCHANT_CREDENTIALS'];
   return {
     active,
     readiness: {
       configured: active.configured,
       provider: active.configured ? active.provider : requestedProvider || null,
       missing,
-      contractVersion: 'majal-payments-v2-myfatoorah-webhook-v2'
+      settlementCurrency: active.provider === 'LEMONSQUEEZY' ? (process.env.LEMONSQUEEZY_SETTLEMENT_CURRENCY || 'USD').trim().toUpperCase() : 'KWD',
+      contractVersion: 'majal-payments-v3-myfatoorah-lemonsqueezy-webhook-v1'
     }
   };
+}
+
+/** Strict integer-fils parser for values echoed back inside a signed webhook payload. */
+export function parseFilsInteger(value: unknown) {
+  const normalized = typeof value === 'number' ? String(value) : typeof value === 'string' ? value.trim() : '';
+  if (!/^\d{1,13}$/.test(normalized)) return undefined;
+  const amount = Number(normalized);
+  return Number.isSafeInteger(amount) && amount > 0 && amount <= 10_000_000_000 ? amount : undefined;
 }
 
 export function parseKwdToFils(value: unknown) {

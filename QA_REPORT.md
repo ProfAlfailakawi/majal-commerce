@@ -1,9 +1,9 @@
-# MAJAL — QA & Security Review (2026-08-20)
+# MAJAL — QA & Security Review (2026-08-20، محدّث 2026-09-03)
 
 ## النتائج المنفذة فعليًا
 
 - TypeScript: `npm run lint` — PASS.
-- Automated tests: 13/13 PASS؛ تشمل Auth sessions/cookies/CSRF/logout، lockout والسجل الموقوف، TOTP، migrations/schema/indexes، KWD minor units، payment webhook idempotency/mismatch، notification coalescing، وخمسة اختبارات صلاحيات تغطي الأدوار العشرة.
+- Automated tests: 68/68 PASS؛ تشمل Auth sessions/cookies/CSRF/logout، lockout والسجل الموقوف، TOTP، migrations/schema/indexes، KWD minor units، payment webhook idempotency/mismatch، notification coalescing، وخمسة اختبارات صلاحيات تغطي الأدوار العشرة.
 - Production build: PASS؛ client/server منفصلان ولا توجد source maps خادمية داخل `dist`.
 - Initial JS: 289.70 kB / 87.48 kB gzip؛ أسطح Creator/Host/Admin/Super Admin ونوافذ Auth/MFA lazy-loaded.
 - Browser role walkthrough: 10/10 PASS — Consumer, Super Admin, Admin, Creator وخمسة أدوار Host؛ عناوين صحيحة، زر توجيه ذكي، لا أزرار بلا اسم ولا horizontal overflow.
@@ -17,7 +17,9 @@
 - PACI boundary: hashed civil ID، readiness contract، signed raw internal callback — PASS؛ المزود يبقى disabled حتى وثائق/اعتماد PACI الرسمية.
 - Scale simulator: 1,000,000 catalog rows + 2,000,000 order events عبر 10,000 tenants — PASS؛ 0 FK/integrity failures.
 - Scale query p95: tenant feed 2.706 ms، category feed 0.063 ms، order timeline 0.522 ms؛ جميعها تحت هدف 400 ms، والفهارس ظهرت في query plans.
-- Dependency audit: `npm audit --omit=dev` — PASS، 0 vulnerabilities.
+- Dependency audit: `npm audit --omit=dev` — PASS، 0 vulnerabilities. Express 4 كان يسحب `qs` ضمن نطاق مصاب بثغرتين (تجاوز array-limit وDoS عبر isBuffer)، و`npm audit fix` لا يحلها لأن الإصلاح يتطلب Express 5. ثُبِّت `qs` على `^6.16.0` عبر `overrides` في `package.json` بدل فرض ترقية كاسرة للتوجيه.
+- Mobile overflow sweep (2026-09-03): 320px و375px عبر كل الأسطح وتبويبات البوابات والمستندات القانونية — 0 كسر أفقي، `scrollWidth == clientWidth` في كل خطوة.
+- Lemon Squeezy webhook gate: 8 اختبارات تثبت رفض التوقيع المزوّر، والجسم المعدّل، والمبلغ غير المطابق رغم صحة التوقيع، والعملة المختلفة، والمرجع المفقود، وأن الإعداد الناقص يفشل مغلقًا.
 
 ## إصلاحات المخاطر الأعلى
 
