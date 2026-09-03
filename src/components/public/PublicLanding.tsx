@@ -23,7 +23,7 @@ interface PublicLandingProps {
 
 /** The four movements of the model, orbiting the mark in the hero. */
 const phases = [
-  { icon: <Sparkles className="w-5 h-5" />, label: 'ابتكار', tone: 'text-[#e8c880] border-[#e8c880]/25 bg-[#c7a55b]/10' },
+  { icon: <Sparkles className="w-5 h-5" />, label: 'ابتكار', tone: 'text-gold-300 border-gold-300/25 bg-gold-500/10' },
   { icon: <Lock className="w-5 h-5" />, label: 'حماية', tone: 'text-fuchsia-300 border-fuchsia-400/25 bg-fuchsia-500/10' },
   { icon: <Building2 className="w-5 h-5" />, label: 'إنتاج', tone: 'text-sky-300 border-sky-400/25 bg-sky-500/10' },
   { icon: <Store className="w-5 h-5" />, label: 'إطلاق', tone: 'text-emerald-300 border-emerald-400/25 bg-emerald-500/10' }
@@ -50,8 +50,8 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
       <div className="glass-panel majal-grain rounded-[32px] p-8 sm:p-12 relative overflow-hidden text-center sm:text-right border border-white/10 elev-3">
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#c7a55b]/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#4b6aa3]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="majal-glow -top-[18rem] -left-[18rem] w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
+        <div className="majal-glow -bottom-[18rem] -right-[18rem] w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(75,106,163,0.10)' } as React.CSSProperties} />
 
         {/*
           The brand monument. The previous version put four flat tiles here, which said
@@ -62,8 +62,8 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
         */}
         <aside aria-label="رحلة مجال المختصرة" className="hidden xl:block absolute left-12 top-1/2 -translate-y-1/2">
           <div className="relative w-[17rem] h-[17rem] grid place-items-center">
-            <span aria-hidden="true" className="absolute inset-0 rounded-full border border-[#c7a55b]/12" />
-            <span aria-hidden="true" className="absolute inset-[13%] rounded-full border border-[#c7a55b]/[0.08]" />
+            <span aria-hidden="true" className="absolute inset-0 rounded-full border border-gold-500/12" />
+            <span aria-hidden="true" className="absolute inset-[13%] rounded-full border border-gold-500/[0.08]" />
             <span
               aria-hidden="true"
               className="absolute inset-[-6%] rounded-full majal-orbit"
@@ -94,7 +94,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
                   <span className={`w-11 h-11 rounded-2xl border grid place-items-center backdrop-blur-sm ${phase.tone}`}>
                     {phase.icon}
                   </span>
-                  <span className="text-[10px] font-black text-stone-300">{phase.label}</span>
+                  <span className="text-[10px] font-black text-slate-300">{phase.label}</span>
                 </span>
               );
             })}
@@ -102,7 +102,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
         </aside>
 
         <div className="relative z-10 max-w-4xl xl:mr-auto xl:ml-[21rem] space-y-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-card border border-[#e8c880]/20 text-[#e8c880] text-xs font-semibold">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-card border border-gold-300/20 text-gold-300 text-xs font-semibold">
             <LayoutPanelTop className="w-4 h-4" />
             <span>مجال — منصة تشغيل الشراكات التجارية بين المبدعين والمنشآت المرخّصة</span>
           </div>
@@ -120,7 +120,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
           {IS_DEMO_MODE ? <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-4">
             <button
               onClick={() => openDemoRole('CREATOR', 'CREATOR')}
-              className="px-6 py-3.5 rounded-2xl bg-gradient-to-l from-[#c7a55b] to-[#dfc377] hover:brightness-110 text-slate-950 font-black text-sm shadow-[0_14px_40px_rgba(199,165,91,0.24)] transition-all flex items-center gap-2"
+              className="px-6 py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 hover:brightness-110 text-slate-950 font-black text-sm shadow-[0_14px_40px_rgba(199,165,91,0.24)] transition-all flex items-center gap-2"
             >
               <span>استعرض تجربة المبدع</span>
               <ChevronLeft className="w-4 h-4" />
@@ -130,7 +130,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
               onClick={() => openDemoRole('HOST_OWNER', 'HOST')}
               className="px-6 py-3.5 rounded-2xl glass-card hover:bg-slate-800/80 text-slate-200 border border-slate-700/60 font-semibold text-sm transition-all flex items-center gap-2"
             >
-              <Building2 className="w-4 h-4 text-[#e8c880]" />
+              <Building2 className="w-4 h-4 text-gold-300" />
               <span>استعرض تجربة المنشأة</span>
             </button>
 
@@ -144,13 +144,13 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
 
             <button
               onClick={() => openDemoRole('SUPER_ADMIN', 'SUPER_ADMIN')}
-              className="px-6 py-3.5 rounded-2xl glass-card hover:bg-slate-800/80 text-[#e8c880] border border-[#e8c880]/20 font-semibold text-sm transition-all flex items-center gap-2"
+              className="px-6 py-3.5 rounded-2xl glass-card hover:bg-slate-800/80 text-gold-300 border border-gold-300/20 font-semibold text-sm transition-all flex items-center gap-2"
             >
               <Crown className="w-4 h-4" />
               <span>استكشف السوبر أدمن</span>
             </button>
           </div> : <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-4">
-            <button onClick={() => onSurfaceChange('CONSUMER')} className="px-6 py-3.5 rounded-2xl bg-gradient-to-l from-[#c7a55b] to-[#dfc377] hover:brightness-110 text-slate-950 font-black text-sm shadow-[0_14px_40px_rgba(199,165,91,0.24)] transition-all flex items-center gap-2">
+            <button onClick={() => onSurfaceChange('CONSUMER')} className="px-6 py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 hover:brightness-110 text-slate-950 font-black text-sm shadow-[0_14px_40px_rgba(199,165,91,0.24)] transition-all flex items-center gap-2">
               <Store className="w-4 h-4" /> استكشف السوق
             </button>
             <span className="px-4 py-3 rounded-2xl bg-emerald-500/5 border border-emerald-400/15 text-emerald-200 text-xs flex items-center gap-2">
@@ -181,7 +181,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
           { icon: <Store className="w-5 h-5" />, title: 'سوق قابل للتوسع', body: 'المنصة تبدأ بالطعام، لكن بنيتها تصلح لاحقًا لقطاعات أخرى مع نفس منطق الحاضن التجاري.' }
         ].map((item, idx) => (
           <div key={idx} className="glass-card glass-card-hover rounded-2xl p-6 border border-white/10 space-y-4">
-            <div className="w-11 h-11 rounded-xl bg-[#c7a55b]/10 border border-[#e8c880]/20 flex items-center justify-center text-[#e8c880]">{item.icon}</div>
+            <div className="w-11 h-11 rounded-xl bg-gold-500/10 border border-gold-300/20 flex items-center justify-center text-gold-300">{item.icon}</div>
             <h3 className="font-bold text-slate-100 text-base">{item.title}</h3>
             <p className="text-xs text-slate-300 leading-7">{item.body}</p>
           </div>

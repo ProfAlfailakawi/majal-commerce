@@ -137,7 +137,7 @@ export const MajalLockup: React.FC<MajalLockupProps> = ({
       <span className="min-w-0 text-right">
         <span className={`block ${scale.word} font-black leading-tight majal-wordmark truncate`}>مجال</span>
         {showLatin && (
-          <span className="block text-[9px] font-semibold tracking-[0.42em] text-[#c7a55b]/70 leading-none mt-1" dir="ltr">
+          <span className="block text-[9px] font-semibold tracking-[0.42em] text-gold-500/70 leading-none mt-1" dir="ltr">
             MAJAL
           </span>
         )}

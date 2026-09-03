@@ -122,8 +122,8 @@ export default function App() {
 
   return (
     <AppErrorBoundary>
-    <div dir="rtl" className="min-h-screen text-slate-100 font-sans selection:bg-[#c7a55b] selection:text-slate-950 flex flex-col justify-between relative overflow-x-hidden">
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:right-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-[#c7a55b] focus:text-stone-950 focus:font-black">
+    <div dir="rtl" className="min-h-screen text-slate-100 font-sans selection:bg-gold-500 selection:text-slate-950 flex flex-col justify-between relative overflow-x-hidden">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:right-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-gold-500 focus:text-slate-950 focus:font-black">
         انتقل إلى المحتوى الرئيسي
       </a>
       {/* The ambient field is drawn entirely by .ambient-bg's own background gradients —
@@ -165,12 +165,12 @@ export default function App() {
       {AI_ASSISTANT_ENABLED && <div className="fixed bottom-6 left-6 z-40">
         <button
           onClick={() => setShowAiDrawer(true)}
-          className="px-4 py-3 bg-gradient-to-r from-[#c7a55b] to-[#e0c57d] hover:from-[#d9b86b] hover:to-[#ecd48b] text-stone-950 font-black rounded-full shadow-2xl transition-transform hover:scale-105 flex items-center gap-2 text-xs border border-[#f3dfaf]/30"
+          className="px-4 py-3 bg-gradient-to-l from-gold-500 to-gold-300 hover:from-gold-400 hover:to-gold-200 text-slate-950 font-black rounded-full shadow-2xl transition-[filter] hover:brightness-110 flex items-center gap-2 text-xs border border-gold-200/30"
           aria-label="فتح مساعد مجال الذكي"
         >
-          <Bot className="w-5 h-5 text-stone-950" />
+          <Bot className="w-5 h-5 text-slate-950" />
           <span className="hidden sm:inline">مساعد مجال الذكي</span>
-          <Sparkles className="w-3.5 h-3.5 text-stone-950" />
+          <Sparkles className="w-3.5 h-3.5 text-slate-950" />
         </button>
       </div>}
 

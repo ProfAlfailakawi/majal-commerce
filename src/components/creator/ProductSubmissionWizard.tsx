@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Sparkles, Check, ArrowRight, Lock, AlertCircle } from 'lucide-react';
 import { store } from '../../lib/store';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
+import { PRODUCT_CATEGORIES } from '../../data/catalog';
 
 interface ProductSubmissionWizardProps {
   isOpen: boolean;
@@ -75,7 +76,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
         category,
         shortDescription,
         story,
-        mediaUrls: ['https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=600'],
+        mediaUrls: ['/dishes/placeholder.svg'],
         generalIngredients: ingredients,
         allergens,
         dietaryTags: ['حلال', 'طازج'],
@@ -117,31 +118,31 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/85 backdrop-blur-md animate-in fade-in">
-      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="product-wizard-title" className="bg-stone-900 border border-stone-800 rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl text-stone-100 flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="product-wizard-title" className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl text-slate-100 flex flex-col max-h-[90vh]">
         
         {/* Header */}
-        <div className="p-5 bg-stone-800/90 border-b border-stone-700 flex items-center justify-between">
+        <div className="p-5 bg-slate-800/90 border-b border-slate-700 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-amber-500/20 text-amber-400 rounded-xl">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h3 id="product-wizard-title" className="font-black text-base text-stone-100">
+              <h3 id="product-wizard-title" className="font-black text-base text-slate-100">
                 تسجيل منتج ووصفة جديدة في منصة مجال
               </h3>
-              <p className="text-xs text-stone-400">
+              <p className="text-xs text-slate-400">
                 الخطوة {step} من ٣ — إضافة البيانات التجريبية وخزنة الوصفة
               </p>
             </div>
           </div>
-          <button onClick={onClose} aria-label="إغلاق معالج المنتج" className="p-1.5 text-stone-400 hover:text-stone-100 rounded-lg hover:bg-stone-700">
+          <button onClick={onClose} aria-label="إغلاق معالج المنتج" className="p-1.5 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-700">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Stepper progress bar */}
-        <div className="w-full h-1 bg-stone-800">
+        <div className="w-full h-1 bg-slate-800">
           <div
             className="h-full bg-amber-500 transition-all duration-300"
             style={{ width: `${(step / 3) * 100}%` }}
@@ -158,7 +159,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-stone-300 font-bold mb-1">اسم المنتج للجمهور (الاسم التجاري):</label>
+                  <label className="block text-slate-300 font-bold mb-1">اسم المنتج للجمهور (الاسم التجاري):</label>
                   <input
                     id="product-public-name"
                     aria-label="اسم المنتج للجمهور"
@@ -168,28 +169,27 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                     placeholder="مثال: قرص عقيلي فاخر بالزعفران"
                     maxLength={80}
                     required
-                    className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2.5 text-stone-100 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-stone-300 font-bold mb-1">فئة المنتج:</label>
+                  <label className="block text-slate-300 font-bold mb-1">فئة المنتج:</label>
                   <select
                     aria-label="فئة المنتج"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2.5 text-stone-100 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500"
                   >
-                    <option value="حلويات">حلويات وكيك</option>
-                    <option value="صلصات">صلصات ومخللات</option>
-                    <option value="مخبوزات">مخبوزات وفطائر</option>
-                    <option value="وجبات">وجبات سريعة ومقبلات</option>
+                    {PRODUCT_CATEGORIES.map(item => (
+                      <option key={item.id} value={item.id}>{item.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-stone-300 font-bold mb-1">وصف قصير للعميل والمنشأة:</label>
+                <label className="block text-slate-300 font-bold mb-1">وصف قصير للعميل والمنشأة:</label>
                 <textarea
                   rows={2}
                   aria-label="وصف قصير للعميل والمنشأة"
@@ -198,12 +198,12 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                   placeholder="وصف مشوق يوضح ما يجعل هذا المنتج استثنائياً..."
                   maxLength={240}
                   required
-                  className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2.5 text-stone-100 focus:outline-none focus:border-amber-500 resize-none"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-stone-300 font-bold mb-1">قصة ابتكار المنتج:</label>
+                <label className="block text-slate-300 font-bold mb-1">قصة ابتكار المنتج:</label>
                 <textarea
                   rows={2}
                   aria-label="قصة ابتكار المنتج"
@@ -212,7 +212,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                   placeholder="كيف بدأت شغفك بهذه الوصفة وما سر تميزها التراثي أو العصري..."
                   maxLength={800}
                   required
-                  className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2.5 text-stone-100 focus:outline-none focus:border-amber-500 resize-none"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 resize-none"
                 />
               </div>
             </div>
@@ -223,7 +223,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
               <h4 className="font-bold text-amber-400 text-sm">٢. المكونات، مسببات الحساسية والأسعار التقديرية</h4>
 
               <div>
-                <label className="block text-stone-300 font-bold mb-1">المكونات العامة (مفصولة بفواصل):</label>
+                <label className="block text-slate-300 font-bold mb-1">المكونات العامة (مفصولة بفواصل):</label>
                 <input
                   type="text"
                   aria-label="المكونات العامة"
@@ -232,12 +232,12 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                   placeholder="مثال: دقيق، بيض، هيل طازج، زعفران، كريمة"
                   maxLength={400}
                   required
-                  className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2.5 text-stone-100 focus:outline-none focus:border-amber-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div>
-                <label className="block text-stone-300 font-bold mb-1">مسببات الحساسية المعروفة (مفصولة بفواصل):</label>
+                <label className="block text-slate-300 font-bold mb-1">مسببات الحساسية المعروفة (مفصولة بفواصل):</label>
                 <input
                   type="text"
                   aria-label="مسببات الحساسية"
@@ -246,13 +246,13 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                   placeholder="مثال: بيض، حليب، سمسم، جلوتين"
                   maxLength={300}
                   required
-                  className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2.5 text-stone-100 focus:outline-none focus:border-amber-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-stone-950/60 p-4 rounded-xl border border-stone-800">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
                 <div>
-                  <label className="block text-stone-300 font-bold mb-1">تكلفة التجهيز التقديرية للقطعة (د.ك):</label>
+                  <label className="block text-slate-300 font-bold mb-1">تكلفة التجهيز التقديرية للقطعة (د.ك):</label>
                   <input
                     type="number"
                     aria-label="تكلفة التجهيز التقديرية للقطعة"
@@ -260,11 +260,11 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                     min="0.001"
                     value={estimatedUnitCostKwd}
                     onChange={(e) => setEstimatedUnitCostKwd(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-lg p-2 text-stone-100 font-bold"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100 font-bold"
                   />
                 </div>
                 <div>
-                  <label className="block text-stone-300 font-bold mb-1">سعر البيع المقترح للجمهور (د.ك):</label>
+                  <label className="block text-slate-300 font-bold mb-1">سعر البيع المقترح للجمهور (د.ك):</label>
                   <input
                     type="number"
                     aria-label="سعر البيع المقترح للجمهور"
@@ -272,7 +272,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                     min="0.001"
                     value={targetSellingPriceKwd}
                     onChange={(e) => setTargetSellingPriceKwd(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-lg p-2 text-amber-400 font-bold"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-amber-400 font-bold"
                   />
                 </div>
               </div>
@@ -291,7 +291,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
               </div>
 
               <div>
-                <label className="block text-stone-300 font-bold mb-1">خطوات التحضير والطهي التشغيلي (كل خطوة في سطر):</label>
+                <label className="block text-slate-300 font-bold mb-1">خطوات التحضير والطهي التشغيلي (كل خطوة في سطر):</label>
                 <textarea
                   rows={3}
                   aria-label="خطوات التحضير والطهي التشغيلي"
@@ -300,12 +300,12 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                   placeholder="الخطوة ١: خفق الصفار مع الزعفران والنقع&#10;الخطوة ٢: الخبز بفرن حراري..."
                   maxLength={2000}
                   required
-                  className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2.5 text-stone-100 focus:outline-none focus:border-amber-500 font-mono resize-none"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 font-mono resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-stone-300 font-bold mb-1">السر التجاري / الملاحظة السرية الخاصة:</label>
+                <label className="block text-slate-300 font-bold mb-1">السر التجاري / الملاحظة السرية الخاصة:</label>
                 <textarea
                   rows={2}
                   aria-label="السر التجاري أو الملاحظة السرية"
@@ -313,7 +313,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                   onChange={(e) => setCriticalSecrets(e.target.value)}
                   placeholder="إضافة زهرة معينة، توقيع حراري خاص..."
                   maxLength={1000}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2.5 text-amber-300 focus:outline-none focus:border-amber-500 resize-none font-medium"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-amber-300 focus:outline-none focus:border-amber-500 resize-none font-medium"
                 />
               </div>
             </div>
@@ -322,11 +322,11 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
         </div>
 
         {/* Footer Navigation */}
-        <div className="p-4 bg-stone-800/90 border-t border-stone-700 flex justify-between items-center">
+        <div className="p-4 bg-slate-800/90 border-t border-slate-700 flex justify-between items-center">
           {step > 1 ? (
             <button
               onClick={() => setStep(step - 1)}
-              className="px-4 py-2 bg-stone-700 hover:bg-stone-600 text-stone-200 font-bold rounded-xl transition-colors"
+              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold rounded-xl transition-colors"
             >
               الخطوة السابقة
             </button>
@@ -335,7 +335,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
           {step < 3 ? (
             <button
               onClick={goNext}
-              className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black rounded-xl transition-colors flex items-center gap-1.5"
+              className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl transition-colors flex items-center gap-1.5"
             >
               <span>متابعة المعالج</span>
               <ArrowRight className="w-4 h-4 rotate-180" />
@@ -343,7 +343,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
           ) : (
             <button
               onClick={handleSubmit}
-              className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black rounded-xl transition-colors flex items-center gap-1.5 shadow-lg"
+              className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl transition-colors flex items-center gap-1.5 shadow-lg"
             >
               <Check className="w-4 h-4" />
               <span>تقديم المنتج للمراجعة والربط</span>

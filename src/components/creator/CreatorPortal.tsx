@@ -23,6 +23,10 @@ import { CreatorPassport } from './CreatorPassport';
 import { DigitalTwinPanel } from '../common/DigitalTwinPanel';
 import { DealRoom } from '../common/DealRoom';
 import { RecipeAccessRequests } from './RecipeAccessRequests';
+import { StatusPill } from '../common/StatusPill';
+import { EmptyState } from '../common/EmptyState';
+import { SurfaceTabs } from '../common/SurfaceTabs';
+import { Avatar } from '../common/Avatar';
 
 export const CreatorPortal: React.FC = () => {
   const [, setTick] = useState(0);
@@ -46,20 +50,20 @@ export const CreatorPortal: React.FC = () => {
   const tabs = [
     { id: 'HOME', label: 'الرئيسية', icon: <Sparkles className="w-4 h-4" /> },
     { id: 'RADAR', label: 'رادار الفرص', icon: <Radar className="w-4 h-4" /> },
-    { id: 'PRODUCTS', label: `منتجاتي (${myProducts.length})`, icon: <Boxes className="w-4 h-4" /> },
-    { id: 'DEALS', label: `تعاوناتي (${myCollaborations.length})`, icon: <BriefcaseBusiness className="w-4 h-4" /> },
+    { id: 'PRODUCTS', label: 'منتجاتي', icon: <Boxes className="w-4 h-4" />, count: myProducts.length },
+    { id: 'DEALS', label: 'تعاوناتي', icon: <BriefcaseBusiness className="w-4 h-4" />, count: myCollaborations.length },
     { id: 'EARNINGS', label: 'مستحقاتي', icon: <BadgeDollarSign className="w-4 h-4" /> }
   ] as const;
 
   if (!profile) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-16 text-center space-y-6">
-        <div className="w-16 h-16 rounded-3xl bg-[#c7a55b]/15 text-[#e8c880] grid place-items-center mx-auto shadow-2xl">
+        <div className="w-16 h-16 rounded-3xl bg-gold-500/15 text-gold-300 grid place-items-center mx-auto shadow-2xl">
           <Sparkles className="w-8 h-8" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-2xl font-black text-stone-100">مرحباً بك في مساحة المبدعين منصة مجال</h2>
-          <p className="text-sm text-stone-400 max-w-lg mx-auto leading-6">
+          <h2 className="text-2xl font-black text-slate-100">مرحباً بك في مساحة المبدعين منصة مجال</h2>
+          <p className="text-sm text-slate-400 max-w-lg mx-auto leading-6">
             لم يتم تفعيل ملف المبدع الخاص بحسابك بعد. انقر على الزر أدناه لإنشاء ملف المبدع والبدء باكتشاف الفرص، تقديم المنتجات، وتوقيع العقود التجارية.
           </p>
         </div>
@@ -81,7 +85,7 @@ export const CreatorPortal: React.FC = () => {
               story: 'شغف تحويل الوصفات المنزلية والسرية إلى خطوط إنتاج وتجارب ناجحة.',
               isAvailableForMatching: true,
               hasSecretRecipe: true,
-              avatarUrl: store.activeUser.avatar || 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&q=80&w=200',
+              avatarUrl: store.activeUser.avatar || '',
               createdAt: new Date().toISOString()
             };
             store.creators = [...store.creators, newCreator];
@@ -89,7 +93,7 @@ export const CreatorPortal: React.FC = () => {
             store.setUser(store.activeUser);
             setTick(t => t + 1);
           }}
-          className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#c7a55b] to-[#e1c67b] text-stone-950 text-sm font-black inline-flex items-center gap-2 shadow-xl hover:scale-105 transition-transform cursor-pointer"
+          className="px-6 py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 text-sm font-black inline-flex items-center gap-2 shadow-xl hover:brightness-110 transition-transform cursor-pointer"
         >
           <Plus className="w-5 h-5" />
           <span>إنشاء وتفعيل ملف المبدع الآن</span>
@@ -99,40 +103,30 @@ export const CreatorPortal: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-stone-100">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
       <section className="glass-panel rounded-[30px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
-        <div className="absolute -top-28 -left-20 w-72 h-72 rounded-full bg-emerald-400/8 blur-3xl" />
+        <div className="majal-glow -top-[19rem] -left-[17rem] w-[42rem] h-[42rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            <img src={profile.avatarUrl} alt={profile.displayName} decoding="async" className="w-20 h-20 rounded-3xl object-cover ring-2 ring-[#e8c880]/35 shadow-xl" />
+            <Avatar name={profile.displayName} src={profile.avatarUrl} size={80} shape="squircle" className="shadow-xl" />
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-400/20 text-[10px] font-black">CREATOR SPACE</span>
-                <span className="text-xs text-stone-500">{profile.specialty}</span>
+                <span className="text-xs text-slate-500">{profile.specialty}</span>
               </div>
               <h1 className="text-2xl md:text-3xl font-black mt-2">أهلًا {profile.displayName}، هذا مجال نموّك</h1>
-              <p className="text-sm text-stone-400 mt-2 max-w-2xl leading-7">كل ما تحتاجه من اكتشاف فرصة، حماية وصفة، تفاوض، عقد، إطلاق ومستحقات موجود في مسار واحد.</p>
+              <p className="text-sm text-slate-400 mt-2 max-w-2xl leading-7">كل ما تحتاجه من اكتشاف فرصة، حماية وصفة، تفاوض، عقد، إطلاق ومستحقات موجود في مسار واحد.</p>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <button onClick={() => setShowCalculator(true)} className="px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-bold text-stone-300 hover:bg-white/10">حاسبة الاقتصاديات</button>
-            <button onClick={() => setShowWizard(true)} className="px-5 py-3 rounded-2xl bg-gradient-to-r from-[#c7a55b] to-[#e1c67b] text-stone-950 text-xs font-black flex items-center gap-2"><Plus className="w-4 h-4" /> تسجيل منتج جديد</button>
+            <button onClick={() => setShowCalculator(true)} className="px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-bold text-slate-300 hover:bg-white/10">حاسبة الاقتصاديات</button>
+            <button onClick={() => setShowWizard(true)} className="px-5 py-3 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 text-xs font-black flex items-center gap-2"><Plus className="w-4 h-4" /> تسجيل منتج جديد</button>
           </div>
         </div>
       </section>
 
-      <div className="flex gap-2 overflow-x-auto no-scrollbar border-b border-white/10 pb-3">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2.5 rounded-xl whitespace-nowrap text-xs font-bold flex items-center gap-2 transition-colors ${activeTab === tab.id ? 'bg-[#c7a55b] text-stone-950' : 'bg-white/5 text-stone-300 hover:bg-white/10'}`}
-          >
-            {tab.icon}{tab.label}
-          </button>
-        ))}
-      </div>
+      <SurfaceTabs tabs={[...tabs]} active={activeTab} onChange={setActiveTab} tone="gold" label="أقسام مساحة المبدع" />
 
       {activeTab === 'HOME' && (
         <div className="space-y-6">
@@ -154,18 +148,18 @@ export const CreatorPortal: React.FC = () => {
                 <div className="p-5 space-y-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className="text-[11px] text-stone-500">{product.category}</div>
-                      <h3 className="text-lg font-black text-stone-100 mt-1">{product.publicName}</h3>
+                      <div className="text-[11px] text-slate-500">{product.category}</div>
+                      <h3 className="text-lg font-black text-slate-100 mt-1">{product.publicName}</h3>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full bg-[#c7a55b]/10 border border-[#e8c880]/20 text-[#e8c880] text-[10px] font-black">{product.status}</span>
+                    <StatusPill status={product.status} />
                   </div>
-                  <p className="text-xs text-stone-400 leading-6">{product.shortDescription}</p>
+                  <p className="text-xs text-slate-400 leading-6">{product.shortDescription}</p>
                   <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-[10px] text-stone-500">التكلفة</div><div className="text-xs font-black mt-1">{product.estimatedUnitCostKwd.toFixed(3)}</div></div>
-                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-[10px] text-stone-500">السعر</div><div className="text-xs font-black mt-1">{product.targetSellingPriceKwd.toFixed(3)}</div></div>
-                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-[10px] text-stone-500">الوصفة</div><div className="text-xs font-black mt-1 text-[#e8c880]">{product.currentRecipeVersion}</div></div>
+                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-[10px] text-slate-500">التكلفة</div><div className="text-xs font-black mt-1">{product.estimatedUnitCostKwd.toFixed(3)}</div></div>
+                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-[10px] text-slate-500">السعر</div><div className="text-xs font-black mt-1">{product.targetSellingPriceKwd.toFixed(3)}</div></div>
+                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-[10px] text-slate-500">الوصفة</div><div className="text-xs font-black mt-1 text-gold-300">{product.currentRecipeVersion}</div></div>
                   </div>
-                  <button onClick={() => setSelectedProductForVault(product)} className="w-full py-3 rounded-xl bg-slate-950/50 border border-white/10 text-xs font-black text-[#e8c880] flex items-center justify-center gap-2"><Lock className="w-4 h-4" /> فتح خزنة الوصفة</button>
+                  <button onClick={() => setSelectedProductForVault(product)} className="w-full py-3 rounded-xl bg-slate-950/50 border border-white/10 text-xs font-black text-gold-300 flex items-center justify-center gap-2"><Lock className="w-4 h-4" /> فتح خزنة الوصفة</button>
                 </div>
               </article>
             ))}
@@ -178,7 +172,12 @@ export const CreatorPortal: React.FC = () => {
       {activeTab === 'DEALS' && (
         <div className="space-y-6">
           {myCollaborations.length === 0 ? (
-            <div className="glass-panel rounded-3xl p-12 border border-white/10 text-center text-stone-400">لا توجد تعاونات بعد. ابدأ من رادار الفرص.</div>
+            <EmptyState
+              icon={<BriefcaseBusiness className="w-6 h-6" />}
+              title="ما عندك تعاونات بعد"
+              body="التعاون يبدأ من فرصة مطابقة: افتح الرادار، شوف المنشآت اللي تناسب منتجك، وابدأ من هناك."
+              action={{ label: 'افتح رادار الفرص', onClick: () => setActiveTab('RADAR') }}
+            />
           ) : myCollaborations.map(col => (
             <div key={col.id} className="space-y-5">
               <DealRoom collaboration={col} />
@@ -187,10 +186,10 @@ export const CreatorPortal: React.FC = () => {
                 <section className="glass-panel rounded-3xl border border-white/10 p-5 md:p-6 space-y-4">
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div>
-                      <div className="flex items-center gap-2 text-[#e8c880] font-bold"><FileSignature className="w-4 h-4" /> العرض التجاري الحالي</div>
-                      <div className="mt-2 text-2xl font-black">{col.currentOffer.creatorRoyaltyRatePercent}% <span className="text-sm text-stone-500">حصة المبدع</span></div>
+                      <div className="flex items-center gap-2 text-gold-300 font-bold"><FileSignature className="w-4 h-4" /> العرض التجاري الحالي</div>
+                      <div className="mt-2 text-2xl font-black">{col.currentOffer.creatorRoyaltyRatePercent}% <span className="text-sm text-slate-500">حصة المبدع</span></div>
                     </div>
-                    <div className="text-xs text-stone-400">سعر البيع: <strong className="text-stone-100">{col.currentOffer.sellingPriceKwd.toFixed(3)} د.ك</strong> — مدة الاتفاق: <strong className="text-stone-100">{col.currentOffer.termMonths} أشهر</strong></div>
+                    <div className="text-xs text-slate-400">سعر البيع: <strong className="text-slate-100">{col.currentOffer.sellingPriceKwd.toFixed(3)} د.ك</strong> — مدة الاتفاق: <strong className="text-slate-100">{col.currentOffer.termMonths} أشهر</strong></div>
                   </div>
 
                   {col.currentOffer.status === 'PENDING' && (
@@ -200,7 +199,7 @@ export const CreatorPortal: React.FC = () => {
                         <input value={counterNotes} onChange={e => setCounterNotes(e.target.value)} placeholder="سبب التعديل أو الملاحظة التجارية..." className="glass-input rounded-xl px-4 py-3 text-xs outline-none" />
                       </div>
                       <div className="flex gap-2">
-                        <button onClick={async () => { await Promise.resolve(store.acceptOffer(col.id, col.currentOffer!.id)); }} className="px-4 py-3 rounded-xl bg-emerald-500 text-stone-950 text-xs font-black">قبول العرض</button>
+                        <button onClick={async () => { await Promise.resolve(store.acceptOffer(col.id, col.currentOffer!.id)); }} className="px-4 py-3 rounded-xl bg-emerald-500 text-slate-950 text-xs font-black">قبول العرض</button>
                         <button
                           onClick={async () => { await Promise.resolve(store.sendOffer(col.id, 'CREATOR', {
                             sellingPriceKwd: col.currentOffer!.sellingPriceKwd,
@@ -215,7 +214,7 @@ export const CreatorPortal: React.FC = () => {
                             minimumCommitmentUnits: col.currentOffer!.minimumCommitmentUnits,
                             notes: counterNotes || `مقترح تعديل النسبة إلى ${counterRate}%`
                           })); }}
-                          className="px-4 py-3 rounded-xl bg-[#c7a55b] text-stone-950 text-xs font-black"
+                          className="px-4 py-3 rounded-xl bg-gold-500 text-slate-950 text-xs font-black"
                         >
                           إرسال Counter
                         </button>
@@ -224,7 +223,7 @@ export const CreatorPortal: React.FC = () => {
                   )}
 
                   {col.contract && (
-                    <button onClick={() => setSelectedContract(col.contract)} className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-xs font-black text-stone-200">فتح العقد <ChevronLeft className="w-4 h-4" /></button>
+                    <button onClick={() => setSelectedContract(col.contract)} className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-xs font-black text-slate-200">فتح العقد <ChevronLeft className="w-4 h-4" /></button>
                   )}
                 </section>
               )}

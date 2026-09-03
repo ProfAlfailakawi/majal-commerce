@@ -25,12 +25,12 @@ import {
 export const INITIAL_USERS: User[] = [
   {
     id: 'usr_super_admin',
-    name: 'مشرف المنصة الرئيسي',
-    email: 'ah_f@hotmail.com',
+    name: 'مشرف منصة مجال',
+    email: 'admin@example.test',
     phone: '+965 99999999',
     role: 'SUPER_ADMIN',
     status: 'ACTIVE',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200'
+    avatar: ''
   },
   {
     id: 'usr_consumer_demo',
@@ -55,30 +55,30 @@ export const INITIAL_USERS: User[] = [
   },
   {
     id: 'usr_creator_main',
-    name: 'المبدع التجريبي',
+    name: 'أم عبدالله',
     email: 'creator@example.test',
     phone: '+965 50000003',
     role: 'CREATOR',
     status: 'ACTIVE',
     creatorId: 'cr_main',
-    avatar: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&q=80&w=200'
+    avatar: ''
   },
   {
     id: 'usr_host_owner',
-    name: 'مالك المنشأة التجريبي',
+    name: 'مالك مطابخ الديرة',
     email: 'host-owner@example.test',
     phone: '+965 50000004',
     role: 'HOST_OWNER',
     status: 'ACTIVE',
     hostBusinessId: 'hb_main',
-    avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=200'
+    avatar: ''
   },
   ...([
-    ['usr_host_operations', 'مسؤول التشغيل التجريبي', 'host-operations@example.test', '+965 50000005', 'HOST_OPERATIONS'],
-    ['usr_host_chef', 'شيف المنشأة التجريبي', 'host-chef@example.test', '+965 50000006', 'HOST_CHEF'],
-    ['usr_host_finance', 'مسؤول المالية التجريبي', 'host-finance@example.test', '+965 50000007', 'HOST_FINANCE'],
-    ['usr_host_marketing', 'مسؤول التسويق التجريبي', 'host-marketing@example.test', '+965 50000008', 'HOST_MARKETING'],
-    ['usr_host_support', 'مسؤول الدعم التجريبي', 'host-support@example.test', '+965 50000009', 'HOST_SUPPORT']
+    ['usr_host_operations', 'مسؤول التشغيل', 'host-operations@example.test', '+965 50000005', 'HOST_OPERATIONS'],
+    ['usr_host_chef', 'شيف المنشأة', 'host-chef@example.test', '+965 50000006', 'HOST_CHEF'],
+    ['usr_host_finance', 'مسؤول المالية', 'host-finance@example.test', '+965 50000007', 'HOST_FINANCE'],
+    ['usr_host_marketing', 'مسؤول التسويق', 'host-marketing@example.test', '+965 50000008', 'HOST_MARKETING'],
+    ['usr_host_support', 'مسؤول الدعم', 'host-support@example.test', '+965 50000009', 'HOST_SUPPORT']
   ] as const).map(([id, name, email, phone, role]) => ({
     id,
     name,
@@ -94,20 +94,20 @@ export const INITIAL_CREATORS: CreatorProfile[] = [
   {
     id: 'cr_main',
     userId: 'usr_creator_main',
-    displayName: 'الشيف المبدع',
-    legalName: 'مبدع طهي معتمد',
+    displayName: 'أم عبدالله',
+    legalName: 'صاحبة مشروع منزلي مرخّص',
     creatorType: 'CREATOR',
-    specialty: 'مطبخ سحابي ووصفات تجارية مبتكرة',
+    specialty: 'حلويات كويتية تقليدية بوصفات عائلية',
     bio: 'حساب عرض ببيانات مصطنعة لاختبار رحلة المبدع قبل ربط الهوية الخلفية.',
-    region: 'العاصمة، الكويت',
+    region: 'حولي، الكويت',
     completionScore: 100,
     badges: ['SIGNATURE_CREATOR'],
     unitsSold: 0,
     repeatPurchaseRate: 0,
-    story: 'شغف ابتكار النكهات وتحويلها إلى امتياز تجاري ناجح.',
+    story: 'وصفات انتقلت في البيت من جيل لجيل، وتستحق تُطبخ بكميات تجارية بدون ما تفقد طعمها.',
     isAvailableForMatching: true,
     hasSecretRecipe: true,
-    avatarUrl: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&q=80&w=200',
+    avatarUrl: '',
     createdAt: new Date().toISOString()
   }
 ];
@@ -115,17 +115,18 @@ export const INITIAL_CREATORS: CreatorProfile[] = [
 export const INITIAL_HOSTS: HostBusiness[] = [
   {
     id: 'hb_main',
-    commercialName: 'المطبخ السحابي المرخص — الكويت',
+    commercialName: 'مطابخ الديرة المركزية', 
     businessType: 'CENTRAL_KITCHEN',
     commercialRegistrationNo: 'DEMO-ONLY-0001',
     verificationStatus: 'VERIFIED',
     branches: [
-      { id: 'br_cap', name: 'فرع العاصمة (الشرق)', area: 'العاصمة', isActive: true },
-      { id: 'br_haw', name: 'فرع حولي والسالمية', area: 'حولي', isActive: true }
+      { id: 'br_cap', name: 'فرع الشرق', area: 'العاصمة', isActive: true },
+      { id: 'br_haw', name: 'فرع السالمية', area: 'حولي', isActive: true },
+      { id: 'br_frw', name: 'فرع الفروانية', area: 'الفروانية', isActive: true }
     ],
     capabilities: {
-      equipment: ['أفران غاز معتمدة', 'صاج جريل عالي التحمل', 'قلايات أوتوماتيكية', 'غرفة تبريد وتجميد'],
-      cuisines: ['برجر وسندويشات', 'مخبوزات وحلويات', 'مأكولات عصرية'],
+      equipment: ['أفران غاز معتمدة', 'قدور مچبوس صناعية', 'قلايات أوتوماتيكية', 'غرفة تبريد وتجميد'],
+      cuisines: ['حلويات كويتية', 'مخبوزات وفطائر', 'أكل كويتي بيتي'],
       dietary: ['حلال معتمد', 'خيارات خالية من الجلوتين'],
       packaging: ['تغليف حراري معتمد', 'علب كرتون صديقة للبيئة'],
       storage: ['مستودع جاف', 'غرفة تجميد -18C'],
@@ -135,12 +136,12 @@ export const INITIAL_HOSTS: HostBusiness[] = [
       priceBand: '2.5 - 8.0 KWD',
       leadTimeDays: 2
     },
-    brandPositioning: 'مطابخ سحابية مرخصة بمعايير سلامة غذائية فائقة',
-    targetAudience: 'عملاء منصات التوصيل السريع والمناسبات',
+    brandPositioning: 'مطبخ مركزي كويتي مرخّص، يشغّل وصفات المبدعين بمعايير سلامة غذائية عالية',
+    targetAudience: 'بيوت الكويت، الدواوين والمناسبات، ومنصات التوصيل المحلية',
     contacts: [
-      { name: 'مدير تشغيل تجريبي', role: 'مدير العمليات', phone: '+965 50000004', email: 'host@example.test' }
+      { name: 'مدير تشغيل مطابخ الديرة', role: 'مدير العمليات', phone: '+965 50000004', email: 'host@example.test' }
     ],
-    logoUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=200',
+    logoUrl: '',
     createdAt: new Date().toISOString()
   }
 ];
@@ -148,27 +149,24 @@ export const INITIAL_HOSTS: HostBusiness[] = [
 // Clean seeded collections ready for immediate interactive demo and live display
 export const INITIAL_PRODUCTS: CreatorProduct[] = [
   {
-    id: 'prod_date_cake',
+    id: 'prod_qurs_ageili',
     creatorId: 'cr_main',
-    internalName: 'كيكة التمر الكويتية بالكراميل المملح',
-    publicName: 'كيكة التمر الفاخرة بالكراميل والهيل',
+    internalName: 'قرص عقيلي بالزعفران والهيل',
+    publicName: 'قرص عقيلي — وصفة بيت كويتية',
     category: 'حلويات',
-    shortDescription: 'كيكة تمر كويتية هشة بصلصة الكراميل المملحة ولمسة هيل فاخرة.',
-    story: 'وصفة مبتكرة تجمع النكهة الأصيلة للتمر الكويتي الممتاز مع صوص الكراميل العصري.',
+    shortDescription: 'قرص عقيلي كويتي هش بالزعفران والهيل، بوجه ذهبي وسمسم محمّص.',
+    story: 'وصفة عائلية تُخبز في البيوت الكويتية من زمان، بنسبة زعفران وهيل ما تتغير.',
     status: 'AVAILABLE_FOR_MATCHING',
-    mediaUrls: [
-      'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&q=80&w=800'
-    ],
-    generalIngredients: ['تمر خلاص كويتي', 'دقيق كويتي فاخر', 'زبدة نقية', 'كراميل مملح', 'هيل ناعم'],
-    allergens: ['مكسرات', 'حليب', 'جلوتين'],
+    mediaUrls: ['/dishes/qurs-ageili.svg'],
+    generalIngredients: ['دقيق فاخر', 'زعفران', 'هيل ناعم', 'زبدة نقية', 'سمسم', 'ماء ورد'],
+    allergens: ['سمسم', 'حليب', 'جلوتين', 'بيض'],
     dietaryTags: ['حلال', 'بدون حافظة'],
-    servingSize: 'قطعة دائرية (180 جرام)',
+    servingSize: 'قرص (180 جرام)',
     shelfLife: '3 أيام في درجة حرارة الغرفة / 7 أيام تبريد',
     estimatedPrepTimeMinutes: 25,
     estimatedUnitCostKwd: 1.150,
     targetSellingPriceKwd: 4.500,
-    expectedEquipment: ['أفران غاز معتمدة', 'خلاط كيك صناعي'],
+    expectedEquipment: ['أفران غاز معتمدة', 'خلاط عجين صناعي'],
     isSecretRecipe: true,
     acceptsExclusivity: true,
     desiredPartnershipType: 'PERCENTAGE_ROYALTY',
@@ -176,26 +174,24 @@ export const INITIAL_PRODUCTS: CreatorProduct[] = [
     currentRecipeVersion: 'V1.0'
   },
   {
-    id: 'prod_wagyu_burger',
+    id: 'prod_machboos',
     creatorId: 'cr_main',
-    internalName: 'وافيو برجر بالصلصة السحرية والكراميل',
-    publicName: 'وافيو برجر مع صلصة الكمأة الحصرية',
+    internalName: 'مچبوس دجاج كويتي — وجبة جاهزة',
+    publicName: 'مچبوس دجاج بالبهارات البيتية',
     category: 'وجبات',
-    shortDescription: 'شريحة لحم واجيو طازجة مع جبن شيدر معتق وخيار مخلل وصوص الكمأة الخاص.',
-    story: 'ابتكار طهي عصري لتجربة برجر سحابية فاخرة تُحضر وتُسلم بأعلى جودة.',
+    shortDescription: 'مچبوس دجاج كويتي بأرز بسمتي وبهارات محمّصة بالبيت، مع دقّوس جانبي.',
+    story: 'أكل كويتي بيتي يوصل البيوت جاهز، بنفس خلطة البهارات اللي تتحمّص كل أسبوع.',
     status: 'AVAILABLE_FOR_MATCHING',
-    mediaUrls: [
-      'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=800'
-    ],
-    generalIngredients: ['لحم واجيو كويتي', 'خبز بريوش طازج', 'صلصة كمأة سحرية', 'جبن شيدر معتق'],
-    allergens: ['حليب', 'جلوتين', 'بيض'],
+    mediaUrls: ['/dishes/machboos.svg'],
+    generalIngredients: ['دجاج طازج', 'أرز بسمتي', 'بهارات مچبوس محمّصة', 'لومي أسود', 'دقّوس طماطم'],
+    allergens: [],
     dietaryTags: ['حلال'],
-    servingSize: 'وجبة برجر سينجل (220 جرام)',
-    shelfLife: 'استهلاك فوري',
-    estimatedPrepTimeMinutes: 12,
+    servingSize: 'وجبة فردية (450 جرام)',
+    shelfLife: 'يومان تبريد / 30 يومًا تجميد',
+    estimatedPrepTimeMinutes: 45,
     estimatedUnitCostKwd: 1.100,
     targetSellingPriceKwd: 3.250,
-    expectedEquipment: ['صاج جريل عالي التحمل', 'قلايات أوتوماتيكية'],
+    expectedEquipment: ['قدور مچبوس صناعية', 'غرفة تبريد وتجميد'],
     isSecretRecipe: true,
     acceptsExclusivity: true,
     desiredPartnershipType: 'PERCENTAGE_ROYALTY',
@@ -203,26 +199,24 @@ export const INITIAL_PRODUCTS: CreatorProduct[] = [
     currentRecipeVersion: 'V1.2'
   },
   {
-    id: 'prod_mango_pistachio',
+    id: 'prod_sobia',
     creatorId: 'cr_main',
-    internalName: 'سلاش مانجو بستاشيو كويتي',
-    publicName: 'سلاش مانجو بستاشيو الانتعاش',
-    category: 'صلصات',
-    shortDescription: 'مشروب سلاش مانجو طبيعي منعش مع طبقة كريمة الفستق الحلبي.',
-    story: 'مشروب منعش مبتكر للموسم الصيفي بمزيج الفواكه الطازجة والمكسرات الفاخرة.',
+    internalName: 'سوبيا كويتية بالتمر',
+    publicName: 'سوبيا الديرة — تمر وهيل',
+    category: 'مشروبات',
+    shortDescription: 'سوبيا كويتية باردة محلّاة بالتمر مع هيل، تُعبّأ طازجة يوميًا.',
+    story: 'مشروب رمضان الكويتي، بنفس الطعم البيتي بدل النكهات الصناعية.',
     status: 'AVAILABLE_FOR_MATCHING',
-    mediaUrls: [
-      'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&q=80&w=800'
-    ],
-    generalIngredients: ['مانجو ألفونسو طازج', 'زبدة فستق حلبي', 'حليب مكثف', 'مكعبات ثلج'],
-    allergens: ['فستق', 'حليب'],
-    dietaryTags: ['حلال', 'طازج'],
-    servingSize: 'كوب 450 مل',
-    shelfLife: 'استهلاك فوري',
-    estimatedPrepTimeMinutes: 5,
+    mediaUrls: ['/dishes/sobia.svg'],
+    generalIngredients: ['خبز أسمر', 'تمر خلاص', 'هيل', 'سكر', 'ماء'],
+    allergens: ['جلوتين'],
+    dietaryTags: ['حلال', 'نباتي', 'طازج'],
+    servingSize: 'قارورة 500 مل',
+    shelfLife: '3 أيام تبريد',
+    estimatedPrepTimeMinutes: 20,
     estimatedUnitCostKwd: 0.650,
     targetSellingPriceKwd: 2.250,
-    expectedEquipment: ['خلاط عصائر صناعي'],
+    expectedEquipment: ['خلاط صناعي', 'غرفة تبريد وتجميد'],
     isSecretRecipe: false,
     acceptsExclusivity: false,
     desiredPartnershipType: 'PERCENTAGE_ROYALTY',
@@ -233,28 +227,28 @@ export const INITIAL_PRODUCTS: CreatorProduct[] = [
 
 export const INITIAL_RECIPE_VERSIONS: RecipeVersion[] = [
   {
-    id: 'rv_date_cake_1',
-    productId: 'prod_date_cake',
+    id: 'rv_qurs_ageili_1',
+    productId: 'prod_qurs_ageili',
     versionNumber: 'V1.0',
     createdById: 'usr_creator_main',
     createdAt: new Date(Date.now() - 30 * 86400000).toISOString(),
     yield: 10,
-    batchSize: 'دفعة 10 قطع',
+    batchSize: 'دفعة 10 أقراص',
     ingredients: [
-      { name: 'تمر خلاص ناعم', quantity: 1, unit: 'كجم', estimatedCostKwd: 2.500 },
-      { name: 'دقيق كويتي فاخر', quantity: 500, unit: 'جم', estimatedCostKwd: 0.400 },
-      { name: 'صوص الكراميل المملح الخاص', quantity: 300, unit: 'مل', estimatedCostKwd: 1.200, isSecretPart: true }
+      { name: 'دقيق فاخر', quantity: 1, unit: 'كجم', estimatedCostKwd: 0.450 },
+      { name: 'زبدة نقية', quantity: 300, unit: 'جم', estimatedCostKwd: 1.100 },
+      { name: 'خلطة الزعفران والهيل وماء الورد', quantity: 40, unit: 'جم', estimatedCostKwd: 2.400, isSecretPart: true }
     ],
     preparationSteps: [
-      'نقع التمر في ماء دافئ مع الهيل.',
-      'خلط المكونات الجافة مع الزبدة والتمر المهروس.',
-      'الخبز في فرن معتمد على درجة حرارة 170 مئوية لمدة 22 دقيقة.',
-      'إضافة صوص الكراميل عند التقديم.'
+      'نقع الزعفران في ماء الورد الدافئ قبل العجن بساعة.',
+      'عجن الدقيق مع الزبدة والبيض حتى تتماسك العجينة.',
+      'تشكيل الأقراص ورشّ السمسم على الوجه.',
+      'الخبز في فرن معتمد على 180 مئوية لمدة 20 دقيقة حتى يذهب الوجه.'
     ],
-    criticalSecrets: 'نسبة الهيل الكويتي الدقيقة مع صوص الكراميل المطبوخ بطريقة سرية.',
+    criticalSecrets: 'نسبة الزعفران للهيل، ومدة نقعه في ماء الورد قبل العجن.',
     equipmentNeeded: ['أفران غاز معتمدة'],
     qualityCheckpoints: ['اللون الذهبي متناسق', 'درجة الرطوبة الداخلية بين 18-22%'],
-    allergenNotes: 'تحتوي على الحليب والمكسرات والجلوتين',
+    allergenNotes: 'تحتوي على الحليب والسمسم والجلوتين والبيض',
     changeLogNote: 'النسخة المعتمدة الأولى للإنتاج التجاري'
   }
 ];
@@ -262,7 +256,7 @@ export const INITIAL_RECIPE_VERSIONS: RecipeVersion[] = [
 export const INITIAL_RECIPE_GRANTS: RecipeAccessGrant[] = [
   {
     id: 'grant_1',
-    productId: 'prod_date_cake',
+    productId: 'prod_qurs_ageili',
     creatorId: 'cr_main',
     hostBusinessId: 'hb_main',
     disclosureLevel: 2,
@@ -272,7 +266,7 @@ export const INITIAL_RECIPE_GRANTS: RecipeAccessGrant[] = [
     grantedByUserId: 'usr_creator_main',
     grantedAt: new Date(Date.now() - 24 * 86400000).toISOString(),
     expiresAt: new Date(Date.now() + 60 * 86400000).toISOString(),
-    purpose: 'إعداد وتشغيل المنتج في المطبخ السحابي للفرع التجريبي.'
+    purpose: 'إعداد وتشغيل المنتج في المطبخ السحابي لفرع السالمية.'
   }
 ];
 
@@ -298,8 +292,8 @@ export const INITIAL_CHALLENGES: Challenge[] = [
   {
     id: 'ch_2',
     hostBusinessId: 'hb_main',
-    title: 'تحدي البرجر السحابي المبتكر',
-    brief: 'مطلوب برجر لحم بخلطة أو صلصة حصرية مميزة تناسب توصيل الطلبات خلال 20 دقيقة.',
+    title: 'تحدي الأكل الكويتي الجاهز',
+    brief: 'مطلوب طبق كويتي بيتي يتحمّل التحضير بكميات والتوصيل خلال 30 دقيقة بدون ما يفقد طعمه.',
     category: 'وجبات',
     targetPriceKwd: 3.500,
     costCeilingKwd: 1.100,
@@ -371,51 +365,51 @@ const signedContract = (
   createdAt: new Date(Date.now() - (signedDaysAgo + 1) * 86400000).toISOString()
 });
 
-const offerDateCake = acceptedOffer('off_date_cake', 'col_date_cake', 4.5, 13, true, 100, 22);
-const offerWagyu = acceptedOffer('off_wagyu_burger', 'col_wagyu_burger', 3.25, 13, false, 500, 13);
-const offerMango = acceptedOffer('off_mango', 'col_mango', 2.25, 13, false, 200, 8);
+const offerQursAgeili = acceptedOffer('off_qurs_ageili', 'col_qurs_ageili', 4.5, 13, true, 100, 22);
+const offerMachboos = acceptedOffer('off_machboos', 'col_machboos', 3.25, 13, false, 500, 13);
+const offerSobia = acceptedOffer('off_sobia', 'col_sobia', 2.25, 13, false, 200, 8);
 
-const contractDateCake = signedContract('ctr_date_cake', 'col_date_cake', offerDateCake, 21);
-const contractWagyu = signedContract('ctr_wagyu_burger', 'col_wagyu_burger', offerWagyu, 12);
-const contractMango = signedContract('ctr_mango', 'col_mango', offerMango, 7);
+const contractQursAgeili = signedContract('ctr_qurs_ageili', 'col_qurs_ageili', offerQursAgeili, 21);
+const contractMachboos = signedContract('ctr_machboos', 'col_machboos', offerMachboos, 12);
+const contractSobia = signedContract('ctr_sobia', 'col_sobia', offerSobia, 7);
 
-export const INITIAL_OFFERS: OfferTerms[] = [offerDateCake, offerWagyu, offerMango];
-export const INITIAL_CONTRACTS: Contract[] = [contractDateCake, contractWagyu, contractMango];
+export const INITIAL_OFFERS: OfferTerms[] = [offerQursAgeili, offerMachboos, offerSobia];
+export const INITIAL_CONTRACTS: Contract[] = [contractQursAgeili, contractMachboos, contractSobia];
 
 export const INITIAL_COLLABORATIONS: Collaboration[] = [
   {
-    id: 'col_date_cake',
-    productId: 'prod_date_cake',
+    id: 'col_qurs_ageili',
+    productId: 'prod_qurs_ageili',
     creatorId: 'cr_main',
     hostBusinessId: 'hb_main',
     stage: 'LIVE',
-    currentOffer: offerDateCake,
-    offerHistory: [offerDateCake],
-    contract: contractDateCake,
+    currentOffer: offerQursAgeili,
+    offerHistory: [offerQursAgeili],
+    contract: contractQursAgeili,
     createdAt: new Date(Date.now() - 25 * 86400000).toISOString(),
     updatedAt: new Date(Date.now() - 2 * 86400000).toISOString()
   },
   {
-    id: 'col_wagyu_burger',
-    productId: 'prod_wagyu_burger',
+    id: 'col_machboos',
+    productId: 'prod_machboos',
     creatorId: 'cr_main',
     hostBusinessId: 'hb_main',
     stage: 'LIVE',
-    currentOffer: offerWagyu,
-    offerHistory: [offerWagyu],
-    contract: contractWagyu,
+    currentOffer: offerMachboos,
+    offerHistory: [offerMachboos],
+    contract: contractMachboos,
     createdAt: new Date(Date.now() - 15 * 86400000).toISOString(),
     updatedAt: new Date(Date.now() - 1 * 86400000).toISOString()
   },
   {
-    id: 'col_mango',
-    productId: 'prod_mango_pistachio',
+    id: 'col_sobia',
+    productId: 'prod_sobia',
     creatorId: 'cr_main',
     hostBusinessId: 'hb_main',
     stage: 'LIVE',
-    currentOffer: offerMango,
-    offerHistory: [offerMango],
-    contract: contractMango,
+    currentOffer: offerSobia,
+    offerHistory: [offerSobia],
+    contract: contractSobia,
     createdAt: new Date(Date.now() - 10 * 86400000).toISOString(),
     updatedAt: new Date(Date.now() - 1 * 86400000).toISOString()
   }
@@ -424,12 +418,12 @@ export const INITIAL_COLLABORATIONS: Collaboration[] = [
 export const INITIAL_LAUNCHES: Launch[] = [
   {
     id: 'launch_date_cake',
-    collaborationId: 'col_date_cake',
-    productId: 'prod_date_cake',
+    collaborationId: 'col_qurs_ageili',
+    productId: 'prod_qurs_ageili',
     creatorId: 'cr_main',
     hostBusinessId: 'hb_main',
     launchType: 'LIMITED_DROP',
-    title: 'إطلاق كيكة التمر الكويتية بالكراميل والهيل',
+    title: 'إطلاق قرص عقيلي — وصفة بيت كويتية',
     sellingPriceKwd: 4.500,
     quantityCapUnits: 100,
     unitsSold: 82,
@@ -455,12 +449,12 @@ export const INITIAL_LAUNCHES: Launch[] = [
   },
   {
     id: 'launch_wagyu_burger',
-    collaborationId: 'col_wagyu_burger',
-    productId: 'prod_wagyu_burger',
+    collaborationId: 'col_machboos',
+    productId: 'prod_machboos',
     creatorId: 'cr_main',
     hostBusinessId: 'hb_main',
     launchType: 'PERMANENT_MENU',
-    title: 'إطلاق وافيو برجر مع صلصة الكمأة الحصرية',
+    title: 'إطلاق مچبوس دجاج بالبهارات البيتية',
     sellingPriceKwd: 3.250,
     quantityCapUnits: 500,
     unitsSold: 240,
@@ -485,12 +479,12 @@ export const INITIAL_LAUNCHES: Launch[] = [
   },
   {
     id: 'launch_mango_pistachio',
-    collaborationId: 'col_mango',
-    productId: 'prod_mango_pistachio',
+    collaborationId: 'col_sobia',
+    productId: 'prod_sobia',
     creatorId: 'cr_main',
     hostBusinessId: 'hb_main',
     launchType: 'LIMITED_DROP',
-    title: 'إطلاق سلاش مانجو بستاشيو الانتعاش الصيفي',
+    title: 'إطلاق سوبيا الديرة — تمر وهيل',
     sellingPriceKwd: 2.250,
     quantityCapUnits: 200,
     unitsSold: 115,
@@ -520,7 +514,7 @@ export const INITIAL_ORDERS: Order[] = [
   {
     id: 'ord_101',
     launchId: 'launch_date_cake',
-    productId: 'prod_date_cake',
+    productId: 'prod_qurs_ageili',
     creatorId: 'cr_main',
     hostBusinessId: 'hb_main',
     branchId: 'br_cap',
@@ -538,7 +532,7 @@ export const INITIAL_ORDERS: Order[] = [
   {
     id: 'ord_102',
     launchId: 'launch_wagyu_burger',
-    productId: 'prod_wagyu_burger',
+    productId: 'prod_machboos',
     creatorId: 'cr_main',
     hostBusinessId: 'hb_main',
     branchId: 'br_cap',
@@ -559,7 +553,7 @@ export const INITIAL_ACCRUALS: Accrual[] = [
   {
     id: 'acc_1',
     creatorId: 'cr_main',
-    collaborationId: 'col_date_cake',
+    collaborationId: 'col_qurs_ageili',
     orderId: 'ord_101',
     grossSaleKwd: 4.500,
     royaltyRatePercent: 13,
@@ -570,7 +564,7 @@ export const INITIAL_ACCRUALS: Accrual[] = [
   {
     id: 'acc_2',
     creatorId: 'cr_main',
-    collaborationId: 'col_wagyu_burger',
+    collaborationId: 'col_machboos',
     orderId: 'ord_102',
     grossSaleKwd: 6.500,
     royaltyRatePercent: 13,
@@ -586,7 +580,7 @@ export const INITIAL_REVIEWS: Review[] = [
   {
     id: 'rev_1',
     launchId: 'launch_date_cake',
-    productId: 'prod_date_cake',
+    productId: 'prod_qurs_ageili',
     creatorId: 'cr_main',
     customerName: 'عبدالله المطيري',
     tasteRating: 5,
@@ -601,14 +595,14 @@ export const INITIAL_REVIEWS: Review[] = [
   {
     id: 'rev_2',
     launchId: 'launch_wagyu_burger',
-    productId: 'prod_wagyu_burger',
+    productId: 'prod_machboos',
     creatorId: 'cr_main',
     customerName: 'فاطمة العلي',
     tasteRating: 5,
     valueRating: 4,
     portionRating: 5,
     wouldBuyAgain: true,
-    comment: 'البرجر ممتاز جداً والتغليف وصل بحالة ممتازة وصاخن.',
+    comment: 'المچبوس طلع مثل البيت، والتغليف وصل حار ومرتّب.',
     keepItVote: true,
     isVerifiedPurchase: true,
     createdAt: new Date(Date.now() - 2 * 86400000).toISOString()

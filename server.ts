@@ -24,7 +24,7 @@ const simulatorsEnabled = !isProduction && process.env.ENABLE_INTEGRATION_SIMULA
 const aiEnabled = process.env.ENABLE_AI_API === 'true';
 const configuredPort = Number(process.env.PORT || 3000);
 const port = Number.isInteger(configuredPort) && configuredPort > 0 && configuredPort < 65536 ? configuredPort : 3000;
-const bindHost = isProduction ? (process.env.HOST || '0.0.0.0') : (process.env.DEV_HOST || '127.0.0.1');
+const bindHost = isProduction ? (process.env.HOST || '0.0.0.0') : (process.env.DEV_HOST || '0.0.0.0');
 
 type RateEntry = { count: number; resetAt: number };
 const rateBuckets = new Map<string, RateEntry>();

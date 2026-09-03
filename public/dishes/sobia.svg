@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="سوبيا كويتية">
+  <defs>
+    <linearGradient id="s-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#141d30"/><stop offset="100%" stop-color="#0a101b"/>
+    </linearGradient>
+    <radialGradient id="s-glow" cx="50%" cy="46%" r="52%">
+      <stop offset="0%" stop-color="#c7a55b" stop-opacity=".24"/><stop offset="100%" stop-color="#c7a55b" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="s-drink" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8c48a"/><stop offset="56%" stop-color="#c08b4a"/><stop offset="100%" stop-color="#8a5b2a"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#s-bg)"/>
+  <rect width="800" height="500" fill="url(#s-glow)"/>
+  <circle cx="400" cy="250" r="172" fill="none" stroke="#c7a55b" stroke-opacity=".16"/>
+  <!-- glass -->
+  <path d="M338 128 h124 l-14 250 a12 12 0 0 1 -12 11 h-72 a12 12 0 0 1 -12 -11 z"
+        fill="#0f1626" stroke="#c7a55b" stroke-opacity=".35" stroke-width="4"/>
+  <path d="M346 176 h108 l-12 198 a8 8 0 0 1 -8 7 h-68 a8 8 0 0 1 -8 -7 z" fill="url(#s-drink)"/>
+  <path d="M346 176 h108 l-2 30 h-104 z" fill="#f6e3c0" fill-opacity=".55"/>
+  <g fill="#ffffff" fill-opacity=".18">
+    <rect x="366" y="214" width="26" height="26" rx="6" transform="rotate(-12 379 227)"/>
+    <rect x="404" y="252" width="24" height="24" rx="6" transform="rotate(9 416 264)"/>
+    <rect x="372" y="292" width="22" height="22" rx="6" transform="rotate(-6 383 303)"/>
+  </g>
+  <!-- cardamom pods -->
+  <g fill="#7d9a5e" fill-opacity=".8">
+    <ellipse cx="268" cy="360" rx="16" ry="10" transform="rotate(-18 268 360)"/>
+    <ellipse cx="520" cy="352" rx="16" ry="10" transform="rotate(14 520 352)"/>
+  </g>
+  <path d="M300 128 h200" stroke="#c7a55b" stroke-opacity=".25" stroke-width="4" stroke-linecap="round"/>
+</svg>

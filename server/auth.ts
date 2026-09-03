@@ -434,43 +434,41 @@ export function requireRoles(...roles: AuthRole[]) {
   };
 }
 
-export const SUPER_ADMIN_EMAILS = new Set([
-  'ah_f@hotmail.com',
-  'dr.ahmad.alfailakawi@gmail.com'
-]);
+/**
+ * Super-admin allowlist.
+ *
+ * This used to be two personal email addresses written into the source, which put the
+ * operator's identity in a public repository and made the platform's highest privilege
+ * a property of the code rather than of the deployment. It is configuration now:
+ * SUPER_ADMIN_EMAILS is a comma-separated list supplied per environment.
+ *
+ * Empty by default, and that is deliberate — an unconfigured deployment grants nobody
+ * super admin rather than granting it to whoever the source happened to name.
+ */
+export const SUPER_ADMIN_EMAILS = new Set(
+  (process.env.SUPER_ADMIN_EMAILS ?? '')
+    .split(',')
+    .map(entry => entry.trim().toLowerCase())
+    .filter(Boolean)
+);
 
+/**
+ * Promotes already-registered accounts named in SUPER_ADMIN_EMAILS.
+ *
+ * It no longer CREATES the account. The previous version inserted a super admin with a
+ * hardcoded password on every boot, so any deployment that had ever started shipped with
+ * a known set of credentials for its most privileged role. Account creation
+ * belongs to `npm run auth:bootstrap`, which takes the password from the environment and
+ * refuses to overwrite an existing account.
+ */
 export async function ensureSuperAdminUser(db: MajalDatabase) {
   for (const email of SUPER_ADMIN_EMAILS) {
     try {
       const existing = await db.prepare('SELECT * FROM users WHERE email = ? LIMIT 1').get<UserRow>(email);
-      if (existing) {
-        if (existing.role !== 'SUPER_ADMIN' || existing.status !== 'ACTIVE') {
-          await db.prepare('UPDATE users SET role = ?, status = ?, updated_at = ? WHERE id = ?')
-            .run('SUPER_ADMIN', 'ACTIVE', new Date().toISOString(), existing.id);
-        }
-      } else {
-        const { hash, salt } = await hashPassword('Admin123456!');
-        const id = `usr_super_${randomUUID().slice(0, 8)}`;
-        const now = new Date().toISOString();
-        await db.prepare(`
-          INSERT INTO users(
-            id, name, email, phone, role, status, creator_id, host_business_id,
-            password_hash, password_salt, created_at, updated_at
-          ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(
-          id,
-          'مشرف المنصة',
-          email,
-          '+965 99999999',
-          'SUPER_ADMIN',
-          'ACTIVE',
-          null,
-          null,
-          hash,
-          salt,
-          now,
-          now
-        );
+      if (!existing) continue;
+      if (existing.role !== 'SUPER_ADMIN' || existing.status !== 'ACTIVE') {
+        await db.prepare('UPDATE users SET role = ?, status = ?, updated_at = ? WHERE id = ?')
+          .run('SUPER_ADMIN', 'ACTIVE', new Date().toISOString(), existing.id);
       }
     } catch {
       // Ignore conflict if another thread or migration initialized it
@@ -492,7 +490,8 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
     try {
       if (!email) return jsonError(res, 400, 'البريد الإلكتروني غير صالح.');
       
-      // Enforce: only ah_f@hotmail.com is Super Admin. Public registration is limited to business roles.
+      // Only addresses in the configured allowlist may hold SUPER_ADMIN. Public
+      // registration is limited to business roles.
       let assignedRole: AuthRole = 'CONSUMER';
       if (SUPER_ADMIN_EMAILS.has(email)) {
         assignedRole = 'SUPER_ADMIN';

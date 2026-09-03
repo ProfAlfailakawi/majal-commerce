@@ -10,12 +10,7 @@ interface AuthModalProps {
   onAuthenticated: (session: AuthSession) => void;
 }
 
-const DEMO_PRESETS = [
-  { role: 'SUPER_ADMIN', label: '👑 سوبر أدمن المنصة', email: 'ah_f@hotmail.com', pass: 'Admin123456!' },
-  { role: 'CREATOR', label: '✨ حساب مبدع', email: 'creator@example.test', pass: 'Creator123456!' },
-  { role: 'HOST_OWNER', label: '🏢 منشأة حاضنة', email: 'host@example.test', pass: 'Host123456!' },
-  { role: 'CONSUMER', label: '🛍️ حساب عميل', email: 'consumer@example.test', pass: 'Consumer123456!' }
-];
+
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthenticated }) => {
   const dialogRef = useDialogBehavior<HTMLDivElement>(isOpen, onClose);
@@ -42,12 +37,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
     setResetCode('');
     setError('');
     setSuccessMsg('');
-  };
-
-  const handleQuickFill = (presetEmail: string, presetPass: string) => {
-    setEmail(presetEmail);
-    setPassword(presetPass);
-    setError('');
   };
 
   const handleSubmit = async (event: FormEvent) => {
@@ -98,7 +87,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
       >
         <div className="p-5 border-b border-white/10 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <span className="w-10 h-10 rounded-2xl bg-[#c7a55b]/15 border border-[#e8c880]/20 grid place-items-center text-[#e8c880]">
+            <span className="w-10 h-10 rounded-2xl bg-gold-500/15 border border-gold-300/20 grid place-items-center text-gold-300">
               {needsMfa ? <KeyRound className="w-5 h-5" /> : (mode === 'RESET_REQUEST' || mode === 'RESET_VERIFY') ? <RefreshCcw className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
             </span>
             <div>
@@ -113,30 +102,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
 
         {!needsMfa && mode !== 'RESET_VERIFY' && (
           <div className="grid grid-cols-3 gap-1 p-1.5 mx-5 mt-4 rounded-2xl bg-slate-950/50 border border-white/10" role="tablist" aria-label="نوع الحساب">
-            <button type="button" role="tab" aria-selected={mode === 'LOGIN'} onClick={() => resetMode('LOGIN')} className={`py-2 rounded-xl text-xs font-bold transition cursor-pointer ${mode === 'LOGIN' ? 'bg-[#c7a55b] text-slate-950' : 'text-slate-300 hover:bg-white/5'}`}>تسجيل الدخول</button>
-            <button type="button" role="tab" aria-selected={mode === 'RESET_REQUEST'} onClick={() => resetMode('RESET_REQUEST')} className={`py-2 rounded-xl text-xs font-bold transition cursor-pointer ${mode === 'RESET_REQUEST' ? 'bg-[#c7a55b] text-slate-950' : 'text-slate-300 hover:bg-white/5'}`}>نسيت كلمة المرور</button>
-            <button type="button" role="tab" aria-selected={mode === 'REGISTER'} onClick={() => resetMode('REGISTER')} className={`py-2 rounded-xl text-xs font-bold transition cursor-pointer ${mode === 'REGISTER' ? 'bg-[#c7a55b] text-slate-950' : 'text-slate-300 hover:bg-white/5'}`}>إنشاء حساب</button>
+            <button type="button" role="tab" aria-selected={mode === 'LOGIN'} onClick={() => resetMode('LOGIN')} className={`py-2 rounded-xl text-xs font-bold transition cursor-pointer ${mode === 'LOGIN' ? 'bg-gold-500 text-slate-950' : 'text-slate-300 hover:bg-white/5'}`}>تسجيل الدخول</button>
+            <button type="button" role="tab" aria-selected={mode === 'RESET_REQUEST'} onClick={() => resetMode('RESET_REQUEST')} className={`py-2 rounded-xl text-xs font-bold transition cursor-pointer ${mode === 'RESET_REQUEST' ? 'bg-gold-500 text-slate-950' : 'text-slate-300 hover:bg-white/5'}`}>نسيت كلمة المرور</button>
+            <button type="button" role="tab" aria-selected={mode === 'REGISTER'} onClick={() => resetMode('REGISTER')} className={`py-2 rounded-xl text-xs font-bold transition cursor-pointer ${mode === 'REGISTER' ? 'bg-gold-500 text-slate-950' : 'text-slate-300 hover:bg-white/5'}`}>إنشاء حساب</button>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto">
-          {mode === 'LOGIN' && !needsMfa && (
-            <div className="rounded-2xl p-3.5 bg-white/5 border border-white/10 space-y-2">
-              <span className="text-[11px] font-bold text-[#e8c880] block">⚡ تعبئة سريعة لحسابات المنظومة:</span>
-              <div className="flex flex-wrap gap-1.5">
-                {DEMO_PRESETS.map((item) => (
-                  <button
-                    key={item.role}
-                    type="button"
-                    onClick={() => handleQuickFill(item.email, item.pass)}
-                    className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-white/5 hover:bg-[#c7a55b]/20 hover:text-[#e8c880] text-slate-300 border border-white/10 transition cursor-pointer"
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
 
           {mode === 'REGISTER' && !needsMfa && (
             <div className="space-y-2">
@@ -153,7 +125,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
                     onClick={() => setRole(item.id as UserRole)}
                     className={`p-3 rounded-xl border text-right transition cursor-pointer ${
                       role === item.id
-                        ? 'bg-[#c7a55b]/15 border-[#e8c880] text-slate-100 shadow-sm'
+                        ? 'bg-gold-500/15 border-gold-300 text-slate-100 shadow-sm'
                         : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
                     }`}
                   >
@@ -168,28 +140,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
           {mode === 'REGISTER' && !needsMfa && (
             <label className="block space-y-1.5">
               <span className="text-xs font-bold text-slate-200">الاسم الكامل</span>
-              <input value={name} onChange={event => setName(event.target.value)} autoComplete="name" required minLength={2} maxLength={120} placeholder="مثال: محمد عبدالله" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-[#e8c880]/50" />
+              <input value={name} onChange={event => setName(event.target.value)} autoComplete="name" required minLength={2} maxLength={120} placeholder="مثال: محمد عبدالله" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-gold-300/50" />
             </label>
           )}
 
           {!needsMfa && mode !== 'RESET_VERIFY' && (
             <label className="block space-y-1.5">
               <span className="text-xs font-bold text-slate-200">البريد الإلكتروني</span>
-              <input type="email" value={email} onChange={event => setEmail(event.target.value)} autoComplete="email" required maxLength={254} dir="ltr" placeholder="name@domain.com" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-[#e8c880]/50 text-left" />
+              <input type="email" value={email} onChange={event => setEmail(event.target.value)} autoComplete="email" required maxLength={254} dir="ltr" placeholder="name@domain.com" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-gold-300/50 text-left" />
             </label>
           )}
 
           {mode === 'REGISTER' && !needsMfa && (
             <label className="block space-y-1.5">
               <span className="text-xs font-bold text-slate-200">رقم الهاتف</span>
-              <input type="tel" value={phone} onChange={event => setPhone(event.target.value)} autoComplete="tel" required minLength={7} maxLength={24} dir="ltr" placeholder="+965 99999999" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-[#e8c880]/50 text-left" />
+              <input type="tel" value={phone} onChange={event => setPhone(event.target.value)} autoComplete="tel" required minLength={7} maxLength={24} dir="ltr" placeholder="+965 99999999" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-gold-300/50 text-left" />
             </label>
           )}
 
           {mode === 'RESET_VERIFY' && (
             <label className="block space-y-1.5">
               <span className="text-xs font-bold text-slate-200">رمز التوثيق (المرسل للبريد)</span>
-              <input type="text" inputMode="numeric" pattern="[0-9]{6}" value={resetCode} onChange={event => setResetCode(event.target.value.replace(/\D/g, '').slice(0, 6))} required maxLength={6} dir="ltr" placeholder="123456" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-3 text-xl tracking-[0.4em] text-center text-slate-100 outline-none focus:border-[#e8c880]/50" />
+              <input type="text" inputMode="numeric" pattern="[0-9]{6}" value={resetCode} onChange={event => setResetCode(event.target.value.replace(/\D/g, '').slice(0, 6))} required maxLength={6} dir="ltr" placeholder="123456" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-3 text-xl tracking-[0.4em] text-center text-slate-100 outline-none focus:border-gold-300/50" />
             </label>
           )}
 
@@ -211,7 +183,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
                   minLength={6}
                   maxLength={128}
                   placeholder="••••••••"
-                  className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 pl-11 text-sm text-slate-100 outline-none focus:border-[#e8c880]/50 text-left"
+                  className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 pl-11 text-sm text-slate-100 outline-none focus:border-gold-300/50 text-left"
                   dir="ltr"
                 />
                 <button
@@ -226,7 +198,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
               </div>
               {mode === 'LOGIN' && (
                 <div className="flex justify-end pt-1">
-                  <button type="button" onClick={() => resetMode('RESET_REQUEST')} className="text-[11px] text-[#e8c880] hover:underline cursor-pointer">
+                  <button type="button" onClick={() => resetMode('RESET_REQUEST')} className="text-[11px] text-gold-300 hover:underline cursor-pointer">
                     نسيت كلمة المرور؟
                   </button>
                 </div>
@@ -235,14 +207,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
           ) : needsMfa ? (
             <label className="block space-y-1.5">
               <span className="text-xs font-bold text-slate-200">رمز المصادقة (MFA)</span>
-              <input inputMode="numeric" pattern="[0-9]{6}" value={mfaCode} onChange={event => setMfaCode(event.target.value.replace(/\D/g, '').slice(0, 6))} autoComplete="one-time-code" required maxLength={6} dir="ltr" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-3 text-xl tracking-[0.4em] text-center text-slate-100 outline-none focus:border-[#e8c880]/50" />
+              <input inputMode="numeric" pattern="[0-9]{6}" value={mfaCode} onChange={event => setMfaCode(event.target.value.replace(/\D/g, '').slice(0, 6))} autoComplete="one-time-code" required maxLength={6} dir="ltr" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-3 text-xl tracking-[0.4em] text-center text-slate-100 outline-none focus:border-gold-300/50" />
             </label>
           ) : null}
 
           {error && <div role="alert" aria-live="assertive" className="rounded-xl bg-rose-500/10 border border-rose-400/20 px-4 py-2.5 text-xs text-rose-200 leading-5">{error}</div>}
           {successMsg && <div role="alert" aria-live="polite" className="rounded-xl bg-emerald-500/10 border border-emerald-400/20 px-4 py-2.5 text-xs text-emerald-200 leading-5">{successMsg}</div>}
 
-          <button disabled={submitting || (needsMfa && mfaCode.length !== 6) || (mode === 'RESET_VERIFY' && resetCode.length !== 6)} className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#c7a55b] to-[#e0c57d] text-slate-950 font-black text-sm disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:brightness-105 transition">
+          <button disabled={submitting || (needsMfa && mfaCode.length !== 6) || (mode === 'RESET_VERIFY' && resetCode.length !== 6)} className="w-full py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 font-black text-sm disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:brightness-105 transition">
             {mode === 'LOGIN' ? <LogIn className="w-4 h-4" /> : (mode === 'RESET_REQUEST' || mode === 'RESET_VERIFY') ? <RefreshCcw className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
             {submitting ? 'جارٍ المعالجة…' : needsMfa ? 'تحقق وادخل' : mode === 'LOGIN' ? 'دخول فوري' : mode === 'RESET_REQUEST' ? 'إرسال رمز التوثيق للبريد' : mode === 'RESET_VERIFY' ? 'توثيق الرمز وتعيين كلمة المرور' : `إنشاء حساب (${role === 'SUPER_ADMIN' ? 'سوبر أدمن' : role === 'ADMIN' ? 'أدمن' : role === 'CREATOR' ? 'مبدع' : role === 'HOST_OWNER' ? 'منشأة' : 'عميل'})`}
           </button>

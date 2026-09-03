@@ -30,7 +30,7 @@ export const journeyStages: JourneyStage[] = [
     body: 'يسجّل المبدع منتجه وقصته ووصفته داخل إصدار محفوظ لا يقبل التعديل بعد إنشائه.',
     brief: 'إصدار محفوظ للفكرة، بتاريخ ومالك واضحين.',
     icon: <Lightbulb className="w-5 h-5" />,
-    accent: { text: 'text-[#e8c880]', ring: 'border-[#e8c880]/30', fill: 'bg-[#c7a55b]/10', dot: 'bg-[#c7a55b]' }
+    accent: { text: 'text-gold-300', ring: 'border-gold-300/30', fill: 'bg-gold-500/10', dot: 'bg-gold-500' }
   },
   {
     index: '٢',

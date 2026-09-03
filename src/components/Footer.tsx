@@ -41,20 +41,20 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
               <MajalMark size={34} />
               <span className="min-w-0">
                 <span className="block text-lg font-black majal-wordmark leading-none">مجال</span>
-                <span className="block text-[9px] font-semibold tracking-[0.42em] text-[#c7a55b]/60 leading-none mt-1.5" dir="ltr">MAJAL</span>
+                <span className="block text-[9px] font-semibold tracking-[0.42em] text-gold-500/60 leading-none mt-1.5" dir="ltr">MAJAL</span>
               </span>
             </div>
             <p className="text-slate-400 text-xs leading-relaxed">
               من الابتكار إلى منتج قابل للإطلاق، عبر رحلة مرئية وصلاحيات واضحة لكل طرف.
             </p>
-            <div className="flex items-center gap-2 text-[11px] text-[#e8c880] font-medium pt-1">
+            <div className="flex items-center gap-2 text-[11px] text-gold-300 font-medium pt-1">
               <Shield className="w-4 h-4" />
               <span>بيئة كويتية — تشغيل آمن افتراضيًا</span>
             </div>
 
             <button
               onClick={onReplayOnboarding}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl glass-card border border-white/10 text-[11px] font-bold text-slate-300 hover:text-[#e8c880] hover:border-[#e8c880]/25 transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl glass-card border border-white/10 text-[11px] font-bold text-slate-300 hover:text-gold-300 hover:border-gold-300/25 transition-colors"
             >
               <PlayCircle className="w-3.5 h-3.5" />
               <span>أعد جولة التعريف</span>
@@ -65,7 +65,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
             <h4 className="font-bold text-slate-200 text-sm mb-3 border-b border-slate-800 pb-1">أسطح النظام</h4>
             <ul className="space-y-2">
               {visibleSurfaces.map(surface => (
-                <li key={surface.id}><button onClick={() => onSurfaceChange(surface.id)} className="py-1.5 -my-1.5 inline-flex items-center hover:text-[#e8c880] transition-colors">{surface.label}</button></li>
+                <li key={surface.id}><button onClick={() => onSurfaceChange(surface.id)} className="py-1.5 -my-1.5 inline-flex items-center hover:text-gold-300 transition-colors">{surface.label}</button></li>
               ))}
             </ul>
           </div>
@@ -81,7 +81,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
           </div>
 
           <div className="space-y-3 glass-card p-4 rounded-xl border border-white/10">
-            <div className="flex items-center gap-2 text-[#e8c880] font-bold text-xs">
+            <div className="flex items-center gap-2 text-gold-300 font-bold text-xs">
               <Globe className="w-4 h-4" />
               <span>نطاق العمل — دولة الكويت</span>
             </div>
@@ -98,12 +98,12 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
               <button
                 key={link.id}
                 onClick={() => onOpenLegal(link.id)}
-                className="py-1.5 -my-1.5 inline-flex items-center hover:text-[#e8c880] transition-colors"
+                className="py-1.5 -my-1.5 inline-flex items-center hover:text-gold-300 transition-colors"
               >
                 {link.label}
               </button>
             ))}
-            <a href={`mailto:${SUPPORT_EMAIL}`} className="py-1.5 -my-1.5 inline-flex items-center gap-1.5 hover:text-[#e8c880] transition-colors">
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="py-1.5 -my-1.5 inline-flex items-center gap-1.5 hover:text-gold-300 transition-colors">
               <Mail className="w-3.5 h-3.5" />
               <span dir="ltr">{SUPPORT_EMAIL}</span>
             </a>

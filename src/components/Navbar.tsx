@@ -25,6 +25,7 @@ import { store } from '../lib/store';
 import { AI_ASSISTANT_ENABLED, INTEGRATION_SIMULATORS_ENABLED, IS_DEMO_MODE } from '../lib/runtime';
 import { fetchNotifications, markAllNotificationsRead, markNotificationRead, NotificationItem } from '../lib/notificationClient';
 import { usePopoverDismiss } from '../hooks/usePopoverDismiss';
+import { Avatar } from './common/Avatar';
 
 interface NavbarProps {
   activeSurface: SurfaceType;
@@ -173,7 +174,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center justify-between h-20 gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <button onClick={() => onSurfaceChange('PUBLIC')} className="flex items-center gap-3 text-right group focus:outline-none min-w-0" aria-label="العودة إلى صفحة مجال العامة">
-              <span className="grid place-items-center w-11 h-11 rounded-2xl bg-white/[0.04] border border-[#e8c880]/15 shrink-0 transition-all duration-200 group-hover:border-[#e8c880]/35 group-hover:bg-[#c7a55b]/10">
+              <span className="grid place-items-center w-11 h-11 rounded-2xl bg-white/[0.04] border border-gold-300/15 shrink-0 transition-all duration-200 group-hover:border-gold-300/35 group-hover:bg-gold-500/10">
                 <MajalMark size={26} />
               </span>
               <div className="min-w-0">
@@ -186,7 +187,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </button>
 
-            <span className="hidden md:inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-semibold bg-[#c7a55b]/10 text-[#e8c880] border border-[#e8c880]/15">
+            <span className="hidden md:inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-semibold bg-gold-500/10 text-gold-300 border border-gold-300/15">
               <LayoutGrid className="w-3.5 h-3.5" />
               {IS_DEMO_MODE ? 'عرض محلي آمن' : 'منصة مجال'}
             </span>
@@ -200,7 +201,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   key={s.id}
                   onClick={() => onSurfaceChange(s.id)}
                   className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium transition-all ${
-                    isActive ? 'bg-[#c7a55b] text-stone-950 font-black shadow-sm' : 'text-stone-300 hover:text-stone-100 hover:bg-white/5'
+                    isActive ? 'bg-gold-500 text-slate-950 font-black shadow-sm' : 'text-slate-300 hover:text-slate-100 hover:bg-white/5'
                   }`}
                 >
                   {s.icon}
@@ -215,22 +216,22 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {!IS_DEMO_MODE && authStatus === 'ANONYMOUS' && <button
               onClick={onOpenAuth}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#c7a55b] text-slate-950 font-black text-xs hover:bg-[#d5b76e] transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gold-500 text-slate-950 font-black text-xs hover:bg-gold-400 transition-colors"
             >
               <LogIn className="w-4 h-4" />
               <span>دخول</span>
             </button>}
 
             {!IS_DEMO_MODE && authStatus === 'AUTHENTICATED' && <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
-              <span className="w-7 h-7 rounded-full bg-[#c7a55b]/20 text-[#e8c880] grid place-items-center font-black text-xs" aria-hidden="true">{activeUser.name.slice(0, 1)}</span>
+              <span className="w-7 h-7 rounded-full bg-gold-500/20 text-gold-300 grid place-items-center font-black text-xs" aria-hidden="true">{activeUser.name.slice(0, 1)}</span>
               <div className="flex flex-col text-right">
                 <span className="max-w-28 truncate text-[11px] font-bold text-slate-100">{activeUser.name}</span>
-                <span className="text-[9px] text-[#e8c880] font-semibold">{roleLabels[activeUser.role]}</span>
+                <span className="text-[9px] text-gold-300 font-semibold">{roleLabels[activeUser.role]}</span>
               </div>
               {['SUPER_ADMIN', 'ADMIN'].includes(activeUser.role) && (
                 <button
                   onClick={() => onSurfaceChange(activeUser.role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'ADMIN')}
-                  className="px-2 py-1 rounded-lg bg-[#c7a55b]/20 hover:bg-[#c7a55b]/30 text-[#e8c880] text-[10px] font-bold border border-[#e8c880]/30 transition cursor-pointer"
+                  className="px-2 py-1 rounded-lg bg-gold-500/20 hover:bg-gold-500/30 text-gold-300 text-[10px] font-bold border border-gold-300/30 transition cursor-pointer"
                   title="الانتقال المباشر للوحة التحكم"
                 >
                   لوحة الإدارة
@@ -251,10 +252,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {AI_ASSISTANT_ENABLED && <button
               onClick={onOpenAiDrawer}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#c7a55b]/10 text-[#f4e1b0] hover:bg-[#c7a55b]/15 border border-[#e8c880]/20 text-xs font-medium transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold-500/10 text-gold-200 hover:bg-gold-500/15 border border-gold-300/20 text-xs font-medium transition-colors cursor-pointer"
               title="مساعد مجال الذكي"
             >
-              <Bot className="w-4 h-4 text-[#e8c880]" />
+              <Bot className="w-4 h-4 text-gold-300" />
               <span className="hidden sm:inline">مساعد مجال</span>
             </button>}
 
@@ -268,35 +269,35 @@ export const Navbar: React.FC<NavbarProps> = ({
                     refreshServerNotifications();
                   }
                 }}
-                className="p-2.5 rounded-xl text-stone-300 hover:text-stone-100 hover:bg-white/5 transition-colors relative"
+                className="p-2.5 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-white/5 transition-colors relative"
                 aria-label="فتح التنبيهات"
                 aria-expanded={showNotifications}
               >
                 <Bell className="w-4 h-4" />
-                {unreadCount > 0 && <><span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#e8c880] animate-ping" /><span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#e8c880]" /></>}
+                {unreadCount > 0 && <><span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-gold-300 animate-ping" /><span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-gold-300" /></>}
               </button>
 
               {showNotifications && (
-                <div className="absolute left-0 mt-2 w-96 max-w-[90vw] bg-[#0f172a]/95 border border-white/10 rounded-2xl shadow-2xl p-4 text-xs text-stone-200 z-50 animate-in fade-in slide-in-from-top-2">
-                  <div className="font-bold pb-3 mb-3 flex justify-between items-center text-[#e8c880] border-b border-white/10">
-                    <div><span className="block">مركز القرار</span><span className="text-[9px] text-stone-500 font-medium">الأهم أولاً، والمتكرر يُدمج</span></div>
+                <div className="absolute left-0 mt-2 w-96 max-w-[90vw] bg-ink-700/95 border border-white/10 rounded-2xl shadow-2xl p-4 text-xs text-slate-200 z-50 animate-in fade-in slide-in-from-top-2">
+                  <div className="font-bold pb-3 mb-3 flex justify-between items-center text-gold-300 border-b border-white/10">
+                    <div><span className="block">مركز القرار</span><span className="text-[9px] text-slate-500 font-medium">الأهم أولاً، والمتكرر يُدمج</span></div>
                     <div className="flex items-center gap-2">
-                      {!IS_DEMO_MODE && unreadCount > 0 && <button onClick={() => markAllNotificationsRead().then(() => { setServerNotifications(current => current.map(item => ({ ...item, status: 'READ' }))); setServerUnreadCount(0); }).catch(() => undefined)} className="text-[9px] text-stone-300 hover:text-white">قرأت الكل</button>}
-                      <span className="text-[10px] text-stone-400">{unreadCount} غير مقروء</span>
+                      {!IS_DEMO_MODE && unreadCount > 0 && <button onClick={() => markAllNotificationsRead().then(() => { setServerNotifications(current => current.map(item => ({ ...item, status: 'READ' }))); setServerUnreadCount(0); }).catch(() => undefined)} className="text-[9px] text-slate-300 hover:text-white">قرأت الكل</button>}
+                      <span className="text-[10px] text-slate-400">{unreadCount} غير مقروء</span>
                     </div>
                   </div>
                   <div className="space-y-2.5">
                     {notificationCards.length ? notificationCards.map(item => (
-                      <button key={item.id} onClick={() => openNotification(item)} className={`w-full p-3 rounded-xl border text-right transition-colors ${item.status === 'UNREAD' ? 'bg-white/7 border-[#e8c880]/20' : 'bg-white/[0.03] border-white/5 opacity-75'}`}>
+                      <button key={item.id} onClick={() => openNotification(item)} className={`w-full p-3 rounded-xl border text-right transition-colors ${item.status === 'UNREAD' ? 'bg-white/7 border-gold-300/20' : 'bg-white/[0.03] border-white/5 opacity-75'}`}>
                         <span className="flex items-center justify-between gap-2 mb-1">
-                          <span className="font-bold text-stone-100">{item.title}</span>
-                          <span className={`text-[9px] px-2 py-0.5 rounded-full ${item.priority === 'URGENT' ? 'bg-rose-500/15 text-rose-200' : item.priority === 'NOW' ? 'bg-[#c7a55b]/15 text-[#f4e1b0]' : 'bg-white/5 text-stone-400'}`}>{item.priority === 'URGENT' ? 'عاجل' : item.priority === 'NOW' ? 'الآن' : item.priority === 'SOON' ? 'قريباً' : 'راقب'}</span>
+                          <span className="font-bold text-slate-100">{item.title}</span>
+                          <span className={`text-[9px] px-2 py-0.5 rounded-full ${item.priority === 'URGENT' ? 'bg-rose-500/15 text-rose-200' : item.priority === 'NOW' ? 'bg-gold-500/15 text-gold-200' : 'bg-white/5 text-slate-400'}`}>{item.priority === 'URGENT' ? 'عاجل' : item.priority === 'NOW' ? 'الآن' : item.priority === 'SOON' ? 'قريباً' : 'راقب'}</span>
                         </span>
-                        <span className="block text-stone-300 leading-6">{item.body}</span>
-                        {item.occurrence_count > 1 && <span className="block mt-1 text-[9px] text-stone-500">تكرر {item.occurrence_count} مرات وتم دمجه هنا</span>}
-                        {'action_label' in item && item.action_label && <span className="block mt-2 text-[10px] font-bold text-[#e8c880]">{item.action_label} ←</span>}
+                        <span className="block text-slate-300 leading-6">{item.body}</span>
+                        {item.occurrence_count > 1 && <span className="block mt-1 text-[9px] text-slate-500">تكرر {item.occurrence_count} مرات وتم دمجه هنا</span>}
+                        {'action_label' in item && item.action_label && <span className="block mt-2 text-[10px] font-bold text-gold-300">{item.action_label} ←</span>}
                       </button>
-                    )) : <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5 text-center text-stone-500">لا توجد قرارات معلقة الآن.</div>}
+                    )) : <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5 text-center text-slate-500">لا توجد قرارات معلقة الآن.</div>}
                   </div>
                 </div>
               )}
@@ -309,21 +310,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setShowRoleDropdown(next);
                   if (next) setShowNotifications(false);
                 }}
-                className="flex items-center gap-2 p-1.5 pr-2.5 rounded-2xl bg-[#0f172a]/80 hover:bg-[#162031] border border-white/10 text-xs font-medium transition-colors"
+                className="flex items-center gap-2 p-1.5 pr-2.5 rounded-2xl bg-ink-700/80 hover:bg-ink-500 border border-white/10 text-xs font-medium transition-colors"
                 aria-label="تبديل هوية العرض المحلية"
                 aria-expanded={showRoleDropdown}
               >
-                {activeUser.avatar ? <img src={activeUser.avatar} alt="" className="w-8 h-8 rounded-full object-cover ring-1 ring-[#e8c880]/50" /> : <span className="w-8 h-8 rounded-full bg-[#c7a55b]/15 text-[#e8c880] grid place-items-center font-black" aria-hidden="true">{activeUser.name.slice(0, 1)}</span>}
+                <Avatar name={activeUser.name} src={activeUser.avatar} size={32} />
                 <div className="text-right hidden md:block max-w-[180px]">
-                  <span className="block font-bold text-stone-200 text-[11px] leading-tight truncate">{activeUser.name}</span>
-                  <span className="block text-[10px] text-[#e8c880] truncate">{roleLabels[activeUser.role]}</span>
+                  <span className="block font-bold text-slate-200 text-[11px] leading-tight truncate">{activeUser.name}</span>
+                  <span className="block text-[10px] text-gold-300 truncate">{roleLabels[activeUser.role]}</span>
                 </div>
-                <ChevronDown className="w-3.5 h-3.5 text-stone-400" />
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
               </button>
 
               {showRoleDropdown && (
-                <div role="menu" aria-label="تبديل هوية العرض المحلية" className="absolute left-0 mt-2 w-80 max-w-[90vw] bg-[#0f172a]/96 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 text-xs text-stone-200 max-h-[70vh] overflow-y-auto">
-                  <div className="px-2 py-2 text-[10px] text-stone-400 font-bold uppercase tracking-wider border-b border-white/10 mb-1">
+                <div role="menu" aria-label="تبديل هوية العرض المحلية" className="absolute left-0 mt-2 w-80 max-w-[90vw] bg-ink-700/96 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 text-xs text-slate-200 max-h-[70vh] overflow-y-auto">
+                  <div className="px-2 py-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider border-b border-white/10 mb-1">
                     تبديل أدوار العرض — Creator / Host / Admin / Super Admin
                   </div>
                   {store.users.map(u => (
@@ -336,17 +337,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setShowRoleDropdown(false);
                       }}
                       className={`w-full flex items-center justify-between p-2.5 rounded-xl text-right transition-colors ${u.status === 'SUSPENDED' ? 'opacity-40 cursor-not-allowed' : ''} ${
-                        activeUser.id === u.id ? 'bg-[#c7a55b]/15 text-[#f4e1b0] font-bold border border-[#e8c880]/15' : 'hover:bg-white/5 text-stone-300'
+                        activeUser.id === u.id ? 'bg-gold-500/15 text-gold-200 font-bold border border-gold-300/15' : 'hover:bg-white/5 text-slate-300'
                       }`}
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        {u.avatar ? <img src={u.avatar} alt="" className="w-8 h-8 rounded-full object-cover" /> : <span className="w-8 h-8 rounded-full bg-white/5 grid place-items-center font-black" aria-hidden="true">{u.name.slice(0, 1)}</span>}
+                        <Avatar name={u.name} src={u.avatar} size={32} />
                         <div className="min-w-0 text-right">
                           <span className="block text-[11px] font-medium truncate">{u.name}</span>
-                          <span className="block text-[10px] text-stone-400 truncate">{roleLabels[u.role]}{u.status === 'SUSPENDED' ? ' — موقوف' : ''}</span>
+                          <span className="block text-[10px] text-slate-400 truncate">{roleLabels[u.role]}{u.status === 'SUSPENDED' ? ' — موقوف' : ''}</span>
                         </div>
                       </div>
-                      {activeUser.id === u.id ? <UserCheck className="w-4 h-4 text-[#e8c880]" /> : <Users className="w-4 h-4 text-stone-500" />}
+                      {activeUser.id === u.id ? <UserCheck className="w-4 h-4 text-gold-300" /> : <Users className="w-4 h-4 text-slate-500" />}
                     </button>
                   ))}
                 </div>
@@ -363,7 +364,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 key={s.id}
                 onClick={() => onSurfaceChange(s.id)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-xl whitespace-nowrap text-[11px] font-medium ${
-                  isActive ? 'bg-[#c7a55b] text-stone-950 font-black' : 'bg-white/5 text-stone-300'
+                  isActive ? 'bg-gold-500 text-slate-950 font-black' : 'bg-white/5 text-slate-300'
                 }`}
               >
                 {s.icon}

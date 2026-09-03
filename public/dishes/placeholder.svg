@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="لا توجد صورة للمنتج بعد">
+  <!-- Shown until a creator uploads real product photography. Deliberately a plate, not a
+       broken-image or a generic grey box: an unphotographed product should still look like
+       it belongs on the shelf. -->
+  <defs>
+    <linearGradient id="p-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#141d30"/><stop offset="100%" stop-color="#0a101b"/>
+    </linearGradient>
+    <radialGradient id="p-glow" cx="50%" cy="48%" r="50%">
+      <stop offset="0%" stop-color="#c7a55b" stop-opacity=".16"/><stop offset="100%" stop-color="#c7a55b" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="p-gold" x1="1" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#a8843c"/><stop offset="45%" stop-color="#c7a55b"/><stop offset="100%" stop-color="#f4e1b0"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#p-bg)"/>
+  <rect width="800" height="500" fill="url(#p-glow)"/>
+  <circle cx="400" cy="250" r="150" fill="none" stroke="#c7a55b" stroke-opacity=".14"/>
+  <circle cx="400" cy="250" r="120" fill="none" stroke="#c7a55b" stroke-opacity=".10"/>
+  <g transform="translate(400 250) scale(1.5) translate(-32 -34)" fill="none"
+     stroke="url(#p-gold)" stroke-linecap="round" opacity=".8">
+    <path d="M11 53 V33 A21 21 0 0 1 53 33 V53" stroke-width="6.5"/>
+    <circle cx="32" cy="34" r="9" stroke-width="6"/>
+  </g>
+</svg>

@@ -3,9 +3,28 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
 
+/**
+ * Resolves __PUBLIC_ORIGIN__ in index.html.
+ *
+ * og:image has to be an absolute URL — most crawlers will not resolve a relative one
+ * against the page — but the origin is only known per deployment. APP_URL already carries
+ * it, so the build substitutes it here. With APP_URL unset the placeholder collapses to
+ * an empty string, leaving a root-relative path: no broken literal in the markup, and
+ * exactly the behaviour the file had before.
+ */
+function publicOriginPlugin() {
+  const origin = (process.env.APP_URL || '').trim().replace(/\/+$/, '');
+  return {
+    name: 'majal-public-origin',
+    transformIndexHtml(html: string) {
+      return html.replaceAll('__PUBLIC_ORIGIN__', origin);
+    },
+  };
+}
+
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), publicOriginPlugin()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

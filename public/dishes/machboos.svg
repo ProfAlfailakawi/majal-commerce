@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="مچبوس دجاج">
+  <defs>
+    <linearGradient id="m-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#141d30"/><stop offset="100%" stop-color="#0a101b"/>
+    </linearGradient>
+    <radialGradient id="m-glow" cx="50%" cy="48%" r="52%">
+      <stop offset="0%" stop-color="#c7a55b" stop-opacity=".24"/><stop offset="100%" stop-color="#c7a55b" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="m-rice" x1="0.3" y1="0" x2="0.7" y2="1">
+      <stop offset="0%" stop-color="#f6e6c2"/><stop offset="60%" stop-color="#e0c68f"/><stop offset="100%" stop-color="#b9975a"/>
+    </linearGradient>
+    <linearGradient id="m-chicken" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#cf9049"/><stop offset="100%" stop-color="#8f5a24"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#m-bg)"/>
+  <rect width="800" height="500" fill="url(#m-glow)"/>
+
+  <!-- Plate, sized and centred so the dish still reads when the card crops the sides. -->
+  <circle cx="400" cy="250" r="196" fill="none" stroke="#c7a55b" stroke-opacity=".14"/>
+  <circle cx="400" cy="250" r="166" fill="#0f1626" stroke="#c7a55b" stroke-opacity=".22" stroke-width="2"/>
+
+  <!-- Rice mound, centred on the plate. -->
+  <path d="M258 344 q34 -136 142 -136 q108 0 142 136 z" fill="url(#m-rice)"/>
+  <g stroke="#a8843c" stroke-opacity=".32" stroke-width="3.5" stroke-linecap="round">
+    <path d="M312 322 l20 -7"/><path d="M356 300 l20 -6"/><path d="M404 310 l20 -7"/>
+    <path d="M448 328 l20 -7"/><path d="M336 276 l19 -8"/><path d="M424 268 l19 -7"/>
+    <path d="M380 252 l19 -7"/><path d="M466 296 l19 -7"/>
+  </g>
+
+  <!-- Chicken piece, seated on top of the rice. -->
+  <ellipse cx="400" cy="232" rx="66" ry="42" fill="url(#m-chicken)"/>
+  <path d="M346 234 q54 -32 108 0" fill="none" stroke="#f4d199" stroke-opacity=".38" stroke-width="6" stroke-linecap="round"/>
+  <ellipse cx="374" cy="222" rx="13" ry="8" fill="#f4d199" fill-opacity=".22"/>
+
+  <!-- Dried limes (لومي) either side. -->
+  <g>
+    <circle cx="278" cy="322" r="21" fill="#3a2b18" stroke="#7d612b" stroke-width="3"/>
+    <path d="M278 301 v-9" stroke="#7d612b" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="522" cy="322" r="21" fill="#3a2b18" stroke="#7d612b" stroke-width="3"/>
+    <path d="M522 301 v-9" stroke="#7d612b" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>

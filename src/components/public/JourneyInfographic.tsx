@@ -16,7 +16,7 @@ import { journeyStages } from '../../data/journey';
 export const JourneyInfographic: React.FC = () => (
   <section aria-labelledby="journey-heading" className="space-y-10">
     <div className="text-center space-y-3">
-      <span className="inline-block text-[10px] font-black tracking-[0.25em] text-[#e8c880] uppercase">MAJAL JOURNEY</span>
+      <span className="inline-block text-[10px] font-black tracking-[0.25em] text-gold-300 uppercase">MAJAL JOURNEY</span>
       <h2 id="journey-heading" className="text-2xl sm:text-3xl font-black text-slate-100">كيف تعمل رحلة «مجال»؟</h2>
       <p className="text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto leading-7">
         ست محطات مرتبطة بالترتيب. لا تُفتح محطة قبل اكتمال ما قبلها، ولذلك لا يوجد «إطلاق سريع» يتجاوز الحماية أو العقد.
@@ -28,7 +28,7 @@ export const JourneyInfographic: React.FC = () => (
           from assistive tech instead of announced as content. */}
       <div
         aria-hidden="true"
-        className="hidden lg:block absolute inset-x-8 top-[3.25rem] h-px bg-gradient-to-l from-emerald-400/30 via-sky-400/25 to-[#c7a55b]/30 pointer-events-none"
+        className="hidden lg:block absolute inset-x-8 top-[3.25rem] h-px bg-gradient-to-l from-emerald-400/30 via-sky-400/25 to-gold-500/30 pointer-events-none"
       />
 
       {journeyStages.map(stage => (

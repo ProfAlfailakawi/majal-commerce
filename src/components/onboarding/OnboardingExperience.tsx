@@ -66,7 +66,7 @@ const intents: {
     title: 'عندي فكرة أو وصفة',
     body: 'أبي أوصلها للسوق عبر منشأة مرخّصة، بدون ما أسلّم سرّي لأحد قبل الاتفاق.',
     icon: <Sparkles className="w-6 h-6" />,
-    accent: { text: 'text-[#e8c880]', ring: 'border-[#e8c880]/35', fill: 'bg-[#c7a55b]/10' }
+    accent: { text: 'text-gold-300', ring: 'border-gold-300/35', fill: 'bg-gold-500/10' }
   },
   {
     id: 'HOST',
@@ -201,8 +201,8 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
       {/* Two slow, very low-contrast fields. They give the screen depth without ever
           competing with the type, and they are the only ambient motion in the flow. */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 right-[8%] w-[34rem] h-[34rem] rounded-full bg-[#c7a55b]/[0.07] blur-3xl majal-drift" />
-        <div className="absolute -bottom-48 left-[4%] w-[30rem] h-[30rem] rounded-full bg-[#4b6aa3]/[0.08] blur-3xl majal-drift-slow" />
+        <div className="absolute -top-40 right-[8%] w-[34rem] h-[34rem] rounded-full bg-gold-500/[0.07] blur-3xl majal-drift" />
+        <div className="absolute -bottom-48 left-[4%] w-[30rem] h-[30rem] rounded-full bg-steel-500/[0.08] blur-3xl majal-drift-slow" />
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff07_1px,transparent_1px)] [background-size:34px_34px]" />
       </div>
 
@@ -233,8 +233,8 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
             <div className="text-center space-y-8">
               <div style={rise(0)} className="flex justify-center">
                 <span className="relative grid place-items-center w-44 h-44">
-                  <span aria-hidden="true" className="absolute inset-0 rounded-full border border-[#c7a55b]/15" />
-                  <span aria-hidden="true" className="absolute inset-[14%] rounded-full border border-[#c7a55b]/10" />
+                  <span aria-hidden="true" className="absolute inset-0 rounded-full border border-gold-500/15" />
+                  <span aria-hidden="true" className="absolute inset-[14%] rounded-full border border-gold-500/10" />
                   <span
                     aria-hidden="true"
                     className="absolute inset-[-10%] rounded-full majal-orbit"
@@ -284,7 +284,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           {step === 'INTENT' && (
             <div className="space-y-8">
               <div className="text-center space-y-3">
-                <span style={rise(0)} className="block text-[10px] font-black tracking-[0.3em] text-[#e8c880]">
+                <span style={rise(0)} className="block text-[10px] font-black tracking-[0.3em] text-gold-300">
                   سؤال واحد فقط
                 </span>
                 <h2
@@ -342,7 +342,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           {step === 'JOURNEY' && (
             <div className="space-y-8">
               <div className="text-center space-y-3">
-                <span style={rise(0)} className="block text-[10px] font-black tracking-[0.3em] text-[#e8c880]">
+                <span style={rise(0)} className="block text-[10px] font-black tracking-[0.3em] text-gold-300">
                   MAJAL JOURNEY
                 </span>
                 <h2
@@ -365,13 +365,13 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                     read as one sequence instead of six features. Decorative, so hidden. */}
                 <span
                   aria-hidden="true"
-                  className="absolute top-3 bottom-3 right-[0.9rem] sm:right-[1.15rem] w-px bg-gradient-to-b from-[#c7a55b]/50 via-sky-400/30 to-emerald-400/40"
+                  className="absolute top-3 bottom-3 right-[0.9rem] sm:right-[1.15rem] w-px bg-gradient-to-b from-gold-500/50 via-sky-400/30 to-emerald-400/40"
                 />
                 {journeyStages.map((stage, index) => (
                   <li key={stage.index} style={rise(3 + index)} className="relative">
                     <span
                       aria-hidden="true"
-                      className={`absolute -right-7 sm:-right-9 top-4 w-[0.55rem] h-[0.55rem] rounded-full ring-4 ring-[#0b1220] ${stage.accent.dot}`}
+                      className={`absolute -right-7 sm:-right-9 top-4 w-[0.55rem] h-[0.55rem] rounded-full ring-4 ring-ink-800 ${stage.accent.dot}`}
                     />
                     <div
                       className={`glass-card rounded-2xl border ${stage.accent.ring} px-4 py-3.5 flex items-center gap-4`}
@@ -401,7 +401,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           {step === 'PROTECTION' && (
             <div className="space-y-8">
               <div className="text-center space-y-3">
-                <span style={rise(0)} className="block text-[10px] font-black tracking-[0.3em] text-[#e8c880]">
+                <span style={rise(0)} className="block text-[10px] font-black tracking-[0.3em] text-gold-300">
                   خزنة الوصفات
                 </span>
                 <h2
@@ -477,7 +477,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
 
               <div style={rise(3)} className="grid sm:grid-cols-2 gap-3 max-w-2xl mx-auto text-right">
                 <div className="glass-card rounded-2xl border border-white/10 p-4 flex items-start gap-3">
-                  <span className="w-10 h-10 shrink-0 rounded-xl bg-white/5 border border-white/10 grid place-items-center text-[#e8c880]">
+                  <span className="w-10 h-10 shrink-0 rounded-xl bg-white/5 border border-white/10 grid place-items-center text-gold-300">
                     <Command className="w-4 h-4" />
                   </span>
                   <span>
@@ -490,7 +490,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                 </div>
 
                 <div className="glass-card rounded-2xl border border-white/10 p-4 flex items-start gap-3">
-                  <span className="w-10 h-10 shrink-0 rounded-xl bg-white/5 border border-white/10 grid place-items-center text-[#e8c880]">
+                  <span className="w-10 h-10 shrink-0 rounded-xl bg-white/5 border border-white/10 grid place-items-center text-gold-300">
                     <Compass className="w-4 h-4" />
                   </span>
                   <span>
@@ -505,7 +505,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           )}
         </main>
 
-        <footer className="sticky bottom-0 shrink-0 space-y-4 -mx-4 sm:-mx-8 px-4 sm:px-8 pt-8 pb-3 bg-gradient-to-t from-[#070d18] via-[#070d18] via-65% to-transparent">
+        <footer className="sticky bottom-0 shrink-0 space-y-4 -mx-4 sm:-mx-8 px-4 sm:px-8 pt-8 pb-3 bg-gradient-to-t from-ink-900 via-ink-900 via-65% to-transparent">
           {/* A segmented rail, not dots: it shows how much is left, which is the only
               honest way to ask someone to keep going. */}
           <div className="flex items-center gap-1.5" aria-hidden="true">
@@ -513,7 +513,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
               <span
                 key={id}
                 className={`h-1 flex-1 rounded-full transition-all duration-500 ${
-                  index < stepIndex ? 'bg-[#c7a55b]/45' : index === stepIndex ? 'bg-[#e8c880]' : 'bg-white/8'
+                  index < stepIndex ? 'bg-gold-500/45' : index === stepIndex ? 'bg-gold-300' : 'bg-white/8'
                 }`}
               />
             ))}
@@ -537,7 +537,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
               {isLast ? (
                 <button
                   onClick={finish}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-l from-[#c7a55b] to-[#e8c880] text-slate-950 text-xs font-black flex items-center gap-2 hover:brightness-110 transition-all shadow-[0_12px_36px_rgba(199,165,91,0.22)]"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 text-xs font-black flex items-center gap-2 hover:brightness-110 transition-all shadow-[0_12px_36px_rgba(199,165,91,0.22)]"
                 >
                   {needsAuth ? <LogIn className="w-4 h-4" /> : null}
                   <span>{needsAuth ? 'سجّل الدخول وابدأ' : 'ادخل المنصة'}</span>
@@ -546,7 +546,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
               ) : (
                 <button
                   onClick={() => setStepIndex(current => Math.min(STEPS.length - 1, current + 1))}
-                  className="px-6 py-2.5 rounded-xl bg-[#c7a55b] hover:bg-[#d5b76e] text-slate-950 text-xs font-black flex items-center gap-2 transition-colors"
+                  className="px-6 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-slate-950 text-xs font-black flex items-center gap-2 transition-colors"
                 >
                   <span>{step === 'INTENT' && !intent ? 'تخطّ السؤال' : 'التالي'}</span>
                   <ArrowLeft className="w-4 h-4" />

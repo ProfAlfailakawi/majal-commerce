@@ -254,7 +254,7 @@ export class Store {
           story: 'شغف ابتكار الأطباق والمنتجات المبتكرة.',
           isAvailableForMatching: true,
           hasSecretRecipe: true,
-          avatarUrl: trustedUser.avatar || 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&q=80&w=200',
+          avatarUrl: trustedUser.avatar || '',
           createdAt: new Date().toISOString()
         };
         this.creators.push(profile);
@@ -304,7 +304,7 @@ export class Store {
           story: 'شغف ابتكار الأطباق والمنتجات المبتكرة.',
           isAvailableForMatching: true,
           hasSecretRecipe: true,
-          avatarUrl: updatedUser.avatar || 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&q=80&w=200',
+          avatarUrl: updatedUser.avatar || '',
           createdAt: new Date().toISOString()
         };
         this.creators.push(profile);

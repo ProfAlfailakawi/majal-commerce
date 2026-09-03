@@ -16,7 +16,12 @@ import './index.css';
  *    transition is actually seen, and so a permanently-hidden overlay can never sit on
  *    top of the app swallowing clicks if the transition never fires.
  */
-const MIN_SPLASH_MS = 1_150;
+// The boot animation's own choreography runs to ~1.95s: the gate draws (0-1s), the core
+// appears inside it (0.5-1.5s), the ground line lands (0.95-1.95s), and the wordmark and
+// tagline rise behind them. Lifting at 1.15s cut the sequence off mid-draw, so on a warm
+// cache the brand was gone before it had finished arriving. This holds until the last
+// stroke has landed, plus a beat to read it.
+const MIN_SPLASH_MS = 2_400;
 const FADE_MS = 560;
 
 function dismissBootSplash() {

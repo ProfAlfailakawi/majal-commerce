@@ -18,6 +18,7 @@ import { roleLabel } from '../../lib/permissions';
 import { buildDealRoomCopilot } from '../../lib/intelligence';
 import { intelligenceClient, type DealRoomEnrichment } from '../../lib/intelligenceClient';
 import { Bot } from 'lucide-react';
+import { StatusPill } from './StatusPill';
 
 interface DealRoomProps {
   collaboration: Collaboration;
@@ -53,7 +54,7 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
   ];
 
   const categoryMeta: Record<DealDecision['category'], { label: string; icon: React.ReactNode; cls: string }> = {
-    DECISION: { label: 'قرار', icon: <ShieldCheck className="w-4 h-4" />, cls: 'text-[#e8c880]' },
+    DECISION: { label: 'قرار', icon: <ShieldCheck className="w-4 h-4" />, cls: 'text-gold-300' },
     NOTE: { label: 'ملاحظة', icon: <StickyNote className="w-4 h-4" />, cls: 'text-sky-300' },
     RISK: { label: 'مخاطرة', icon: <AlertTriangle className="w-4 h-4" />, cls: 'text-rose-300' },
     MILESTONE: { label: 'محطة', icon: <Milestone className="w-4 h-4" />, cls: 'text-emerald-300' }
@@ -98,16 +99,16 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-400/20 flex items-center justify-center text-sky-300"><BriefcaseBusiness className="w-6 h-6" /></div>
           <div>
-            <h3 className="text-lg font-black text-stone-100">Deal Room — غرفة الصفقة</h3>
-            <p className="text-xs text-stone-400 mt-1">{creator?.displayName || 'مبدع'} × {host?.commercialName || 'منشأة'} — {product?.publicName || 'منتج'}</p>
+            <h3 className="text-lg font-black text-slate-100">Deal Room — غرفة الصفقة</h3>
+            <p className="text-xs text-slate-400 mt-1">{creator?.displayName || 'مبدع'} × {host?.commercialName || 'منشأة'} — {product?.publicName || 'منتج'}</p>
           </div>
         </div>
-        <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-sky-400/10 text-sky-300 border border-sky-400/20">المرحلة: {collaboration.stage}</span>
+        <StatusPill status={collaboration.stage} prefix="المرحلة" size="md" />
       </div>
 
       <div className="grid xl:grid-cols-[.9fr_1.1fr] gap-5">
         <div className="space-y-3">
-          <div className="font-bold text-sm text-stone-100 flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-300" /> خط سير الصفقة</div>
+          <div className="font-bold text-sm text-slate-100 flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-300" /> خط سير الصفقة</div>
           {tasks.map((task, idx) => (
             <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10 gap-3">
               <div className="flex items-center gap-3 min-w-0">
@@ -115,8 +116,8 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
                   {task.done ? <CheckCircle2 className="w-4 h-4" /> : <Clock3 className="w-4 h-4" />}
                 </div>
                 <div className="min-w-0">
-                  <div className="text-sm font-bold text-stone-200">{task.title}</div>
-                  <div className="text-[11px] text-stone-500 mt-1">المسؤول: {task.owner} — {task.detail}</div>
+                  <div className="text-sm font-bold text-slate-200">{task.title}</div>
+                  <div className="text-[11px] text-slate-500 mt-1">المسؤول: {task.owner} — {task.detail}</div>
                 </div>
               </div>
               <span className={`text-[10px] font-bold shrink-0 ${task.done ? 'text-emerald-300' : 'text-amber-300'}`}>{task.done ? 'مكتمل' : 'قيد التنفيذ'}</span>
@@ -126,23 +127,23 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
 
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
-            <div className="font-bold text-sm text-stone-100 flex items-center gap-2"><MessageSquareText className="w-4 h-4 text-fuchsia-300" /> Decision Ledger</div>
-            <span className="text-[10px] text-stone-500">{decisions.length} سجلات بشرية محفوظة</span>
+            <div className="font-bold text-sm text-slate-100 flex items-center gap-2"><MessageSquareText className="w-4 h-4 text-fuchsia-300" /> Decision Ledger</div>
+            <span className="text-[10px] text-slate-500">{decisions.length} سجلات بشرية محفوظة</span>
           </div>
 
           <div className="rounded-2xl bg-slate-950/50 border border-white/10 p-4 space-y-3 max-h-72 overflow-auto">
             {decisions.length === 0 ? (
-              <div className="p-6 text-center text-xs text-stone-500 leading-6">لا توجد قرارات بشرية مسجلة بعد. أضف أول قرار أو ملاحظة ليصبح جزءًا من سجل الصفقة المحفوظ.</div>
+              <div className="p-6 text-center text-xs text-slate-500 leading-6">لا توجد قرارات بشرية مسجلة بعد. أضف أول قرار أو ملاحظة ليصبح جزءًا من سجل الصفقة المحفوظ.</div>
             ) : decisions.map(decision => {
               const meta = categoryMeta[decision.category];
               return (
-                <div key={decision.id} className="rounded-xl p-3 bg-white/5 border border-white/10 text-xs leading-6 text-stone-300">
+                <div key={decision.id} className="rounded-xl p-3 bg-white/5 border border-white/10 text-xs leading-6 text-slate-300">
                   <div className="flex items-center justify-between gap-3 mb-2">
                     <div className={`flex items-center gap-2 font-black ${meta.cls}`}>{meta.icon}{meta.label}</div>
-                    <span className="text-[9px] text-stone-600">{new Date(decision.createdAt).toLocaleString('ar-KW')}</span>
+                    <span className="text-[9px] text-slate-600">{new Date(decision.createdAt).toLocaleString('ar-KW')}</span>
                   </div>
                   <div>{decision.text}</div>
-                  <div className="mt-2 text-[10px] text-stone-500">{decision.authorName} — {roleLabel(decision.authorRole)}</div>
+                  <div className="mt-2 text-[10px] text-slate-500">{decision.authorName} — {roleLabel(decision.authorRole)}</div>
                 </div>
               );
             })}
@@ -155,35 +156,35 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
               <option value="RISK">مخاطرة</option>
               <option value="MILESTONE">محطة</option>
             </select>
-            <input value={message} onChange={e => setMessage(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addDecision(); }} placeholder="سجّل قرارًا أو ملاحظة مرتبطة بالصفقة..." className="glass-input px-4 py-3 rounded-xl text-xs outline-none text-stone-100" />
-            <button onClick={addDecision} disabled={message.trim().length < 3} className="px-4 py-3 rounded-xl bg-[#c7a55b] disabled:bg-white/5 disabled:text-stone-600 text-stone-950 font-black text-xs">حفظ</button>
+            <input value={message} onChange={e => setMessage(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addDecision(); }} placeholder="سجّل قرارًا أو ملاحظة مرتبطة بالصفقة..." className="glass-input px-4 py-3 rounded-xl text-xs outline-none text-slate-100" />
+            <button onClick={addDecision} disabled={message.trim().length < 3} className="px-4 py-3 rounded-xl bg-gold-500 disabled:bg-white/5 disabled:text-slate-600 text-slate-950 font-black text-xs">حفظ</button>
           </div>
         </div>
       </div>
 
       <div className="rounded-2xl p-4 bg-indigo-500/5 border border-indigo-400/15 space-y-3">
         <div className="flex items-center gap-2 text-sm font-black text-indigo-200"><Bot className="w-4 h-4" /> Deal Copilot — يلخّص ولا يقرّر</div>
-        <p className="text-[11px] text-stone-400 leading-6">{aiNarrative?.narrative || copilot.summary}</p>
+        <p className="text-[11px] text-slate-400 leading-6">{aiNarrative?.narrative || copilot.summary}</p>
         <div className="grid md:grid-cols-2 gap-3">
           <div className="space-y-2">
-            <div className="text-[11px] font-bold text-stone-300">الخيارات</div>
+            <div className="text-[11px] font-bold text-slate-300">الخيارات</div>
             {copilot.optionSummaries.map((option, idx) => (
-              <div key={idx} className="text-[11px] text-stone-400 rounded-lg px-3 py-2 bg-white/5 border border-white/10">{option}</div>
+              <div key={idx} className="text-[11px] text-slate-400 rounded-lg px-3 py-2 bg-white/5 border border-white/10">{option}</div>
             ))}
           </div>
           <div className="space-y-2">
-            <div className="text-[11px] font-bold text-stone-300">مخاطر ونقاط انتباه</div>
+            <div className="text-[11px] font-bold text-slate-300">مخاطر ونقاط انتباه</div>
             {copilot.risks.map((risk, idx) => (
               <div key={idx} className={`text-[11px] rounded-lg px-3 py-2 border ${risk.level === 'HIGH' ? 'bg-rose-500/10 border-rose-400/20 text-rose-200' : 'bg-amber-500/10 border-amber-400/20 text-amber-200'}`}>{risk.text}</div>
             ))}
             {(aiNarrative?.watchouts || []).map((watch, idx) => (
-              <div key={`ai-${idx}`} className="text-[11px] rounded-lg px-3 py-2 bg-white/5 border border-white/10 text-stone-400">{watch}</div>
+              <div key={`ai-${idx}`} className="text-[11px] rounded-lg px-3 py-2 bg-white/5 border border-white/10 text-slate-400">{watch}</div>
             ))}
           </div>
         </div>
         <div className="flex flex-wrap gap-2 pt-2 border-t border-white/5">
           {copilot.blockedActions.map((guard, idx) => (
-            <span key={idx} className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-full bg-slate-950/50 border border-white/10 text-stone-400">
+            <span key={idx} className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-full bg-slate-950/50 border border-white/10 text-slate-400">
               <ShieldCheck className="w-3 h-3 text-emerald-300" /> {guard.label}
             </span>
           ))}
@@ -191,9 +192,9 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
       </div>
 
       <div className="grid md:grid-cols-3 gap-3 text-xs">
-        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><FileCheck2 className="w-4 h-4 text-sky-300 mb-2" /><div className="text-stone-400">العقد</div><div className="font-black text-stone-100 mt-1">{collaboration.contract?.status || 'لم ينشأ'}</div></div>
-        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><Sparkles className="w-4 h-4 text-[#e8c880] mb-2" /><div className="text-stone-400">آخر عرض</div><div className="font-black text-stone-100 mt-1">{collaboration.currentOffer ? `${collaboration.currentOffer.creatorRoyaltyRatePercent}% للمبدع — V${collaboration.currentOffer.version}` : 'لا يوجد'}</div></div>
-        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><UserRoundCheck className="w-4 h-4 text-emerald-300 mb-2" /><div className="text-stone-400">سلامة السجل</div><div className="font-black text-emerald-300 mt-1">محفوظ + مرتبط بـ Audit</div></div>
+        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><FileCheck2 className="w-4 h-4 text-sky-300 mb-2" /><div className="text-slate-400">العقد</div><div className="font-black text-slate-100 mt-1">{collaboration.contract?.status || 'لم ينشأ'}</div></div>
+        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><Sparkles className="w-4 h-4 text-gold-300 mb-2" /><div className="text-slate-400">آخر عرض</div><div className="font-black text-slate-100 mt-1">{collaboration.currentOffer ? `${collaboration.currentOffer.creatorRoyaltyRatePercent}% للمبدع — V${collaboration.currentOffer.version}` : 'لا يوجد'}</div></div>
+        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><UserRoundCheck className="w-4 h-4 text-emerald-300 mb-2" /><div className="text-slate-400">سلامة السجل</div><div className="font-black text-emerald-300 mt-1">محفوظ + مرتبط بـ Audit</div></div>
       </div>
     </section>
   );

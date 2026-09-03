@@ -1,32 +1,62 @@
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   MAJAL — design tokens
+   MAJAL — palette
 
-   The palette used to be four hex values, so every component reached for raw
-   `#c7a55b` / `#e8c880` literals and there was no way to express "one step darker"
-   or "the disabled version of gold". These ramps give the UI a vocabulary: tone is
-   chosen by role (line, edge, text, fill) rather than by eyeballing a hex.
+   Declared in @theme so Tailwind generates real utilities (`bg-gold-500`,
+   `text-gold-300`, `border-gold-300/20`, `from-gold-400`…). Before this the app
+   carried twelve hand-invented golds — #d9b86b, #d7b96d, #e1c67b, #ecd48b and
+   friends — all within a few percent of each other, because there was no way to
+   ask for "one step darker" and every hover state got eyeballed on the spot.
+
+   Tone is now chosen by role, not by taste:
+     gold-200/300  text and icons on dark
+     gold-400      hover of a gold fill
+     gold-500      the identity fill, primary decisions
+     gold-600/700  edges and pressed states
    ───────────────────────────────────────────────────────────────────────────── */
+@theme {
+  --color-gold-100: #f8ecd0;
+  --color-gold-200: #f4e1b0;
+  --color-gold-300: #e8c880;
+  --color-gold-400: #d4b46a;
+  --color-gold-500: #c7a55b;
+  --color-gold-600: #a8843c;
+  --color-gold-700: #7d612b;
+
+  --color-ink-400: #1d2b44;
+  --color-ink-500: #18243a;
+  --color-ink-600: #131c2d;
+  --color-ink-700: #0f172a;
+  --color-ink-800: #0b1220;
+  --color-ink-850: #0a101b;
+  --color-ink-900: #070d18;
+
+  /* Operational data tone. Distinct from Tailwind's `sky`, which is far brighter
+     than this UI's ground can carry. */
+  --color-steel-400: #6b87bd;
+  --color-steel-500: #4b6aa3;
+}
+
 :root {
-  /* Gold — identity, primary decisions, the journey direction. */
-  --gold-100: #f8ecd0;
-  --gold-200: #f4e1b0;
-  --gold-300: #e8c880;
-  --gold-400: #d4b46a;
-  --gold-500: #c7a55b;
-  --gold-600: #a8843c;
-  --gold-700: #7d612b;
+  /* Aliases onto the @theme scale above, so raw CSS can use the same vocabulary
+     the utilities expose. One source of truth, two syntaxes. */
+  --gold-100: var(--color-gold-100);
+  --gold-200: var(--color-gold-200);
+  --gold-300: var(--color-gold-300);
+  --gold-400: var(--color-gold-400);
+  --gold-500: var(--color-gold-500);
+  --gold-600: var(--color-gold-600);
+  --gold-700: var(--color-gold-700);
 
-  /* Ink — the governed, institutional ground the whole product sits on. */
-  --ink-900: #070d18;
-  --ink-850: #0a101b;
-  --ink-800: #0b1220;
-  --ink-700: #0f172a;
-  --ink-600: #131c2d;
-  --ink-500: #18243a;
+  --ink-900: var(--color-ink-900);
+  --ink-850: var(--color-ink-850);
+  --ink-800: var(--color-ink-800);
+  --ink-700: var(--color-ink-700);
+  --ink-600: var(--color-ink-600);
+  --ink-500: var(--color-ink-500);
 
-  /* Back-compat aliases: existing components read these. */
+  /* Surface aliases used across the app. */
   --majal-bg: var(--ink-800);
   --majal-panel: rgba(15, 23, 42, 0.88);
   --majal-card: rgba(19, 28, 45, 0.82);
@@ -212,6 +242,38 @@
     pointer-events: none;
     opacity: 0.035;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+
+  /* A decorative glow, painted rather than filtered.
+   *
+   * Same substitution as .ambient-bg: `filter: blur()` on a disc is a separate rendering
+   * pass that every glass panel above it then has to sample, and these sit inside the
+   * hero panels that carry the most nested glass in the product. The gradient is the
+   * blurred disc's own falloff, so nothing changes on screen.
+   *
+   * Size the element to the BLURRED extent (disc radius + 3σ), not the disc, and centre
+   * it where the disc was. Set --glow to the colour at full strength. */
+  .majal-glow {
+    position: absolute;
+    border-radius: 9999px;
+    pointer-events: none;
+    background-image: radial-gradient(circle closest-side,
+      color-mix(in srgb, var(--glow) 99.3%, transparent) 0%,
+      color-mix(in srgb, var(--glow) 98.1%, transparent) 7%,
+      color-mix(in srgb, var(--glow) 95.3%, transparent) 14%,
+      color-mix(in srgb, var(--glow) 90.1%, transparent) 21%,
+      color-mix(in srgb, var(--glow) 81.5%, transparent) 29%,
+      color-mix(in srgb, var(--glow) 69.4%, transparent) 36%,
+      color-mix(in srgb, var(--glow) 54.7%, transparent) 43%,
+      color-mix(in srgb, var(--glow) 39.3%, transparent) 50%,
+      color-mix(in srgb, var(--glow) 25.4%, transparent) 57%,
+      color-mix(in srgb, var(--glow) 14.6%, transparent) 64%,
+      color-mix(in srgb, var(--glow) 7.5%, transparent) 71%,
+      color-mix(in srgb, var(--glow) 3.4%, transparent) 79%,
+      color-mix(in srgb, var(--glow) 1.3%, transparent) 86%,
+      color-mix(in srgb, var(--glow) 0.5%, transparent) 93%,
+      color-mix(in srgb, var(--glow) 0.0%, transparent) 100%);
   }
 
   .elev-1 { box-shadow: var(--elev-1); }
