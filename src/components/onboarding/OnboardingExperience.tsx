@@ -201,8 +201,14 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
       {/* Two slow, very low-contrast fields. They give the screen depth without ever
           competing with the type, and they are the only ambient motion in the flow. */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 right-[8%] w-[34rem] h-[34rem] rounded-full bg-gold-500/[0.07] blur-3xl majal-drift" />
-        <div className="absolute -bottom-48 left-[4%] w-[30rem] h-[30rem] rounded-full bg-steel-500/[0.08] blur-3xl majal-drift-slow" />
+        <div
+          className="majal-glow -top-[30rem] right-[8%] w-[54rem] h-[54rem] majal-drift"
+          style={{ '--glow': 'rgba(199,165,91,0.07)' } as React.CSSProperties}
+        />
+        <div
+          className="majal-glow -bottom-[34rem] left-[4%] w-[50rem] h-[50rem] majal-drift-slow"
+          style={{ '--glow': 'rgba(75,106,163,0.08)' } as React.CSSProperties}
+        />
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff07_1px,transparent_1px)] [background-size:34px_34px]" />
       </div>
 
