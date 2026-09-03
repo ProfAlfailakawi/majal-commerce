@@ -315,8 +315,72 @@ export const INITIAL_CHALLENGES: Challenge[] = [
 
 export const INITIAL_TASTINGS: TastingSession[] = [];
 export const INITIAL_LAB_BATCHES: LabBatch[] = [];
-export const INITIAL_OFFERS: OfferTerms[] = [];
-export const INITIAL_CONTRACTS: Contract[] = [];
+
+// Every LIVE launch in this demo must be able to prove the full chain that the
+// platform promises — «لا إطلاق يتجاوز الحماية أو العقد». A launch cannot exist
+// without an ACCEPTED offer and a FULLY_SIGNED contract behind it, otherwise the
+// Digital Twin, the Deal Room and the Super Admin counters expose a contradiction
+// (LIVE launches with zero signed contracts). These records close that gap so the
+// seeded story is internally consistent end to end.
+const acceptedOffer = (
+  id: string,
+  collaborationId: string,
+  sellingPriceKwd: number,
+  royaltyPercent: number,
+  exclusive: boolean,
+  minimumCommitmentUnits: number,
+  createdDaysAgo: number
+): OfferTerms => ({
+  id,
+  version: 1,
+  collaborationId,
+  senderRole: 'HOST',
+  sellingPriceKwd,
+  creatorRoyaltyModel: 'PERCENTAGE',
+  creatorRoyaltyRatePercent: royaltyPercent,
+  fixedAmountPerUnitKwd: 0,
+  platformFeePercent: 5,
+  termMonths: 12,
+  exclusivityType: exclusive ? 'EXCLUSIVE' : 'NON_EXCLUSIVE',
+  territory: 'دولة الكويت',
+  channels: ['DELIVERY', 'PICKUP'],
+  minimumCommitmentUnits,
+  notes: 'عرض تجاري معتمد للعرض التجريبي — يعكس الشروط التي بُني عليها الإطلاق.',
+  status: 'ACCEPTED',
+  createdAt: new Date(Date.now() - createdDaysAgo * 86400000).toISOString()
+});
+
+const signedContract = (
+  id: string,
+  collaborationId: string,
+  terms: OfferTerms,
+  signedDaysAgo: number
+): Contract => ({
+  id,
+  collaborationId,
+  versionNumber: 'V1.0',
+  terms,
+  creatorLegalName: 'مبدع طهي معتمد',
+  hostCommercialName: 'المطبخ السحابي المرخص — الكويت',
+  contractPdfUrl: '#',
+  creatorSignedAt: new Date(Date.now() - signedDaysAgo * 86400000).toISOString(),
+  creatorSignerIp: 'local-demo:creator',
+  hostSignedAt: new Date(Date.now() - signedDaysAgo * 86400000).toISOString(),
+  hostSignerIp: 'local-demo:host',
+  status: 'FULLY_SIGNED',
+  createdAt: new Date(Date.now() - (signedDaysAgo + 1) * 86400000).toISOString()
+});
+
+const offerDateCake = acceptedOffer('off_date_cake', 'col_date_cake', 4.5, 13, true, 100, 22);
+const offerWagyu = acceptedOffer('off_wagyu_burger', 'col_wagyu_burger', 3.25, 13, false, 500, 13);
+const offerMango = acceptedOffer('off_mango', 'col_mango', 2.25, 13, false, 200, 8);
+
+const contractDateCake = signedContract('ctr_date_cake', 'col_date_cake', offerDateCake, 21);
+const contractWagyu = signedContract('ctr_wagyu_burger', 'col_wagyu_burger', offerWagyu, 12);
+const contractMango = signedContract('ctr_mango', 'col_mango', offerMango, 7);
+
+export const INITIAL_OFFERS: OfferTerms[] = [offerDateCake, offerWagyu, offerMango];
+export const INITIAL_CONTRACTS: Contract[] = [contractDateCake, contractWagyu, contractMango];
 
 export const INITIAL_COLLABORATIONS: Collaboration[] = [
   {
@@ -325,7 +389,9 @@ export const INITIAL_COLLABORATIONS: Collaboration[] = [
     creatorId: 'cr_main',
     hostBusinessId: 'hb_main',
     stage: 'LIVE',
-    offerHistory: [],
+    currentOffer: offerDateCake,
+    offerHistory: [offerDateCake],
+    contract: contractDateCake,
     createdAt: new Date(Date.now() - 25 * 86400000).toISOString(),
     updatedAt: new Date(Date.now() - 2 * 86400000).toISOString()
   },
@@ -335,7 +401,9 @@ export const INITIAL_COLLABORATIONS: Collaboration[] = [
     creatorId: 'cr_main',
     hostBusinessId: 'hb_main',
     stage: 'LIVE',
-    offerHistory: [],
+    currentOffer: offerWagyu,
+    offerHistory: [offerWagyu],
+    contract: contractWagyu,
     createdAt: new Date(Date.now() - 15 * 86400000).toISOString(),
     updatedAt: new Date(Date.now() - 1 * 86400000).toISOString()
   },
@@ -345,7 +413,9 @@ export const INITIAL_COLLABORATIONS: Collaboration[] = [
     creatorId: 'cr_main',
     hostBusinessId: 'hb_main',
     stage: 'LIVE',
-    offerHistory: [],
+    currentOffer: offerMango,
+    offerHistory: [offerMango],
+    contract: contractMango,
     createdAt: new Date(Date.now() - 10 * 86400000).toISOString(),
     updatedAt: new Date(Date.now() - 1 * 86400000).toISOString()
   }

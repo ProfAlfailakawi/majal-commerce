@@ -22,16 +22,31 @@ interface OpportunityRadarProps {
 
 export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId }) => {
   const opportunities = useMemo(() => {
-    const products = store.products.filter(p => p.creatorId === creatorId);
-    const rows = products.flatMap(product =>
-      store.matches
-        .filter(m => m.productId === product.id)
-        .map(match => {
-          const host = store.hosts.find(h => h.id === match.hostBusinessId);
-          return { product, match, host };
-        })
+    // The creator radar runs the SAME interpreted matching engine the host discovery
+    // surface uses (store.calculateMatchScore), scored live against every verified
+    // host. Reading store.matches alone left this panel blank whenever no persisted
+    // match rows existed yet, even though the engine could rank hosts on demand.
+    const products = store.products.filter(
+      p => p.creatorId === creatorId && p.status === 'AVAILABLE_FOR_MATCHING'
     );
-    return rows.sort((a, b) => b.match.matchScore.overallScore - a.match.matchScore.overallScore).slice(0, 6);
+    const verifiedHosts = store.hosts.filter(h => h.verificationStatus === 'VERIFIED');
+    const rows = products.flatMap(product =>
+      verifiedHosts.map(host => {
+        const persisted = store.matches.find(
+          m => m.productId === product.id && m.hostBusinessId === host.id
+        );
+        const matchScore = persisted?.matchScore || store.calculateMatchScore(product, host);
+        return {
+          product,
+          host,
+          matchScore,
+          key: `${product.id}_${host.id}`
+        };
+      })
+    );
+    return rows
+      .sort((a, b) => b.matchScore.overallScore - a.matchScore.overallScore)
+      .slice(0, 6);
   }, [creatorId]);
 
   // Grounded market signals: optional Google-Search-backed enrichment. Absent
@@ -39,6 +54,7 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId })
   const [signals, setSignals] = useState<GroundedMarketSignal[]>([]);
   const [signalNote, setSignalNote] = useState<string | null>(null);
   const topProduct = opportunities[0]?.product;
+  const hasOpportunities = opportunities.length > 0;
 
   useEffect(() => {
     let active = true;
@@ -68,36 +84,48 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId })
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {opportunities.map(({ product, match, host }) => (
-          <div key={match.id} className="rounded-2xl p-5 bg-white/5 border border-white/10 hover:border-[#e8c880]/25 transition-colors space-y-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="text-[11px] text-stone-500">{product.publicName}</div>
-                <h4 className="font-black text-stone-100 mt-1">{host?.commercialName || 'منشأة مرخّصة'}</h4>
+      {hasOpportunities ? (
+        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {opportunities.map(({ product, matchScore, host, key }) => (
+            <div key={key} className="rounded-2xl p-5 bg-white/5 border border-white/10 hover:border-[#e8c880]/25 transition-colors space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-[11px] text-stone-500">{product.publicName}</div>
+                  <h4 className="font-black text-stone-100 mt-1">{host?.commercialName || 'منشأة مرخّصة'}</h4>
+                </div>
+                <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 flex flex-col items-center justify-center">
+                  <span className="text-xl font-black text-emerald-300">{matchScore.overallScore}</span>
+                  <span className="text-[9px] text-emerald-400">MATCH</span>
+                </div>
               </div>
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 flex flex-col items-center justify-center">
-                <span className="text-xl font-black text-emerald-300">{match.matchScore.overallScore}</span>
-                <span className="text-[9px] text-emerald-400">MATCH</span>
+
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between"><span className="text-stone-400 flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" /> توافق التشغيل</span><strong className="text-stone-100">{matchScore.equipmentFit}%</strong></div>
+                <div className="flex items-center justify-between"><span className="text-stone-400 flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5" /> توافق الهامش</span><strong className="text-stone-100">{matchScore.marginFit}%</strong></div>
+                <div className="flex items-center justify-between"><span className="text-stone-400 flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /> توافق العلامة</span><strong className="text-stone-100">{matchScore.brandFit}%</strong></div>
               </div>
-            </div>
 
-            <div className="space-y-2 text-xs">
-              <div className="flex items-center justify-between"><span className="text-stone-400 flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" /> توافق التشغيل</span><strong className="text-stone-100">{match.matchScore.equipmentFit}%</strong></div>
-              <div className="flex items-center justify-between"><span className="text-stone-400 flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5" /> توافق الهامش</span><strong className="text-stone-100">{match.matchScore.marginFit}%</strong></div>
-              <div className="flex items-center justify-between"><span className="text-stone-400 flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /> توافق العلامة</span><strong className="text-stone-100">{match.matchScore.brandFit}%</strong></div>
-            </div>
+              <div className="rounded-xl p-3 bg-slate-950/45 border border-white/10 text-[11px] leading-6 text-stone-400">
+                {matchScore.explanationAr}
+              </div>
 
-            <div className="rounded-xl p-3 bg-slate-950/45 border border-white/10 text-[11px] leading-6 text-stone-400">
-              {match.matchScore.explanationAr}
+              <button className="w-full py-2.5 rounded-xl bg-[#c7a55b] hover:bg-[#d9b86b] text-stone-950 text-xs font-black flex items-center justify-center gap-2">
+                <Sparkles className="w-4 h-4" /> ابدأ فرصة التعاون <ChevronLeft className="w-4 h-4" />
+              </button>
             </div>
-
-            <button className="w-full py-2.5 rounded-xl bg-[#c7a55b] hover:bg-[#d9b86b] text-stone-950 text-xs font-black flex items-center justify-center gap-2">
-              <Sparkles className="w-4 h-4" /> ابدأ فرصة التعاون <ChevronLeft className="w-4 h-4" />
-            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-2xl p-8 bg-white/5 border border-dashed border-white/15 text-center space-y-3">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-center text-emerald-300">
+            <Radar className="w-7 h-7" />
           </div>
-        ))}
-      </div>
+          <h4 className="font-black text-stone-100">لا توجد فرص مطابقة الآن</h4>
+          <p className="text-xs text-stone-400 leading-6 max-w-md mx-auto">
+            سجّل منتجًا متاحًا للمطابقة، أو انتظر انضمام منشأة مرخّصة جديدة. الرادار يحسب الفرص حيًّا فور توفر منتج متاح ومنشأة متحققة، ولا يعرض بطاقات وهمية.
+          </p>
+        </div>
+      )}
 
       {(signals.length > 0 || signalNote) && (
         <div className="rounded-2xl p-4 bg-emerald-500/5 border border-emerald-400/15 space-y-3">

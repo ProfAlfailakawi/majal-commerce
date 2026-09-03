@@ -63,6 +63,17 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* The full-viewport decorative background layers (opacity + multiple blur-3xl glows)
+     sit behind many backdrop-filter panels. During fast scrolling, Chrome re-rasterizes
+     that stack and momentarily paints blank bands. Pinning the layer to its own stable
+     GPU compositing layer keeps it painted continuously without changing its look. */
+  .ambient-bg {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform;
+    contain: strict;
+  }
 }
 
 html {

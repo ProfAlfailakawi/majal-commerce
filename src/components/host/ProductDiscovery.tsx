@@ -129,7 +129,7 @@ export const ProductDiscovery: React.FC = () => {
                 {/* Match Score Breakdown */}
                 <div className="bg-stone-950 p-3.5 rounded-xl border border-stone-800/80 space-y-2 text-xs">
                   <div className="flex items-center justify-between text-stone-300 font-bold">
-                    <span>تحليل التوافق التشغيلية المفسر:</span>
+                    <span>تحليل التوافق التشغيلي المفسَّر:</span>
                     <span className="text-amber-400 text-[11px]">معدات + هامش + شريحة</span>
                   </div>
 
