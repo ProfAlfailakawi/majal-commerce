@@ -446,6 +446,23 @@ export async function applyVerifiedPaymentEvent(db: MajalDatabase, event: Verifi
       // receipt is unique per (provider,eventId), this append happens exactly once per event.
       if (event.status === 'PAID') {
         await appendLedgerEntry(tx, { scope: 'PAYMENT', entryType: 'PAYMENT_CAPTURED', entityType: 'PAYMENT_INTENT', entityId: intent.id, amountFils: intent.amount_fils, currency: 'KWD', occurredAt: now, meta: { provider: event.provider, eventId: event.eventId } });
+        // Promote the order to PAID and generate the creator royalty accrual from the accepted
+        // offer's rate. accruals.order_id is UNIQUE and we guard with ON CONFLICT, so a retried
+        // PAID webhook (already idempotent above) can never create a second accrual.
+        const order = await tx.prepare('SELECT id, launch_id, total_fils FROM orders WHERE payment_intent_id = ? LIMIT 1').get(intent.id) as { id: string; launch_id: string; total_fils: number } | undefined;
+        if (order) {
+          await tx.prepare("UPDATE orders SET status = 'PAID', updated_at = ? WHERE id = ? AND status = 'PENDING_PAYMENT'").run(now, order.id);
+          const terms = await tx.prepare(`SELECT c.creator_id, o.creator_royalty_basis_points AS bp
+            FROM launches l JOIN collaborations c ON c.id = l.collaboration_id
+            JOIN offer_versions o ON o.collaboration_id = c.id AND o.status = 'ACCEPTED'
+            WHERE l.id = ? ORDER BY o.version_number DESC LIMIT 1`).get(order.launch_id) as { creator_id: string; bp: number } | undefined;
+          if (terms) {
+            const royalty = Math.round(order.total_fils * Number(terms.bp) / 10_000);
+            await tx.prepare(`INSERT INTO accruals(id, order_id, creator_id, amount_fils, status, created_at, updated_at)
+              VALUES(?, ?, ?, ?, 'ELIGIBLE', ?, ?)
+              ON CONFLICT(order_id) DO NOTHING`).run(`acc_${order.id}`, order.id, terms.creator_id, royalty, now, now);
+          }
+        }
       } else if (event.status === 'REFUNDED') {
         await appendLedgerEntry(tx, { scope: 'REFUND', entryType: 'PAYMENT_REFUNDED', entityType: 'PAYMENT_INTENT', entityId: intent.id, amountFils: -intent.amount_fils, currency: 'KWD', occurredAt: now, meta: { provider: event.provider, eventId: event.eventId } });
         // Cascade the refund to the order and its royalty accrual so a refunded sale stops

@@ -5,6 +5,7 @@ import { MajalDatabase, withTransaction } from './database';
 import { deleteEncryptedObject, getEncryptedJson, googleAccessToken, putEncryptedJson } from './secure-storage';
 import { appendLedgerEntry } from './ledger';
 import { assertKillSwitchClear } from './kill-switch';
+import { mirrorDoc } from './firebase-mirror';
 
 const now = () => new Date().toISOString();
 const sha256 = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
@@ -332,6 +333,142 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
     try{await assertKillSwitchClear(db,'SETTLEMENTS');const expected=process.env.SETTLEMENT_RECONCILIATION_SECRET?.trim();if(!expected||expected.length<32||req.header('x-reconciliation-secret')!==expected)return jsonError(res,403,'تأكيد الدفع يتطلب قناة تسوية موثقة.','RECONCILIATION_REQUIRED');const ref=text(req.body?.providerReference,4,200);if(!ref)return jsonError(res,400,'مرجع المزود مطلوب.','PROVIDER_REFERENCE_REQUIRED');const result=await applySettlementPaid(db,req.params.id,ref,(tx,batch)=>audit(tx,req,'SETTLEMENT_PAID','SETTLEMENT_BATCH',req.params.id,batch,{providerReference:ref}));res.json({id:req.params.id,status:result.status,providerReference:ref,applied:result.applied});}catch(e){handleDomainError(res,e)}
   });
 
+  // ---- Consumer commerce: launches catalog, orders (fail-closed until payment provider), reviews ----
+
+  // Public catalog of LIVE launches with sold/cap and creator/host display info.
+  router.get('/launches', async (_req: AuthenticatedRequest, res) => {
+    try {
+      const rows = await db.prepare(`
+        SELECT l.id, l.product_id, l.organization_id, l.status, l.quantity_cap, l.starts_at, l.ends_at,
+               p.public_name, p.category, p.short_description,
+               o.selling_price_fils, o.creator_royalty_basis_points,
+               c.creator_id,
+               cp.display_name AS creator_name,
+               org.commercial_name AS host_name,
+               COALESCE((SELECT SUM(units) FROM orders WHERE launch_id = l.id AND status IN ('PAID','FULFILLED')), 0) AS units_sold
+        FROM launches l
+        JOIN products p ON p.id = l.product_id
+        JOIN collaborations c ON c.id = l.collaboration_id
+        LEFT JOIN creator_profiles cp ON cp.id = c.creator_id
+        LEFT JOIN organizations org ON org.id = l.organization_id
+        LEFT JOIN offer_versions o ON o.collaboration_id = c.id AND o.status = 'ACCEPTED'
+        WHERE l.status = 'LIVE'
+        ORDER BY l.starts_at DESC, l.id DESC
+        LIMIT 100
+      `).all<Record<string, unknown>>();
+      res.json({ launches: rows.map(r => ({
+        id: r.id, productId: r.product_id, organizationId: r.organization_id, status: r.status,
+        quantityCap: r.quantity_cap === null ? null : Number(r.quantity_cap),
+        unitsSold: Number(r.units_sold), startsAt: r.starts_at, endsAt: r.ends_at,
+        publicName: r.public_name, category: r.category, shortDescription: r.short_description,
+        unitPriceFils: r.selling_price_fils === null ? null : Number(r.selling_price_fils),
+        creatorRoyaltyBasisPoints: r.creator_royalty_basis_points === null ? null : Number(r.creator_royalty_basis_points),
+        creatorId: r.creator_id, creatorName: r.creator_name, hostName: r.host_name
+      })) });
+    } catch (e) { handleDomainError(res, e); }
+  });
+
+  // The signed-in consumer's own orders.
+  router.get('/me/orders', async (req: AuthenticatedRequest, res) => {
+    try {
+      const rows = await db.prepare(`
+        SELECT o.id, o.launch_id, o.units, o.unit_price_fils, o.total_fils, o.status, o.created_at,
+               p.public_name
+        FROM orders o
+        JOIN launches l ON l.id = o.launch_id
+        JOIN products p ON p.id = l.product_id
+        WHERE o.consumer_user_id = ?
+        ORDER BY o.created_at DESC, o.id DESC
+        LIMIT 100
+      `).all<Record<string, unknown>>(req.auth!.user.id);
+      res.json({ orders: rows.map(r => ({
+        id: r.id, launchId: r.launch_id, units: Number(r.units), unitPriceFils: Number(r.unit_price_fils),
+        totalFils: Number(r.total_fils), status: r.status, createdAt: r.created_at, publicName: r.public_name
+      })) });
+    } catch (e) { handleDomainError(res, e); }
+  });
+
+  // Reviews for a launch (aggregate signals + list).
+  router.get('/launches/:launchId/reviews', async (req: AuthenticatedRequest, res) => {
+    try {
+      const rows = await db.prepare(`
+        SELECT r.id, r.taste_rating, r.would_buy_again, r.keep_it_vote, r.comment, r.created_at, u.name AS reviewer_name
+        FROM reviews r JOIN users u ON u.id = r.consumer_user_id
+        WHERE r.launch_id = ? ORDER BY r.created_at DESC, r.id DESC LIMIT 100
+      `).all<Record<string, unknown>>(req.params.launchId);
+      const count = rows.length;
+      const keep = count ? Math.round(rows.filter(r => Number(r.keep_it_vote) === 1).length / count * 100) : 0;
+      const repeat = count ? Math.round(rows.filter(r => Number(r.would_buy_again) === 1).length / count * 100) : 0;
+      const rating = count ? rows.reduce((s, r) => s + Number(r.taste_rating), 0) / count : 0;
+      res.json({ count, keepPercent: keep, repeatPercent: repeat, averageRating: Math.round(rating * 10) / 10,
+        reviews: rows.map(r => ({ id: r.id, tasteRating: Number(r.taste_rating), wouldBuyAgain: Number(r.would_buy_again) === 1,
+          keepItVote: Number(r.keep_it_vote) === 1, comment: r.comment, createdAt: r.created_at, reviewerName: r.reviewer_name })) });
+    } catch (e) { handleDomainError(res, e); }
+  });
+
+  // Place an order on a LIVE launch. Enforces the quantity cap transactionally and creates a
+  // PENDING_PAYMENT order + a fail-closed payment intent. No sale/accrual exists until a
+  // verified provider webhook transitions the intent to PAID.
+  router.post('/launches/:launchId/orders', async (req: AuthenticatedRequest, res) => {
+    try {
+      const result = await withIdempotency(db, req, 'ORDER_CREATE', async () => withTransaction(db, async tx => {
+        const launch = await tx.prepare("SELECT id, collaboration_id, status, quantity_cap FROM launches WHERE id=?").get<{id:string;collaboration_id:string;status:string;quantity_cap:number|null}>(req.params.launchId);
+        if (!launch) throw Object.assign(new Error('NOT_FOUND'), { status: 404 });
+        if (launch.status !== 'LIVE') throw Object.assign(new Error('LAUNCH_NOT_LIVE'), { status: 409 });
+        const offer = await tx.prepare("SELECT selling_price_fils FROM offer_versions WHERE collaboration_id=? AND status='ACCEPTED' ORDER BY version_number DESC LIMIT 1").get<{selling_price_fils:number|string}>(launch.collaboration_id);
+        if (!offer) throw Object.assign(new Error('NO_ACCEPTED_OFFER'), { status: 409 });
+        const units = integer(req.body?.units, 1, 1000);
+        if (units === undefined) throw Object.assign(new Error('INVALID_UNITS'), { status: 400 });
+        // Enforce the cap against orders that still hold inventory (pending payment counts).
+        if (launch.quantity_cap !== null) {
+          const held = await tx.prepare("SELECT COALESCE(SUM(units),0) AS s FROM orders WHERE launch_id=? AND status IN ('PENDING_PAYMENT','PAID','FULFILLED')").get<{s:number|string}>(launch.id);
+          if (Number(held?.s || 0) + units > launch.quantity_cap) throw Object.assign(new Error('QUANTITY_CAP_EXCEEDED'), { status: 409 });
+        }
+        const unitPrice = Number(offer.selling_price_fils);
+        const total = unitPrice * units;
+        const orderId = `ord_${randomUUID()}`;
+        const intentId = `pi_${randomUUID()}`;
+        const created = now();
+        const provider = process.env.PAYMENT_PROVIDER?.trim() || 'UNCONFIGURED';
+        await tx.prepare(`INSERT INTO payment_intents(id, order_public_id, user_id, provider, amount_fils, currency, status, idempotency_key, created_at, updated_at)
+          VALUES(?,?,?,?,?, 'KWD', 'PENDING_PROVIDER', ?, ?, ?)`).run(intentId, orderId, req.auth!.user.id, provider, total, `oi-${orderId}`, created, created);
+        await tx.prepare(`INSERT INTO orders(id, launch_id, consumer_user_id, payment_intent_id, units, unit_price_fils, total_fils, status, created_at, updated_at)
+          VALUES(?,?,?,?,?,?,?, 'PENDING_PAYMENT', ?, ?)`).run(orderId, launch.id, req.auth!.user.id, intentId, units, unitPrice, total, created, created);
+        await audit(tx, req, 'ORDER_CREATED', 'ORDER', orderId, undefined, { launchId: launch.id, units, totalFils: total });
+        return { orderId, paymentIntentId: intentId, status: 'PENDING_PAYMENT', units, unitPriceFils: unitPrice, totalFils: total, checkoutUrl: null as string | null };
+      }));
+      // Fire-and-forget mirror to Firestore (no-op unless the Admin SDK + creds are configured).
+      // consumerId is included so the orders read rule (owner/tenant/admin) applies.
+      void mirrorDoc('orders', result.orderId, { id: result.orderId, launchId: req.params.launchId, consumerId: req.auth!.user.id, units: result.units, totalFils: result.totalFils, status: result.status, createdAt: now() });
+      res.status(201).json(result);
+    } catch (e) { handleDomainError(res, e); }
+  });
+
+  // Submit a review / Keep-It vote. Authenticity: the reviewer must own a PAID/FULFILLED order
+  // for this launch, and each order can be reviewed exactly once.
+  router.post('/launches/:launchId/reviews', async (req: AuthenticatedRequest, res) => {
+    try {
+      const tasteRating = integer(req.body?.tasteRating, 1, 5);
+      if (tasteRating === undefined) return jsonError(res, 400, 'تقييم التذوق يجب أن يكون بين 1 و5.', 'INVALID_RATING');
+      const wouldBuyAgain = bool(req.body?.wouldBuyAgain); const keepItVote = bool(req.body?.keepItVote);
+      if (wouldBuyAgain === undefined || keepItVote === undefined) return jsonError(res, 400, 'قيم التقييم غير مكتملة.', 'INVALID_REVIEW');
+      const comment = req.body?.comment == null ? null : text(req.body.comment, 1, 1000) ?? null;
+      const result = await withTransaction(db, async tx => {
+        const order = await tx.prepare(`SELECT o.id FROM orders o
+          WHERE o.launch_id=? AND o.consumer_user_id=? AND o.status IN ('PAID','FULFILLED')
+            AND NOT EXISTS (SELECT 1 FROM reviews r WHERE r.order_id = o.id)
+          ORDER BY o.created_at ASC LIMIT 1`).get<{id:string}>(req.params.launchId, req.auth!.user.id);
+        if (!order) throw Object.assign(new Error('NO_REVIEWABLE_ORDER'), { status: 409 });
+        const id = `rev_${randomUUID()}`; const created = now();
+        await tx.prepare(`INSERT INTO reviews(id, launch_id, order_id, consumer_user_id, taste_rating, would_buy_again, keep_it_vote, comment, created_at)
+          VALUES(?,?,?,?,?,?,?,?,?)`).run(id, req.params.launchId, order.id, req.auth!.user.id, tasteRating, wouldBuyAgain ? 1 : 0, keepItVote ? 1 : 0, comment, created);
+        await audit(tx, req, 'REVIEW_SUBMITTED', 'REVIEW', id, undefined, { launchId: req.params.launchId, tasteRating });
+        return { id, launchId: req.params.launchId, orderId: order.id, tasteRating, wouldBuyAgain, keepItVote, comment, createdAt: created };
+      });
+      res.status(201).json(result);
+    } catch (e) { handleDomainError(res, e); }
+  });
+
   // 1. Secret recipe seal: public commitment only; salt stays in encrypted storage.
   router.post('/innovations/recipe-seals/:recipeVersionId', async (req: AuthenticatedRequest,res)=>{
     try{const recipe=await db.prepare('SELECT rv.*,p.creator_id FROM recipe_versions rv JOIN products p ON p.id=rv.product_id WHERE rv.id=?').get<RecipeRow & {creator_id:string}>(req.params.recipeVersionId);if(!recipe||!isCreator(req,recipe.creator_id))return jsonError(res,403,'الوصفة غير متاحة.','FORBIDDEN');const existing=await db.prepare('SELECT id,commitment_sha256,created_at FROM recipe_seals WHERE recipe_version_id=?').get<Record<string,unknown>>(recipe.id);if(existing)return res.json(existing);const salt=randomBytes(32).toString('base64url'),commitment=sha256(`MAJAL_RECIPE_SEAL_V1:${recipe.payload_sha256}:${salt}`),id=`seal_${randomUUID()}`;const receipt=await putEncryptedJson('recipe-seals',id,{salt,recipePayloadSha256:recipe.payload_sha256});const created=now();await db.prepare('INSERT INTO recipe_seals(id,recipe_version_id,product_id,commitment_sha256,salt_object_key,created_by_user_id,created_at) VALUES(?,?,?,?,?,?,?)').run(id,recipe.id,recipe.product_id,commitment,receipt.objectKey,req.auth!.user.id,created);await audit(db,req,'RECIPE_SEALED','RECIPE_SEAL',id,undefined,{commitment,createdAt:created});res.status(201).json({id,productId:recipe.product_id,commitmentSha256:commitment,createdAt:created});}catch(e){handleDomainError(res,e)}
@@ -380,6 +517,6 @@ function handleDomainError(res: Response, error: unknown) {
   const candidate=error as {status?:number;message?:string;code?:string};
   const status=Number(candidate?.status) || (String(candidate?.message).includes('UNIQUE') ? 409 : 400);
   const code=candidate?.code || candidate?.message || 'DOMAIN_OPERATION_FAILED';
-  const safe:Record<string,string>={IDEMPOTENCY_KEY_REQUIRED:'Idempotency-Key مطلوب للعملية.',IDEMPOTENCY_CONFLICT:'المفتاح أُعيد استخدامه بطلب مختلف.',NO_ELIGIBLE_ACCRUALS:'لا توجد مستحقات مؤهلة للتسوية.',SETTLEMENT_AMOUNT_MISMATCH:'مجموع المستحقات المقفلة لا يطابق قيمة الدفعة؛ أُلغيت التسوية حمايةً من الدفع الخاطئ.',SLOT_UNAVAILABLE:'السعة لم تعد متاحة.',SLOT_RACE_LOST:'حُجزت السعة بطلب متزامن آخر.',DOCUMENT_AI_NOT_CONFIGURED:'استخراج المستندات الحقيقي غير مهيأ في هذه البيئة.',KILL_SWITCH_ENGAGED_SETTLEMENTS:'التسويات مجمّدة مؤقتًا بأمر احتواء أمني.',KILL_SWITCH_ENGAGED_RECIPE_REVEALS:'كشف الأسرار مجمّد مؤقتًا بأمر احتواء أمني.'};
+  const safe:Record<string,string>={IDEMPOTENCY_KEY_REQUIRED:'Idempotency-Key مطلوب للعملية.',IDEMPOTENCY_CONFLICT:'المفتاح أُعيد استخدامه بطلب مختلف.',NO_ELIGIBLE_ACCRUALS:'لا توجد مستحقات مؤهلة للتسوية.',SETTLEMENT_AMOUNT_MISMATCH:'مجموع المستحقات المقفلة لا يطابق قيمة الدفعة؛ أُلغيت التسوية حمايةً من الدفع الخاطئ.',LAUNCH_NOT_LIVE:'هذا الإطلاق غير متاح للطلب حاليًا.',NO_ACCEPTED_OFFER:'لا يوجد عرض تجاري معتمد لهذا الإطلاق.',INVALID_UNITS:'عدد الوحدات غير صالح.',QUANTITY_CAP_EXCEEDED:'الكمية المطلوبة تتجاوز المتاح من هذا الإطلاق.',NO_REVIEWABLE_ORDER:'لا يمكنك التقييم قبل إتمام طلب مدفوع لهذا الإطلاق (أو أنك قيّمت مسبقًا).',INVALID_RATING:'تقييم التذوق يجب أن يكون بين 1 و5.',INVALID_REVIEW:'قيم التقييم غير مكتملة.',SLOT_UNAVAILABLE:'السعة لم تعد متاحة.',SLOT_RACE_LOST:'حُجزت السعة بطلب متزامن آخر.',DOCUMENT_AI_NOT_CONFIGURED:'استخراج المستندات الحقيقي غير مهيأ في هذه البيئة.',KILL_SWITCH_ENGAGED_SETTLEMENTS:'التسويات مجمّدة مؤقتًا بأمر احتواء أمني.',KILL_SWITCH_ENGAGED_RECIPE_REVEALS:'كشف الأسرار مجمّد مؤقتًا بأمر احتواء أمني.'};
   jsonError(res,status,safe[code]||'تعذّر تنفيذ العملية بأمان.',code);
 }

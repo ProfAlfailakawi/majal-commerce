@@ -13,6 +13,7 @@ import {
   OfferTerms,
   Contract,
   Launch,
+  LaunchGateChecklist,
   Order,
   Accrual,
   SettlementBatch,
@@ -942,84 +943,77 @@ export class Store {
     return launch;
   }
 
-  public placeOrder(launchId: string, unitsCount: number, customerName: string, customerPhone: string, acquisitionSource: Order['acquisitionSource'] = 'MAJAL', branchId?: string) {
-    if (!IS_DEMO_MODE) return this.fail('الطلبات مقفلة حتى ربط الدفع والتحقق الخادمي من المخزون.');
-    const launch = this.launches.find(l => l.id === launchId);
-    if (!launch) return this.fail('الإطلاق غير موجود.');
-    if (launch.status !== 'LIVE' && launch.status !== 'PERMANENT') return this.fail('هذا الإطلاق غير متاح للطلب حاليًا.');
-    if (!Number.isInteger(unitsCount) || unitsCount < 1 || unitsCount > this.policy.maxOrderUnits) return this.fail(`كمية الطلب يجب أن تكون بين 1 و${this.policy.maxOrderUnits} وحدة.`);
-    if (launch.quantityCapUnits && launch.unitsSold + unitsCount > launch.quantityCapUnits) return this.fail('الكمية المطلوبة تتجاوز المتاح في هذا الإصدار.');
-    if (!customerName.trim()) return this.fail('اسم العميل مطلوب.');
-    const phoneDigits = customerPhone.replace(/\D/g, '');
-    if (phoneDigits.length < 8 || phoneDigits.length > 12) return this.fail('رقم الهاتف غير صالح.');
-
-    const col = this.collaborations.find(c => c.id === launch.collaborationId);
-    const royaltyPercent = col?.currentOffer?.creatorRoyaltyRatePercent || 13;
-    const platformFeePercent = col?.currentOffer?.platformFeePercent ?? this.policy.platformFeePercent;
-
-    const grossAmountKwd = Math.round(launch.sellingPriceKwd * unitsCount * 1000) / 1000;
-    const creatorRoyaltyKwd = Math.round((grossAmountKwd * (royaltyPercent / 100)) * 1000) / 1000;
-    const platformFeeKwd = Math.round((grossAmountKwd * (platformFeePercent / 100)) * 1000) / 1000;
-    const hostNetKwd = Math.round((grossAmountKwd - creatorRoyaltyKwd - platformFeeKwd) * 1000) / 1000;
-
-    const order: Order = {
-      id: `ord_${Date.now()}`,
-      launchId,
-      productId: launch.productId,
-      creatorId: launch.creatorId,
-      hostBusinessId: launch.hostBusinessId,
-      branchId: branchId && launch.branches.includes(branchId) ? branchId : undefined,
-      acquisitionSource,
-      customerName,
-      customerPhone,
-      grossAmountKwd,
-      unitsCount,
-      creatorRoyaltyKwd,
-      platformFeeKwd,
-      hostNetKwd,
-      status: 'PENDING_PAYMENT',
-      createdAt: new Date().toISOString()
+  /** Maps a server catalog launch row into the client Launch model (LIVE = gate fully passed). */
+  private mapServerLaunch(r: any): Launch {
+    const passed: LaunchGateChecklist = {
+      hostVerified: true, requiredDocsValid: true, contractSigned: true, productionRecipeApproved: true,
+      productNamePriceApproved: true, allergensCompleted: true, packagingDataCompleted: true,
+      productionLocationSelected: true, branchAvailabilitySelected: true, settlementConfigApproved: true,
+      photosReady: true, allRequirementsPassed: true
     };
-    this.orders.unshift(order);
-    this.addAuditLog('ORDER_PLACED', 'ORDER', order.id, `حجز تجريبي معلق للدفع: ${unitsCount} وحدة على الإطلاق ${launchId}`);
-
-    this.notify();
-    return order;
+    return {
+      id: r.id, collaborationId: r.collaborationId || '', productId: r.productId,
+      creatorId: r.creatorId || '', hostBusinessId: r.organizationId || '',
+      launchType: 'LIMITED_DROP', title: r.publicName || 'إطلاق',
+      sellingPriceKwd: r.unitPriceFils != null ? r.unitPriceFils / 1000 : 0,
+      quantityCapUnits: r.quantityCap ?? undefined, unitsSold: Number(r.unitsSold || 0),
+      branches: [], startDate: r.startsAt || new Date().toISOString(), endDate: r.endsAt || undefined,
+      status: 'LIVE', gateChecklist: passed, createdAt: r.startsAt || new Date().toISOString()
+    };
   }
 
-  public submitReview(launchId: string, tasteRating: number, valueRating: number, portionRating: number, comment: string, keepItVote: boolean, customerName: string) {
-    if (!IS_DEMO_MODE) return this.fail('التقييم الإنتاجي يحتاج ربطه بطلب المستخدم الموثق على الخادم.');
-    const launch = this.launches.find(l => l.id === launchId);
-    if (!launch) return this.fail('الإطلاق غير موجود.');
-    const ratings = [tasteRating, valueRating, portionRating];
-    if (ratings.some(r => r < 1 || r > 5)) return this.fail('التقييم يجب أن يكون بين 1 و5.');
-    if (!customerName.trim()) return this.fail('اسم العميل مطلوب.');
-    const normalizedCustomer = customerName.trim().toLowerCase();
-    if (this.reviews.some(r => r.launchId === launchId && r.customerName.trim().toLowerCase() === normalizedCustomer)) return this.fail('تم تسجيل تقييم لهذا العميل على هذا الإطلاق مسبقًا.');
-    // Verified purchase must eventually come from the authenticated owner of a
-    // completed server order; a matching display name is never evidence.
-    const verifiedPurchase = false;
+  /** Loads the real consumer read model (LIVE launches + this user's orders) from the server. */
+  public async loadConsumerData() {
+    try {
+      const [launchRes, orderRes] = await Promise.all([domainClient.listLaunches(), domainClient.listMyOrders()]);
+      this.launches = (launchRes.launches || []).map((r: any) => this.mapServerLaunch(r));
+      this.orders = (orderRes.orders || []).map((o: any): Order => ({
+        id: o.id, launchId: o.launchId, productId: '', creatorId: '', hostBusinessId: '',
+        customerName: this.activeUser.name, grossAmountKwd: o.totalFils / 1000, unitsCount: Number(o.units),
+        creatorRoyaltyKwd: 0, platformFeeKwd: 0, hostNetKwd: 0,
+        status: o.status === 'PAID' || o.status === 'FULFILLED' ? 'COMPLETED' : o.status === 'REFUNDED' ? 'REFUNDED' : 'PENDING_PAYMENT',
+        createdAt: o.createdAt
+      }));
+      this.notify();
+    } catch { /* leave arrays as-is on failure */ }
+  }
 
-    const review: Review = {
-      id: `rev_${Date.now()}`,
-      launchId,
-      productId: launch.productId,
-      creatorId: launch.creatorId,
-      customerName,
-      tasteRating,
-      valueRating,
-      portionRating,
-      wouldBuyAgain: tasteRating >= 4,
-      comment,
-      keepItVote,
-      isVerifiedPurchase: verifiedPurchase,
-      createdAt: new Date().toISOString()
-    };
+  /** Loads reviews for a launch and merges them into the review list. */
+  public async loadLaunchReviews(launchId: string) {
+    try {
+      const res = await domainClient.listLaunchReviews(launchId);
+      const mapped: Review[] = (res.reviews || []).map((r: any) => ({
+        id: r.id, launchId, productId: '', creatorId: '', customerName: r.reviewerName || 'عميل',
+        tasteRating: Number(r.tasteRating), valueRating: Number(r.tasteRating), portionRating: Number(r.tasteRating),
+        wouldBuyAgain: !!r.wouldBuyAgain, comment: r.comment || '', keepItVote: !!r.keepItVote, isVerifiedPurchase: true,
+        createdAt: r.createdAt
+      }));
+      this.reviews = [...mapped, ...this.reviews.filter(r => r.launchId !== launchId)];
+      this.notify();
+    } catch { /* ignore */ }
+  }
 
-    this.reviews.unshift(review);
-    this.addAuditLog('REVIEW_SUBMITTED', 'REVIEW', review.id, `تسجيل تقييم للإطلاق ${launchId}`);
-    this.notify();
-    return review;
+  public placeOrder(launchId: string, unitsCount: number, _customerName: string, _customerPhone: string, _acquisitionSource: Order['acquisitionSource'] = 'MAJAL', _branchId?: string) {
+    if (!Number.isInteger(unitsCount) || unitsCount < 1 || unitsCount > this.policy.maxOrderUnits) return this.fail(`كمية الطلب يجب أن تكون بين 1 و${this.policy.maxOrderUnits} وحدة.`);
+    // The order is bound to the authenticated consumer on the server; identity/inventory/pricing
+    // are all validated server-side. Stays PENDING_PAYMENT (fail-closed) until a verified
+    // provider webhook confirms payment.
+    return this.serverMutation(async () => {
+      const result = await domainClient.createOrder(launchId, unitsCount);
+      await this.loadConsumerData();
+      return { id: result.orderId, ...result };
+    });
+  }
+
+  public submitReview(launchId: string, tasteRating: number, _valueRating: number, _portionRating: number, comment: string, keepItVote: boolean, _customerName: string) {
+    if (tasteRating < 1 || tasteRating > 5) return this.fail('التقييم يجب أن يكون بين 1 و5.');
+    // The server verifies the reviewer owns a PAID order for this launch and enforces one
+    // review per order.
+    return this.serverMutation(async () => {
+      const result = await domainClient.createReview(launchId, { tasteRating, wouldBuyAgain: tasteRating >= 4, keepItVote, comment: comment?.trim() || undefined });
+      await this.loadLaunchReviews(launchId);
+      return { id: result.id, ...result };
+    });
   }
 
   public approveSettlementBatch(creatorId: string) {

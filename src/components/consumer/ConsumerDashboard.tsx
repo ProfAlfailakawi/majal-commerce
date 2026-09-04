@@ -26,6 +26,7 @@ interface ConsumerDashboardProps {
 export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
   const [, setTick] = useState(0);
   useEffect(() => store.subscribe(() => setTick(t => t + 1)), []);
+  useEffect(() => { store.loadConsumerData(); }, []);
 
   const launches = store.launches.filter(l => l.status === 'LIVE' || l.status === 'PERMANENT');
   const [selectedLaunch, setSelectedLaunch] = useState<Launch | null>(null);
@@ -66,25 +67,38 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
     return { keep, repeat, rating, remaining };
   }, [featured, store.reviews.length]);
 
-  const handleOrder = (e: React.FormEvent) => {
+  const [placing, setPlacing] = useState(false);
+  const [voting, setVoting] = useState(false);
+
+  const handleOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedLaunch) return;
+    if (!selectedLaunch || placing) return;
     const branchId = selectedBranchId || selectedLaunch.branches[0];
-    const order = store.placeOrder(selectedLaunch.id, unitsCount, customerName, customerPhone, acquisitionSource, branchId);
-    if (!order) {
-      setOrderSuccessMsg('');
-      setOrderErrorMsg(store.lastGuardMessage || 'تعذر تسجيل الطلب. تحقق من حالة الإطلاق والكمية والبيانات ثم حاول مرة أخرى.');
-      return;
+    setPlacing(true);
+    try {
+      const order = await store.placeOrder(selectedLaunch.id, unitsCount, customerName, customerPhone, acquisitionSource, branchId);
+      if (!order) {
+        setOrderSuccessMsg('');
+        setOrderErrorMsg(store.lastGuardMessage || 'تعذر تسجيل الطلب. تحقق من حالة الإطلاق والكمية ثم حاول مرة أخرى.');
+        return;
+      }
+      setOrderErrorMsg('');
+      setOrderSuccessMsg(`تم إنشاء طلب معلّق للدفع — ${unitsCount} × ${selectedLaunch.title} — رقم ${order.id}`);
+    } finally {
+      setPlacing(false);
     }
-    setOrderErrorMsg('');
-    setOrderSuccessMsg(`تم إنشاء حجز تجريبي معلّق للدفع — ${unitsCount} × ${selectedLaunch.title} — رقم ${order.id}`);
   };
 
-  const handleKeepVote = () => {
-    if (!featured) return;
-    const review = store.submitReview(featured.id, 5, 4, 5, 'أبي هذا المنتج يستمر في المنيو.', true, customerName || 'عميل مجال');
-    setVoteMessage(review ? 'وصل صوتك. صار لك أثر مباشر في قرار استمرار المنتج.' : (store.lastGuardMessage || 'تم تسجيل صوت بهذا الاسم لهذا الإطلاق مسبقًا.'));
-    setTimeout(() => setVoteMessage(''), 3200);
+  const handleKeepVote = async () => {
+    if (!featured || voting) return;
+    setVoting(true);
+    try {
+      const review = await store.submitReview(featured.id, 5, 4, 5, 'أبي هذا المنتج يستمر في المنيو.', true, customerName || 'عميل مجال');
+      setVoteMessage(review ? 'وصل صوتك. صار لك أثر مباشر في قرار استمرار المنتج.' : (store.lastGuardMessage || 'لا يمكنك التصويت قبل إتمام طلب مدفوع لهذا الإطلاق.'));
+      setTimeout(() => setVoteMessage(''), 3600);
+    } finally {
+      setVoting(false);
+    }
   };
 
   return (
