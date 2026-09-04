@@ -30,8 +30,8 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
   const launches = store.launches.filter(l => l.status === 'LIVE' || l.status === 'PERMANENT');
   const [selectedLaunch, setSelectedLaunch] = useState<Launch | null>(null);
   const [unitsCount, setUnitsCount] = useState(1);
-  const [customerName, setCustomerName] = useState('مشاري الكويتي');
-  const [customerPhone, setCustomerPhone] = useState('96599887766');
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
   const [orderSuccessMsg, setOrderSuccessMsg] = useState('');
   const [orderErrorMsg, setOrderErrorMsg] = useState('');
   const [followedCreators, setFollowedCreators] = useState<string[]>([]);
