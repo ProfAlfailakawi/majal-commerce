@@ -520,6 +520,18 @@ export class Store {
         shortDescription: productData.shortDescription,
         estimatedUnitCostFils: Math.round(productData.estimatedUnitCostKwd * 1000),
         targetPriceFils: Math.round(productData.targetSellingPriceKwd * 1000),
+        internalName: productData.internalName,
+        story: productData.story,
+        mediaUrls: productData.mediaUrls,
+        generalIngredients: productData.generalIngredients,
+        allergens: productData.allergens,
+        dietaryTags: productData.dietaryTags,
+        servingSize: productData.servingSize,
+        shelfLife: productData.shelfLife,
+        estimatedPrepTimeMinutes: productData.estimatedPrepTimeMinutes,
+        expectedEquipment: productData.expectedEquipment,
+        acceptsExclusivity: productData.acceptsExclusivity,
+        desiredPartnershipType: productData.desiredPartnershipType,
         recipe: initialRecipe
       }).catch(err => console.warn('Server background product sync note:', err));
     }
@@ -643,23 +655,170 @@ export class Store {
    */
   public async hydrateFromServer() {
     try {
-      const snap = await domainClient.snapshot();
+      const [snap, profiles] = await Promise.all([
+        domainClient.snapshot(),
+        domainClient.profiles().catch(() => ({ creators: [], organizations: [] }))
+      ]);
+
+      // Creator profiles + host organizations referenced by the loaded products/collaborations.
+      if ((profiles.creators || []).length) {
+        this.creators = (profiles.creators || []).map((c: any): CreatorProfile => ({
+          id: c.id, userId: c.userId, displayName: c.displayName, creatorType: 'CREATOR',
+          specialty: c.specialty || '', bio: '', region: '', completionScore: Number(c.completionScore) || 0,
+          badges: [], unitsSold: 0, repeatPurchaseRate: 0, story: '',
+          isAvailableForMatching: !!c.isAvailableForMatching, hasSecretRecipe: false, avatarUrl: '', createdAt: c.createdAt
+        }));
+      }
+      if ((profiles.organizations || []).length) {
+        this.hosts = (profiles.organizations || []).map((o: any): HostBusiness => this.hostFromServer(o));
+      }
+      const creatorUserIds = new Set((this.creators || []).map(c => c.userId));
+
+      // Products — full profile from migration 16 (money fils → KWD here, the one conversion site).
       this.products = (snap.products || []).map((p: any): CreatorProduct => ({
-        id: p.id, creatorId: p.creatorId, internalName: p.publicName, publicName: p.publicName,
-        category: p.category, shortDescription: p.shortDescription, story: '', status: p.status,
-        mediaUrls: [], generalIngredients: [], allergens: [], dietaryTags: [], servingSize: '', shelfLife: '',
-        estimatedPrepTimeMinutes: 0,
+        id: p.id, creatorId: p.creatorId, internalName: p.internalName || p.publicName, publicName: p.publicName,
+        category: p.category, shortDescription: p.shortDescription, story: p.story || '', status: p.status,
+        mediaUrls: p.mediaUrls || [], generalIngredients: p.generalIngredients || [], allergens: p.allergens || [],
+        dietaryTags: p.dietaryTags || [], servingSize: p.servingSize || '', shelfLife: p.shelfLife || '',
+        estimatedPrepTimeMinutes: Number(p.estimatedPrepTimeMinutes) || 0,
         estimatedUnitCostKwd: (Number(p.estimatedUnitCostFils) || 0) / 1000,
         targetSellingPriceKwd: (Number(p.targetPriceFils) || 0) / 1000,
-        expectedEquipment: [], isSecretRecipe: !!p.isSecretRecipe, acceptsExclusivity: false,
-        desiredPartnershipType: 'PERCENTAGE_ROYALTY', createdAt: p.createdAt, currentRecipeVersion: 'V1.0'
+        expectedEquipment: p.expectedEquipment || [], isSecretRecipe: !!p.isSecretRecipe,
+        acceptsExclusivity: !!p.acceptsExclusivity,
+        desiredPartnershipType: p.desiredPartnershipType || 'PERCENTAGE_ROYALTY',
+        createdAt: p.createdAt, currentRecipeVersion: 'V1.0'
       }));
-      this.collaborations = (snap.collaborations || []).map((c: any): Collaboration => ({
-        id: c.id, productId: c.product_id, creatorId: c.creator_id, hostBusinessId: c.organization_id,
-        stage: c.stage, offerHistory: [], createdAt: c.created_at, updatedAt: c.updated_at
-      }));
+
+      // Collaborations with nested offers / contract / launch, and the flat entity arrays the
+      // portals read. Everything below is real server state — no seed fallback once hydrated.
+      const allOffers: OfferTerms[] = [];
+      const allContracts: Contract[] = [];
+      const allLaunches: Launch[] = [];
+      const allGrants: RecipeAccessGrant[] = [];
+
+      this.collaborations = (snap.collaborations || []).map((c: any): Collaboration => {
+        const offers = (c.offers || []).map((o: any) => this.offerFromServer(o, c.id, creatorUserIds));
+        const currentOffer = offers.find(o => o.status === 'PENDING')
+          || [...offers].reverse().find(o => o.status === 'ACCEPTED') || offers[offers.length - 1];
+        allOffers.push(...offers);
+        const contract = c.contract ? this.contractFromServer(c.contract, currentOffer, c.organization_id, c.creator_id) : undefined;
+        if (contract) allContracts.push(contract);
+        const activeLaunch = c.launch ? this.launchFromServer(c.launch, c, currentOffer) : undefined;
+        if (activeLaunch) allLaunches.push(activeLaunch);
+        allGrants.push(...(c.recipeAccessGrants || []).map((g: any) => this.grantFromServer(g)));
+        return {
+          id: c.id, productId: c.product_id, creatorId: c.creator_id, hostBusinessId: c.organization_id,
+          stage: c.stage, currentOffer, offerHistory: offers, contract, activeLaunch,
+          createdAt: c.created_at, updatedAt: c.updated_at
+        };
+      });
+
+      // Recipe-version label per product from the highest version number the server returned.
+      const versionByProduct = new Map<string, number>();
+      for (const c of (snap.collaborations || [])) for (const rv of (c.recipeVersions || [])) {
+        versionByProduct.set(rv.productId, Math.max(versionByProduct.get(rv.productId) || 0, Number(rv.versionNumber) || 0));
+      }
+      this.products = this.products.map(p => versionByProduct.has(p.id) ? { ...p, currentRecipeVersion: `V${versionByProduct.get(p.id)}.0` } : p);
+
+      this.offers = allOffers;
+      this.contracts = allContracts;
+      this.launches = allLaunches;
+      this.recipeGrants = [...new Map(allGrants.map(g => [g.id, g])).values()];
       this.notify();
+      // Creators discover across the whole verified-host directory, not only their own partners.
+      if (this.activeUser?.role === 'CREATOR') void this.loadOrganizations();
     } catch { /* keep whatever is loaded on failure */ }
+  }
+
+  /**
+   * Verified-host directory for the creator Discovery / matching surface. Merges by id so hosts
+   * already known from the caller's own collaborations keep their place.
+   */
+  public async loadOrganizations() {
+    try {
+      const res = await domainClient.listOrganizations();
+      const byId = new Map(this.hosts.map(h => [h.id, h]));
+      for (const o of (res.organizations || [])) byId.set(o.id, this.hostFromServer(o));
+      this.hosts = [...byId.values()];
+      this.notify();
+    } catch { /* ignore */ }
+  }
+
+  // --- server → client mappers. Money crosses as fils/basis-points and becomes KWD/percent here. ---
+  private hostFromServer(o: any): HostBusiness {
+    return {
+      id: o.id, commercialName: o.commercialName, businessType: 'RESTAURANT', commercialRegistrationNo: '',
+      verificationStatus: o.verificationStatus, branches: [],
+      capabilities: { equipment: [], cuisines: [], dietary: [], packaging: [], storage: [], batchCapacityMin: 0, batchCapacityMax: 0, serviceModels: [], priceBand: '', leadTimeDays: 0 },
+      brandPositioning: '', targetAudience: '', contacts: [], logoUrl: '', createdAt: o.createdAt
+    };
+  }
+  private offerFromServer(o: any, collaborationId: string, creatorUserIds: Set<string>): OfferTerms {
+    return {
+      id: o.id, version: Number(o.versionNumber) || 1, collaborationId,
+      senderRole: creatorUserIds.has(o.senderUserId) ? 'CREATOR' : 'HOST',
+      sellingPriceKwd: (Number(o.sellingPriceFils) || 0) / 1000,
+      creatorRoyaltyModel: 'PERCENTAGE',
+      creatorRoyaltyRatePercent: (Number(o.creatorRoyaltyBasisPoints) || 0) / 100,
+      fixedAmountPerUnitKwd: 0,
+      platformFeePercent: (Number(o.platformFeeBasisPoints) || 0) / 100,
+      termMonths: 0, exclusivityType: 'NON_EXCLUSIVE', territory: '', channels: [],
+      minimumCommitmentUnits: 0, notes: o.notes || '',
+      status: o.status === 'SUPERSEDED' ? 'WITHDRAWN' : o.status,
+      createdAt: o.createdAt
+    };
+  }
+  private contractFromServer(ct: any, currentOffer: OfferTerms | undefined, organizationId: string, creatorId: string): Contract {
+    const signatures: Array<{ side: string; signedAt: string }> = ct.signatures || [];
+    const creatorSig = signatures.find(s => s.side === 'CREATOR');
+    const hostSig = signatures.find(s => s.side === 'HOST');
+    const status: Contract['status'] =
+      ct.status === 'FULLY_SIGNED' ? 'FULLY_SIGNED'
+      : ct.status === 'DRAFT' ? 'DRAFT'
+      : ct.status === 'EXPIRED' || ct.status === 'VOID' ? 'EXPIRED'
+      : creatorSig ? 'PENDING_HOST_SIGNATURE' : 'PENDING_CREATOR_SIGNATURE';
+    const terms: OfferTerms = currentOffer || {
+      id: `${ct.id}_terms`, version: Number(ct.versionNumber) || 1, collaborationId: ct.collaborationId,
+      senderRole: 'HOST', sellingPriceKwd: 0, creatorRoyaltyModel: 'PERCENTAGE', creatorRoyaltyRatePercent: 0,
+      fixedAmountPerUnitKwd: 0, platformFeePercent: 0, termMonths: 0, exclusivityType: 'NON_EXCLUSIVE',
+      territory: '', channels: [], minimumCommitmentUnits: 0, notes: '', status: 'ACCEPTED', createdAt: ct.createdAt
+    };
+    return {
+      id: ct.id, collaborationId: ct.collaborationId, versionNumber: `V${Number(ct.versionNumber) || 1}.0`,
+      terms, creatorLegalName: this.creators.find(c => c.id === creatorId)?.displayName || '',
+      hostCommercialName: this.hosts.find(h => h.id === organizationId)?.commercialName || '',
+      status, createdAt: ct.createdAt,
+      creatorSignedAt: creatorSig?.signedAt, hostSignedAt: hostSig?.signedAt
+    };
+  }
+  private launchFromServer(l: any, c: any, currentOffer: OfferTerms | undefined): Launch {
+    const g = l.gate || {};
+    const gateChecklist: LaunchGateChecklist = {
+      hostVerified: !!g.hostVerified, requiredDocsValid: !!g.hostVerified, contractSigned: !!g.contractSigned,
+      productionRecipeApproved: !!g.productionRecipeApproved, productNamePriceApproved: !!g.productNamePriceApproved,
+      allergensCompleted: !!g.packagingDataCompleted, packagingDataCompleted: !!g.packagingDataCompleted,
+      productionLocationSelected: !!g.productionLocationSelected, branchAvailabilitySelected: !!g.productionLocationSelected,
+      settlementConfigApproved: !!g.settlementConfigApproved, photosReady: !!g.packagingDataCompleted,
+      allRequirementsPassed: !!g.allRequirementsPassed
+    };
+    const status: Launch['status'] = l.status === 'LIVE' ? 'LIVE' : l.status === 'PAUSED' ? 'PAUSED'
+      : l.status === 'COMPLETED' ? 'COMPLETED' : l.status === 'PERMANENT' ? 'PERMANENT' : 'SCHEDULED';
+    return {
+      id: l.id, collaborationId: l.collaborationId, productId: l.productId, creatorId: c.creator_id,
+      hostBusinessId: l.organizationId, launchType: 'TRIAL_PERIOD',
+      title: this.products.find(p => p.id === l.productId)?.publicName || '',
+      sellingPriceKwd: currentOffer?.sellingPriceKwd || 0,
+      quantityCapUnits: l.quantityCap != null ? Number(l.quantityCap) : undefined, unitsSold: 0, branches: [],
+      startDate: l.startsAt || l.createdAt, endDate: l.endsAt || undefined, status, gateChecklist, createdAt: l.createdAt
+    };
+  }
+  private grantFromServer(g: any): RecipeAccessGrant {
+    return {
+      id: g.id, productId: g.productId, creatorId: g.creatorId, hostBusinessId: g.organizationId,
+      disclosureLevel: Number(g.disclosureLevel) as RecipeAccessGrant['disclosureLevel'], status: g.status,
+      requestedByUserId: g.requestedByUserId, requestedAt: g.createdAt,
+      grantedByUserId: g.grantedByUserId || undefined, expiresAt: g.expiresAt || undefined, purpose: g.purpose
+    };
   }
 
   public async loadChallenges() {

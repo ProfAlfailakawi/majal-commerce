@@ -25,6 +25,19 @@ const integer = (value: unknown, min: number, max: number) => {
 };
 const bool = (value: unknown) => value === true || value === false ? value : undefined;
 const requestId = (req: AuthenticatedRequest) => text(req.header('x-request-id'), 8, 128) || randomUUID();
+// Sanitises a client-supplied list of short strings for storage: trims, drops blanks and
+// non-strings, caps the count and each item's length. Anything invalid collapses to [].
+const strList = (value: unknown, maxItems = 40, maxLen = 200): string[] =>
+  Array.isArray(value)
+    ? value.filter((v): v is string => typeof v === 'string' && v.trim().length > 0 && v.trim().length <= maxLen)
+        .map(v => v.trim()).slice(0, maxItems)
+    : [];
+// Parses a stored JSON-array text column back to string[], tolerating legacy nulls/garbage.
+const parseList = (value: unknown): string[] => {
+  if (typeof value !== 'string' || !value) return [];
+  try { const parsed = JSON.parse(value); return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === 'string') : []; }
+  catch { return []; }
+};
 
 type CollabRow = { id: string; product_id: string; creator_id: string; organization_id: string; stage: string; version: number };
 type OfferRow = { id: string; collaboration_id: string; version_number: number; sender_user_id: string; selling_price_fils: number | string; creator_royalty_basis_points: number | string; platform_fee_basis_points: number | string; status: string; terms_json: string };
@@ -119,7 +132,16 @@ function publicProduct(row: Record<string, unknown>) {
     id: row.id, creatorId: row.creator_id, publicName: row.public_name, category: row.category,
     shortDescription: row.short_description, status: row.status,
     estimatedUnitCostFils: Number(row.estimated_unit_cost_fils), targetPriceFils: Number(row.target_price_fils),
-    isSecretRecipe: Boolean(row.is_secret_recipe), createdAt: row.created_at, updatedAt: row.updated_at
+    isSecretRecipe: Boolean(row.is_secret_recipe), createdAt: row.created_at, updatedAt: row.updated_at,
+    // Full profile (migration 16). internalName falls back to the public name for rows created
+    // before the wizard forwarded it, so the creator portal never shows an empty label.
+    internalName: (row.internal_name as string) || (row.public_name as string), story: (row.story as string) || '',
+    mediaUrls: parseList(row.media_json), generalIngredients: parseList(row.general_ingredients_json),
+    allergens: parseList(row.allergens_json), dietaryTags: parseList(row.dietary_tags_json),
+    servingSize: (row.serving_size as string) || '', shelfLife: (row.shelf_life as string) || '',
+    estimatedPrepTimeMinutes: Number(row.prep_time_minutes) || 0, expectedEquipment: parseList(row.expected_equipment_json),
+    acceptsExclusivity: Boolean(row.accepts_exclusivity),
+    desiredPartnershipType: (row.desired_partnership_type as string) || 'PERCENTAGE_ROYALTY'
   };
 }
 
@@ -189,6 +211,123 @@ async function documentAiExtract(contentBase64: string, mimeType: string) {
   return { fields, confidence, textSha256: sha256(payload.document.text || '') };
 }
 
+// ---- Read-model serializers -------------------------------------------------------------
+// Every monetary value stays in fils / basis points on the wire; the client hydration layer
+// (src/lib/store.ts) is the single place that converts to KWD for display. Recipe *payloads*
+// stay encrypted and disclosure-gated — the snapshot exposes version metadata only, never the
+// decrypted secret.
+const offerRecord = (r: Record<string, unknown>) => ({
+  id: r.id, collaborationId: r.collaboration_id, versionNumber: Number(r.version_number),
+  senderUserId: r.sender_user_id, sellingPriceFils: Number(r.selling_price_fils),
+  creatorRoyaltyBasisPoints: Number(r.creator_royalty_basis_points),
+  platformFeeBasisPoints: Number(r.platform_fee_basis_points), status: r.status,
+  notes: (() => { try { return String(JSON.parse(String(r.terms_json ?? '{}'))?.notes ?? ''); } catch { return ''; } })(),
+  createdAt: r.created_at
+});
+const contractRecord = (r: Record<string, unknown>, signatures: Array<{ side: string; signedAt: string }>) => ({
+  id: r.id, collaborationId: r.collaboration_id, versionNumber: Number(r.version_number),
+  documentSha256: r.document_sha256, status: r.status, createdAt: r.created_at, signatures
+});
+const grantRecord = (r: Record<string, unknown>) => ({
+  id: r.id, productId: r.product_id, creatorId: r.creator_id, organizationId: r.organization_id,
+  disclosureLevel: Number(r.disclosure_level), status: r.status, purpose: r.purpose,
+  requestedByUserId: r.requested_by_user_id, grantedByUserId: r.granted_by_user_id ?? null,
+  expiresAt: r.expires_at ?? null, createdAt: r.created_at, updatedAt: r.updated_at
+});
+const recipeVersionRecord = (r: Record<string, unknown>) => ({
+  id: r.id, productId: r.product_id, versionNumber: Number(r.version_number), createdAt: r.created_at
+});
+const creatorProfileRecord = (r: Record<string, unknown>) => ({
+  id: r.id, userId: r.user_id, displayName: r.display_name, specialty: r.specialty,
+  completionScore: Number(r.completion_score) || 0, isAvailableForMatching: Boolean(r.matching_enabled),
+  createdAt: r.created_at, updatedAt: r.updated_at
+});
+const organizationRecord = (r: Record<string, unknown>) => ({
+  id: r.id, commercialName: r.commercial_name, organizationType: r.organization_type,
+  verificationStatus: r.verification_status, createdAt: r.created_at, updatedAt: r.updated_at
+});
+
+type SnapshotUser = { role: string; creatorId?: string | null; hostBusinessId?: string | null };
+const placeholders = (n: number) => Array.from({ length: n }, () => '?').join(',');
+
+/**
+ * The full authenticated read model. Scopes products/collaborations to the caller (creator →
+ * own; host → org's collaborations; admin → all), then hydrates every in-scope collaboration
+ * with its offers, latest contract + signatures, launch + derived launch gate, recipe-version
+ * metadata and recipe access grants — the nested detail the portals need to render without any
+ * seed data. Exported for direct unit testing.
+ */
+export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser) {
+  const isAdminUser = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+  const filter = isAdminUser
+    ? { clause: '1=1', args: [] as unknown[] }
+    : user.creatorId ? { clause: 'p.creator_id = ?', args: [user.creatorId] }
+    : user.hostBusinessId ? { clause: 'EXISTS (SELECT 1 FROM collaborations c WHERE c.product_id=p.id AND c.organization_id=?)', args: [user.hostBusinessId] }
+    : { clause: '1=0', args: [] as unknown[] };
+  const productRows = await db.prepare(`SELECT p.* FROM products p WHERE ${filter.clause} ORDER BY p.created_at DESC LIMIT 500`).all(...filter.args) as Record<string, unknown>[];
+  const collabRows = user.creatorId
+    ? await db.prepare('SELECT * FROM collaborations WHERE creator_id = ? ORDER BY updated_at DESC LIMIT 500').all(user.creatorId) as CollabRow[]
+    : user.hostBusinessId ? await db.prepare('SELECT * FROM collaborations WHERE organization_id = ? ORDER BY updated_at DESC LIMIT 500').all(user.hostBusinessId) as CollabRow[]
+    : isAdminUser ? await db.prepare('SELECT * FROM collaborations ORDER BY updated_at DESC LIMIT 500').all() as CollabRow[]
+    : [];
+
+  const collabIds = collabRows.map(c => c.id);
+  const productIds = Array.from(new Set([...productRows.map(p => String(p.id)), ...collabRows.map(c => c.product_id)]));
+
+  // Bulk-load nested detail for the in-scope collaborations, then assemble in memory — one
+  // query per relation instead of N per collaboration.
+  const offersByCollab = new Map<string, Array<ReturnType<typeof offerRecord>>>();
+  const contractRowByCollab = new Map<string, Record<string, unknown>>();
+  const signaturesByContract = new Map<string, Array<{ side: string; signedAt: string }>>();
+  const launchByCollab = new Map<string, Record<string, unknown>>();
+  const grantsByProduct = new Map<string, Array<ReturnType<typeof grantRecord>>>();
+  const recipeVersionsByProduct = new Map<string, Array<ReturnType<typeof recipeVersionRecord>>>();
+
+  if (collabIds.length) {
+    const cph = placeholders(collabIds.length);
+    for (const r of await db.prepare(`SELECT * FROM offer_versions WHERE collaboration_id IN (${cph}) ORDER BY version_number ASC`).all(...collabIds) as Record<string, unknown>[]) {
+      const list = offersByCollab.get(String(r.collaboration_id)) ?? []; list.push(offerRecord(r)); offersByCollab.set(String(r.collaboration_id), list);
+    }
+    // Latest contract per collaboration (highest version wins; rows arrive newest-first).
+    const contractRows = await db.prepare(`SELECT * FROM contract_versions WHERE collaboration_id IN (${cph}) ORDER BY version_number DESC`).all(...collabIds) as Record<string, unknown>[];
+    for (const r of contractRows) if (!contractRowByCollab.has(String(r.collaboration_id))) contractRowByCollab.set(String(r.collaboration_id), r);
+    const contractIds = [...contractRowByCollab.values()].map(r => String(r.id));
+    if (contractIds.length) {
+      for (const s of await db.prepare(`SELECT contract_id, signer_side, signed_at FROM contract_signatures WHERE contract_id IN (${placeholders(contractIds.length)})`).all(...contractIds) as Record<string, unknown>[]) {
+        const list = signaturesByContract.get(String(s.contract_id)) ?? []; list.push({ side: String(s.signer_side), signedAt: String(s.signed_at) }); signaturesByContract.set(String(s.contract_id), list);
+      }
+    }
+    for (const r of await db.prepare(`SELECT * FROM launches WHERE collaboration_id IN (${cph})`).all(...collabIds) as Record<string, unknown>[]) launchByCollab.set(String(r.collaboration_id), r);
+  }
+  if (productIds.length) {
+    const pph = placeholders(productIds.length);
+    for (const r of await db.prepare(`SELECT * FROM recipe_access_grants WHERE product_id IN (${pph}) ORDER BY created_at DESC`).all(...productIds) as Record<string, unknown>[]) {
+      // A product may carry grants to several orgs. The creator (discloser) and admins see them
+      // all; a host sees only its own org's grants, never a competitor's interest on the product.
+      if (!isAdminUser && user.hostBusinessId && String(r.organization_id) !== user.hostBusinessId) continue;
+      const list = grantsByProduct.get(String(r.product_id)) ?? []; list.push(grantRecord(r)); grantsByProduct.set(String(r.product_id), list);
+    }
+    for (const r of await db.prepare(`SELECT id, product_id, version_number, created_at FROM recipe_versions WHERE product_id IN (${pph}) ORDER BY version_number DESC`).all(...productIds) as Record<string, unknown>[]) {
+      const list = recipeVersionsByProduct.get(String(r.product_id)) ?? []; list.push(recipeVersionRecord(r)); recipeVersionsByProduct.set(String(r.product_id), list);
+    }
+  }
+
+  const collaborations = [];
+  for (const c of collabRows) {
+    const launchRow = launchByCollab.get(c.id);
+    const contractRow = contractRowByCollab.get(c.id);
+    collaborations.push({
+      ...c,
+      offers: offersByCollab.get(c.id) ?? [],
+      contract: contractRow ? contractRecord(contractRow, signaturesByContract.get(String(contractRow.id)) ?? []) : null,
+      launch: launchRow ? { id: launchRow.id, collaborationId: launchRow.collaboration_id, productId: launchRow.product_id, organizationId: launchRow.organization_id, status: launchRow.status, quantityCap: launchRow.quantity_cap ?? null, startsAt: launchRow.starts_at ?? null, endsAt: launchRow.ends_at ?? null, createdAt: launchRow.created_at, gate: await launchGate(db, c) } : null,
+      recipeVersions: recipeVersionsByProduct.get(c.product_id) ?? [],
+      recipeAccessGrants: grantsByProduct.get(c.product_id) ?? []
+    });
+  }
+  return { products: productRows.map(publicProduct), collaborations };
+}
+
 export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
   const router = Router();
   const authenticated = requireAuth(db, authConfig);
@@ -197,11 +336,30 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
   router.use(csrf);
 
   router.get('/snapshot', async (req: AuthenticatedRequest, res) => {
-    const user = req.auth!.user;
-    const filter = isAdmin(req) ? { clause: '1=1', args: [] as unknown[] } : user.creatorId ? { clause: 'p.creator_id = ?', args: [user.creatorId] } : user.hostBusinessId ? { clause: 'EXISTS (SELECT 1 FROM collaborations c WHERE c.product_id=p.id AND c.organization_id=?)', args: [user.hostBusinessId] } : { clause: '1=0', args: [] };
-    const products = await db.prepare(`SELECT p.* FROM products p WHERE ${filter.clause} ORDER BY p.created_at DESC LIMIT 500`).all(...filter.args) as Record<string,unknown>[];
-    const collabs = user.creatorId ? await db.prepare('SELECT * FROM collaborations WHERE creator_id = ? ORDER BY updated_at DESC LIMIT 500').all(user.creatorId) : user.hostBusinessId ? await db.prepare('SELECT * FROM collaborations WHERE organization_id = ? ORDER BY updated_at DESC LIMIT 500').all(user.hostBusinessId) : isAdmin(req) ? await db.prepare('SELECT * FROM collaborations ORDER BY updated_at DESC LIMIT 500').all() : [];
-    res.json({ products: products.map(publicProduct), collaborations: collabs });
+    try { res.json(await buildDomainSnapshot(db, req.auth!.user)); } catch (e) { handleDomainError(res, e); }
+  });
+
+  // Display profiles for the caller's in-scope collaborations: the creator profiles and
+  // organizations referenced by the products/collaborations they can already see. Read-only,
+  // scoped through buildDomainSnapshot's own filter — no cross-tenant leakage.
+  router.get('/profiles', async (req: AuthenticatedRequest, res) => {
+    try {
+      const snap = await buildDomainSnapshot(db, req.auth!.user);
+      const creatorIds = Array.from(new Set([...snap.products.map(p => String(p.creatorId)), ...snap.collaborations.map(c => String(c.creator_id))].filter(Boolean)));
+      const orgIds = Array.from(new Set(snap.collaborations.map(c => String(c.organization_id)).filter(Boolean)));
+      const creators = creatorIds.length ? await db.prepare(`SELECT id, user_id, display_name, specialty, completion_score, matching_enabled, created_at, updated_at FROM creator_profiles WHERE id IN (${placeholders(creatorIds.length)})`).all(...creatorIds) as Record<string,unknown>[] : [];
+      const organizations = orgIds.length ? await db.prepare(`SELECT id, commercial_name, organization_type, verification_status, created_at, updated_at FROM organizations WHERE id IN (${placeholders(orgIds.length)})`).all(...orgIds) as Record<string,unknown>[] : [];
+      res.json({ creators: creators.map(creatorProfileRecord), organizations: organizations.map(organizationRecord) });
+    } catch (e) { handleDomainError(res, e); }
+  });
+
+  // Organizations available for the creator's Discovery / matching surface: verified hosts.
+  // Any authenticated user may browse the verified directory; nothing sensitive is exposed.
+  router.get('/organizations', async (req: AuthenticatedRequest, res) => {
+    try {
+      const rows = await db.prepare("SELECT id, commercial_name, organization_type, verification_status, created_at, updated_at FROM organizations WHERE organization_type='HOST' AND verification_status='VERIFIED' ORDER BY created_at DESC, id DESC LIMIT 500").all() as Record<string,unknown>[];
+      res.json({ organizations: rows.map(organizationRecord) });
+    } catch (e) { handleDomainError(res, e); }
   });
 
   router.post('/products', async (req: AuthenticatedRequest, res) => {
@@ -221,12 +379,21 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
       const publicName=text(req.body?.publicName,2,140), category=text(req.body?.category,2,80), description=text(req.body?.shortDescription,5,1500);
       const cost=integer(req.body?.estimatedUnitCostFils,0,50_000_000), price=integer(req.body?.targetPriceFils,1,50_000_000), recipe=req.body?.recipe;
       if (!publicName||!category||!description||cost===undefined||price===undefined||!recipe||typeof recipe!=='object') return jsonError(res,400,'بيانات المنتج أو الوصفة غير صالحة.','INVALID_PRODUCT');
+      // Full product profile (migration 16). All optional and sanitised: an older client that
+      // only sends the core fields still creates a valid product, defaults fill the rest.
+      const internalName=text(req.body?.internalName,2,140)||publicName, story=text(req.body?.story,0,4000)||'';
+      const servingSize=text(req.body?.servingSize,0,120)||'', shelfLife=text(req.body?.shelfLife,0,120)||'';
+      const prepMinutes=integer(req.body?.estimatedPrepTimeMinutes,0,100_000)??0;
+      const partnershipRaw=text(req.body?.desiredPartnershipType,0,40);
+      const partnership=['PERCENTAGE_ROYALTY','FIXED_PER_UNIT','HYBRID'].includes(partnershipRaw||'')?partnershipRaw!:'PERCENTAGE_ROYALTY';
+      const media=strList(req.body?.mediaUrls), ingredients=strList(req.body?.generalIngredients), allergens=strList(req.body?.allergens);
+      const dietary=strList(req.body?.dietaryTags), equipment=strList(req.body?.expectedEquipment), exclusivity=bool(req.body?.acceptsExclusivity)===true?1:0;
       const result = await withIdempotency(db, req, 'PRODUCT_CREATE', async () => {
         const productId=`prd_${randomUUID()}`, recipeId=`rcp_${randomUUID()}`, created=now();
         const receipt=await putEncryptedJson('recipes',recipeId,recipe);
         await withTransaction(db, async tx => {
-          await tx.prepare('INSERT INTO products(id, creator_id, public_name, category, short_description, status, estimated_unit_cost_fils, target_price_fils, is_secret_recipe, created_at, updated_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)')
-            .run(productId,req.auth!.user.creatorId,publicName,category,description,'DRAFT',cost,price,created,created);
+          await tx.prepare(`INSERT INTO products(id, creator_id, public_name, category, short_description, status, estimated_unit_cost_fils, target_price_fils, is_secret_recipe, created_at, updated_at, internal_name, story, media_json, general_ingredients_json, allergens_json, dietary_tags_json, serving_size, shelf_life, prep_time_minutes, expected_equipment_json, accepts_exclusivity, desired_partnership_type) VALUES(?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+            .run(productId,req.auth!.user.creatorId,publicName,category,description,'DRAFT',cost,price,created,created,internalName,story,JSON.stringify(media),JSON.stringify(ingredients),JSON.stringify(allergens),JSON.stringify(dietary),servingSize,shelfLife,prepMinutes,JSON.stringify(equipment),exclusivity,partnership);
           await tx.prepare('INSERT INTO recipe_versions(id, product_id, version_number, encrypted_payload, payload_sha256, created_by_user_id, created_at) VALUES(?, ?, 1, ?, ?, ?, ?)')
             .run(recipeId,productId,JSON.stringify({objectKey:receipt.objectKey,storage:receipt.storageProvider,ciphertextSha256:receipt.ciphertextSha256}),receipt.plaintextSha256,req.auth!.user.id,created);
           await audit(tx,req,'PRODUCT_CREATED','PRODUCT',productId,undefined,{publicName,category,recipeSha256:receipt.plaintextSha256});

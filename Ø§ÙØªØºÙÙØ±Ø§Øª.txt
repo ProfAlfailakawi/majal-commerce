@@ -1,0 +1,21 @@
+تغييرات فرع claude/project-html-presentation-slwcn1 مقابل main
+================================================================
+
+ارفع هذه الملفات في مستودعك بنفس المسارات (الهيكل محفوظ داخل هذا المجلد).
+
+العرض التقديمي:
+  presentation/majal-deck.html      العرض التفاعلي
+  presentation/majal-deck.pdf       نسخة PDF (١٢ صفحة)
+
+نموذج القراءة الخادمي (شاشات المبدع/المنشأة بلا seed):
+  server/database.ts                Migration 16 (أعمدة المنتج الكاملة)
+  server/database.test.ts           schemaVersion → 16
+  server/domain.ts                  إثراء /snapshot + endpoints /profiles و /organizations
+  server/domain-snapshot.test.ts    اختبارات النموذج المتداخل والـscoping
+  src/lib/domainClient.ts           profiles() و listOrganizations()
+  src/lib/store.ts                  hydrateFromServer الكامل
+
+إصلاح CI:
+  package-lock.json                 مزامنة القفل مع firebase-admin (كان npm ci يسقط)
+
+تحقّق: npm ci ثم npm test (76/76) ثم npx tsc --noEmit ثم npm run build — كلها نظيفة.
