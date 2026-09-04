@@ -1196,6 +1196,62 @@ const migrations = [
       CREATE INDEX IF NOT EXISTS idx_orders_consumer
         ON orders(consumer_user_id, created_at DESC, id DESC);
     `
+  },
+  {
+    // Host innovation surfaces made server-real: challenges, lab batches, deal-room decisions.
+    version: 15,
+    sql: `
+      CREATE TABLE IF NOT EXISTS challenges (
+        id TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE RESTRICT,
+        title TEXT NOT NULL,
+        brief TEXT NOT NULL,
+        category TEXT NOT NULL,
+        target_price_fils INTEGER NOT NULL CHECK(target_price_fils > 0),
+        cost_ceiling_fils INTEGER NOT NULL CHECK(cost_ceiling_fils >= 0),
+        estimated_volume_units INTEGER NOT NULL CHECK(estimated_volume_units >= 0),
+        deadline TEXT NOT NULL,
+        equipment_json TEXT NOT NULL DEFAULT '[]',
+        dietary_json TEXT NOT NULL DEFAULT '[]',
+        exclusivity_preference INTEGER NOT NULL DEFAULT 0 CHECK(exclusivity_preference IN (0, 1)),
+        status TEXT NOT NULL CHECK(status IN ('OPEN', 'IN_REVIEW', 'CLOSED')),
+        created_by_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_challenges_org
+        ON challenges(organization_id, status, created_at DESC, id DESC);
+
+      CREATE TABLE IF NOT EXISTS lab_batches (
+        id TEXT PRIMARY KEY,
+        collaboration_id TEXT NOT NULL REFERENCES collaborations(id) ON DELETE RESTRICT,
+        recipe_version TEXT NOT NULL,
+        batch_date TEXT NOT NULL,
+        yield_quantity INTEGER NOT NULL CHECK(yield_quantity > 0),
+        measured_cost_fils INTEGER NOT NULL CHECK(measured_cost_fils >= 0),
+        prep_time_minutes INTEGER NOT NULL CHECK(prep_time_minutes > 0),
+        waste_percentage INTEGER NOT NULL CHECK(waste_percentage BETWEEN 0 AND 100),
+        tasting_result TEXT NOT NULL,
+        proposed_changes TEXT NOT NULL,
+        decision TEXT NOT NULL CHECK(decision IN ('APPROVE_NEXT', 'REJECT', 'PRODUCTION_CANDIDATE')),
+        created_by_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+        created_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_lab_batches_collab
+        ON lab_batches(collaboration_id, created_at DESC, id DESC);
+
+      CREATE TABLE IF NOT EXISTS deal_decisions (
+        id TEXT PRIMARY KEY,
+        collaboration_id TEXT NOT NULL REFERENCES collaborations(id) ON DELETE RESTRICT,
+        author_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+        author_role TEXT NOT NULL,
+        text TEXT NOT NULL,
+        category TEXT NOT NULL CHECK(category IN ('DECISION', 'NOTE', 'RISK', 'MILESTONE')),
+        created_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_deal_decisions_collab
+        ON deal_decisions(collaboration_id, created_at DESC, id DESC);
+    `
   }
 ] as const;
 

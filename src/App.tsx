@@ -65,6 +65,7 @@ export default function App() {
       .then(session => {
         if (!active) return;
         if (session && store.setAuthenticatedUser(session.user)) {
+          void store.hydrateFromServer();
           const surface = surfaceForRole(session.user.role);
           setAuthStatus('AUTHENTICATED');
           setActiveSurface(surface);
@@ -87,6 +88,7 @@ export default function App() {
 
   const handleAuthenticated = (session: AuthSession) => {
     if (!store.setAuthenticatedUser(session.user)) return;
+    void store.hydrateFromServer();
     const surface = surfaceForRole(session.user.role);
     setAuthStatus('AUTHENTICATED');
     setActiveSurface(surface);
