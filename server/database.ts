@@ -458,7 +458,19 @@ const migrations = [
         target_price_fils INTEGER NOT NULL CHECK(target_price_fils > 0),
         is_secret_recipe INTEGER NOT NULL DEFAULT 1 CHECK(is_secret_recipe IN (0, 1)),
         created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL
+        updated_at TEXT NOT NULL,
+        internal_name TEXT,
+        story TEXT,
+        media_json TEXT,
+        general_ingredients_json TEXT,
+        allergens_json TEXT,
+        dietary_tags_json TEXT,
+        serving_size TEXT,
+        shelf_life TEXT,
+        prep_time_minutes INTEGER,
+        expected_equipment_json TEXT,
+        accepts_exclusivity INTEGER DEFAULT 0,
+        desired_partnership_type TEXT
       );
 
       CREATE INDEX IF NOT EXISTS idx_products_creator_cursor
