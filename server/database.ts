@@ -1252,6 +1252,28 @@ const migrations = [
       CREATE INDEX IF NOT EXISTS idx_deal_decisions_collab
         ON deal_decisions(collaboration_id, created_at DESC, id DESC);
     `
+  },
+  {
+    // Persist the full product profile the submission wizard already collects, so the
+    // creator/host portals can render real products from the server instead of falling back
+    // to thin snapshot rows. Money stays in fils elsewhere; nothing here is a monetary field.
+    // Columns are added with constant defaults so existing rows backfill safely on both
+    // SQLite and Postgres; app-layer validation (server/domain.ts) enforces shapes.
+    version: 16,
+    sql: `
+      ALTER TABLE products ADD COLUMN internal_name TEXT NOT NULL DEFAULT '';
+      ALTER TABLE products ADD COLUMN story TEXT NOT NULL DEFAULT '';
+      ALTER TABLE products ADD COLUMN media_json TEXT NOT NULL DEFAULT '[]';
+      ALTER TABLE products ADD COLUMN general_ingredients_json TEXT NOT NULL DEFAULT '[]';
+      ALTER TABLE products ADD COLUMN allergens_json TEXT NOT NULL DEFAULT '[]';
+      ALTER TABLE products ADD COLUMN dietary_tags_json TEXT NOT NULL DEFAULT '[]';
+      ALTER TABLE products ADD COLUMN serving_size TEXT NOT NULL DEFAULT '';
+      ALTER TABLE products ADD COLUMN shelf_life TEXT NOT NULL DEFAULT '';
+      ALTER TABLE products ADD COLUMN prep_time_minutes INTEGER NOT NULL DEFAULT 0;
+      ALTER TABLE products ADD COLUMN expected_equipment_json TEXT NOT NULL DEFAULT '[]';
+      ALTER TABLE products ADD COLUMN accepts_exclusivity INTEGER NOT NULL DEFAULT 0;
+      ALTER TABLE products ADD COLUMN desired_partnership_type TEXT NOT NULL DEFAULT 'PERCENTAGE_ROYALTY';
+    `
   }
 ] as const;
 
