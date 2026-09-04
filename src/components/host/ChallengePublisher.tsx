@@ -35,25 +35,33 @@ export const ChallengePublisher: React.FC<ChallengePublisherProps> = ({ isOpen, 
 
   if (!isOpen) return null;
 
-  const handleSubmit = () => {
-    const result = store.publishChallenge({
-      title: title.trim(),
-      brief: brief.trim(),
-      category,
-      targetPriceKwd,
-      costCeilingKwd,
-      estimatedVolumeUnits: Math.max(1, estimatedVolumeUnits),
-      deadline: new Date(`${deadline}T23:59:59`).toISOString(),
-      equipmentAvailable: host?.capabilities.equipment.slice(0, 6) || [],
-      dietaryConstraints: [],
-      exclusivityPreference: true
-    });
-    if (!result) {
-      setNotice(store.lastGuardMessage || 'تعذر نشر التحدي. تأكد من العنوان، الوصف، الأسعار، الموعد والصلاحية.');
-      return;
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const result = await store.publishChallenge({
+        title: title.trim(),
+        brief: brief.trim(),
+        category,
+        targetPriceKwd,
+        costCeilingKwd,
+        estimatedVolumeUnits: Math.max(1, estimatedVolumeUnits),
+        deadline: new Date(`${deadline}T23:59:59`).toISOString(),
+        equipmentAvailable: host?.capabilities.equipment.slice(0, 6) || [],
+        dietaryConstraints: [],
+        exclusivityPreference: true
+      });
+      if (!result) {
+        setNotice(store.lastGuardMessage || 'تعذر نشر التحدي. تأكد من العنوان، الوصف، الأسعار، الموعد والصلاحية.');
+        return;
+      }
+      setNotice('تم نشر التحدي وربطه بالمنشأة وتسجيله في سجل التدقيق.');
+      setTimeout(onClose, 650);
+    } finally {
+      setSubmitting(false);
     }
-    setNotice('تم نشر التحدي وربطه بالمنشأة وتسجيله في سجل التدقيق.');
-    setTimeout(onClose, 650);
   };
 
   const isValid = title.trim().length >= 4 && brief.trim().length >= 10 && targetPriceKwd > 0 && costCeilingKwd >= 0 && costCeilingKwd < targetPriceKwd && estimatedVolumeUnits > 0 && !!deadline;
@@ -100,7 +108,7 @@ export const ChallengePublisher: React.FC<ChallengePublisherProps> = ({ isOpen, 
 
         <div className="p-4 bg-slate-950/45 border-t border-white/10 flex justify-end gap-2">
           <button onClick={onClose} className="px-4 py-2.5 bg-white/5 text-slate-300 font-bold rounded-xl text-xs border border-white/10">إلغاء</button>
-          <button onClick={handleSubmit} disabled={!isValid} className="px-5 py-2.5 bg-gold-300 hover:bg-gold-200 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5"><Check className="w-4 h-4" /><span>نشر التحدي</span></button>
+          <button onClick={handleSubmit} disabled={!isValid || submitting} className="px-5 py-2.5 bg-gold-300 hover:bg-gold-200 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5"><Check className="w-4 h-4" /><span>{submitting ? 'جارٍ النشر…' : 'نشر التحدي'}</span></button>
         </div>
       </div>
     </div>

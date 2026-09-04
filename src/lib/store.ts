@@ -636,69 +636,83 @@ export class Store {
     this.notify();
   }
 
+  /**
+   * Hydrates the authenticated user's real products + collaborations from the server snapshot,
+   * replacing any seed. Called right after authentication. Nested offer/contract/launch detail
+   * loads lazily per surface; this gives each portal its real top-level entities.
+   */
+  public async hydrateFromServer() {
+    try {
+      const snap = await domainClient.snapshot();
+      this.products = (snap.products || []).map((p: any): CreatorProduct => ({
+        id: p.id, creatorId: p.creatorId, internalName: p.publicName, publicName: p.publicName,
+        category: p.category, shortDescription: p.shortDescription, story: '', status: p.status,
+        mediaUrls: [], generalIngredients: [], allergens: [], dietaryTags: [], servingSize: '', shelfLife: '',
+        estimatedPrepTimeMinutes: 0,
+        estimatedUnitCostKwd: (Number(p.estimatedUnitCostFils) || 0) / 1000,
+        targetSellingPriceKwd: (Number(p.targetPriceFils) || 0) / 1000,
+        expectedEquipment: [], isSecretRecipe: !!p.isSecretRecipe, acceptsExclusivity: false,
+        desiredPartnershipType: 'PERCENTAGE_ROYALTY', createdAt: p.createdAt, currentRecipeVersion: 'V1.0'
+      }));
+      this.collaborations = (snap.collaborations || []).map((c: any): Collaboration => ({
+        id: c.id, productId: c.product_id, creatorId: c.creator_id, hostBusinessId: c.organization_id,
+        stage: c.stage, offerHistory: [], createdAt: c.created_at, updatedAt: c.updated_at
+      }));
+      this.notify();
+    } catch { /* keep whatever is loaded on failure */ }
+  }
+
+  public async loadChallenges() {
+    try { const res = await domainClient.listChallenges(); this.challenges = (res.challenges || []) as Challenge[]; this.notify(); } catch { /* ignore */ }
+  }
+
+  public async loadLabBatches(collaborationId: string) {
+    try { const res = await domainClient.listLabBatches(collaborationId); this.labBatches = [...(res.labBatches || []) as LabBatch[], ...this.labBatches.filter(b => b.collaborationId !== collaborationId)]; this.notify(); } catch { /* ignore */ }
+  }
+
+  public async loadDealDecisions(collaborationId: string) {
+    try { const res = await domainClient.listDealDecisions(collaborationId); this.dealDecisions = [...(res.dealDecisions || []) as DealDecision[], ...this.dealDecisions.filter(d => d.collaborationId !== collaborationId)]; this.notify(); } catch { /* ignore */ }
+  }
+
   public publishChallenge(data: Omit<Challenge, 'id' | 'hostBusinessId' | 'status' | 'createdAt'>) {
-    if (!IS_DEMO_MODE) return this.fail('نشر التحدي الإنتاجي يحتاج API مرتبطة بالمنشأة.');
-    const hostBusinessId = this.activeUser.hostBusinessId;
-    if (!hostBusinessId || !this.isHostMemberFor(hostBusinessId) || !hasPermission(this.activeUser, 'MANAGE_CHALLENGES')) return this.fail('لا تملك صلاحية نشر تحدٍ لهذه المنشأة.');
-    if (!data.title.trim() || data.title.trim().length < 4) return this.fail('عنوان التحدي مطلوب ويجب أن يكون واضحًا.');
-    if (!data.brief.trim() || data.brief.trim().length < 10) return this.fail('موجز التحدي يحتاج وصفًا أوضح.');
+    if (!data.title?.trim() || data.title.trim().length < 4) return this.fail('عنوان التحدي مطلوب ويجب أن يكون واضحًا.');
+    if (!data.brief?.trim() || data.brief.trim().length < 10) return this.fail('موجز التحدي يحتاج وصفًا أوضح.');
     if (data.targetPriceKwd <= 0 || data.costCeilingKwd < 0 || data.costCeilingKwd >= data.targetPriceKwd) return this.fail('سعر البيع وسقف التكلفة غير متوازنين.');
     if (new Date(data.deadline).getTime() <= Date.now()) return this.fail('الموعد النهائي يجب أن يكون في المستقبل.');
-    const challenge: Challenge = {
-      ...data,
-      id: `ch_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-      hostBusinessId,
-      status: 'OPEN',
-      createdAt: new Date().toISOString()
-    };
-    this.challenges.unshift(challenge);
-    this.addAuditLog('CHALLENGE_PUBLISHED', 'CHALLENGE', challenge.id, `نشر تحدٍ جديد: ${challenge.title}`);
-    this.notify();
-    return challenge;
+    return this.serverMutation(async () => {
+      const result = await domainClient.createChallenge({
+        title: data.title, brief: data.brief, category: data.category,
+        targetPriceFils: Math.round(data.targetPriceKwd * 1000), costCeilingFils: Math.round(data.costCeilingKwd * 1000),
+        estimatedVolumeUnits: data.estimatedVolumeUnits, deadline: data.deadline,
+        equipmentAvailable: data.equipmentAvailable, dietaryConstraints: data.dietaryConstraints, exclusivityPreference: data.exclusivityPreference
+      });
+      await this.loadChallenges();
+      return result as Challenge;
+    });
   }
 
   public addLabBatch(collaborationId: string, data: Omit<LabBatch, 'id' | 'collaborationId' | 'createdAt'>) {
-    if (!IS_DEMO_MODE) return this.fail('دفعة المختبر الإنتاجية تُحفظ خادميًا بإصدار الوصفة المرتبط.');
-    const col = this.collaborations.find(c => c.id === collaborationId);
-    if (!col) return this.fail('التعاون غير موجود.');
-    if (!hasPermission(this.activeUser, 'MANAGE_LAB') || !this.isHostMemberFor(col.hostBusinessId)) return this.fail('لا تملك صلاحية تسجيل دفعة مختبر لهذا التعاون.');
     if (data.yieldQuantity <= 0 || data.measuredCostKwd < 0 || data.prepTimeMinutes <= 0 || data.wastePercentage < 0 || data.wastePercentage > 100) return this.fail('قيم الدفعة التجريبية غير صالحة.');
-    const batch: LabBatch = {
-      ...data,
-      id: `btch_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-      collaborationId,
-      createdAt: new Date().toISOString()
-    };
-    this.labBatches.unshift(batch);
-    col.stage = 'LAB_ACTIVE';
-    col.updatedAt = new Date().toISOString();
-    this.addAuditLog('LAB_BATCH_RECORDED', 'LAB_BATCH', batch.id, `تسجيل دفعة مختبر ${batch.recipeVersion} بقرار ${batch.decision}`);
-    this.notify();
-    return batch;
+    return this.serverMutation(async () => {
+      const result = await domainClient.createLabBatch(collaborationId, {
+        recipeVersion: data.recipeVersion, yieldQuantity: data.yieldQuantity, measuredCostFils: Math.round(data.measuredCostKwd * 1000),
+        prepTimeMinutes: data.prepTimeMinutes, wastePercentage: data.wastePercentage,
+        tastingResult: data.tastingResult, proposedChanges: data.proposedChanges, decision: data.decision
+      });
+      await this.loadLabBatches(collaborationId);
+      const col = this.collaborations.find(c => c.id === collaborationId); if (col) { col.stage = 'LAB_ACTIVE'; }
+      return result as LabBatch;
+    });
   }
 
   public addDealDecision(collaborationId: string, text: string, category: DealDecision['category'] = 'DECISION') {
-    if (!IS_DEMO_MODE) return this.fail('قرار الصفقة الإنتاجي يحتاج كتابة خادمية موثقة.');
-    const col = this.collaborations.find(c => c.id === collaborationId);
-    if (!col) return this.fail('التعاون غير موجود.');
-    const allowed = this.isCreatorFor(col.creatorId) || this.isHostMemberFor(col.hostBusinessId) || ['ADMIN', 'SUPER_ADMIN'].includes(this.activeUser.role);
-    if (!allowed) return this.fail('لا تملك صلاحية الكتابة في غرفة هذه الصفقة.');
     const clean = text.trim();
     if (clean.length < 3 || clean.length > 1000) return this.fail('نص القرار يجب أن يكون بين 3 و1000 حرف.');
-    const decision: DealDecision = {
-      id: `dec_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-      collaborationId,
-      authorUserId: this.activeUser.id,
-      authorName: this.activeUser.name,
-      authorRole: this.activeUser.role,
-      text: clean,
-      category,
-      createdAt: new Date().toISOString()
-    };
-    this.dealDecisions.unshift(decision);
-    this.addAuditLog('DEAL_DECISION_ADDED', 'DEAL_DECISION', decision.id, `إضافة ${category} إلى غرفة الصفقة ${collaborationId}`);
-    this.notify();
-    return decision;
+    return this.serverMutation(async () => {
+      const result = await domainClient.createDealDecision(collaborationId, { text: clean, category });
+      await this.loadDealDecisions(collaborationId);
+      return result as DealDecision;
+    });
   }
 
   public sendOffer(collaborationId: string, senderRole: 'HOST' | 'CREATOR', offerData: Omit<OfferTerms, 'id' | 'version' | 'collaborationId' | 'senderRole' | 'status' | 'createdAt'>) {

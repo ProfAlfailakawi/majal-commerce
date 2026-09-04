@@ -34,6 +34,7 @@ import { EmptyState } from '../common/EmptyState';
 export const HostPortal: React.FC = () => {
   const [, setTick] = useState(0);
   useEffect(() => store.subscribe(() => setTick(t => t + 1)), []);
+  useEffect(() => { store.loadChallenges(); }, []);
 
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'DISCOVERY' | 'CHALLENGES' | 'LAB' | 'WAR_ROOM' | 'FINANCE' | 'TEAM'>('OVERVIEW');
   const [showPublisher, setShowPublisher] = useState(false);

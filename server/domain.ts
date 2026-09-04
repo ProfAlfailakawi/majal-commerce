@@ -469,6 +469,101 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
     } catch (e) { handleDomainError(res, e); }
   });
 
+  // ---- Host innovation surfaces: challenges, lab batches, deal-room decisions ----
+
+  const isHostMember = (req: AuthenticatedRequest, orgId: string) =>
+    isAdmin(req) || (!!req.auth?.user.hostBusinessId && req.auth.user.hostBusinessId === orgId && !!req.auth?.user.role?.startsWith('HOST_'));
+
+  // Challenges (host-published briefs).
+  router.get('/challenges', async (req: AuthenticatedRequest, res) => {
+    try {
+      const admin = isAdmin(req); const org = req.auth!.user.hostBusinessId;
+      const rows = admin
+        ? await db.prepare('SELECT * FROM challenges ORDER BY created_at DESC, id DESC LIMIT 200').all<Record<string, unknown>>()
+        : await db.prepare('SELECT * FROM challenges WHERE organization_id=? ORDER BY created_at DESC, id DESC LIMIT 200').all<Record<string, unknown>>(org || '');
+      res.json({ challenges: rows.map(r => ({
+        id: r.id, hostBusinessId: r.organization_id, title: r.title, brief: r.brief, category: r.category,
+        targetPriceKwd: Number(r.target_price_fils) / 1000, costCeilingKwd: Number(r.cost_ceiling_fils) / 1000,
+        estimatedVolumeUnits: Number(r.estimated_volume_units), deadline: r.deadline,
+        equipmentAvailable: JSON.parse(String(r.equipment_json || '[]')), dietaryConstraints: JSON.parse(String(r.dietary_json || '[]')),
+        exclusivityPreference: Number(r.exclusivity_preference) === 1, status: r.status, createdAt: r.created_at
+      })) });
+    } catch (e) { handleDomainError(res, e); }
+  });
+
+  router.post('/challenges', async (req: AuthenticatedRequest, res) => {
+    try {
+      const org = req.auth!.user.hostBusinessId;
+      if (!org || !isHostMember(req, org)) return jsonError(res, 403, 'لا تملك صلاحية نشر تحدٍ لهذه المنشأة.', 'FORBIDDEN');
+      const title = text(req.body?.title, 4, 160), brief = text(req.body?.brief, 10, 4000), category = text(req.body?.category, 2, 80);
+      const targetPriceFils = integer(req.body?.targetPriceFils, 1, 100_000_000), costCeilingFils = integer(req.body?.costCeilingFils, 0, 100_000_000);
+      const volume = integer(req.body?.estimatedVolumeUnits, 0, 100_000_000);
+      if (!title || !brief || !category || targetPriceFils === undefined || costCeilingFils === undefined || volume === undefined) return jsonError(res, 400, 'بيانات التحدي غير مكتملة.', 'INVALID_CHALLENGE');
+      if (costCeilingFils >= targetPriceFils) return jsonError(res, 400, 'سقف التكلفة يجب أن يكون أقل من سعر البيع.', 'INVALID_CHALLENGE');
+      const deadline = text(req.body?.deadline, 4, 40);
+      if (!deadline || new Date(deadline).getTime() <= Date.now()) return jsonError(res, 400, 'الموعد النهائي يجب أن يكون في المستقبل.', 'INVALID_DEADLINE');
+      const equipment = Array.isArray(req.body?.equipmentAvailable) ? req.body.equipmentAvailable.map((x: unknown) => text(x, 1, 60)).filter(Boolean).slice(0, 30) : [];
+      const dietary = Array.isArray(req.body?.dietaryConstraints) ? req.body.dietaryConstraints.map((x: unknown) => text(x, 1, 60)).filter(Boolean).slice(0, 30) : [];
+      const id = `ch_${randomUUID()}`, created = now();
+      await db.prepare(`INSERT INTO challenges(id, organization_id, title, brief, category, target_price_fils, cost_ceiling_fils, estimated_volume_units, deadline, equipment_json, dietary_json, exclusivity_preference, status, created_by_user_id, created_at, updated_at)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?, 'OPEN', ?,?,?)`).run(id, org, title, brief, category, targetPriceFils, costCeilingFils, volume, deadline, JSON.stringify(equipment), JSON.stringify(dietary), req.body?.exclusivityPreference ? 1 : 0, req.auth!.user.id, created, created);
+      await audit(db, req, 'CHALLENGE_PUBLISHED', 'CHALLENGE', id, undefined, { title }, org);
+      res.status(201).json({ id, hostBusinessId: org, title, brief, category, targetPriceKwd: targetPriceFils / 1000, costCeilingKwd: costCeilingFils / 1000, estimatedVolumeUnits: volume, deadline, equipmentAvailable: equipment, dietaryConstraints: dietary, exclusivityPreference: !!req.body?.exclusivityPreference, status: 'OPEN', createdAt: created });
+    } catch (e) { handleDomainError(res, e); }
+  });
+
+  // Lab batches (persistent, tied to a collaboration).
+  router.get('/collaborations/:id/lab-batches', async (req: AuthenticatedRequest, res) => {
+    try {
+      const col = await ensureCollabParty(db, req, req.params.id); if (!col) return jsonError(res, 403, 'التعاون غير متاح.', 'FORBIDDEN');
+      const rows = await db.prepare('SELECT * FROM lab_batches WHERE collaboration_id=? ORDER BY created_at DESC, id DESC LIMIT 200').all<Record<string, unknown>>(col.id);
+      res.json({ labBatches: rows.map(r => ({
+        id: r.id, collaborationId: r.collaboration_id, recipeVersion: r.recipe_version, batchDate: r.batch_date,
+        yieldQuantity: Number(r.yield_quantity), measuredCostKwd: Number(r.measured_cost_fils) / 1000, prepTimeMinutes: Number(r.prep_time_minutes),
+        wastePercentage: Number(r.waste_percentage), tastingResult: r.tasting_result, photos: [], proposedChanges: r.proposed_changes,
+        decision: r.decision, createdAt: r.created_at
+      })) });
+    } catch (e) { handleDomainError(res, e); }
+  });
+
+  router.post('/collaborations/:id/lab-batches', async (req: AuthenticatedRequest, res) => {
+    try {
+      const col = await collaboration(db, req.params.id); if (!col || !isHostMember(req, col.organization_id)) return jsonError(res, 403, 'لا تملك صلاحية تسجيل دفعة مختبر لهذا التعاون.', 'FORBIDDEN');
+      const recipeVersion = text(req.body?.recipeVersion, 1, 40) || 'V1.0';
+      const yieldQuantity = integer(req.body?.yieldQuantity, 1, 10_000_000), measuredCostFils = integer(req.body?.measuredCostFils, 0, 100_000_000);
+      const prepTimeMinutes = integer(req.body?.prepTimeMinutes, 1, 100_000), wastePercentage = integer(req.body?.wastePercentage, 0, 100);
+      const decision = text(req.body?.decision, 4, 40);
+      if (yieldQuantity === undefined || measuredCostFils === undefined || prepTimeMinutes === undefined || wastePercentage === undefined || !['APPROVE_NEXT', 'REJECT', 'PRODUCTION_CANDIDATE'].includes(decision || '')) return jsonError(res, 400, 'قيم الدفعة التجريبية غير صالحة.', 'INVALID_BATCH');
+      const id = `btch_${randomUUID()}`, created = now();
+      await db.prepare(`INSERT INTO lab_batches(id, collaboration_id, recipe_version, batch_date, yield_quantity, measured_cost_fils, prep_time_minutes, waste_percentage, tasting_result, proposed_changes, decision, created_by_user_id, created_at)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(id, col.id, recipeVersion, now(), yieldQuantity, measuredCostFils, prepTimeMinutes, wastePercentage, text(req.body?.tastingResult, 1, 2000) || 'لا توجد ملاحظة تذوق إضافية.', text(req.body?.proposedChanges, 1, 2000) || 'لا توجد تغييرات مقترحة.', decision, req.auth!.user.id, created);
+      await db.prepare("UPDATE collaborations SET stage='LAB_ACTIVE', updated_at=? WHERE id=?").run(created, col.id);
+      await audit(db, req, 'LAB_BATCH_RECORDED', 'LAB_BATCH', id, undefined, { recipeVersion, decision }, col.organization_id);
+      res.status(201).json({ id, collaborationId: col.id, recipeVersion, batchDate: created, yieldQuantity, measuredCostKwd: measuredCostFils / 1000, prepTimeMinutes, wastePercentage, tastingResult: req.body?.tastingResult || '', photos: [], proposedChanges: req.body?.proposedChanges || '', decision, createdAt: created });
+    } catch (e) { handleDomainError(res, e); }
+  });
+
+  // Deal-room decisions.
+  router.get('/collaborations/:id/deal-decisions', async (req: AuthenticatedRequest, res) => {
+    try {
+      const col = await ensureCollabParty(db, req, req.params.id); if (!col) return jsonError(res, 403, 'التعاون غير متاح.', 'FORBIDDEN');
+      const rows = await db.prepare('SELECT d.*, u.name AS author_name FROM deal_decisions d JOIN users u ON u.id = d.author_user_id WHERE d.collaboration_id=? ORDER BY d.created_at DESC, d.id DESC LIMIT 200').all<Record<string, unknown>>(col.id);
+      res.json({ dealDecisions: rows.map(r => ({ id: r.id, collaborationId: r.collaboration_id, authorUserId: r.author_user_id, authorName: r.author_name, authorRole: r.author_role, text: r.text, category: r.category, createdAt: r.created_at })) });
+    } catch (e) { handleDomainError(res, e); }
+  });
+
+  router.post('/collaborations/:id/deal-decisions', async (req: AuthenticatedRequest, res) => {
+    try {
+      const col = await ensureCollabParty(db, req, req.params.id); if (!col) return jsonError(res, 403, 'لا تملك صلاحية الكتابة في غرفة هذه الصفقة.', 'FORBIDDEN');
+      const body = text(req.body?.text, 3, 1000); const category = text(req.body?.category, 4, 20);
+      if (!body || !['DECISION', 'NOTE', 'RISK', 'MILESTONE'].includes(category || '')) return jsonError(res, 400, 'نص القرار غير صالح.', 'INVALID_DECISION');
+      const id = `dec_${randomUUID()}`, created = now();
+      await db.prepare('INSERT INTO deal_decisions(id, collaboration_id, author_user_id, author_role, text, category, created_at) VALUES(?,?,?,?,?,?,?)').run(id, col.id, req.auth!.user.id, req.auth!.user.role, body, category, created);
+      await audit(db, req, 'DEAL_DECISION_ADDED', 'DEAL_DECISION', id, undefined, { category }, col.organization_id);
+      res.status(201).json({ id, collaborationId: col.id, authorUserId: req.auth!.user.id, authorName: req.auth!.user.name, authorRole: req.auth!.user.role, text: body, category, createdAt: created });
+    } catch (e) { handleDomainError(res, e); }
+  });
+
   // 1. Secret recipe seal: public commitment only; salt stays in encrypted storage.
   router.post('/innovations/recipe-seals/:recipeVersionId', async (req: AuthenticatedRequest,res)=>{
     try{const recipe=await db.prepare('SELECT rv.*,p.creator_id FROM recipe_versions rv JOIN products p ON p.id=rv.product_id WHERE rv.id=?').get<RecipeRow & {creator_id:string}>(req.params.recipeVersionId);if(!recipe||!isCreator(req,recipe.creator_id))return jsonError(res,403,'الوصفة غير متاحة.','FORBIDDEN');const existing=await db.prepare('SELECT id,commitment_sha256,created_at FROM recipe_seals WHERE recipe_version_id=?').get<Record<string,unknown>>(recipe.id);if(existing)return res.json(existing);const salt=randomBytes(32).toString('base64url'),commitment=sha256(`MAJAL_RECIPE_SEAL_V1:${recipe.payload_sha256}:${salt}`),id=`seal_${randomUUID()}`;const receipt=await putEncryptedJson('recipe-seals',id,{salt,recipePayloadSha256:recipe.payload_sha256});const created=now();await db.prepare('INSERT INTO recipe_seals(id,recipe_version_id,product_id,commitment_sha256,salt_object_key,created_by_user_id,created_at) VALUES(?,?,?,?,?,?,?)').run(id,recipe.id,recipe.product_id,commitment,receipt.objectKey,req.auth!.user.id,created);await audit(db,req,'RECIPE_SEALED','RECIPE_SEAL',id,undefined,{commitment,createdAt:created});res.status(201).json({id,productId:recipe.product_id,commitmentSha256:commitment,createdAt:created});}catch(e){handleDomainError(res,e)}

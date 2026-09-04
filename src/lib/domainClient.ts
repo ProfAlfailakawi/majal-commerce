@@ -45,4 +45,10 @@ export const domainClient = {
   listLaunchReviews: (launchId: string) => request<any>(`/api/v1/domain/launches/${encodeURIComponent(launchId)}/reviews`),
   createOrder: (launchId: string, units: number) => request<any>(`/api/v1/domain/launches/${encodeURIComponent(launchId)}/orders`, { method:'POST', body: JSON.stringify({ units }) }, 'order'),
   createReview: (launchId: string, body: { tasteRating: number; wouldBuyAgain: boolean; keepItVote: boolean; comment?: string }) => request<any>(`/api/v1/domain/launches/${encodeURIComponent(launchId)}/reviews`, { method:'POST', body: JSON.stringify(body) }, 'review'),
+  listChallenges: () => request<{challenges: any[]}>('/api/v1/domain/challenges'),
+  createChallenge: (body: unknown) => request<any>('/api/v1/domain/challenges', { method:'POST', body: JSON.stringify(body) }, 'challenge'),
+  listLabBatches: (collaborationId: string) => request<{labBatches: any[]}>(`/api/v1/domain/collaborations/${encodeURIComponent(collaborationId)}/lab-batches`),
+  createLabBatch: (collaborationId: string, body: unknown) => request<any>(`/api/v1/domain/collaborations/${encodeURIComponent(collaborationId)}/lab-batches`, { method:'POST', body: JSON.stringify(body) }, 'lab-batch'),
+  listDealDecisions: (collaborationId: string) => request<{dealDecisions: any[]}>(`/api/v1/domain/collaborations/${encodeURIComponent(collaborationId)}/deal-decisions`),
+  createDealDecision: (collaborationId: string, body: unknown) => request<any>(`/api/v1/domain/collaborations/${encodeURIComponent(collaborationId)}/deal-decisions`, { method:'POST', body: JSON.stringify(body) }, 'deal-decision'),
 };
