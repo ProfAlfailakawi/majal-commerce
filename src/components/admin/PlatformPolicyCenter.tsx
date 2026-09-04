@@ -22,8 +22,10 @@ export const PlatformPolicyCenter: React.FC = () => {
       strongMatchThreshold: Number(draft.strongMatchThreshold),
       settlementCycleDays: Number(draft.settlementCycleDays)
     });
-    setNotice(result ? 'تم اعتماد سياسة المنصة وتسجيل التغيير في سجل التدقيق.' : 'تعذر حفظ السياسة. راجع الحدود المسموحة.');
-    setTimeout(() => setNotice(null), 3500);
+    // Surface the ACTUAL guard reason (e.g. blocked in production) instead of always
+    // blaming the operator's input values.
+    setNotice(result ? 'تم اعتماد سياسة المنصة وتسجيل التغيير في سجل التدقيق.' : (store.lastGuardMessage || 'تعذر حفظ السياسة.'));
+    setTimeout(() => setNotice(null), 5000);
   };
 
   const fields = [

@@ -17,6 +17,13 @@ async function settlementFixture(db: Awaited<ReturnType<typeof openMajalDatabase
   await db.prepare("INSERT INTO users(id,name,email,phone,role,status,password_hash,password_salt,created_at,updated_at) VALUES('u_s','Chef','settle@example.test','','CREATOR','ACTIVE','h','s',?,?)").run(now, now);
   await db.prepare("INSERT INTO creator_profiles(id,user_id,display_name,specialty,created_at,updated_at) VALUES('cr_s','u_s','C','b',?,?)").run(now, now);
   await db.prepare("INSERT INTO settlement_batches(id,creator_id,total_fils,status,created_at,updated_at) VALUES('stl_s','cr_s',9000,'APPROVED',?,?)").run(now, now);
+  // A valid APPROVED batch has its accruals LOCKED to it, summing to total_fils. We insert a
+  // matching accrual directly (FKs off for this fixture only — the full order→launch chain is
+  // out of scope for a settlement-idempotency unit test) so applySettlementPaid's amount check
+  // sees a consistent batch.
+  await db.exec('PRAGMA foreign_keys = OFF;');
+  await db.prepare("INSERT INTO accruals(id,order_id,creator_id,amount_fils,status,settlement_batch_id,created_at,updated_at) VALUES('acc_s','ord_s','cr_s',9000,'LOCKED','stl_s',?,?)").run(now, now);
+  await db.exec('PRAGMA foreign_keys = ON;');
 }
 
 test('settlement paid is idempotent: a retried call never double-appends to the ledger', async () => {

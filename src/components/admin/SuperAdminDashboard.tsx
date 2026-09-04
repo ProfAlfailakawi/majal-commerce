@@ -155,13 +155,29 @@ export const SuperAdminDashboard: React.FC = () => {
                   <div className="flex flex-wrap gap-2">
                     <select
                       value={user.role}
-                      onChange={e => store.changeUserRole(user.id, e.target.value as UserRole)}
+                      onChange={e => {
+                        const next = e.target.value as UserRole;
+                        if (next === user.role) return;
+                        // Privileged mutation — confirm before applying. If declined, the
+                        // controlled value reverts to user.role on the next render.
+                        if (!window.confirm(`تغيير دور «${user.name}» إلى «${roleLabel(next)}»؟ هذا يعدّل صلاحيات الوصول فورًا.`)) {
+                          setTick(t => t + 1);
+                          return;
+                        }
+                        store.changeUserRole(user.id, next);
+                      }}
                       className="glass-input rounded-xl px-3 py-2 text-xs outline-none"
                     >
                       {roleRows.map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
                     </select>
                     <button
-                      onClick={() => store.setUserStatus(user.id, user.status === 'SUSPENDED' ? 'ACTIVE' : 'SUSPENDED')}
+                      onClick={() => {
+                        const suspending = user.status !== 'SUSPENDED';
+                        if (!window.confirm(suspending
+                          ? `تعليق حساب «${user.name}»؟ سيُمنع من تسجيل الدخول فورًا.`
+                          : `إعادة تفعيل حساب «${user.name}»؟`)) return;
+                        store.setUserStatus(user.id, suspending ? 'SUSPENDED' : 'ACTIVE');
+                      }}
                       className={`px-3 py-2 rounded-xl text-xs font-black border ${user.status === 'SUSPENDED' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-rose-500/10 text-rose-300 border-rose-400/20'}`}
                     >
                       {user.status === 'SUSPENDED' ? 'إعادة التفعيل' : 'تعليق الحساب'}

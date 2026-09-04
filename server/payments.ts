@@ -448,6 +448,15 @@ export async function applyVerifiedPaymentEvent(db: MajalDatabase, event: Verifi
         await appendLedgerEntry(tx, { scope: 'PAYMENT', entryType: 'PAYMENT_CAPTURED', entityType: 'PAYMENT_INTENT', entityId: intent.id, amountFils: intent.amount_fils, currency: 'KWD', occurredAt: now, meta: { provider: event.provider, eventId: event.eventId } });
       } else if (event.status === 'REFUNDED') {
         await appendLedgerEntry(tx, { scope: 'REFUND', entryType: 'PAYMENT_REFUNDED', entityType: 'PAYMENT_INTENT', entityId: intent.id, amountFils: -intent.amount_fils, currency: 'KWD', occurredAt: now, meta: { provider: event.provider, eventId: event.eventId } });
+        // Cascade the refund to the order and its royalty accrual so a refunded sale stops
+        // counting as revenue and its accrual can't reach settlement. Only accruals not yet
+        // paid out are reversed; a LOCKED/PENDING/ELIGIBLE accrual becomes REVERSED. (No-op
+        // until the orders/accruals pipeline is populated.)
+        const order = await tx.prepare('SELECT id FROM orders WHERE payment_intent_id = ? LIMIT 1').get(intent.id) as { id: string } | undefined;
+        if (order) {
+          await tx.prepare("UPDATE orders SET status = 'REFUNDED', updated_at = ? WHERE id = ?").run(now, order.id);
+          await tx.prepare("UPDATE accruals SET status = 'REVERSED', updated_at = ? WHERE order_id = ? AND status IN ('PENDING','ELIGIBLE','LOCKED')").run(now, order.id);
+        }
       }
     }
     await tx.prepare(`

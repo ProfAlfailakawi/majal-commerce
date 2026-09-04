@@ -132,12 +132,12 @@ export const CreatorPortal: React.FC = () => {
         <div className="space-y-6">
           <CreatorPassport creatorId={currentCreatorId} />
           <RecipeAccessRequests creatorId={currentCreatorId} />
-          <OpportunityRadar creatorId={currentCreatorId} />
+          <OpportunityRadar creatorId={currentCreatorId} onOpenProduct={() => setActiveTab('PRODUCTS')} />
           {myProducts[0] && <DigitalTwinPanel product={myProducts[0]} />}
         </div>
       )}
 
-      {activeTab === 'RADAR' && <OpportunityRadar creatorId={currentCreatorId} />}
+      {activeTab === 'RADAR' && <OpportunityRadar creatorId={currentCreatorId} onOpenProduct={() => setActiveTab('PRODUCTS')} />}
 
       {activeTab === 'PRODUCTS' && (
         <div className="space-y-6">

@@ -116,7 +116,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {[
                   { id: 'CREATOR', label: 'مبدع وصفات', icon: <Sparkles className="w-4 h-4" />, desc: 'ابتكار وحفظ أسرار الأطباق' },
-                  { id: 'HOST_OWNER', label: 'منشأة حاضنة', icon: <Building2 className="w-4 h-4" />, desc: 'تشغيل وإنتاج المطابخ' },
+                  { id: 'HOST_OWNER', label: 'منشأة حاضنة', icon: <Building2 className="w-4 h-4" />, desc: 'يبدأ الحساب كعميل ويُرقّى بعد تأهيل المنشأة' },
                   { id: 'CONSUMER', label: 'متذوق / عميل', icon: <Store className="w-4 h-4" />, desc: 'تصفح وتجربة وشراء الأطباق' }
                 ].map((item) => (
                   <button
@@ -180,7 +180,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
                   onChange={event => setPassword(event.target.value)}
                   autoComplete={mode === 'LOGIN' ? 'current-password' : 'new-password'}
                   required
-                  minLength={6}
+                  minLength={mode === 'LOGIN' ? 1 : 12}
                   maxLength={128}
                   placeholder="••••••••"
                   className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 pl-11 text-sm text-slate-100 outline-none focus:border-gold-300/50 text-left"
@@ -191,7 +191,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-1 cursor-pointer"
                   title={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
-                  tabIndex={-1}
+                  aria-label={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+                  aria-pressed={showPassword}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>

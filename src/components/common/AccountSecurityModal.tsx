@@ -29,7 +29,13 @@ export const AccountSecurityModal: React.FC<{ isOpen: boolean; onClose: () => vo
     setStatus('LOADING');
     try {
       const result = await confirmMfaEnrollment(code);
-      if (result.enabled) setStatus('CONFIRMED');
+      if (result.enabled) {
+        setStatus('CONFIRMED');
+      } else {
+        // A non-throwing failure must not leave the spinner stuck on "جارٍ التحقق…".
+        setStatus('IDLE');
+        setNotice('الرمز غير صحيح أو انتهت صلاحيته. حاول مرة أخرى.');
+      }
     } catch (error) {
       setStatus('IDLE');
       setNotice(error instanceof Error ? error.message : 'تعذّر تفعيل MFA.');

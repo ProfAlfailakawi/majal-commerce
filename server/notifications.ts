@@ -30,19 +30,27 @@ const textValue = (value: unknown, min: number, max: number) => {
 const jsonError = (res: Response, status: number, message: string, code?: string) =>
   res.status(status).json({ error: message, ...(code ? { code } : {}) });
 
+// The inbox is ordered priority-first, then recency. The keyset cursor MUST carry the same
+// leading priority rank, otherwise page 2 (which only compared timestamp/id) silently skipped
+// or duplicated rows across priority bands.
+const PRIORITY_RANK_SQL = "CASE priority WHEN 'URGENT' THEN 0 WHEN 'NOW' THEN 1 WHEN 'SOON' THEN 2 ELSE 3 END";
+function priorityRank(priority: unknown): number {
+  return priority === 'URGENT' ? 0 : priority === 'NOW' ? 1 : priority === 'SOON' ? 2 : 3;
+}
+
 function parseCursor(value: unknown) {
   if (typeof value !== 'string' || value.length > 300) return undefined;
   try {
-    const parsed = JSON.parse(Buffer.from(value, 'base64url').toString('utf8')) as { at?: string; id?: string };
-    if (!parsed.at || !parsed.id || Number.isNaN(new Date(parsed.at).getTime())) return undefined;
-    return { at: parsed.at, id: parsed.id };
+    const parsed = JSON.parse(Buffer.from(value, 'base64url').toString('utf8')) as { pr?: number; at?: string; id?: string };
+    if (!parsed.at || !parsed.id || typeof parsed.pr !== 'number' || Number.isNaN(new Date(parsed.at).getTime())) return undefined;
+    return { pr: parsed.pr, at: parsed.at, id: parsed.id };
   } catch {
     return undefined;
   }
 }
 
-function makeCursor(row: { last_occurred_at: string; id: string }) {
-  return Buffer.from(JSON.stringify({ at: row.last_occurred_at, id: row.id })).toString('base64url');
+function makeCursor(row: { priority: unknown; last_occurred_at: string; id: string }) {
+  return Buffer.from(JSON.stringify({ pr: priorityRank(row.priority), at: row.last_occurred_at, id: row.id })).toString('base64url');
 }
 
 function deliveryTime(now: Date, quietStart: string | null, quietEnd: string | null, timezone: string) {
@@ -157,21 +165,27 @@ export function createNotificationRouter(db: MajalDatabase, authConfig: AuthConf
       WHERE user_id = ?
         AND status != 'ARCHIVED'
         AND (expires_at IS NULL OR expires_at > ?)
-        AND (? IS NULL OR last_occurred_at < ? OR (last_occurred_at = ? AND id < ?))
+        AND (
+          ? IS NULL
+          OR ${PRIORITY_RANK_SQL} > ?
+          OR (${PRIORITY_RANK_SQL} = ? AND (last_occurred_at < ? OR (last_occurred_at = ? AND id < ?)))
+        )
       ORDER BY
-        CASE priority WHEN 'URGENT' THEN 0 WHEN 'NOW' THEN 1 WHEN 'SOON' THEN 2 ELSE 3 END,
+        ${PRIORITY_RANK_SQL},
         last_occurred_at DESC,
         id DESC
       LIMIT ?
     `).all(
       req.auth.user.id,
       new Date().toISOString(),
-      cursor?.at ?? null,
+      cursor?.pr ?? null,
+      cursor?.pr ?? null,
+      cursor?.pr ?? null,
       cursor?.at ?? null,
       cursor?.at ?? null,
       cursor?.id ?? null,
       limit + 1
-    ) as Array<Record<string, unknown> & { id: string; last_occurred_at: string }>;
+    ) as Array<Record<string, unknown> & { id: string; priority: unknown; last_occurred_at: string }>;
     const hasMore = rows.length > limit;
     const items = rows.slice(0, limit);
     const unread = await db.prepare(`

@@ -56,12 +56,13 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
   const featuredHost = featured ? store.hosts.find(h => h.id === featured.hostBusinessId) : undefined;
 
   const metrics = useMemo(() => {
-    if (!featured) return { keep: 0, repeat: 0, rating: 0, remaining: 0 };
+    if (!featured) return { keep: 0, repeat: 0, rating: 0, remaining: null as number | null };
     const reviews = store.reviews.filter(r => r.launchId === featured.id);
     const keep = reviews.length ? Math.round(reviews.filter(r => r.keepItVote).length / reviews.length * 100) : 0;
     const repeat = reviews.length ? Math.round(reviews.filter(r => r.wouldBuyAgain).length / reviews.length * 100) : 0;
     const rating = reviews.length ? reviews.reduce((s, r) => s + r.tasteRating, 0) / reviews.length : 0;
-    const remaining = Math.max(0, (featured.quantityCapUnits || featured.unitsSold) - featured.unitsSold);
+    // Uncapped (permanent/ongoing) launches have no "remaining" — don't paint them as sold out.
+    const remaining = featured.quantityCapUnits ? Math.max(0, featured.quantityCapUnits - featured.unitsSold) : null;
     return { keep, repeat, rating, remaining };
   }, [featured, store.reviews.length]);
 
@@ -72,7 +73,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
     const order = store.placeOrder(selectedLaunch.id, unitsCount, customerName, customerPhone, acquisitionSource, branchId);
     if (!order) {
       setOrderSuccessMsg('');
-      setOrderErrorMsg('تعذر تسجيل الطلب. تحقق من حالة الإطلاق والكمية والبيانات ثم حاول مرة أخرى.');
+      setOrderErrorMsg(store.lastGuardMessage || 'تعذر تسجيل الطلب. تحقق من حالة الإطلاق والكمية والبيانات ثم حاول مرة أخرى.');
       return;
     }
     setOrderErrorMsg('');
@@ -82,7 +83,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
   const handleKeepVote = () => {
     if (!featured) return;
     const review = store.submitReview(featured.id, 5, 4, 5, 'أبي هذا المنتج يستمر في المنيو.', true, customerName || 'عميل مجال');
-    setVoteMessage(review ? 'وصل صوتك. صار لك أثر مباشر في قرار استمرار المنتج.' : 'تم تسجيل صوت بهذا الاسم لهذا الإطلاق مسبقًا.');
+    setVoteMessage(review ? 'وصل صوتك. صار لك أثر مباشر في قرار استمرار المنتج.' : (store.lastGuardMessage || 'تم تسجيل صوت بهذا الاسم لهذا الإطلاق مسبقًا.'));
     setTimeout(() => setVoteMessage(''), 3200);
   };
 
@@ -126,7 +127,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
                   <div className="rounded-xl p-3 bg-white/5"><Star className="w-4 h-4 text-gold-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.rating.toFixed(1)}</div><div className="text-[9px] text-slate-500">الطعم</div></div>
                   <div className="rounded-xl p-3 bg-white/5"><Repeat2 className="w-4 h-4 text-emerald-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.repeat}%</div><div className="text-[9px] text-slate-500">يكرر</div></div>
                   <div className="rounded-xl p-3 bg-white/5"><Users className="w-4 h-4 text-sky-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.keep}%</div><div className="text-[9px] text-slate-500">نسبة التكرار</div></div>
-                  <div className="rounded-xl p-3 bg-white/5"><PackageOpen className="w-4 h-4 text-rose-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.remaining}</div><div className="text-[9px] text-slate-500">متبقي</div></div>
+                  <div className="rounded-xl p-3 bg-white/5"><PackageOpen className="w-4 h-4 text-rose-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.remaining ?? '∞'}</div><div className="text-[9px] text-slate-500">{metrics.remaining === null ? 'بلا سقف' : 'متبقي'}</div></div>
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => { setSelectedLaunch(featured); setSelectedBranchId(featured.branches[0] || ''); }} className="flex-1 py-3 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center justify-center gap-2"><ShoppingBag className="w-4 h-4" /> اطلب التجربة</button>
@@ -151,7 +152,8 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
             const product = store.products.find(p => p.id === launch.productId);
             const creator = store.creators.find(c => c.id === launch.creatorId);
             const host = store.hosts.find(h => h.id === launch.hostBusinessId);
-            const progress = launch.quantityCapUnits ? Math.min(100, Math.round(launch.unitsSold / launch.quantityCapUnits * 100)) : 100;
+            const capped = !!launch.quantityCapUnits;
+            const progress = capped ? Math.min(100, Math.round(launch.unitsSold / launch.quantityCapUnits! * 100)) : 0;
             return (
               <article key={launch.id} className="glass-card rounded-3xl border border-white/10 overflow-hidden hover:-translate-y-1 transition-transform">
                 <div className="relative h-52">
@@ -162,7 +164,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
                 </div>
                 <div className="p-5 space-y-4">
                   <p className="text-xs text-slate-400 leading-6 line-clamp-2">{product?.shortDescription}</p>
-                  <div><div className="flex justify-between text-[10px] text-slate-500 mb-1"><span>{launch.unitsSold} مبيعة</span><span>{progress}%</span></div><div className="h-2 bg-white/5 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-l from-gold-500 to-emerald-400 rounded-full" style={{ width: `${progress}%` }} /></div></div>
+                  <div><div className="flex justify-between text-[10px] text-slate-500 mb-1"><span>{launch.unitsSold} مبيعة</span><span>{capped ? `${progress}%` : 'مستمر'}</span></div><div className="h-2 bg-white/5 rounded-full overflow-hidden">{capped ? <div className="h-full bg-gradient-to-l from-gold-500 to-emerald-400 rounded-full" style={{ width: `${progress}%` }} /> : <div className="h-full w-full bg-gradient-to-l from-emerald-500/30 to-emerald-400/30 rounded-full" />}</div></div>
                   <div className="flex items-center justify-between"><div><div className="text-[10px] text-slate-500">السعر</div><div className="font-black text-gold-300">{launch.sellingPriceKwd.toFixed(3)} د.ك</div></div><button onClick={() => { setSelectedLaunch(launch); setSelectedBranchId(launch.branches[0] || ''); }} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black text-slate-100">شاهد واطلب</button></div>
                 </div>
               </article>

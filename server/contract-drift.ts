@@ -60,9 +60,11 @@ export async function gatherActuals(db: MajalDatabase, collaborationId: string):
   const orders = await db.prepare(`SELECT COUNT(*) AS order_count, COALESCE(SUM(o.units),0) AS units, COALESCE(SUM(o.total_fils),0) AS revenue
     FROM orders o JOIN launches l ON l.id = o.launch_id
     WHERE l.collaboration_id = ? AND o.status IN ('PAID','FULFILLED')`).get<{ order_count: number|string; units: number|string; revenue: number|string }>(collaborationId);
+  // Scope accruals to the SAME revenue-bearing orders as the denominator above and drop
+  // reversed accruals, so a refund can't inflate the effective royalty rate.
   const accrued = await db.prepare(`SELECT COALESCE(SUM(a.amount_fils),0) AS accrued
     FROM accruals a JOIN orders o ON o.id = a.order_id JOIN launches l ON l.id = o.launch_id
-    WHERE l.collaboration_id = ?`).get<{ accrued: number|string }>(collaborationId);
+    WHERE l.collaboration_id = ? AND o.status IN ('PAID','FULFILLED') AND a.status <> 'REVERSED'`).get<{ accrued: number|string }>(collaborationId);
   const paidUnits = Number(orders?.units || 0);
   const revenue = Number(orders?.revenue || 0);
   return {

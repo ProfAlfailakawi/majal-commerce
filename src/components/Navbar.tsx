@@ -222,9 +222,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>دخول</span>
             </button>}
 
-            {!IS_DEMO_MODE && authStatus === 'AUTHENTICATED' && <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
-              <span className="w-7 h-7 rounded-full bg-gold-500/20 text-gold-300 grid place-items-center font-black text-xs" aria-hidden="true">{activeUser.name.slice(0, 1)}</span>
-              <div className="flex flex-col text-right">
+            {!IS_DEMO_MODE && authStatus === 'AUTHENTICATED' && <div className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+              {/* Name/role are hidden on phones, but security + logout stay reachable. */}
+              <span className="hidden sm:grid w-7 h-7 rounded-full bg-gold-500/20 text-gold-300 place-items-center font-black text-xs" aria-hidden="true">{activeUser.name.slice(0, 1)}</span>
+              <div className="hidden sm:flex flex-col text-right">
                 <span className="max-w-28 truncate text-[11px] font-bold text-slate-100">{activeUser.name}</span>
                 <span className="text-[9px] text-gold-300 font-semibold">{roleLabels[activeUser.role]}</span>
               </div>

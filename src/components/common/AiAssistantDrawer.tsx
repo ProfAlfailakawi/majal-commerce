@@ -152,7 +152,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
                     <span>النتيجة المقترحة:</span>
                   </span>
                   <button
-                    onClick={() => navigator.clipboard.writeText(aiOutput)}
+                    onClick={() => { try { navigator.clipboard?.writeText(aiOutput); } catch { /* clipboard unavailable in insecure contexts */ } }}
                     className="text-[10px] text-amber-300 underline"
                   >
                     نسخ النص

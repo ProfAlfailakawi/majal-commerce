@@ -92,21 +92,29 @@ export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => voi
 
   const handleConnectPos = async () => {
     const hostId = store.activeUser.hostBusinessId || 'hst_demo_kw';
-    const res = await fetch('/api/v1/pos/connect', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': authCsrfToken() },
-      body: JSON.stringify({
-        hostBusinessId: hostId,
-        provider: posProvider
-      })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'تعذرت محاكاة POS');
-    if (data.success && data.simulated) {
-      setPosConnected(true);
+    try {
+      const res = await fetch('/api/v1/pos/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': authCsrfToken() },
+        body: JSON.stringify({
+          hostBusinessId: hostId,
+          provider: posProvider
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'تعذرت محاكاة POS');
+      if (data.success && data.simulated) {
+        setPosConnected(true);
+        setSyncLog(prev => [
+          `[${new Date().toLocaleTimeString('ar-KW')}] اكتملت محاكاة اتصال ${posProvider} محلياً`,
+          `[${new Date().toLocaleTimeString('ar-KW')}] لا توجد مزامنة أو مستحقات أو Webhook حقيقي في هذا الوضع`
+        ]);
+      }
+    } catch (e: any) {
+      // A failed fetch must surface to the user, not become an unhandled rejection.
       setSyncLog(prev => [
-        `[${new Date().toLocaleTimeString('ar-KW')}] اكتملت محاكاة اتصال ${posProvider} محلياً`,
-        `[${new Date().toLocaleTimeString('ar-KW')}] لا توجد مزامنة أو مستحقات أو Webhook حقيقي في هذا الوضع`
+        `[${new Date().toLocaleTimeString('ar-KW')}] تعذّر اتصال ${posProvider}: ${e?.message || 'خطأ غير معروف'}`,
+        ...prev
       ]);
     }
   };

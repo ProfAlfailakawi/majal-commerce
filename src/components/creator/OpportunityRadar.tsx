@@ -20,7 +20,7 @@ interface OpportunityRadarProps {
   onOpenProduct?: (productId: string) => void;
 }
 
-export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId }) => {
+export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId, onOpenProduct }) => {
   // Real-time ranking: subscribe to the store so the radar re-ranks the instant its
   // inputs change — a host clearing verification, a product entering matching, or a
   // freshly persisted/re-scored match row. Without this, the memo below computed once
@@ -116,7 +116,12 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId })
                 {matchScore.explanationAr}
               </div>
 
-              <button className="w-full py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-slate-950 text-xs font-black flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => onOpenProduct?.(product.id)}
+                disabled={!onOpenProduct}
+                className="w-full py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 text-xs font-black flex items-center justify-center gap-2"
+              >
                 <Sparkles className="w-4 h-4" /> ابدأ فرصة التعاون <ChevronLeft className="w-4 h-4" />
               </button>
             </div>

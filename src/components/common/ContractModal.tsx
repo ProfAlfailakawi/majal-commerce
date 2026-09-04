@@ -41,7 +41,7 @@ export const ContractModal: React.FC<ContractModalProps> = ({
     setSignError(null);
     try {
       if (IS_DEMO_MODE) {
-        await Promise.resolve(store.signContract(contract.id));
+        await Promise.resolve(store.signContract(contract.id, signatureName));
         onClose();
         return;
       }

@@ -187,9 +187,21 @@ export const AdminDashboard: React.FC = () => {
               <div key={product.id} className="rounded-2xl p-4 bg-slate-950/40 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3">
                 <div><div className="font-bold text-slate-100">{product.publicName}</div><div className="mt-1.5"><StatusPill status={product.status} prefix="الحالة" /></div></div>
                 {product.status === 'PAUSED' ? (
-                  <button onClick={() => store.resumeProduct(product.id)} className="px-3 py-2 rounded-xl bg-emerald-500 text-slate-950 text-xs font-black">إعادة التشغيل</button>
+                  <button
+                    onClick={() => { if (window.confirm(`إعادة تشغيل «${product.publicName}» وإتاحته للبيع مجددًا؟`)) store.resumeProduct(product.id); }}
+                    className="px-3 py-2 rounded-xl bg-emerald-500 text-slate-950 text-xs font-black">إعادة التشغيل</button>
                 ) : (
-                  <button onClick={() => store.pauseProduct(product.id, 'إيقاف احترازي بواسطة الأدمن لمراجعة الجودة/الامتثال')} className="px-3 py-2 rounded-xl bg-rose-500/10 text-rose-300 border border-rose-400/20 text-xs font-black">إيقاف احترازي</button>
+                  <button
+                    onClick={() => {
+                      // Emergency stop on a LIVE product: confirm and capture a real reason
+                      // (recorded in the audit trail) instead of a hardcoded string.
+                      const reason = window.prompt(`سبب الإيقاف الاحترازي لـ«${product.publicName}» (يُسجَّل في التدقيق):`, '');
+                      if (reason === null) return;
+                      const trimmed = reason.trim();
+                      if (trimmed.length < 4) { window.alert('يرجى إدخال سبب واضح (٤ أحرف على الأقل).'); return; }
+                      store.pauseProduct(product.id, trimmed);
+                    }}
+                    className="px-3 py-2 rounded-xl bg-rose-500/10 text-rose-300 border border-rose-400/20 text-xs font-black">إيقاف احترازي</button>
                 )}
               </div>
             ))}

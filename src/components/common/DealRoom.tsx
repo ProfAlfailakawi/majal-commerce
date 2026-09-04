@@ -162,7 +162,7 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
               <option value="RISK">مخاطرة</option>
               <option value="MILESTONE">محطة</option>
             </select>
-            <input value={message} onChange={e => setMessage(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addDecision(); }} placeholder="سجّل قرارًا أو ملاحظة مرتبطة بالصفقة..." className="glass-input px-4 py-2.5 rounded-xl text-xs outline-none text-slate-100" />
+            <input value={message} onChange={e => setMessage(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && message.trim().length >= 3) addDecision(); }} placeholder="سجّل قرارًا أو ملاحظة مرتبطة بالصفقة..." className="glass-input px-4 py-2.5 rounded-xl text-xs outline-none text-slate-100" />
             <button onClick={addDecision} disabled={message.trim().length < 3} className="px-4 py-2.5 rounded-xl bg-gold-500 disabled:bg-white/5 disabled:text-slate-600 text-slate-950 font-black text-xs">حفظ</button>
           </div>
         </div>

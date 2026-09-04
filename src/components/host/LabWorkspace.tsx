@@ -53,7 +53,7 @@ export const LabWorkspace: React.FC<LabWorkspaceProps> = ({ collaboration }) => 
       decision: selectedBatchDecision
     });
     if (!batch) {
-      setNotice('تعذر حفظ الدفعة. تحقق من الصلاحيات والقيم المدخلة.');
+      setNotice(store.lastGuardMessage || 'تعذر حفظ الدفعة. تحقق من الصلاحيات والقيم المدخلة.');
       return;
     }
     setNotice(`تم حفظ الدفعة ${batch.id} وربطها بالتعاون وسجل التدقيق.`);

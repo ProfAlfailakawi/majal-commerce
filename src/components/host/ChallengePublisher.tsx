@@ -49,7 +49,7 @@ export const ChallengePublisher: React.FC<ChallengePublisherProps> = ({ isOpen, 
       exclusivityPreference: true
     });
     if (!result) {
-      setNotice('تعذر نشر التحدي. تأكد من العنوان، الوصف، الأسعار، الموعد والصلاحية.');
+      setNotice(store.lastGuardMessage || 'تعذر نشر التحدي. تأكد من العنوان، الوصف، الأسعار، الموعد والصلاحية.');
       return;
     }
     setNotice('تم نشر التحدي وربطه بالمنشأة وتسجيله في سجل التدقيق.');

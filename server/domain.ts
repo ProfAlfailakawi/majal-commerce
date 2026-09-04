@@ -16,7 +16,12 @@ const canonical = (value: unknown): string => {
 };
 const jsonError = (res: Response, status: number, message: string, code: string) => res.status(status).json({ error: message, code });
 const text = (value: unknown, min = 1, max = 500) => typeof value === 'string' && value.trim().length >= min && value.trim().length <= max ? value.trim() : undefined;
-const integer = (value: unknown, min: number, max: number) => Number.isInteger(Number(value)) && Number(value) >= min && Number(value) <= max ? Number(value) : undefined;
+const integer = (value: unknown, min: number, max: number) => {
+  // Reject silent coercions like Number(true)=1 or Number('')=0 on money-adjacent fields.
+  if (typeof value !== 'number' && !(typeof value === 'string' && /^-?\d+$/.test(value.trim()))) return undefined;
+  const n = Number(value);
+  return Number.isInteger(n) && n >= min && n <= max ? n : undefined;
+};
 const bool = (value: unknown) => value === true || value === false ? value : undefined;
 const requestId = (req: AuthenticatedRequest) => text(req.header('x-request-id'), 8, 128) || randomUUID();
 
@@ -67,7 +72,13 @@ export async function applySettlementPaid(
     if (!batch) throw Object.assign(new Error('NOT_FOUND'), { status: 404 });
     const updated = await tx.prepare("UPDATE settlement_batches SET status='PAID',provider_reference=?,updated_at=? WHERE id=? AND status IN ('APPROVED','PROCESSING')").run(providerReference, now(), batchId);
     if (updated.changes !== 1) return { applied: false, status: String(batch.status) };
-    await tx.prepare("UPDATE accruals SET status='PAID',updated_at=? WHERE creator_id=? AND status='LOCKED'").run(now(), String(batch.creator_id));
+    // Settle ONLY the accruals that belong to THIS batch. Verify the locked sum equals the
+    // batch total before posting the (irreversible) ledger entry, so the payout amount can
+    // never diverge from what was actually locked.
+    const lockedRows = await tx.prepare("SELECT amount_fils FROM accruals WHERE settlement_batch_id=? AND status='LOCKED'").all<{amount_fils:number|string}>(batchId);
+    const lockedSum = lockedRows.reduce((s, r) => s + Number(r.amount_fils), 0);
+    if (lockedSum !== Number(batch.total_fils)) throw Object.assign(new Error('SETTLEMENT_AMOUNT_MISMATCH'), { status: 409 });
+    await tx.prepare("UPDATE accruals SET status='PAID',updated_at=? WHERE settlement_batch_id=? AND status='LOCKED'").run(now(), batchId);
     await appendLedgerEntry(tx, { scope: 'SETTLEMENT', entryType: 'SETTLEMENT_PAID', entityType: 'SETTLEMENT_BATCH', entityId: batchId, amountFils: -Number(batch.total_fils), currency: 'KWD', meta: { creatorId: String(batch.creator_id), providerReference } });
     if (onApplied) await onApplied(tx, batch);
     return { applied: true, status: 'PAID' };
@@ -275,10 +286,19 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
   router.post('/collaborations/:collaborationId/offers/:offerId/accept', async (req: AuthenticatedRequest,res)=>{
     try { const col=await ensureCollabParty(db,req,req.params.collaborationId); if(!col)return jsonError(res,403,'التعاون غير متاح.','FORBIDDEN'); const offer=await db.prepare('SELECT * FROM offer_versions WHERE id=? AND collaboration_id=?').get<OfferRow>(req.params.offerId,col.id); if(!offer||offer.status!=='PENDING')return jsonError(res,409,'العرض غير قابل للقبول.','OFFER_NOT_PENDING');
       const sender=await db.prepare('SELECT creator_id, host_business_id FROM users WHERE id=?').get<{creator_id:string|null;host_business_id:string|null}>(offer.sender_user_id); const acceptingCreator=isCreator(req,col.creator_id)&&sender?.creator_id!==col.creator_id; const acceptingHost=isHost(req,col.organization_id)&&sender?.host_business_id!==col.organization_id; if(!acceptingCreator&&!acceptingHost)return jsonError(res,403,'المرسل لا يستطيع قبول عرضه بنفسه.','SELF_ACCEPT_FORBIDDEN');
+      // A fully-signed contract can't be renegotiated through a plain offer-accept.
+      const signed=await db.prepare("SELECT id FROM contract_versions WHERE collaboration_id=? AND status='FULLY_SIGNED' LIMIT 1").get<{id:string}>(col.id); if(signed)return jsonError(res,409,'يوجد عقد موقّع بالكامل لهذا التعاون؛ التعديل يتطلّب مسار تجديد رسمي.','CONTRACT_ALREADY_SIGNED');
       const result=await withIdempotency(db,req,'OFFER_ACCEPT',async()=>{
-        const contractId=`ctr_${randomUUID()}`, created=now(); const document={version:1,collaborationId:col.id,offerId:offer.id,terms:JSON.parse(offer.terms_json),acceptedAt:created}; const receipt=await putEncryptedJson('contracts',contractId,document);
-        await withTransaction(db,async tx=>{ await tx.prepare("UPDATE offer_versions SET status='ACCEPTED' WHERE id=? AND status='PENDING'").run(offer.id); await tx.prepare("UPDATE collaborations SET stage='CONTRACTING', version=version+1, updated_at=? WHERE id=?").run(created,col.id); await tx.prepare("INSERT INTO contract_versions(id,collaboration_id,version_number,document_sha256,object_storage_key,status,created_at) VALUES(?,?,1,?,?,'PENDING_SIGNATURES',?)").run(contractId,col.id,receipt.plaintextSha256,receipt.objectKey,created); await audit(tx,req,'OFFER_ACCEPTED_CONTRACT_CREATED','CONTRACT',contractId,offer,{documentSha256:receipt.plaintextSha256},col.organization_id); });
-        return{offerId:offer.id,contractId,status:'PENDING_SIGNATURES',documentSha256:receipt.plaintextSha256};
+        const contractId=`ctr_${randomUUID()}`, created=now(); const receipt=await putEncryptedJson('contracts',contractId,{collaborationId:col.id,offerId:offer.id,terms:JSON.parse(offer.terms_json),acceptedAt:created});
+        const nextVersion=await withTransaction(db,async tx=>{
+          // Supersede any still-open contract so re-acceptance produces a clean new version
+          // instead of colliding on UNIQUE(collaboration_id, version_number).
+          await tx.prepare("UPDATE contract_versions SET status='VOID' WHERE collaboration_id=? AND status IN ('DRAFT','PENDING_SIGNATURES')").run(col.id);
+          const max=await tx.prepare('SELECT MAX(version_number) AS max_version FROM contract_versions WHERE collaboration_id=?').get<{max_version:number|string|null}>(col.id); const version=Number(max?.max_version||0)+1;
+          await tx.prepare("UPDATE offer_versions SET status='ACCEPTED' WHERE id=? AND status='PENDING'").run(offer.id); await tx.prepare("UPDATE collaborations SET stage='CONTRACTING', version=version+1, updated_at=? WHERE id=?").run(created,col.id); await tx.prepare("INSERT INTO contract_versions(id,collaboration_id,version_number,document_sha256,object_storage_key,status,created_at) VALUES(?,?,?,?,?,'PENDING_SIGNATURES',?)").run(contractId,col.id,version,receipt.plaintextSha256,receipt.objectKey,created); await audit(tx,req,'OFFER_ACCEPTED_CONTRACT_CREATED','CONTRACT',contractId,offer,{documentSha256:receipt.plaintextSha256,versionNumber:version},col.organization_id);
+          return version;
+        });
+        return{offerId:offer.id,contractId,versionNumber:nextVersion,status:'PENDING_SIGNATURES',documentSha256:receipt.plaintextSha256};
       }); res.json(result);
     }catch(e){handleDomainError(res,e)}
   });
@@ -305,7 +325,7 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
   });
 
   router.post('/settlements/:creatorId/approve', requireRoles('ADMIN','SUPER_ADMIN'), async (req: AuthenticatedRequest,res)=>{
-    try{await assertKillSwitchClear(db,'SETTLEMENTS');const result=await withIdempotency(db,req,'SETTLEMENT_APPROVE',async()=>withTransaction(db,async tx=>{const rows=await tx.prepare("SELECT id,amount_fils FROM accruals WHERE creator_id=? AND status='ELIGIBLE'").all<{id:string;amount_fils:number|string}>(req.params.creatorId);if(!rows.length)throw Object.assign(new Error('NO_ELIGIBLE_ACCRUALS'),{status:409});const total=rows.reduce((s,r)=>s+Number(r.amount_fils),0),id=`stl_${randomUUID()}`,created=now();await tx.prepare("INSERT INTO settlement_batches(id,creator_id,total_fils,status,created_at,updated_at) VALUES(?,?,?,'APPROVED',?,?)").run(id,req.params.creatorId,total,created,created);await tx.prepare("UPDATE accruals SET status='LOCKED',updated_at=? WHERE creator_id=? AND status='ELIGIBLE'").run(created,req.params.creatorId);await audit(tx,req,'SETTLEMENT_APPROVED','SETTLEMENT_BATCH',id,undefined,{totalFils:total});return{id,totalFils:total,status:'APPROVED'};}));res.status(201).json(result);}catch(e){handleDomainError(res,e)}
+    try{await assertKillSwitchClear(db,'SETTLEMENTS');const result=await withIdempotency(db,req,'SETTLEMENT_APPROVE',async()=>withTransaction(db,async tx=>{const rows=await tx.prepare("SELECT id,amount_fils FROM accruals WHERE creator_id=? AND status='ELIGIBLE'").all<{id:string;amount_fils:number|string}>(req.params.creatorId);if(!rows.length)throw Object.assign(new Error('NO_ELIGIBLE_ACCRUALS'),{status:409});const total=rows.reduce((s,r)=>s+Number(r.amount_fils),0),id=`stl_${randomUUID()}`,created=now();await tx.prepare("INSERT INTO settlement_batches(id,creator_id,total_fils,status,created_at,updated_at) VALUES(?,?,?,'APPROVED',?,?)").run(id,req.params.creatorId,total,created,created);await tx.prepare("UPDATE accruals SET status='LOCKED',settlement_batch_id=?,updated_at=? WHERE creator_id=? AND status='ELIGIBLE'").run(id,created,req.params.creatorId);await audit(tx,req,'SETTLEMENT_APPROVED','SETTLEMENT_BATCH',id,undefined,{totalFils:total});return{id,totalFils:total,status:'APPROVED'};}));res.status(201).json(result);}catch(e){handleDomainError(res,e)}
   });
 
   router.post('/internal/settlements/:id/paid', requireRoles('ADMIN','SUPER_ADMIN'), async (req: AuthenticatedRequest,res)=>{
@@ -360,6 +380,6 @@ function handleDomainError(res: Response, error: unknown) {
   const candidate=error as {status?:number;message?:string;code?:string};
   const status=Number(candidate?.status) || (String(candidate?.message).includes('UNIQUE') ? 409 : 400);
   const code=candidate?.code || candidate?.message || 'DOMAIN_OPERATION_FAILED';
-  const safe:Record<string,string>={IDEMPOTENCY_KEY_REQUIRED:'Idempotency-Key مطلوب للعملية.',IDEMPOTENCY_CONFLICT:'المفتاح أُعيد استخدامه بطلب مختلف.',NO_ELIGIBLE_ACCRUALS:'لا توجد مستحقات مؤهلة للتسوية.',SLOT_UNAVAILABLE:'السعة لم تعد متاحة.',SLOT_RACE_LOST:'حُجزت السعة بطلب متزامن آخر.',DOCUMENT_AI_NOT_CONFIGURED:'استخراج المستندات الحقيقي غير مهيأ في هذه البيئة.',KILL_SWITCH_ENGAGED_SETTLEMENTS:'التسويات مجمّدة مؤقتًا بأمر احتواء أمني.',KILL_SWITCH_ENGAGED_RECIPE_REVEALS:'كشف الأسرار مجمّد مؤقتًا بأمر احتواء أمني.'};
+  const safe:Record<string,string>={IDEMPOTENCY_KEY_REQUIRED:'Idempotency-Key مطلوب للعملية.',IDEMPOTENCY_CONFLICT:'المفتاح أُعيد استخدامه بطلب مختلف.',NO_ELIGIBLE_ACCRUALS:'لا توجد مستحقات مؤهلة للتسوية.',SETTLEMENT_AMOUNT_MISMATCH:'مجموع المستحقات المقفلة لا يطابق قيمة الدفعة؛ أُلغيت التسوية حمايةً من الدفع الخاطئ.',SLOT_UNAVAILABLE:'السعة لم تعد متاحة.',SLOT_RACE_LOST:'حُجزت السعة بطلب متزامن آخر.',DOCUMENT_AI_NOT_CONFIGURED:'استخراج المستندات الحقيقي غير مهيأ في هذه البيئة.',KILL_SWITCH_ENGAGED_SETTLEMENTS:'التسويات مجمّدة مؤقتًا بأمر احتواء أمني.',KILL_SWITCH_ENGAGED_RECIPE_REVEALS:'كشف الأسرار مجمّد مؤقتًا بأمر احتواء أمني.'};
   jsonError(res,status,safe[code]||'تعذّر تنفيذ العملية بأمان.',code);
 }

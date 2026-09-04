@@ -124,9 +124,13 @@ function scryptPassword(password: string, salt: string): Promise<string> {
   });
 }
 
+export const PASSWORD_MIN_LENGTH = 12;
+
 export function validatePassword(password: unknown) {
-  if (typeof password !== 'string' || password.length < 6 || password.length > PASSWORD_MAX_LENGTH) {
-    return 'كلمة المرور يجب أن تكون بين 6 و128 محرفًا.';
+  // SECURITY: a 12-char minimum guards privileged roles (incl. SUPER_ADMIN) against brute
+  // force far better than the old 6-char floor.
+  if (typeof password !== 'string' || password.length < PASSWORD_MIN_LENGTH || password.length > PASSWORD_MAX_LENGTH) {
+    return `كلمة المرور يجب أن تكون بين ${PASSWORD_MIN_LENGTH} و${PASSWORD_MAX_LENGTH} محرفًا.`;
   }
   return null;
 }
@@ -388,7 +392,12 @@ export function requireAuth(db: MajalDatabase, config: AuthConfig) {
       }
     }
 
-    if (!row.host_business_id && (row.role.startsWith('HOST_') || ['ADMIN', 'SUPER_ADMIN'].includes(row.role))) {
+    // SECURITY: never infer tenant membership in production. Auto-attaching a HOST_*/ADMIN
+    // user to an arbitrary existing host business is a cross-tenant escalation. This
+    // convenience seeding is limited to non-production (demo/dev); in production a host
+    // user must be linked to an org explicitly through an approved onboarding flow.
+    if (process.env.NODE_ENV !== 'production'
+        && !row.host_business_id && (row.role.startsWith('HOST_') || ['ADMIN', 'SUPER_ADMIN'].includes(row.role))) {
       try {
         const existingHb = await db.prepare('SELECT id FROM host_businesses LIMIT 1').get<{id: string}>();
         let hbId = existingHb?.id;
@@ -496,8 +505,11 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
       if (SUPER_ADMIN_EMAILS.has(email)) {
         assignedRole = 'SUPER_ADMIN';
       } else {
+        // SECURITY: public self-registration may only pick unprivileged roles. HOST_OWNER
+        // is a tenant-privileged role and must be granted through an approved onboarding +
+        // explicit org binding, never self-assigned at signup.
         const requestedRole = req.body?.role;
-        const allowedPublicRoles: AuthRole[] = ['CREATOR', 'HOST_OWNER', 'CONSUMER'];
+        const allowedPublicRoles: AuthRole[] = ['CREATOR', 'CONSUMER'];
         assignedRole = allowedPublicRoles.includes(requestedRole) ? requestedRole : 'CONSUMER';
       }
 
@@ -521,30 +533,11 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
         (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === '23505');
 
       if (email && isUniqueViolation) {
-        // Handle forgotten password / re-registering with existing email: update password & info and login
-        try {
-          const existingUser = await db.prepare('SELECT * FROM users WHERE email = ? LIMIT 1').get<UserRow>(email);
-          if (existingUser) {
-            const passwordError = validatePassword(req.body?.password);
-            if (passwordError) return jsonError(res, 400, passwordError);
-            const { hash, salt } = await hashPassword(req.body.password);
-            const now = new Date().toISOString();
-            const updatedName = cleanText(req.body?.name || existingUser.name, 2, 120);
-            const updatedPhone = req.body?.phone ? cleanText(req.body.phone, 7, 24) : existingUser.phone;
-
-            await db.prepare(`
-              UPDATE users SET password_hash = ?, password_salt = ?, name = ?, phone = ?, updated_at = ?, failed_login_count = 0, locked_until = NULL WHERE id = ?
-            `).run(hash, salt, updatedName, updatedPhone, now, existingUser.id);
-
-            const refreshedUser = await db.prepare('SELECT * FROM users WHERE id = ?').get<UserRow>(existingUser.id) as UserRow;
-            const session = await createSession(db, config, req, refreshedUser);
-            setSessionCookies(res, config, session.token, session.csrfToken, session.expiresAt);
-            await logAuthEvent(db, config, { userId: refreshedUser.id, email, eventType: 'LOGIN_SUCCEEDED', requestId, ip: req.ip });
-            return res.status(201).json({ user: publicUser(refreshedUser), csrfToken: session.csrfToken, expiresAt: session.expiresAt });
-          }
-        } catch {
-          // Fall through
-        }
+        // SECURITY: a duplicate email must NEVER be treated as "recover + authenticate".
+        // Previously this path re-hashed the supplied password, overwrote the existing
+        // account's credentials and issued a session — a one-request account takeover of
+        // any existing user. Registration only ever returns 409; credential recovery goes
+        // exclusively through the reset-password flow with an out-of-band code.
         return jsonError(res, 409, 'هذا البريد الإلكتروني مسجّل مسبقاً. يرجى التبديل إلى تسجيل الدخول مباشرة.', 'ACCOUNT_EXISTS');
       }
       return jsonError(res, 400, error instanceof Error ? error.message : 'تعذّر إنشاء الحساب.');
@@ -555,34 +548,42 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
     const email = normalizeEmail(req.body?.email);
     if (!email) return jsonError(res, 400, 'البريد الإلكتروني غير صالح.');
     
+    // Enumeration-safe uniform response used for every outcome.
+    const uniform = { message: 'إذا كان البريد مسجلاً، فسيصلك رمز التحقق على بريدك.' };
     try {
       const existingUser = await db.prepare('SELECT id FROM users WHERE email = ? LIMIT 1').get<{id: string}>(email);
-      if (!existingUser && !SUPER_ADMIN_EMAILS.has(email)) {
-        // Return success even if user doesn't exist to prevent email enumeration
-        return res.json({ message: 'إذا كان البريد مسجلاً، ستصلك رسالة.' });
+      // SECURITY: only issue a reset token for an account that actually exists. Do NOT
+      // special-case SUPER_ADMIN_EMAILS here — a reset must never create/provision a super
+      // admin, and treating those emails differently would leak which emails are privileged.
+      if (!existingUser) {
+        return res.json(uniform);
       }
 
       // Generate 6 digit code
       const code = Math.floor(100000 + Math.random() * 900000).toString();
-      
-      // Hash it for DB (using same salt logic for simplicity, or just simple sha256. For simplicity, just use standard crypto hash)
       const crypto = require('crypto');
       const token_hash = crypto.createHash('sha256').update(code).digest('hex');
       const now = new Date();
       const expiresAt = new Date(now.getTime() + 15 * 60000).toISOString(); // 15 mins
-      
+
       await db.prepare(`
         INSERT INTO password_reset_tokens (email, token_hash, expires_at, created_at)
         VALUES (?, ?, ?, ?)
         ON CONFLICT(email) DO UPDATE SET token_hash = excluded.token_hash, expires_at = excluded.expires_at, created_at = excluded.created_at
       `).run(email, token_hash, expiresAt, now.toISOString());
 
-      // Print to console for dev environment so the user can easily get it
-      console.log(`\n\n[DEV] Password Reset Code for ${email}: ${code}\n\n`);
-      
-      return res.json({ message: 'تم إرسال رمز التحقق بنجاح. (لأغراض التطوير، تم طباعة الرمز في الـ console، أو أدخل 123456)', devCode: code });
+      // SECURITY: the reset code is a credential. It is NEVER returned in the HTTP response
+      // and NEVER logged in production. Until an email/SMS provider is wired, non-production
+      // builds print it to the server console only so local testing can proceed.
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`\n\n[DEV] Password Reset Code for ${email}: ${code}\n\n`);
+      }
+      // TODO(prod): deliver `code` out-of-band via the email/SMS provider before launch.
+
+      return res.json(uniform);
     } catch (error) {
-      return jsonError(res, 500, 'حدث خطأ في النظام.');
+      // Keep the response uniform to avoid leaking whether the email exists.
+      return res.json(uniform);
     }
   });
 
@@ -601,44 +602,37 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
       const providedHash = crypto.createHash('sha256').update(code).digest('hex');
 
       const tokenRecord = await db.prepare('SELECT * FROM password_reset_tokens WHERE email = ?').get<any>(email);
-      const isDevBypass = code === '123456' && process.env.NODE_ENV !== 'production';
 
-      if (!isDevBypass) {
-        if (!tokenRecord || tokenRecord.token_hash !== providedHash) {
-          return jsonError(res, 400, 'الرمز غير صحيح أو منتهي الصلاحية.');
-        }
-        if (new Date(tokenRecord.expires_at) < new Date()) {
-          return jsonError(res, 400, 'صلاحية الرمز منتهية.');
-        }
+      // SECURITY: no dev bypass code. Every reset requires a valid, unexpired token that
+      // matches the hash stored at request time — in all environments.
+      if (!tokenRecord || tokenRecord.token_hash !== providedHash) {
+        return jsonError(res, 400, 'الرمز غير صحيح أو منتهي الصلاحية.');
+      }
+      if (new Date(tokenRecord.expires_at) < new Date()) {
+        return jsonError(res, 400, 'صلاحية الرمز منتهية.');
       }
 
-      let existingUser = await db.prepare('SELECT * FROM users WHERE email = ? LIMIT 1').get<UserRow>(email);
-      if (!existingUser && SUPER_ADMIN_EMAILS.has(email)) {
-        // Auto-provision Super Admin if missing
-        const { hash, salt } = await hashPassword(newPassword);
-        const id = `usr_super_${randomUUID().slice(0, 8)}`;
-        const nowStr = new Date().toISOString();
-        await db.prepare(`
-          INSERT INTO users(
-            id, name, email, phone, role, status, creator_id, host_business_id,
-            password_hash, password_salt, created_at, updated_at
-          ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(id, 'مشرف المنصة', email, '+965 99999999', 'SUPER_ADMIN', 'ACTIVE', null, null, hash, salt, nowStr, nowStr);
-        existingUser = await db.prepare('SELECT * FROM users WHERE id = ?').get<UserRow>(id) as UserRow;
-      }
-
+      // SECURITY: a password reset must NEVER create an account (previously this
+      // auto-provisioned a live SUPER_ADMIN for any allowlisted email). Accounts are
+      // created only via the register flow / auth:bootstrap.
+      const existingUser = await db.prepare('SELECT * FROM users WHERE email = ? LIMIT 1').get<UserRow>(email);
       if (!existingUser) {
-        return jsonError(res, 404, 'هذا البريد الإلكتروني غير مسجل.', 'USER_NOT_FOUND');
+        // Consume the dangling token and return an enumeration-safe error.
+        await db.prepare('DELETE FROM password_reset_tokens WHERE email = ?').run(email);
+        return jsonError(res, 400, 'الرمز غير صحيح أو منتهي الصلاحية.');
       }
 
       const { hash, salt } = await hashPassword(newPassword);
       const nowStr = new Date().toISOString();
-      
+
       await db.transaction(async (tx) => {
         await tx.prepare(`
           UPDATE users SET password_hash = ?, password_salt = ?, failed_login_count = 0, locked_until = NULL, updated_at = ? WHERE id = ?
         `).run(hash, salt, nowStr, existingUser!.id);
         await tx.prepare('DELETE FROM password_reset_tokens WHERE email = ?').run(email);
+        // SECURITY: revoke all existing sessions on credential change so a prior (possibly
+        // attacker-held) session cannot survive a password reset.
+        await tx.prepare('DELETE FROM sessions WHERE user_id = ?').run(existingUser!.id);
       });
 
       const refreshedUser = await db.prepare('SELECT * FROM users WHERE id = ?').get<UserRow>(existingUser.id) as UserRow;

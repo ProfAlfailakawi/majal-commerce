@@ -21,7 +21,7 @@ export const AdminAuditLogs: React.FC = () => {
         <div>
           <h3 className="font-bold text-base text-slate-100 flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-amber-400" />
-            <span>سجل التدقيق والأمان الرقمي سجل التدقيق</span>
+            <span>سجل التدقيق والأمان الرقمي</span>
           </h3>
           <p className="text-slate-400 text-xs">
             سجل حركة غير قابل للتعديل يوثق أحداث التوقيع، معاينة خزنة الوصفات، وتوليد التسويات المالية

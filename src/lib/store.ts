@@ -450,6 +450,11 @@ export class Store {
     this.listeners.forEach(listener => listener());
   }
 
+  /** Reads the current guard message (set by `fail`/`serverMutation` on the last failure). */
+  public get lastGuardMessage(): string | null {
+    return this.guardNotice?.message ?? null;
+  }
+
   private async serverMutation<T>(operation: () => Promise<T>): Promise<T | undefined> {
     try {
       const result = await operation();
@@ -772,7 +777,7 @@ export class Store {
     this.notify();
   }
 
-  public signContract(contractId: string) {
+  public signContract(contractId: string, signatureName?: string) {
     if (!IS_DEMO_MODE) return this.fail('ابدأ تحقق PACI لغرض CONTRACT_SIGNATURE ثم استخدم signContractWithPaci(contractId, paciRequestId).');
     const contract = this.contracts.find(c => c.id === contractId);
     if (!contract) return this.fail('العقد غير موجود.');
@@ -804,7 +809,8 @@ export class Store {
       }
     }
 
-    this.addAuditLog('CONTRACT_SIGNED', 'CONTRACT', contractId, `محاكاة توقيع محلية غير ملزمة — حالة العقد: ${contract.status}`);
+    const signerLabel = signatureName?.trim() ? ` — الاسم القانوني: ${signatureName.trim()}` : '';
+    this.addAuditLog('CONTRACT_SIGNED', 'CONTRACT', contractId, `محاكاة توقيع محلية غير ملزمة — حالة العقد: ${contract.status}${signerLabel}`);
     this.notify();
     return contract;
   }

@@ -14,6 +14,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { store } from '../../lib/store';
+import { IS_DEMO_MODE } from '../../lib/runtime';
 import { HostBusiness } from '../../types/majal';
 import { hasPermission, roleLabel } from '../../lib/permissions';
 import { ProductDiscovery } from './ProductDiscovery';
@@ -86,7 +87,13 @@ export const HostPortal: React.FC = () => {
           <Building2 className="w-12 h-12 mx-auto text-slate-500 opacity-50" />
           <h2 className="text-xl font-bold text-slate-200">لا توجد منشأة مرتبطة بحسابك</h2>
           <p>للبدء في استخدام منصة المنشآت، يرجى إنشاء ملف منشأتك.</p>
-          <button 
+          {!IS_DEMO_MODE && (
+            <p className="text-xs text-amber-300/90 leading-6 max-w-md mx-auto">
+              ربط حسابك بمنشأة يتم عبر عملية تأهيل معتمدة من فريق مجال (توثيق السجل التجاري والتصاريح).
+              تواصل مع الدعم لإتمام التأهيل — لا يمكن إنشاء منشأة تلقائيًا في بيئة الإنتاج.
+            </p>
+          )}
+          {IS_DEMO_MODE && <button
             onClick={() => {
               const newHost: HostBusiness = {
                 id: 'hst_' + Math.random().toString(36).substr(2, 9),
@@ -120,7 +127,7 @@ export const HostPortal: React.FC = () => {
             className="mt-4 px-6 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-bold inline-flex items-center gap-2"
           >
             <Plus className="w-5 h-5" /> إنشاء منشأة افتراضية للبدء
-          </button>
+          </button>}
         </div>
       );
     }

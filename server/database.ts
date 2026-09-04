@@ -1156,6 +1156,19 @@ const migrations = [
         created_at TEXT NOT NULL
       );
     `
+  },
+  {
+    // Links each accrual to the settlement batch that locked it, so paying a batch settles
+    // ONLY that batch's accruals (previously the payout marked every LOCKED accrual for the
+    // creator PAID, which double-paid once two batches could coexist).
+    version: 13,
+    sql: `
+      ALTER TABLE accruals ADD COLUMN settlement_batch_id TEXT
+        REFERENCES settlement_batches(id) ON DELETE RESTRICT;
+
+      CREATE INDEX IF NOT EXISTS idx_accruals_batch_status
+        ON accruals(settlement_batch_id, status);
+    `
   }
 ] as const;
 
