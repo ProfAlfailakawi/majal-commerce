@@ -42,10 +42,6 @@ export function hasSeenOnboarding(): boolean {
   return readStorage() !== null;
 }
 
-export function readOnboarding(): OnboardingRecord | null {
-  return readStorage();
-}
-
 export function markOnboardingSeen(intent: OnboardingIntent | null, skipped: boolean): void {
   try {
     const record: OnboardingRecord = { completedAt: new Date().toISOString(), intent, skipped };
@@ -53,13 +49,5 @@ export function markOnboardingSeen(intent: OnboardingIntent | null, skipped: boo
   } catch {
     // A visitor who cannot persist the flag simply sees the intro again next visit.
     // That is a far better failure than a boot-time exception.
-  }
-}
-
-export function resetOnboarding(): void {
-  try {
-    window.localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // Nothing to clear if storage is unavailable.
   }
 }

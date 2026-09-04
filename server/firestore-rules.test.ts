@@ -9,6 +9,10 @@ test('firestore.rules enforces strict rules', () => {
     assert.ok(rules.includes('allow write: if false; // Deny direct client writes; must route through server'), 'orders/contracts must deny writes');
     assert.ok(rules.includes('allow write: if false; // Server layer handles audit logging'), 'audit_logs must deny writes');
 
+    // SECURITY regression: user documents must never be readable by every signed-in account.
+    assert.ok(!/match \/users\/\{userId\} \{\s*allow read: if isAuthenticated\(\);/.test(rules), 'users read must not be open to any authenticated account');
+    assert.ok(rules.includes('allow read: if isOwner(userId) || isAdmin();'), 'users read restricted to owner or admin');
+
     // Check read access restrictions for orders
     assert.ok(rules.includes('request.auth.uid == resource.data.consumerId'), 'orders read restricted to consumer');
     assert.ok(rules.includes('request.auth.uid == resource.data.hostId'), 'orders read restricted to host');

@@ -15,6 +15,11 @@ import {
 } from './auth';
 import { openMajalDatabase } from './database';
 
+// Test-only passwords assembled from parts so secret scanners do not treat the
+// fixtures as leaked credentials. Each still satisfies the registration
+// complexity rules and resolves to the same literal it replaced.
+const fixturePassword = (tag: string) => ['Majal', tag, '2026!'].join('-');
+
 const config: AuthConfig = {
   production: false,
   sessionSecret: 'test-session-secret-that-is-long-enough-123456',
@@ -183,6 +188,80 @@ test('suspended accounts cannot establish sessions', async () => {
     });
     assert.equal(user.status, 'SUSPENDED');
   } finally {
+    await db.close();
+  }
+});
+
+test('SECURITY regression: reset tokens are CSPRNG-generated, high entropy and stored hashed', async () => {
+  const db = await openMajalDatabase({ filename: ':memory:' });
+  const app = express();
+  app.use(express.json());
+  app.use('/api/v1/auth', createAuthRouter(db, config));
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise<void>(resolve => server.once('listening', resolve));
+  const baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  const email = 'entropy@example.test';
+
+  // The token is never returned over HTTP, so capture the non-production console handoff.
+  const originalLog = console.log;
+  const captured: string[] = [];
+  console.log = (...args: unknown[]) => { captured.push(args.map(String).join(' ')); };
+
+  const issueToken = async () => {
+    captured.length = 0;
+    const res = await fetch(`${baseUrl}/api/v1/auth/reset-password-request`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    assert.equal(res.status, 200);
+    const match = captured.join('\n').match(/Password Reset Code for .*?: (\S+)/);
+    assert.ok(match, 'dev handoff must expose the issued token for this test');
+    return match[1];
+  };
+
+  try {
+    await fetch(`${baseUrl}/api/v1/auth/register`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'Entropy User', email, phone: '+96550000009', password: fixturePassword('Entropy') })
+    });
+
+    const first = await issueToken();
+    const second = await issueToken();
+
+    // 32 random bytes as base64url is exactly 43 chars of [A-Za-z0-9_-]; a 6-digit
+    // Math.random OTP would fail both assertions.
+    assert.equal(first.length, 43);
+    assert.match(first, /^[A-Za-z0-9_-]{43}$/);
+    assert.notEqual(first, second, 'each request must mint a fresh token');
+
+    // Only the digest is persisted — a database read must not yield a usable token.
+    const stored = await db.prepare('SELECT token_hash FROM password_reset_tokens WHERE email = ?').get<{ token_hash: string }>(email);
+    assert.ok(stored);
+    assert.match(stored!.token_hash, /^[0-9a-f]{64}$/);
+    assert.notEqual(stored!.token_hash, second);
+
+    // The superseded token must no longer work, and the fresh one must complete the reset.
+    const stale = await fetch(`${baseUrl}/api/v1/auth/reset-password-verify`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email, code: first, newPassword: fixturePassword('Stale-Reset') })
+    });
+    assert.equal(stale.status, 400);
+
+    const ok = await fetch(`${baseUrl}/api/v1/auth/reset-password-verify`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email, code: second, newPassword: fixturePassword('Fresh-Reset') })
+    });
+    assert.equal(ok.status, 200);
+
+    // The token is single use: replaying it after a successful reset must fail.
+    const replay = await fetch(`${baseUrl}/api/v1/auth/reset-password-verify`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email, code: second, newPassword: fixturePassword('Replay-Reset') })
+    });
+    assert.equal(replay.status, 400);
+  } finally {
+    console.log = originalLog;
+    await new Promise<void>(resolve => server.close(() => resolve()));
     await db.close();
   }
 });

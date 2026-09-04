@@ -90,6 +90,16 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DUMMY_SALT = Buffer.alloc(16, 7).toString('base64url');
 const DUMMY_HASH = 'x'.repeat(86);
 
+// SECURITY: password-reset tokens are bearer credentials. They are generated from the CSPRNG
+// (never Math.random, which is predictable from a handful of observed outputs), carry 256 bits
+// of entropy so they cannot be guessed or brute forced, and are stored only as a SHA-256 digest
+// so a database read never yields a usable token.
+const RESET_TOKEN_BYTES = 32;
+const RESET_TOKEN_TTL_MINUTES = 15;
+// base64url of 32 bytes is always 43 chars; bound the accepted input so an oversized body is
+// rejected before any hashing work is done.
+const RESET_TOKEN_MAX_LENGTH = 64;
+
 const jsonError = (res: Response, status: number, message: string, code?: string) =>
   res.status(status).json({ error: message, ...(code ? { code } : {}) });
 
@@ -559,12 +569,12 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
         return res.json(uniform);
       }
 
-      // Generate 6 digit code
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      const crypto = require('crypto');
-      const token_hash = crypto.createHash('sha256').update(code).digest('hex');
+      // SECURITY: cryptographically secure reset token (256 bits) — a 6-digit Math.random code
+      // was both predictable (Math.random is not a CSPRNG) and brute forceable (10^6 space).
+      const code = randomBytes(RESET_TOKEN_BYTES).toString('base64url');
+      const token_hash = sha256(code);
       const now = new Date();
-      const expiresAt = new Date(now.getTime() + 15 * 60000).toISOString(); // 15 mins
+      const expiresAt = new Date(now.getTime() + RESET_TOKEN_TTL_MINUTES * 60_000).toISOString();
 
       await db.prepare(`
         INSERT INTO password_reset_tokens (email, token_hash, expires_at, created_at)
@@ -594,21 +604,25 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
     const newPassword = typeof req.body?.newPassword === 'string' ? req.body.newPassword : req.body?.password;
     
     try {
-      if (!email || !code) return jsonError(res, 400, 'بيانات غير مكتملة.');
+      if (!email || typeof code !== 'string' || !code || code.length > RESET_TOKEN_MAX_LENGTH) {
+        return jsonError(res, 400, 'بيانات غير مكتملة.');
+      }
       const passwordError = validatePassword(newPassword);
       if (passwordError) return jsonError(res, 400, passwordError);
 
-      const crypto = require('crypto');
-      const providedHash = crypto.createHash('sha256').update(code).digest('hex');
+      const providedHash = sha256(code);
 
       const tokenRecord = await db.prepare('SELECT * FROM password_reset_tokens WHERE email = ?').get<any>(email);
 
       // SECURITY: no dev bypass code. Every reset requires a valid, unexpired token that
-      // matches the hash stored at request time — in all environments.
-      if (!tokenRecord || tokenRecord.token_hash !== providedHash) {
+      // matches the hash stored at request time — in all environments. The digest comparison
+      // is constant time so response latency cannot be used to recover the stored hash.
+      if (!tokenRecord || typeof tokenRecord.token_hash !== 'string' || !safeTextEqual(tokenRecord.token_hash, providedHash)) {
         return jsonError(res, 400, 'الرمز غير صحيح أو منتهي الصلاحية.');
       }
       if (new Date(tokenRecord.expires_at) < new Date()) {
+        // Consume the expired token so it cannot be replayed after a clock adjustment.
+        await db.prepare('DELETE FROM password_reset_tokens WHERE email = ?').run(email);
         return jsonError(res, 400, 'صلاحية الرمز منتهية.');
       }
 
