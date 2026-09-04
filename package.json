@@ -47,6 +47,9 @@
     "typescript": "~5.8.2"
   },
   "description": "MAJAL Absolute Edition — secure creator-to-business commercialization platform",
+  "optionalDependencies": {
+    "firebase-admin": "^13.0.0"
+  },
   "overrides": {
     "qs": "^6.16.0"
   }

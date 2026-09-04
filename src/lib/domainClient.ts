@@ -40,4 +40,9 @@ export const domainClient = {
   setLaunchGate: (collaborationId: string, key: string, value: boolean, evidence: unknown = {}) => request<any>(`/api/v1/domain/collaborations/${encodeURIComponent(collaborationId)}/launch-gate/${encodeURIComponent(key)}`, { method:'PUT', body: JSON.stringify({ value, evidence }) }),
   activateLaunch: (collaborationId: string) => request<any>(`/api/v1/domain/collaborations/${encodeURIComponent(collaborationId)}/launch/activate`, { method:'POST', body:'{}' }),
   approveSettlement: (creatorId: string) => request<any>(`/api/v1/domain/settlements/${encodeURIComponent(creatorId)}/approve`, { method:'POST', body:'{}' }, 'settlement'),
+  listLaunches: () => request<{launches: any[]}>('/api/v1/domain/launches'),
+  listMyOrders: () => request<{orders: any[]}>('/api/v1/domain/me/orders'),
+  listLaunchReviews: (launchId: string) => request<any>(`/api/v1/domain/launches/${encodeURIComponent(launchId)}/reviews`),
+  createOrder: (launchId: string, units: number) => request<any>(`/api/v1/domain/launches/${encodeURIComponent(launchId)}/orders`, { method:'POST', body: JSON.stringify({ units }) }, 'order'),
+  createReview: (launchId: string, body: { tasteRating: number; wouldBuyAgain: boolean; keepItVote: boolean; comment?: string }) => request<any>(`/api/v1/domain/launches/${encodeURIComponent(launchId)}/reviews`, { method:'POST', body: JSON.stringify(body) }, 'review'),
 };

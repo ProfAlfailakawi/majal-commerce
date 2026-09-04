@@ -1169,6 +1169,33 @@ const migrations = [
       CREATE INDEX IF NOT EXISTS idx_accruals_batch_status
         ON accruals(settlement_batch_id, status);
     `
+  },
+  {
+    // Consumer reviews / Keep-It votes, bound to a paid order for authenticity. One review
+    // per order (a consumer can only review what they actually bought).
+    version: 14,
+    sql: `
+      CREATE TABLE IF NOT EXISTS reviews (
+        id TEXT PRIMARY KEY,
+        launch_id TEXT NOT NULL REFERENCES launches(id) ON DELETE RESTRICT,
+        order_id TEXT NOT NULL UNIQUE REFERENCES orders(id) ON DELETE RESTRICT,
+        consumer_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+        taste_rating INTEGER NOT NULL CHECK(taste_rating BETWEEN 1 AND 5),
+        would_buy_again INTEGER NOT NULL CHECK(would_buy_again IN (0, 1)),
+        keep_it_vote INTEGER NOT NULL CHECK(keep_it_vote IN (0, 1)),
+        comment TEXT,
+        created_at TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_reviews_launch
+        ON reviews(launch_id, created_at DESC, id DESC);
+
+      CREATE INDEX IF NOT EXISTS idx_reviews_consumer
+        ON reviews(consumer_user_id, created_at DESC);
+
+      CREATE INDEX IF NOT EXISTS idx_orders_consumer
+        ON orders(consumer_user_id, created_at DESC, id DESC);
+    `
   }
 ] as const;
 

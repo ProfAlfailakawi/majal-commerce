@@ -1,73 +1,88 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper functions
+    // ---------------------------------------------------------------------------
+    // MAJAL Firestore security rules — LEAST PRIVILEGE.
+    //
+    // The application NEVER reads Firestore from the client (all reads go through
+    // the Express API); Firestore is a server-owned mirror. Therefore every
+    // collection denies public reads and scopes access to the owning principal or
+    // an admin. Writes are denied to clients across the board — the server writes
+    // via the Firebase Admin SDK (service account), which bypasses these rules.
+    //
+    // Role-based conditions below rely on a custom claim `role` on the Firebase
+    // token. That claim MUST be minted by the server (Admin SDK setCustomUserClaims)
+    // when a Firebase session is issued; without it, role checks fail closed.
+    // ---------------------------------------------------------------------------
+
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Users Collection
+    function isAdmin() {
+      return isAuthenticated()
+        && request.auth.token.role is string
+        && request.auth.token.role in ['ADMIN', 'SUPER_ADMIN'];
+    }
+
+    // Users — PII. Only the account owner or an admin may read a user document.
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if isOwner(userId);
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if false; // Server (Admin SDK) owns writes.
     }
 
-    // Creators Collection
+    // Creators — the profile document holds contact/earnings context; not public.
     match /creators/{creatorId} {
-      allow read: if true;
-      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
-      allow update: if isAuthenticated() &&
-                    request.auth.uid == resource.data.userId &&
-                    request.auth.uid == request.resource.data.userId;
-      allow delete: if false; // Delete operations route through server
+      allow read: if isAuthenticated();
+      allow write: if false; // Server (Admin SDK) owns writes.
     }
 
-    // Hosts Collection
+    // Hosts — business data (CR number, permits, contacts). Not public.
     match /hosts/{hostId} {
-      allow read: if true;
-      allow write: if isAuthenticated() && request.auth.token.role in ['ADMIN', 'SUPER_ADMIN'];
+      allow read: if isAuthenticated();
+      allow write: if false; // Server (Admin SDK) owns writes.
     }
 
-    // Products Collection
+    // Products — the full product document includes internal cost fields and secret
+    // flags, so it is NOT public. The public catalog is served separately by the API.
     match /products/{productId} {
-      allow read: if true;
-      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.creatorId;
-      allow update: if isAuthenticated() &&
-                    request.auth.uid == resource.data.creatorId &&
-                    request.auth.uid == request.resource.data.creatorId;
-      allow delete: if false; // Delete operations route through server
+      allow read: if isAuthenticated();
+      allow write: if false; // Server (Admin SDK) owns writes.
     }
 
-    // Orders Collection
+    // Orders — a consumer sees their own orders; the host tenant and admins see theirs.
     match /orders/{orderId} {
-      // Consumers see their own orders; Hosts/Admins can see orders for their tenants.
       allow read: if isAuthenticated() && (
         request.auth.uid == resource.data.consumerId ||
         request.auth.uid == resource.data.hostId ||
-        request.auth.token.role in ['ADMIN', 'SUPER_ADMIN']
+        isAdmin()
       );
-      allow write: if false; // Deny direct client writes; must route through server
+      allow write: if false; // Deny direct client writes; must route through server.
     }
 
-    // Contracts Collection
+    // Contracts — only the creator, the host, or admins can view the contract.
     match /contracts/{contractId} {
-      // Only the creator, the host, or admins can view the contract.
       allow read: if isAuthenticated() && (
         request.auth.uid == resource.data.creatorId ||
         request.auth.uid == resource.data.hostId ||
-        request.auth.token.role in ['ADMIN', 'SUPER_ADMIN']
+        isAdmin()
       );
-      allow write: if false; // Deny direct client writes; must route through server
+      allow write: if false; // Deny direct client writes; must route through server.
     }
 
-    // Audit logs (append-only by authenticated users, no deletion or modification)
+    // Audit logs — admin read only; append-only via the server layer.
     match /audit_logs/{logId} {
-      allow read: if isAuthenticated() && request.auth.token.role in ['ADMIN', 'SUPER_ADMIN'];
-      allow write: if false; // Server layer handles audit logging
+      allow read: if isAdmin();
+      allow write: if false; // Server layer handles audit logging.
+    }
+
+    // Default deny for any collection not explicitly matched above.
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
