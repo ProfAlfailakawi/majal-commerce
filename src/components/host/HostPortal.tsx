@@ -29,6 +29,7 @@ import { TeamPermissions } from './TeamPermissions';
 import { StatusPill } from '../common/StatusPill';
 import { SurfaceTabs } from '../common/SurfaceTabs';
 import { EmptyState } from '../common/EmptyState';
+import { Avatar } from '../common/Avatar';
 
 export const HostPortal: React.FC = () => {
   const [, setTick] = useState(0);
@@ -140,7 +141,7 @@ export const HostPortal: React.FC = () => {
         <div className="majal-glow -top-[18rem] -right-[17rem] w-[42rem] h-[42rem]" style={{ '--glow': 'rgba(56,189,248,0.08)' } as React.CSSProperties} />
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            <img src={host.logoUrl} alt={host.commercialName} decoding="async" className="w-20 h-20 rounded-3xl object-cover ring-2 ring-sky-400/25 shadow-xl" />
+            <Avatar name={host.commercialName} src={host.logoUrl} size={80} shape="squircle" className="ring-2 ring-sky-400/25 shadow-xl" />
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="px-2.5 py-1 rounded-full bg-sky-500/10 text-sky-300 border border-sky-400/20 text-[10px] font-black">LICENSED HOST</span>
