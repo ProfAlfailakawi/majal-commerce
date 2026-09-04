@@ -13,7 +13,6 @@ import {
   OfferTerms,
   Contract,
   Launch,
-  LaunchGateChecklist,
   Order,
   Accrual,
   SettlementBatch,
@@ -520,18 +519,6 @@ export class Store {
         shortDescription: productData.shortDescription,
         estimatedUnitCostFils: Math.round(productData.estimatedUnitCostKwd * 1000),
         targetPriceFils: Math.round(productData.targetSellingPriceKwd * 1000),
-        internalName: productData.internalName,
-        story: productData.story,
-        mediaUrls: productData.mediaUrls,
-        generalIngredients: productData.generalIngredients,
-        allergens: productData.allergens,
-        dietaryTags: productData.dietaryTags,
-        servingSize: productData.servingSize,
-        shelfLife: productData.shelfLife,
-        estimatedPrepTimeMinutes: productData.estimatedPrepTimeMinutes,
-        expectedEquipment: productData.expectedEquipment,
-        acceptsExclusivity: productData.acceptsExclusivity,
-        desiredPartnershipType: productData.desiredPartnershipType,
         recipe: initialRecipe
       }).catch(err => console.warn('Server background product sync note:', err));
     }
@@ -648,230 +635,69 @@ export class Store {
     this.notify();
   }
 
-  /**
-   * Hydrates the authenticated user's real products + collaborations from the server snapshot,
-   * replacing any seed. Called right after authentication. Nested offer/contract/launch detail
-   * loads lazily per surface; this gives each portal its real top-level entities.
-   */
-  public async hydrateFromServer() {
-    try {
-      const [snap, profiles] = await Promise.all([
-        domainClient.snapshot(),
-        domainClient.profiles().catch(() => ({ creators: [], organizations: [] }))
-      ]);
-
-      // Creator profiles + host organizations referenced by the loaded products/collaborations.
-      if ((profiles.creators || []).length) {
-        this.creators = (profiles.creators || []).map((c: any): CreatorProfile => ({
-          id: c.id, userId: c.userId, displayName: c.displayName, creatorType: 'CREATOR',
-          specialty: c.specialty || '', bio: '', region: '', completionScore: Number(c.completionScore) || 0,
-          badges: [], unitsSold: 0, repeatPurchaseRate: 0, story: '',
-          isAvailableForMatching: !!c.isAvailableForMatching, hasSecretRecipe: false, avatarUrl: '', createdAt: c.createdAt
-        }));
-      }
-      if ((profiles.organizations || []).length) {
-        this.hosts = (profiles.organizations || []).map((o: any): HostBusiness => this.hostFromServer(o));
-      }
-      const creatorUserIds = new Set((this.creators || []).map(c => c.userId));
-
-      // Products — full profile from migration 16 (money fils → KWD here, the one conversion site).
-      this.products = (snap.products || []).map((p: any): CreatorProduct => ({
-        id: p.id, creatorId: p.creatorId, internalName: p.internalName || p.publicName, publicName: p.publicName,
-        category: p.category, shortDescription: p.shortDescription, story: p.story || '', status: p.status,
-        mediaUrls: p.mediaUrls || [], generalIngredients: p.generalIngredients || [], allergens: p.allergens || [],
-        dietaryTags: p.dietaryTags || [], servingSize: p.servingSize || '', shelfLife: p.shelfLife || '',
-        estimatedPrepTimeMinutes: Number(p.estimatedPrepTimeMinutes) || 0,
-        estimatedUnitCostKwd: (Number(p.estimatedUnitCostFils) || 0) / 1000,
-        targetSellingPriceKwd: (Number(p.targetPriceFils) || 0) / 1000,
-        expectedEquipment: p.expectedEquipment || [], isSecretRecipe: !!p.isSecretRecipe,
-        acceptsExclusivity: !!p.acceptsExclusivity,
-        desiredPartnershipType: p.desiredPartnershipType || 'PERCENTAGE_ROYALTY',
-        createdAt: p.createdAt, currentRecipeVersion: 'V1.0'
-      }));
-
-      // Collaborations with nested offers / contract / launch, and the flat entity arrays the
-      // portals read. Everything below is real server state — no seed fallback once hydrated.
-      const allOffers: OfferTerms[] = [];
-      const allContracts: Contract[] = [];
-      const allLaunches: Launch[] = [];
-      const allGrants: RecipeAccessGrant[] = [];
-
-      this.collaborations = (snap.collaborations || []).map((c: any): Collaboration => {
-        const offers = (c.offers || []).map((o: any) => this.offerFromServer(o, c.id, creatorUserIds));
-        const currentOffer = offers.find(o => o.status === 'PENDING')
-          || [...offers].reverse().find(o => o.status === 'ACCEPTED') || offers[offers.length - 1];
-        allOffers.push(...offers);
-        const contract = c.contract ? this.contractFromServer(c.contract, currentOffer, c.organization_id, c.creator_id) : undefined;
-        if (contract) allContracts.push(contract);
-        const activeLaunch = c.launch ? this.launchFromServer(c.launch, c, currentOffer) : undefined;
-        if (activeLaunch) allLaunches.push(activeLaunch);
-        allGrants.push(...(c.recipeAccessGrants || []).map((g: any) => this.grantFromServer(g)));
-        return {
-          id: c.id, productId: c.product_id, creatorId: c.creator_id, hostBusinessId: c.organization_id,
-          stage: c.stage, currentOffer, offerHistory: offers, contract, activeLaunch,
-          createdAt: c.created_at, updatedAt: c.updated_at
-        };
-      });
-
-      // Recipe-version label per product from the highest version number the server returned.
-      const versionByProduct = new Map<string, number>();
-      for (const c of (snap.collaborations || [])) for (const rv of (c.recipeVersions || [])) {
-        versionByProduct.set(rv.productId, Math.max(versionByProduct.get(rv.productId) || 0, Number(rv.versionNumber) || 0));
-      }
-      this.products = this.products.map(p => versionByProduct.has(p.id) ? { ...p, currentRecipeVersion: `V${versionByProduct.get(p.id)}.0` } : p);
-
-      this.offers = allOffers;
-      this.contracts = allContracts;
-      this.launches = allLaunches;
-      this.recipeGrants = [...new Map(allGrants.map(g => [g.id, g])).values()];
-      this.notify();
-      // Creators discover across the whole verified-host directory, not only their own partners.
-      if (this.activeUser?.role === 'CREATOR') void this.loadOrganizations();
-    } catch { /* keep whatever is loaded on failure */ }
-  }
-
-  /**
-   * Verified-host directory for the creator Discovery / matching surface. Merges by id so hosts
-   * already known from the caller's own collaborations keep their place.
-   */
-  public async loadOrganizations() {
-    try {
-      const res = await domainClient.listOrganizations();
-      const byId = new Map(this.hosts.map(h => [h.id, h]));
-      for (const o of (res.organizations || [])) byId.set(o.id, this.hostFromServer(o));
-      this.hosts = [...byId.values()];
-      this.notify();
-    } catch { /* ignore */ }
-  }
-
-  // --- server → client mappers. Money crosses as fils/basis-points and becomes KWD/percent here. ---
-  private hostFromServer(o: any): HostBusiness {
-    return {
-      id: o.id, commercialName: o.commercialName, businessType: 'RESTAURANT', commercialRegistrationNo: '',
-      verificationStatus: o.verificationStatus, branches: [],
-      capabilities: { equipment: [], cuisines: [], dietary: [], packaging: [], storage: [], batchCapacityMin: 0, batchCapacityMax: 0, serviceModels: [], priceBand: '', leadTimeDays: 0 },
-      brandPositioning: '', targetAudience: '', contacts: [], logoUrl: '', createdAt: o.createdAt
-    };
-  }
-  private offerFromServer(o: any, collaborationId: string, creatorUserIds: Set<string>): OfferTerms {
-    return {
-      id: o.id, version: Number(o.versionNumber) || 1, collaborationId,
-      senderRole: creatorUserIds.has(o.senderUserId) ? 'CREATOR' : 'HOST',
-      sellingPriceKwd: (Number(o.sellingPriceFils) || 0) / 1000,
-      creatorRoyaltyModel: 'PERCENTAGE',
-      creatorRoyaltyRatePercent: (Number(o.creatorRoyaltyBasisPoints) || 0) / 100,
-      fixedAmountPerUnitKwd: 0,
-      platformFeePercent: (Number(o.platformFeeBasisPoints) || 0) / 100,
-      termMonths: 0, exclusivityType: 'NON_EXCLUSIVE', territory: '', channels: [],
-      minimumCommitmentUnits: 0, notes: o.notes || '',
-      status: o.status === 'SUPERSEDED' ? 'WITHDRAWN' : o.status,
-      createdAt: o.createdAt
-    };
-  }
-  private contractFromServer(ct: any, currentOffer: OfferTerms | undefined, organizationId: string, creatorId: string): Contract {
-    const signatures: Array<{ side: string; signedAt: string }> = ct.signatures || [];
-    const creatorSig = signatures.find(s => s.side === 'CREATOR');
-    const hostSig = signatures.find(s => s.side === 'HOST');
-    const status: Contract['status'] =
-      ct.status === 'FULLY_SIGNED' ? 'FULLY_SIGNED'
-      : ct.status === 'DRAFT' ? 'DRAFT'
-      : ct.status === 'EXPIRED' || ct.status === 'VOID' ? 'EXPIRED'
-      : creatorSig ? 'PENDING_HOST_SIGNATURE' : 'PENDING_CREATOR_SIGNATURE';
-    const terms: OfferTerms = currentOffer || {
-      id: `${ct.id}_terms`, version: Number(ct.versionNumber) || 1, collaborationId: ct.collaborationId,
-      senderRole: 'HOST', sellingPriceKwd: 0, creatorRoyaltyModel: 'PERCENTAGE', creatorRoyaltyRatePercent: 0,
-      fixedAmountPerUnitKwd: 0, platformFeePercent: 0, termMonths: 0, exclusivityType: 'NON_EXCLUSIVE',
-      territory: '', channels: [], minimumCommitmentUnits: 0, notes: '', status: 'ACCEPTED', createdAt: ct.createdAt
-    };
-    return {
-      id: ct.id, collaborationId: ct.collaborationId, versionNumber: `V${Number(ct.versionNumber) || 1}.0`,
-      terms, creatorLegalName: this.creators.find(c => c.id === creatorId)?.displayName || '',
-      hostCommercialName: this.hosts.find(h => h.id === organizationId)?.commercialName || '',
-      status, createdAt: ct.createdAt,
-      creatorSignedAt: creatorSig?.signedAt, hostSignedAt: hostSig?.signedAt
-    };
-  }
-  private launchFromServer(l: any, c: any, currentOffer: OfferTerms | undefined): Launch {
-    const g = l.gate || {};
-    const gateChecklist: LaunchGateChecklist = {
-      hostVerified: !!g.hostVerified, requiredDocsValid: !!g.hostVerified, contractSigned: !!g.contractSigned,
-      productionRecipeApproved: !!g.productionRecipeApproved, productNamePriceApproved: !!g.productNamePriceApproved,
-      allergensCompleted: !!g.packagingDataCompleted, packagingDataCompleted: !!g.packagingDataCompleted,
-      productionLocationSelected: !!g.productionLocationSelected, branchAvailabilitySelected: !!g.productionLocationSelected,
-      settlementConfigApproved: !!g.settlementConfigApproved, photosReady: !!g.packagingDataCompleted,
-      allRequirementsPassed: !!g.allRequirementsPassed
-    };
-    const status: Launch['status'] = l.status === 'LIVE' ? 'LIVE' : l.status === 'PAUSED' ? 'PAUSED'
-      : l.status === 'COMPLETED' ? 'COMPLETED' : l.status === 'PERMANENT' ? 'PERMANENT' : 'SCHEDULED';
-    return {
-      id: l.id, collaborationId: l.collaborationId, productId: l.productId, creatorId: c.creator_id,
-      hostBusinessId: l.organizationId, launchType: 'TRIAL_PERIOD',
-      title: this.products.find(p => p.id === l.productId)?.publicName || '',
-      sellingPriceKwd: currentOffer?.sellingPriceKwd || 0,
-      quantityCapUnits: l.quantityCap != null ? Number(l.quantityCap) : undefined, unitsSold: 0, branches: [],
-      startDate: l.startsAt || l.createdAt, endDate: l.endsAt || undefined, status, gateChecklist, createdAt: l.createdAt
-    };
-  }
-  private grantFromServer(g: any): RecipeAccessGrant {
-    return {
-      id: g.id, productId: g.productId, creatorId: g.creatorId, hostBusinessId: g.organizationId,
-      disclosureLevel: Number(g.disclosureLevel) as RecipeAccessGrant['disclosureLevel'], status: g.status,
-      requestedByUserId: g.requestedByUserId, requestedAt: g.createdAt,
-      grantedByUserId: g.grantedByUserId || undefined, expiresAt: g.expiresAt || undefined, purpose: g.purpose
-    };
-  }
-
-  public async loadChallenges() {
-    try { const res = await domainClient.listChallenges(); this.challenges = (res.challenges || []) as Challenge[]; this.notify(); } catch { /* ignore */ }
-  }
-
-  public async loadLabBatches(collaborationId: string) {
-    try { const res = await domainClient.listLabBatches(collaborationId); this.labBatches = [...(res.labBatches || []) as LabBatch[], ...this.labBatches.filter(b => b.collaborationId !== collaborationId)]; this.notify(); } catch { /* ignore */ }
-  }
-
-  public async loadDealDecisions(collaborationId: string) {
-    try { const res = await domainClient.listDealDecisions(collaborationId); this.dealDecisions = [...(res.dealDecisions || []) as DealDecision[], ...this.dealDecisions.filter(d => d.collaborationId !== collaborationId)]; this.notify(); } catch { /* ignore */ }
-  }
-
   public publishChallenge(data: Omit<Challenge, 'id' | 'hostBusinessId' | 'status' | 'createdAt'>) {
-    if (!data.title?.trim() || data.title.trim().length < 4) return this.fail('عنوان التحدي مطلوب ويجب أن يكون واضحًا.');
-    if (!data.brief?.trim() || data.brief.trim().length < 10) return this.fail('موجز التحدي يحتاج وصفًا أوضح.');
+    if (!IS_DEMO_MODE) return this.fail('نشر التحدي الإنتاجي يحتاج API مرتبطة بالمنشأة.');
+    const hostBusinessId = this.activeUser.hostBusinessId;
+    if (!hostBusinessId || !this.isHostMemberFor(hostBusinessId) || !hasPermission(this.activeUser, 'MANAGE_CHALLENGES')) return this.fail('لا تملك صلاحية نشر تحدٍ لهذه المنشأة.');
+    if (!data.title.trim() || data.title.trim().length < 4) return this.fail('عنوان التحدي مطلوب ويجب أن يكون واضحًا.');
+    if (!data.brief.trim() || data.brief.trim().length < 10) return this.fail('موجز التحدي يحتاج وصفًا أوضح.');
     if (data.targetPriceKwd <= 0 || data.costCeilingKwd < 0 || data.costCeilingKwd >= data.targetPriceKwd) return this.fail('سعر البيع وسقف التكلفة غير متوازنين.');
     if (new Date(data.deadline).getTime() <= Date.now()) return this.fail('الموعد النهائي يجب أن يكون في المستقبل.');
-    return this.serverMutation(async () => {
-      const result = await domainClient.createChallenge({
-        title: data.title, brief: data.brief, category: data.category,
-        targetPriceFils: Math.round(data.targetPriceKwd * 1000), costCeilingFils: Math.round(data.costCeilingKwd * 1000),
-        estimatedVolumeUnits: data.estimatedVolumeUnits, deadline: data.deadline,
-        equipmentAvailable: data.equipmentAvailable, dietaryConstraints: data.dietaryConstraints, exclusivityPreference: data.exclusivityPreference
-      });
-      await this.loadChallenges();
-      return result as Challenge;
-    });
+    const challenge: Challenge = {
+      ...data,
+      id: `ch_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      hostBusinessId,
+      status: 'OPEN',
+      createdAt: new Date().toISOString()
+    };
+    this.challenges.unshift(challenge);
+    this.addAuditLog('CHALLENGE_PUBLISHED', 'CHALLENGE', challenge.id, `نشر تحدٍ جديد: ${challenge.title}`);
+    this.notify();
+    return challenge;
   }
 
   public addLabBatch(collaborationId: string, data: Omit<LabBatch, 'id' | 'collaborationId' | 'createdAt'>) {
+    if (!IS_DEMO_MODE) return this.fail('دفعة المختبر الإنتاجية تُحفظ خادميًا بإصدار الوصفة المرتبط.');
+    const col = this.collaborations.find(c => c.id === collaborationId);
+    if (!col) return this.fail('التعاون غير موجود.');
+    if (!hasPermission(this.activeUser, 'MANAGE_LAB') || !this.isHostMemberFor(col.hostBusinessId)) return this.fail('لا تملك صلاحية تسجيل دفعة مختبر لهذا التعاون.');
     if (data.yieldQuantity <= 0 || data.measuredCostKwd < 0 || data.prepTimeMinutes <= 0 || data.wastePercentage < 0 || data.wastePercentage > 100) return this.fail('قيم الدفعة التجريبية غير صالحة.');
-    return this.serverMutation(async () => {
-      const result = await domainClient.createLabBatch(collaborationId, {
-        recipeVersion: data.recipeVersion, yieldQuantity: data.yieldQuantity, measuredCostFils: Math.round(data.measuredCostKwd * 1000),
-        prepTimeMinutes: data.prepTimeMinutes, wastePercentage: data.wastePercentage,
-        tastingResult: data.tastingResult, proposedChanges: data.proposedChanges, decision: data.decision
-      });
-      await this.loadLabBatches(collaborationId);
-      const col = this.collaborations.find(c => c.id === collaborationId); if (col) { col.stage = 'LAB_ACTIVE'; }
-      return result as LabBatch;
-    });
+    const batch: LabBatch = {
+      ...data,
+      id: `btch_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      collaborationId,
+      createdAt: new Date().toISOString()
+    };
+    this.labBatches.unshift(batch);
+    col.stage = 'LAB_ACTIVE';
+    col.updatedAt = new Date().toISOString();
+    this.addAuditLog('LAB_BATCH_RECORDED', 'LAB_BATCH', batch.id, `تسجيل دفعة مختبر ${batch.recipeVersion} بقرار ${batch.decision}`);
+    this.notify();
+    return batch;
   }
 
   public addDealDecision(collaborationId: string, text: string, category: DealDecision['category'] = 'DECISION') {
+    if (!IS_DEMO_MODE) return this.fail('قرار الصفقة الإنتاجي يحتاج كتابة خادمية موثقة.');
+    const col = this.collaborations.find(c => c.id === collaborationId);
+    if (!col) return this.fail('التعاون غير موجود.');
+    const allowed = this.isCreatorFor(col.creatorId) || this.isHostMemberFor(col.hostBusinessId) || ['ADMIN', 'SUPER_ADMIN'].includes(this.activeUser.role);
+    if (!allowed) return this.fail('لا تملك صلاحية الكتابة في غرفة هذه الصفقة.');
     const clean = text.trim();
     if (clean.length < 3 || clean.length > 1000) return this.fail('نص القرار يجب أن يكون بين 3 و1000 حرف.');
-    return this.serverMutation(async () => {
-      const result = await domainClient.createDealDecision(collaborationId, { text: clean, category });
-      await this.loadDealDecisions(collaborationId);
-      return result as DealDecision;
-    });
+    const decision: DealDecision = {
+      id: `dec_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      collaborationId,
+      authorUserId: this.activeUser.id,
+      authorName: this.activeUser.name,
+      authorRole: this.activeUser.role,
+      text: clean,
+      category,
+      createdAt: new Date().toISOString()
+    };
+    this.dealDecisions.unshift(decision);
+    this.addAuditLog('DEAL_DECISION_ADDED', 'DEAL_DECISION', decision.id, `إضافة ${category} إلى غرفة الصفقة ${collaborationId}`);
+    this.notify();
+    return decision;
   }
 
   public sendOffer(collaborationId: string, senderRole: 'HOST' | 'CREATOR', offerData: Omit<OfferTerms, 'id' | 'version' | 'collaborationId' | 'senderRole' | 'status' | 'createdAt'>) {
@@ -1116,77 +942,84 @@ export class Store {
     return launch;
   }
 
-  /** Maps a server catalog launch row into the client Launch model (LIVE = gate fully passed). */
-  private mapServerLaunch(r: any): Launch {
-    const passed: LaunchGateChecklist = {
-      hostVerified: true, requiredDocsValid: true, contractSigned: true, productionRecipeApproved: true,
-      productNamePriceApproved: true, allergensCompleted: true, packagingDataCompleted: true,
-      productionLocationSelected: true, branchAvailabilitySelected: true, settlementConfigApproved: true,
-      photosReady: true, allRequirementsPassed: true
-    };
-    return {
-      id: r.id, collaborationId: r.collaborationId || '', productId: r.productId,
-      creatorId: r.creatorId || '', hostBusinessId: r.organizationId || '',
-      launchType: 'LIMITED_DROP', title: r.publicName || 'إطلاق',
-      sellingPriceKwd: r.unitPriceFils != null ? r.unitPriceFils / 1000 : 0,
-      quantityCapUnits: r.quantityCap ?? undefined, unitsSold: Number(r.unitsSold || 0),
-      branches: [], startDate: r.startsAt || new Date().toISOString(), endDate: r.endsAt || undefined,
-      status: 'LIVE', gateChecklist: passed, createdAt: r.startsAt || new Date().toISOString()
-    };
-  }
-
-  /** Loads the real consumer read model (LIVE launches + this user's orders) from the server. */
-  public async loadConsumerData() {
-    try {
-      const [launchRes, orderRes] = await Promise.all([domainClient.listLaunches(), domainClient.listMyOrders()]);
-      this.launches = (launchRes.launches || []).map((r: any) => this.mapServerLaunch(r));
-      this.orders = (orderRes.orders || []).map((o: any): Order => ({
-        id: o.id, launchId: o.launchId, productId: '', creatorId: '', hostBusinessId: '',
-        customerName: this.activeUser.name, grossAmountKwd: o.totalFils / 1000, unitsCount: Number(o.units),
-        creatorRoyaltyKwd: 0, platformFeeKwd: 0, hostNetKwd: 0,
-        status: o.status === 'PAID' || o.status === 'FULFILLED' ? 'COMPLETED' : o.status === 'REFUNDED' ? 'REFUNDED' : 'PENDING_PAYMENT',
-        createdAt: o.createdAt
-      }));
-      this.notify();
-    } catch { /* leave arrays as-is on failure */ }
-  }
-
-  /** Loads reviews for a launch and merges them into the review list. */
-  public async loadLaunchReviews(launchId: string) {
-    try {
-      const res = await domainClient.listLaunchReviews(launchId);
-      const mapped: Review[] = (res.reviews || []).map((r: any) => ({
-        id: r.id, launchId, productId: '', creatorId: '', customerName: r.reviewerName || 'عميل',
-        tasteRating: Number(r.tasteRating), valueRating: Number(r.tasteRating), portionRating: Number(r.tasteRating),
-        wouldBuyAgain: !!r.wouldBuyAgain, comment: r.comment || '', keepItVote: !!r.keepItVote, isVerifiedPurchase: true,
-        createdAt: r.createdAt
-      }));
-      this.reviews = [...mapped, ...this.reviews.filter(r => r.launchId !== launchId)];
-      this.notify();
-    } catch { /* ignore */ }
-  }
-
-  public placeOrder(launchId: string, unitsCount: number, _customerName: string, _customerPhone: string, _acquisitionSource: Order['acquisitionSource'] = 'MAJAL', _branchId?: string) {
+  public placeOrder(launchId: string, unitsCount: number, customerName: string, customerPhone: string, acquisitionSource: Order['acquisitionSource'] = 'MAJAL', branchId?: string) {
+    if (!IS_DEMO_MODE) return this.fail('الطلبات مقفلة حتى ربط الدفع والتحقق الخادمي من المخزون.');
+    const launch = this.launches.find(l => l.id === launchId);
+    if (!launch) return this.fail('الإطلاق غير موجود.');
+    if (launch.status !== 'LIVE' && launch.status !== 'PERMANENT') return this.fail('هذا الإطلاق غير متاح للطلب حاليًا.');
     if (!Number.isInteger(unitsCount) || unitsCount < 1 || unitsCount > this.policy.maxOrderUnits) return this.fail(`كمية الطلب يجب أن تكون بين 1 و${this.policy.maxOrderUnits} وحدة.`);
-    // The order is bound to the authenticated consumer on the server; identity/inventory/pricing
-    // are all validated server-side. Stays PENDING_PAYMENT (fail-closed) until a verified
-    // provider webhook confirms payment.
-    return this.serverMutation(async () => {
-      const result = await domainClient.createOrder(launchId, unitsCount);
-      await this.loadConsumerData();
-      return { id: result.orderId, ...result };
-    });
+    if (launch.quantityCapUnits && launch.unitsSold + unitsCount > launch.quantityCapUnits) return this.fail('الكمية المطلوبة تتجاوز المتاح في هذا الإصدار.');
+    if (!customerName.trim()) return this.fail('اسم العميل مطلوب.');
+    const phoneDigits = customerPhone.replace(/\D/g, '');
+    if (phoneDigits.length < 8 || phoneDigits.length > 12) return this.fail('رقم الهاتف غير صالح.');
+
+    const col = this.collaborations.find(c => c.id === launch.collaborationId);
+    const royaltyPercent = col?.currentOffer?.creatorRoyaltyRatePercent || 13;
+    const platformFeePercent = col?.currentOffer?.platformFeePercent ?? this.policy.platformFeePercent;
+
+    const grossAmountKwd = Math.round(launch.sellingPriceKwd * unitsCount * 1000) / 1000;
+    const creatorRoyaltyKwd = Math.round((grossAmountKwd * (royaltyPercent / 100)) * 1000) / 1000;
+    const platformFeeKwd = Math.round((grossAmountKwd * (platformFeePercent / 100)) * 1000) / 1000;
+    const hostNetKwd = Math.round((grossAmountKwd - creatorRoyaltyKwd - platformFeeKwd) * 1000) / 1000;
+
+    const order: Order = {
+      id: `ord_${Date.now()}`,
+      launchId,
+      productId: launch.productId,
+      creatorId: launch.creatorId,
+      hostBusinessId: launch.hostBusinessId,
+      branchId: branchId && launch.branches.includes(branchId) ? branchId : undefined,
+      acquisitionSource,
+      customerName,
+      customerPhone,
+      grossAmountKwd,
+      unitsCount,
+      creatorRoyaltyKwd,
+      platformFeeKwd,
+      hostNetKwd,
+      status: 'PENDING_PAYMENT',
+      createdAt: new Date().toISOString()
+    };
+    this.orders.unshift(order);
+    this.addAuditLog('ORDER_PLACED', 'ORDER', order.id, `حجز تجريبي معلق للدفع: ${unitsCount} وحدة على الإطلاق ${launchId}`);
+
+    this.notify();
+    return order;
   }
 
-  public submitReview(launchId: string, tasteRating: number, _valueRating: number, _portionRating: number, comment: string, keepItVote: boolean, _customerName: string) {
-    if (tasteRating < 1 || tasteRating > 5) return this.fail('التقييم يجب أن يكون بين 1 و5.');
-    // The server verifies the reviewer owns a PAID order for this launch and enforces one
-    // review per order.
-    return this.serverMutation(async () => {
-      const result = await domainClient.createReview(launchId, { tasteRating, wouldBuyAgain: tasteRating >= 4, keepItVote, comment: comment?.trim() || undefined });
-      await this.loadLaunchReviews(launchId);
-      return { id: result.id, ...result };
-    });
+  public submitReview(launchId: string, tasteRating: number, valueRating: number, portionRating: number, comment: string, keepItVote: boolean, customerName: string) {
+    if (!IS_DEMO_MODE) return this.fail('التقييم الإنتاجي يحتاج ربطه بطلب المستخدم الموثق على الخادم.');
+    const launch = this.launches.find(l => l.id === launchId);
+    if (!launch) return this.fail('الإطلاق غير موجود.');
+    const ratings = [tasteRating, valueRating, portionRating];
+    if (ratings.some(r => r < 1 || r > 5)) return this.fail('التقييم يجب أن يكون بين 1 و5.');
+    if (!customerName.trim()) return this.fail('اسم العميل مطلوب.');
+    const normalizedCustomer = customerName.trim().toLowerCase();
+    if (this.reviews.some(r => r.launchId === launchId && r.customerName.trim().toLowerCase() === normalizedCustomer)) return this.fail('تم تسجيل تقييم لهذا العميل على هذا الإطلاق مسبقًا.');
+    // Verified purchase must eventually come from the authenticated owner of a
+    // completed server order; a matching display name is never evidence.
+    const verifiedPurchase = false;
+
+    const review: Review = {
+      id: `rev_${Date.now()}`,
+      launchId,
+      productId: launch.productId,
+      creatorId: launch.creatorId,
+      customerName,
+      tasteRating,
+      valueRating,
+      portionRating,
+      wouldBuyAgain: tasteRating >= 4,
+      comment,
+      keepItVote,
+      isVerifiedPurchase: verifiedPurchase,
+      createdAt: new Date().toISOString()
+    };
+
+    this.reviews.unshift(review);
+    this.addAuditLog('REVIEW_SUBMITTED', 'REVIEW', review.id, `تسجيل تقييم للإطلاق ${launchId}`);
+    this.notify();
+    return review;
   }
 
   public approveSettlementBatch(creatorId: string) {

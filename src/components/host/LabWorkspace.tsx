@@ -12,9 +12,7 @@ interface LabWorkspaceProps {
 export const LabWorkspace: React.FC<LabWorkspaceProps> = ({ collaboration }) => {
   const [, setTick] = useState(0);
   useEffect(() => store.subscribe(() => setTick(t => t + 1)), []);
-  useEffect(() => { store.loadLabBatches(collaboration.id); }, [collaboration.id]);
   const [showCalculator, setShowCalculator] = useState(false);
-  const [saving, setSaving] = useState(false);
   const product = store.products.find(p => p.id === collaboration.productId);
   const tastingSession = store.tastings.find(t => t.collaborationId === collaboration.id);
   const recipeVersions = store.recipeVersions.filter(r => r.productId === collaboration.productId).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -41,33 +39,27 @@ export const LabWorkspace: React.FC<LabWorkspaceProps> = ({ collaboration }) => 
     };
   }, [batches.length, latest?.id]);
 
-  const handleRecordNewBatch = async () => {
-    if (saving) return;
-    setSaving(true);
-    try {
-      const batch = await store.addLabBatch(collaboration.id, {
-        recipeVersion,
-        batchDate: new Date().toISOString(),
-        yieldQuantity,
-        measuredCostKwd,
-        prepTimeMinutes,
-        wastePercentage,
-        tastingResult: batchDecisionNote.trim() || 'لا توجد ملاحظة تذوق إضافية.',
-        photos: [],
-        proposedChanges: proposedChanges.trim() || 'لا توجد تغييرات مقترحة.',
-        decision: selectedBatchDecision
-      });
-      if (!batch) {
-        setNotice(store.lastGuardMessage || 'تعذر حفظ الدفعة. تحقق من الصلاحيات والقيم المدخلة.');
-        return;
-      }
-      setNotice(`تم حفظ الدفعة ${batch.id} وربطها بالتعاون وسجل التدقيق.`);
-      setBatchDecisionNote('');
-      setProposedChanges('');
-      setTimeout(() => setNotice(''), 3500);
-    } finally {
-      setSaving(false);
+  const handleRecordNewBatch = () => {
+    const batch = store.addLabBatch(collaboration.id, {
+      recipeVersion,
+      batchDate: new Date().toISOString(),
+      yieldQuantity,
+      measuredCostKwd,
+      prepTimeMinutes,
+      wastePercentage,
+      tastingResult: batchDecisionNote.trim() || 'لا توجد ملاحظة تذوق إضافية.',
+      photos: [],
+      proposedChanges: proposedChanges.trim() || 'لا توجد تغييرات مقترحة.',
+      decision: selectedBatchDecision
+    });
+    if (!batch) {
+      setNotice(store.lastGuardMessage || 'تعذر حفظ الدفعة. تحقق من الصلاحيات والقيم المدخلة.');
+      return;
     }
+    setNotice(`تم حفظ الدفعة ${batch.id} وربطها بالتعاون وسجل التدقيق.`);
+    setBatchDecisionNote('');
+    setProposedChanges('');
+    setTimeout(() => setNotice(''), 3500);
   };
 
   return (
@@ -100,7 +92,7 @@ export const LabWorkspace: React.FC<LabWorkspaceProps> = ({ collaboration }) => 
           <label className="space-y-1"><span className="text-slate-400 font-bold">القرار</span><select value={selectedBatchDecision} onChange={e => setSelectedBatchDecision(e.target.value as LabBatch['decision'])} className="w-full glass-input rounded-xl p-3 outline-none"><option value="APPROVE_NEXT">تجربة أخرى</option><option value="PRODUCTION_CANDIDATE">مرشح إنتاج</option><option value="REJECT">مرفوض</option></select></label>
         </div>
         <div className="grid md:grid-cols-2 gap-4"><label className="space-y-1"><span className="text-slate-400 font-bold">ملاحظات التذوق/التشغيل</span><textarea rows={3} value={batchDecisionNote} onChange={e => setBatchDecisionNote(e.target.value)} className="w-full glass-input rounded-xl p-3 outline-none resize-none" /></label><label className="space-y-1"><span className="text-slate-400 font-bold">التغييرات المقترحة</span><textarea rows={3} value={proposedChanges} onChange={e => setProposedChanges(e.target.value)} className="w-full glass-input rounded-xl p-3 outline-none resize-none" /></label></div>
-        <button onClick={handleRecordNewBatch} disabled={saving} className="px-5 py-3 bg-gold-500 hover:bg-gold-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-black rounded-xl text-xs">{saving ? 'جارٍ الحفظ…' : 'حفظ الدفعة وربطها بالسجل'}</button>
+        <button onClick={handleRecordNewBatch} className="px-5 py-3 bg-gold-500 hover:bg-gold-400 text-slate-950 font-black rounded-xl text-xs">حفظ الدفعة وربطها بالسجل</button>
       </section>
 
       <section className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">

@@ -28,9 +28,7 @@ async function request<T>(url: string, init: RequestInit = {}, idempotencyScope?
 }
 
 export const domainClient = {
-  snapshot: () => request<{products: any[]; collaborations: any[]}>('/api/v1/domain/snapshot'),
-  profiles: () => request<{creators: any[]; organizations: any[]}>('/api/v1/domain/profiles'),
-  listOrganizations: () => request<{organizations: any[]}>('/api/v1/domain/organizations'),
+  snapshot: () => request<{products: unknown[]; collaborations: unknown[]}>('/api/v1/domain/snapshot'),
   createProduct: (body: unknown) => request<{id:string;recipeVersionId:string;status:string;recipeSha256:string}>('/api/v1/domain/products', { method: 'POST', body: JSON.stringify(body) }, 'product'),
   requestRecipeAccess: (body: unknown) => request<{id:string;status:string}>('/api/v1/domain/recipe-access', { method: 'POST', body: JSON.stringify(body) }, 'recipe-access'),
   approveRecipeAccess: (id: string, body: unknown) => request<any>(`/api/v1/domain/recipe-access/${encodeURIComponent(id)}/approve`, { method: 'POST', body: JSON.stringify(body) }),
@@ -42,15 +40,4 @@ export const domainClient = {
   setLaunchGate: (collaborationId: string, key: string, value: boolean, evidence: unknown = {}) => request<any>(`/api/v1/domain/collaborations/${encodeURIComponent(collaborationId)}/launch-gate/${encodeURIComponent(key)}`, { method:'PUT', body: JSON.stringify({ value, evidence }) }),
   activateLaunch: (collaborationId: string) => request<any>(`/api/v1/domain/collaborations/${encodeURIComponent(collaborationId)}/launch/activate`, { method:'POST', body:'{}' }),
   approveSettlement: (creatorId: string) => request<any>(`/api/v1/domain/settlements/${encodeURIComponent(creatorId)}/approve`, { method:'POST', body:'{}' }, 'settlement'),
-  listLaunches: () => request<{launches: any[]}>('/api/v1/domain/launches'),
-  listMyOrders: () => request<{orders: any[]}>('/api/v1/domain/me/orders'),
-  listLaunchReviews: (launchId: string) => request<any>(`/api/v1/domain/launches/${encodeURIComponent(launchId)}/reviews`),
-  createOrder: (launchId: string, units: number) => request<any>(`/api/v1/domain/launches/${encodeURIComponent(launchId)}/orders`, { method:'POST', body: JSON.stringify({ units }) }, 'order'),
-  createReview: (launchId: string, body: { tasteRating: number; wouldBuyAgain: boolean; keepItVote: boolean; comment?: string }) => request<any>(`/api/v1/domain/launches/${encodeURIComponent(launchId)}/reviews`, { method:'POST', body: JSON.stringify(body) }, 'review'),
-  listChallenges: () => request<{challenges: any[]}>('/api/v1/domain/challenges'),
-  createChallenge: (body: unknown) => request<any>('/api/v1/domain/challenges', { method:'POST', body: JSON.stringify(body) }, 'challenge'),
-  listLabBatches: (collaborationId: string) => request<{labBatches: any[]}>(`/api/v1/domain/collaborations/${encodeURIComponent(collaborationId)}/lab-batches`),
-  createLabBatch: (collaborationId: string, body: unknown) => request<any>(`/api/v1/domain/collaborations/${encodeURIComponent(collaborationId)}/lab-batches`, { method:'POST', body: JSON.stringify(body) }, 'lab-batch'),
-  listDealDecisions: (collaborationId: string) => request<{dealDecisions: any[]}>(`/api/v1/domain/collaborations/${encodeURIComponent(collaborationId)}/deal-decisions`),
-  createDealDecision: (collaborationId: string, body: unknown) => request<any>(`/api/v1/domain/collaborations/${encodeURIComponent(collaborationId)}/deal-decisions`, { method:'POST', body: JSON.stringify(body) }, 'deal-decision'),
 };

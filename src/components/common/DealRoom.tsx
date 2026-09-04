@@ -28,7 +28,6 @@ interface DealRoomProps {
 export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
   const [, setTick] = useState(0);
   useEffect(() => store.subscribe(() => setTick(t => t + 1)), []);
-  useEffect(() => { store.loadDealDecisions(collaboration.id); }, [collaboration.id]);
   const [message, setMessage] = useState('');
   const [category, setCategory] = useState<DealDecision['category']>('DECISION');
 
@@ -62,16 +61,9 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
     MILESTONE: { label: 'محطة', icon: <Milestone className="w-4 h-4" />, cls: 'text-emerald-300' }
   };
 
-  const [posting, setPosting] = useState(false);
-  const addDecision = async () => {
-    if (posting || message.trim().length < 3) return;
-    setPosting(true);
-    try {
-      const created = await store.addDealDecision(collaboration.id, message, category);
-      if (created) setMessage('');
-    } finally {
-      setPosting(false);
-    }
+  const addDecision = () => {
+    const created = store.addDealDecision(collaboration.id, message, category);
+    if (created) setMessage('');
   };
 
   // Deterministic copilot: summarizes options and risks. It never executes a
@@ -171,7 +163,7 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
               <option value="MILESTONE">محطة</option>
             </select>
             <input value={message} onChange={e => setMessage(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && message.trim().length >= 3) addDecision(); }} placeholder="سجّل قرارًا أو ملاحظة مرتبطة بالصفقة..." className="glass-input px-4 py-2.5 rounded-xl text-xs outline-none text-slate-100" />
-            <button onClick={addDecision} disabled={message.trim().length < 3 || posting} className="px-4 py-2.5 rounded-xl bg-gold-500 disabled:bg-white/5 disabled:text-slate-600 text-slate-950 font-black text-xs">{posting ? '...' : 'حفظ'}</button>
+            <button onClick={addDecision} disabled={message.trim().length < 3} className="px-4 py-2.5 rounded-xl bg-gold-500 disabled:bg-white/5 disabled:text-slate-600 text-slate-950 font-black text-xs">حفظ</button>
           </div>
         </div>
       </div>

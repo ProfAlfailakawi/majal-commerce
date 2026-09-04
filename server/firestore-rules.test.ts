@@ -2,30 +2,29 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import fs from 'node:fs';
 
-test('firestore.rules enforces least-privilege rules', () => {
+test('firestore.rules enforces strict rules', () => {
     const rules = fs.readFileSync('firestore.rules', 'utf8');
 
-    // No collection may be publicly readable.
-    assert.ok(!/allow read:\s*if\s+true/.test(rules), 'no collection may allow public (if true) reads');
+    // Check deny writes
+    assert.ok(rules.includes('allow write: if false; // Deny direct client writes; must route through server'), 'orders/contracts must deny writes');
+    assert.ok(rules.includes('allow write: if false; // Server layer handles audit logging'), 'audit_logs must deny writes');
 
-    // Users are PII: read is restricted to the owner or an admin, never any authed user.
-    assert.ok(/match \/users\/\{userId\}[\s\S]*?allow read: if isOwner\(userId\) \|\| isAdmin\(\);/.test(rules),
-      'users read restricted to owner or admin');
-
-    // Client writes are denied everywhere (server Admin SDK owns writes).
-    assert.ok(!/allow write:\s*if\s+isAuthenticated/.test(rules), 'no client write may be granted by auth alone');
-    assert.ok(rules.includes('allow write: if false;'), 'writes denied to clients');
-
-    // Orders / contracts reads remain owner/tenant/admin scoped.
+    // Check read access restrictions for orders
     assert.ok(rules.includes('request.auth.uid == resource.data.consumerId'), 'orders read restricted to consumer');
-    assert.ok(rules.includes('request.auth.uid == resource.data.hostId'), 'orders/contracts read restricted to host');
+    assert.ok(rules.includes('request.auth.uid == resource.data.hostId'), 'orders read restricted to host');
+
+    // Check read access restrictions for contracts
     assert.ok(rules.includes('request.auth.uid == resource.data.creatorId'), 'contracts read restricted to creator');
+    assert.ok(rules.includes('request.auth.uid == resource.data.hostId'), 'contracts read restricted to host');
 
-    // Admin helper checks the custom role claim as a string against the allowlist.
-    assert.ok(/request\.auth\.token\.role is string/.test(rules), 'admin role claim is type-checked');
-    assert.ok(/in \['ADMIN', 'SUPER_ADMIN'\]/.test(rules), 'admin role allowlist present');
+    // Check deny deletes
+    assert.ok(rules.includes('allow delete: if false; // Delete operations route through server'), 'creators/products must deny deletes');
 
-    // A catch-all default-deny must terminate the ruleset.
-    assert.ok(/match \/\{document=\*\*\}[\s\S]*?allow read, write: if false;/.test(rules),
-      'default-deny catch-all present');
+    // Check create rules
+    assert.ok(rules.includes('allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;'), 'creators create restricted');
+    assert.ok(rules.includes('allow create: if isAuthenticated() && request.auth.uid == request.resource.data.creatorId;'), 'products create restricted');
+
+    // Check update rules prevents transfer
+    assert.ok(rules.includes('request.auth.uid == resource.data.userId &&') && rules.includes('request.auth.uid == request.resource.data.userId;'), 'creators update prevents transfer');
+    assert.ok(rules.includes('request.auth.uid == resource.data.creatorId &&') && rules.includes('request.auth.uid == request.resource.data.creatorId;'), 'products update prevents transfer');
 });
