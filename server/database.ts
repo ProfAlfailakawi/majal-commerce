@@ -1169,6 +1169,26 @@ const migrations = [
       CREATE INDEX IF NOT EXISTS idx_accruals_batch_status
         ON accruals(settlement_batch_id, status);
     `
+  },
+  {
+    // Product profile fields surfaced in the domain snapshot (internal name, story, media,
+    // ingredients/allergens/dietary tags, serving/shelf/prep, equipment, exclusivity intent).
+    // All nullable so existing rows migrate cleanly; JSON columns hold serialized arrays.
+    version: 14,
+    sql: `
+      ALTER TABLE products ADD COLUMN internal_name TEXT;
+      ALTER TABLE products ADD COLUMN story TEXT;
+      ALTER TABLE products ADD COLUMN media_json TEXT;
+      ALTER TABLE products ADD COLUMN general_ingredients_json TEXT;
+      ALTER TABLE products ADD COLUMN allergens_json TEXT;
+      ALTER TABLE products ADD COLUMN dietary_tags_json TEXT;
+      ALTER TABLE products ADD COLUMN serving_size TEXT;
+      ALTER TABLE products ADD COLUMN shelf_life TEXT;
+      ALTER TABLE products ADD COLUMN prep_time_minutes INTEGER;
+      ALTER TABLE products ADD COLUMN expected_equipment_json TEXT;
+      ALTER TABLE products ADD COLUMN accepts_exclusivity INTEGER NOT NULL DEFAULT 0 CHECK(accepts_exclusivity IN (0, 1));
+      ALTER TABLE products ADD COLUMN desired_partnership_type TEXT;
+    `
   }
 ] as const;
 

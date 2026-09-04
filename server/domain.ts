@@ -188,6 +188,85 @@ async function documentAiExtract(contentBase64: string, mimeType: string) {
   return { fields, confidence, textSha256: sha256(payload.document.text || '') };
 }
 
+function richProduct(row: Record<string, unknown>) {
+  const j = (v: unknown): unknown[] => { try { return v == null ? [] : JSON.parse(String(v)); } catch { return []; } };
+  return {
+    id: row.id, creatorId: row.creator_id, publicName: row.public_name, category: row.category,
+    shortDescription: row.short_description, status: row.status,
+    estimatedUnitCostFils: Number(row.estimated_unit_cost_fils), targetPriceFils: Number(row.target_price_fils),
+    isSecretRecipe: Boolean(row.is_secret_recipe),
+    internalName: row.internal_name ?? null, story: row.story ?? null,
+    media: j(row.media_json), generalIngredients: j(row.general_ingredients_json),
+    allergens: j(row.allergens_json), dietaryTags: j(row.dietary_tags_json),
+    servingSize: row.serving_size ?? null, shelfLife: row.shelf_life ?? null,
+    estimatedPrepTimeMinutes: row.prep_time_minutes == null ? null : Number(row.prep_time_minutes),
+    expectedEquipment: j(row.expected_equipment_json),
+    acceptsExclusivity: Boolean(row.accepts_exclusivity),
+    desiredPartnershipType: row.desired_partnership_type ?? null,
+    createdAt: row.created_at, updatedAt: row.updated_at,
+  };
+}
+
+/**
+ * Server-authoritative read-model each portal renders from. Scoped to the caller
+ * (admin: all; creator: own; host: collaborating), money left in fils. Recipe payloads
+ * are never included — only version metadata.
+ */
+export async function buildDomainSnapshot(
+  db: MajalDatabase,
+  user: { role: string; creatorId?: string | null; hostBusinessId?: string | null }
+) {
+  const admin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+  const pFilter = admin
+    ? { clause: '1=1', args: [] as unknown[] }
+    : user.creatorId
+      ? { clause: 'p.creator_id = ?', args: [user.creatorId] as unknown[] }
+      : user.hostBusinessId
+        ? { clause: 'EXISTS (SELECT 1 FROM collaborations c WHERE c.product_id=p.id AND c.organization_id=?)', args: [user.hostBusinessId] as unknown[] }
+        : { clause: '1=0', args: [] as unknown[] };
+  const productRows = await db.prepare(`SELECT p.* FROM products p WHERE ${pFilter.clause} ORDER BY p.created_at DESC LIMIT 500`).all(...pFilter.args) as Record<string, unknown>[];
+
+  const collabRows = (admin
+    ? await db.prepare('SELECT * FROM collaborations ORDER BY updated_at DESC LIMIT 500').all()
+    : user.creatorId
+      ? await db.prepare('SELECT * FROM collaborations WHERE creator_id = ? ORDER BY updated_at DESC LIMIT 500').all(user.creatorId)
+      : user.hostBusinessId
+        ? await db.prepare('SELECT * FROM collaborations WHERE organization_id = ? ORDER BY updated_at DESC LIMIT 500').all(user.hostBusinessId)
+        : []) as Record<string, unknown>[];
+
+  const collaborations = [];
+  for (const c of collabRows) {
+    const cid = String(c.id);
+    const offerRows = await db.prepare('SELECT * FROM offer_versions WHERE collaboration_id = ? ORDER BY version_number ASC').all(cid) as Record<string, unknown>[];
+    const offers = offerRows.map(o => {
+      let notes = '';
+      try { notes = String((JSON.parse(String(o.terms_json || '{}')) as { notes?: unknown }).notes ?? ''); } catch { notes = ''; }
+      return { id: o.id, version: Number(o.version_number), sellingPriceFils: Number(o.selling_price_fils), creatorRoyaltyBasisPoints: Number(o.creator_royalty_basis_points), platformFeeBasisPoints: Number(o.platform_fee_basis_points), status: o.status, notes };
+    });
+    const contractRow = await db.prepare('SELECT * FROM contract_versions WHERE collaboration_id = ? ORDER BY version_number DESC LIMIT 1').get(cid) as Record<string, unknown> | undefined;
+    let contract: Record<string, unknown> | null = null;
+    if (contractRow) {
+      const sigs = await db.prepare('SELECT * FROM contract_signatures WHERE contract_id = ?').all(String(contractRow.id)) as Record<string, unknown>[];
+      contract = { id: contractRow.id, version: Number(contractRow.version_number), status: contractRow.status, documentSha256: contractRow.document_sha256, signatures: sigs.map(sg => ({ id: sg.id, signerSide: sg.signer_side, signerUserId: sg.signer_user_id, signedAt: sg.signed_at })) };
+    }
+    const launchRow = await db.prepare('SELECT * FROM launches WHERE collaboration_id = ? ORDER BY created_at DESC LIMIT 1').get(cid) as Record<string, unknown> | undefined;
+    const org = await db.prepare('SELECT verification_status FROM organizations WHERE id = ?').get(String(c.organization_id)) as { verification_status?: string } | undefined;
+    let launch: Record<string, unknown> | null = null;
+    if (launchRow) {
+      launch = { id: launchRow.id, status: launchRow.status, quantityCap: launchRow.quantity_cap == null ? null : Number(launchRow.quantity_cap), startsAt: launchRow.starts_at, gate: { contractSigned: (contract?.status as string | undefined) === 'FULLY_SIGNED', hostVerified: org?.verification_status === 'VERIFIED' } };
+    }
+    const recipeRows = await db.prepare('SELECT id, version_number, payload_sha256, created_at FROM recipe_versions WHERE product_id = ? ORDER BY version_number DESC').all(String(c.product_id)) as Record<string, unknown>[];
+    const grantRows = await db.prepare('SELECT * FROM recipe_access_grants WHERE product_id = ? ORDER BY created_at DESC').all(String(c.product_id)) as Record<string, unknown>[];
+    collaborations.push({
+      id: c.id, productId: c.product_id, creatorId: c.creator_id, organizationId: c.organization_id, stage: c.stage,
+      offers, contract, launch,
+      recipeVersions: recipeRows.map(r => ({ id: r.id, versionNumber: Number(r.version_number), payloadSha256: r.payload_sha256, createdAt: r.created_at })),
+      recipeAccessGrants: grantRows.map(g => ({ id: g.id, disclosureLevel: Number(g.disclosure_level), status: g.status, organizationId: g.organization_id })),
+    });
+  }
+  return { products: productRows.map(richProduct), collaborations };
+}
+
 export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
   const router = Router();
   const authenticated = requireAuth(db, authConfig);
@@ -196,11 +275,7 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
   router.use(csrf);
 
   router.get('/snapshot', async (req: AuthenticatedRequest, res) => {
-    const user = req.auth!.user;
-    const filter = isAdmin(req) ? { clause: '1=1', args: [] as unknown[] } : user.creatorId ? { clause: 'p.creator_id = ?', args: [user.creatorId] } : user.hostBusinessId ? { clause: 'EXISTS (SELECT 1 FROM collaborations c WHERE c.product_id=p.id AND c.organization_id=?)', args: [user.hostBusinessId] } : { clause: '1=0', args: [] };
-    const products = await db.prepare(`SELECT p.* FROM products p WHERE ${filter.clause} ORDER BY p.created_at DESC LIMIT 500`).all(...filter.args) as Record<string,unknown>[];
-    const collabs = user.creatorId ? await db.prepare('SELECT * FROM collaborations WHERE creator_id = ? ORDER BY updated_at DESC LIMIT 500').all(user.creatorId) : user.hostBusinessId ? await db.prepare('SELECT * FROM collaborations WHERE organization_id = ? ORDER BY updated_at DESC LIMIT 500').all(user.hostBusinessId) : isAdmin(req) ? await db.prepare('SELECT * FROM collaborations ORDER BY updated_at DESC LIMIT 500').all() : [];
-    res.json({ products: products.map(publicProduct), collaborations: collabs });
+    res.json(await buildDomainSnapshot(db, req.auth!.user as { role: string; creatorId?: string | null; hostBusinessId?: string | null }));
   });
 
   router.post('/products', async (req: AuthenticatedRequest, res) => {
