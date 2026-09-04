@@ -13,7 +13,9 @@ import {defineConfig} from 'vite';
  * exactly the behaviour the file had before.
  */
 function publicOriginPlugin() {
-  const origin = (process.env.APP_URL || '').trim().replace(/\/+$/, '');
+  const origin = (process.env.APP_URL || 'https://majal-app-522016905178.europe-west2.run.app')
+    .trim()
+    .replace(/\/+$/, '');
   return {
     name: 'majal-public-origin',
     transformIndexHtml(html: string) {
