@@ -446,25 +446,26 @@ export async function applyVerifiedPaymentEvent(db: MajalDatabase, event: Verifi
       // receipt is unique per (provider,eventId), this append happens exactly once per event.
       if (event.status === 'PAID') {
         await appendLedgerEntry(tx, { scope: 'PAYMENT', entryType: 'PAYMENT_CAPTURED', entityType: 'PAYMENT_INTENT', entityId: intent.id, amountFils: intent.amount_fils, currency: 'KWD', occurredAt: now, meta: { provider: event.provider, eventId: event.eventId } });
-        // Promote the paid order and accrue the creator royalty from the accepted offer, in the
-        // SAME transaction. Idempotent: the webhook-receipt dedup above blocks a replayed event,
-        // and accruals.order_id is UNIQUE so a re-derivation can never double-count.
-        const order = await tx.prepare('SELECT id, launch_id, total_fils, status FROM orders WHERE payment_intent_id = ? LIMIT 1')
-          .get(intent.id) as { id: string; launch_id: string; total_fils: number; status: string } | undefined;
-        if (order && order.status !== 'PAID') {
+        const order = await tx.prepare('SELECT id, launch_id, total_fils FROM orders WHERE payment_intent_id = ? LIMIT 1').get<{ id: string; launch_id: string; total_fils: number | string }>(intent.id);
+        if (order) {
           await tx.prepare("UPDATE orders SET status = 'PAID', updated_at = ? WHERE id = ?").run(now, order.id);
-          const terms = await tx.prepare(`
-            SELECT c.creator_id AS creator_id, o.creator_royalty_basis_points AS bp
-            FROM launches l
-            JOIN collaborations c ON c.id = l.collaboration_id
-            JOIN offer_versions o ON o.collaboration_id = c.id AND o.status = 'ACCEPTED'
-            WHERE l.id = ?
-            ORDER BY o.version_number DESC LIMIT 1
-          `).get(order.launch_id) as { creator_id: string; bp: number } | undefined;
-          if (terms && terms.creator_id) {
-            const amountFils = Math.round((Number(order.total_fils) * Number(terms.bp)) / 10000);
-            await tx.prepare("INSERT OR IGNORE INTO accruals(id, order_id, creator_id, amount_fils, status, created_at, updated_at) VALUES(?, ?, ?, ?, 'ELIGIBLE', ?, ?)")
-              .run(`acr_${randomUUID()}`, order.id, terms.creator_id, amountFils, now, now);
+          const existingAccrual = await tx.prepare('SELECT id FROM accruals WHERE order_id = ? LIMIT 1').get<{ id: string }>(order.id);
+          if (!existingAccrual) {
+            const launch = await tx.prepare('SELECT collaboration_id FROM launches WHERE id = ?').get<{ collaboration_id: string }>(order.launch_id);
+            if (launch) {
+              const collab = await tx.prepare('SELECT creator_id FROM collaborations WHERE id = ?').get<{ creator_id: string }>(launch.collaboration_id);
+              const offer = await tx.prepare("SELECT creator_royalty_basis_points FROM offer_versions WHERE collaboration_id = ? AND status = 'ACCEPTED' ORDER BY version_number DESC LIMIT 1").get<{ creator_royalty_basis_points: number | string }>(launch.collaboration_id);
+              if (collab && offer) {
+                const royaltyBp = Number(offer.creator_royalty_basis_points);
+                const orderTotal = Number(order.total_fils);
+                const royaltyFils = Math.round((orderTotal * royaltyBp) / 10_000);
+                const accrualId = `acc_${randomUUID()}`;
+                await tx.prepare(`
+                  INSERT INTO accruals(id, order_id, creator_id, amount_fils, status, created_at, updated_at)
+                  VALUES(?, ?, ?, ?, 'ELIGIBLE', ?, ?)
+                `).run(accrualId, order.id, collab.creator_id, royaltyFils, now, now);
+              }
+            }
           }
         }
       } else if (event.status === 'REFUNDED') {

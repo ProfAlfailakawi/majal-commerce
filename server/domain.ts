@@ -113,12 +113,161 @@ async function withIdempotency<T>(db: MajalDatabase, req: AuthenticatedRequest, 
   return result;
 }
 
-function publicProduct(row: Record<string, unknown>) {
+export function publicProduct(row: Record<string, unknown>) {
+  const safeJson = (val: unknown) => {
+    if (!val) return undefined;
+    if (Array.isArray(val) || (typeof val === 'object' && val !== null)) return val;
+    try { return JSON.parse(String(val)); } catch { return undefined; }
+  };
+
   return {
     id: row.id, creatorId: row.creator_id, publicName: row.public_name, category: row.category,
     shortDescription: row.short_description, status: row.status,
     estimatedUnitCostFils: Number(row.estimated_unit_cost_fils), targetPriceFils: Number(row.target_price_fils),
-    isSecretRecipe: Boolean(row.is_secret_recipe), createdAt: row.created_at, updatedAt: row.updated_at
+    isSecretRecipe: Boolean(row.is_secret_recipe), createdAt: row.created_at, updatedAt: row.updated_at,
+    internalName: (row.internal_name as string) ?? undefined,
+    story: (row.story as string) ?? undefined,
+    media: safeJson(row.media_json),
+    generalIngredients: safeJson(row.general_ingredients_json),
+    allergens: safeJson(row.allergens_json),
+    dietaryTags: safeJson(row.dietary_tags_json),
+    servingSize: (row.serving_size as string) ?? undefined,
+    shelfLife: (row.shelf_life as string) ?? undefined,
+    estimatedPrepTimeMinutes: row.prep_time_minutes !== undefined && row.prep_time_minutes !== null ? Number(row.prep_time_minutes) : undefined,
+    expectedEquipment: safeJson(row.expected_equipment_json),
+    acceptsExclusivity: row.accepts_exclusivity !== undefined && row.accepts_exclusivity !== null ? Boolean(row.accepts_exclusivity) : undefined,
+    desiredPartnershipType: (row.desired_partnership_type as string) ?? undefined
+  };
+}
+
+export interface SnapshotUser {
+  role?: string;
+  creatorId?: string | null;
+  hostBusinessId?: string | null;
+}
+
+export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser) {
+  const isAdminUser = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+  const filter = isAdminUser
+    ? { clause: '1=1', args: [] as unknown[] }
+    : user.creatorId
+    ? { clause: 'p.creator_id = ?', args: [user.creatorId] }
+    : user.hostBusinessId
+    ? { clause: 'EXISTS (SELECT 1 FROM collaborations c WHERE c.product_id=p.id AND c.organization_id=?)', args: [user.hostBusinessId] }
+    : { clause: '1=0', args: [] };
+
+  const products = await db.prepare(`SELECT p.* FROM products p WHERE ${filter.clause} ORDER BY p.created_at DESC LIMIT 500`).all(...filter.args) as Record<string, unknown>[];
+
+  const collabs = (isAdminUser
+    ? await db.prepare('SELECT * FROM collaborations ORDER BY updated_at DESC LIMIT 500').all()
+    : user.creatorId
+    ? await db.prepare('SELECT * FROM collaborations WHERE creator_id = ? ORDER BY updated_at DESC LIMIT 500').all(user.creatorId)
+    : user.hostBusinessId
+    ? await db.prepare('SELECT * FROM collaborations WHERE organization_id = ? ORDER BY updated_at DESC LIMIT 500').all(user.hostBusinessId)
+    : []) as CollabRow[];
+
+  const collaborations = await Promise.all(collabs.map(async (collab) => {
+    const offerRows = await db.prepare('SELECT * FROM offer_versions WHERE collaboration_id = ? ORDER BY version_number ASC').all<Record<string, unknown>>(collab.id);
+    const offers = offerRows.map(o => {
+      let terms: Record<string, unknown> = {};
+      try {
+        if (typeof o.terms_json === 'string') terms = JSON.parse(o.terms_json);
+        else if (o.terms_json && typeof o.terms_json === 'object') terms = o.terms_json as Record<string, unknown>;
+      } catch { /* ignore */ }
+      return {
+        id: o.id,
+        collaborationId: o.collaboration_id,
+        versionNumber: Number(o.version_number),
+        senderUserId: o.sender_user_id,
+        sellingPriceFils: Number(o.selling_price_fils),
+        creatorRoyaltyBasisPoints: Number(o.creator_royalty_basis_points),
+        platformFeeBasisPoints: Number(o.platform_fee_basis_points),
+        status: o.status,
+        notes: terms.notes,
+        terms,
+        createdAt: o.created_at
+      };
+    });
+
+    const contractRow = await db.prepare('SELECT * FROM contract_versions WHERE collaboration_id = ? ORDER BY version_number DESC LIMIT 1').get<Record<string, unknown>>(collab.id);
+    let contract: Record<string, unknown> | null = null;
+    if (contractRow) {
+      const signatureRows = await db.prepare('SELECT * FROM contract_signatures WHERE contract_id = ? ORDER BY signed_at ASC').all<Record<string, unknown>>(contractRow.id);
+      contract = {
+        id: contractRow.id,
+        collaborationId: contractRow.collaboration_id,
+        versionNumber: Number(contractRow.version_number),
+        documentSha256: contractRow.document_sha256,
+        objectStorageKey: contractRow.object_storage_key,
+        status: contractRow.status,
+        createdAt: contractRow.created_at,
+        signatures: signatureRows.map(s => ({
+          id: s.id,
+          contractId: s.contract_id,
+          signerUserId: s.signer_user_id,
+          signerSide: s.signer_side,
+          paciRequestId: s.paci_request_id,
+          documentSha256: s.document_sha256,
+          signatureEvidenceSha256: s.signature_evidence_sha256,
+          signedAt: s.signed_at
+        }))
+      };
+    }
+
+    const launchRow = await db.prepare('SELECT * FROM launches WHERE collaboration_id = ? ORDER BY created_at DESC LIMIT 1').get<Record<string, unknown>>(collab.id);
+    const gate = await launchGate(db, collab);
+    const launch = launchRow ? {
+      id: launchRow.id,
+      collaborationId: launchRow.collaboration_id,
+      productId: launchRow.product_id,
+      organizationId: launchRow.organization_id,
+      status: launchRow.status,
+      quantityCap: launchRow.quantity_cap ? Number(launchRow.quantity_cap) : null,
+      startsAt: launchRow.starts_at,
+      createdAt: launchRow.created_at,
+      updatedAt: launchRow.updated_at,
+      gate
+    } : { gate };
+
+    const recipeRows = await db.prepare('SELECT id, product_id, version_number, payload_sha256, created_by_user_id, created_at FROM recipe_versions WHERE product_id = ? ORDER BY version_number ASC').all<Record<string, unknown>>(collab.product_id);
+    const recipeVersions = recipeRows.map(r => ({
+      id: r.id,
+      productId: r.product_id,
+      versionNumber: Number(r.version_number),
+      payloadSha256: r.payload_sha256,
+      createdByUserId: r.created_by_user_id,
+      createdAt: r.created_at
+    }));
+
+    const grantRows = await db.prepare('SELECT * FROM recipe_access_grants WHERE product_id = ? AND organization_id = ? ORDER BY created_at ASC').all<Record<string, unknown>>(collab.product_id, collab.organization_id);
+    const recipeAccessGrants = grantRows.map(g => ({
+      id: g.id,
+      productId: g.product_id,
+      creatorId: g.creator_id,
+      organizationId: g.organization_id,
+      disclosureLevel: Number(g.disclosure_level),
+      status: g.status,
+      purpose: g.purpose,
+      requestedByUserId: g.requested_by_user_id,
+      grantedByUserId: g.granted_by_user_id,
+      expiresAt: g.expires_at,
+      createdAt: g.created_at,
+      updatedAt: g.updated_at
+    }));
+
+    return {
+      ...collab,
+      offers,
+      contract,
+      launch,
+      recipeVersions,
+      recipeAccessGrants
+    };
+  }));
+
+  return {
+    products: products.map(publicProduct),
+    collaborations
   };
 }
 
@@ -188,85 +337,6 @@ async function documentAiExtract(contentBase64: string, mimeType: string) {
   return { fields, confidence, textSha256: sha256(payload.document.text || '') };
 }
 
-function richProduct(row: Record<string, unknown>) {
-  const j = (v: unknown): unknown[] => { try { return v == null ? [] : JSON.parse(String(v)); } catch { return []; } };
-  return {
-    id: row.id, creatorId: row.creator_id, publicName: row.public_name, category: row.category,
-    shortDescription: row.short_description, status: row.status,
-    estimatedUnitCostFils: Number(row.estimated_unit_cost_fils), targetPriceFils: Number(row.target_price_fils),
-    isSecretRecipe: Boolean(row.is_secret_recipe),
-    internalName: row.internal_name ?? null, story: row.story ?? null,
-    media: j(row.media_json), generalIngredients: j(row.general_ingredients_json),
-    allergens: j(row.allergens_json), dietaryTags: j(row.dietary_tags_json),
-    servingSize: row.serving_size ?? null, shelfLife: row.shelf_life ?? null,
-    estimatedPrepTimeMinutes: row.prep_time_minutes == null ? null : Number(row.prep_time_minutes),
-    expectedEquipment: j(row.expected_equipment_json),
-    acceptsExclusivity: Boolean(row.accepts_exclusivity),
-    desiredPartnershipType: row.desired_partnership_type ?? null,
-    createdAt: row.created_at, updatedAt: row.updated_at,
-  };
-}
-
-/**
- * Server-authoritative read-model each portal renders from. Scoped to the caller
- * (admin: all; creator: own; host: collaborating), money left in fils. Recipe payloads
- * are never included — only version metadata.
- */
-export async function buildDomainSnapshot(
-  db: MajalDatabase,
-  user: { role: string; creatorId?: string | null; hostBusinessId?: string | null }
-) {
-  const admin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
-  const pFilter = admin
-    ? { clause: '1=1', args: [] as unknown[] }
-    : user.creatorId
-      ? { clause: 'p.creator_id = ?', args: [user.creatorId] as unknown[] }
-      : user.hostBusinessId
-        ? { clause: 'EXISTS (SELECT 1 FROM collaborations c WHERE c.product_id=p.id AND c.organization_id=?)', args: [user.hostBusinessId] as unknown[] }
-        : { clause: '1=0', args: [] as unknown[] };
-  const productRows = await db.prepare(`SELECT p.* FROM products p WHERE ${pFilter.clause} ORDER BY p.created_at DESC LIMIT 500`).all(...pFilter.args) as Record<string, unknown>[];
-
-  const collabRows = (admin
-    ? await db.prepare('SELECT * FROM collaborations ORDER BY updated_at DESC LIMIT 500').all()
-    : user.creatorId
-      ? await db.prepare('SELECT * FROM collaborations WHERE creator_id = ? ORDER BY updated_at DESC LIMIT 500').all(user.creatorId)
-      : user.hostBusinessId
-        ? await db.prepare('SELECT * FROM collaborations WHERE organization_id = ? ORDER BY updated_at DESC LIMIT 500').all(user.hostBusinessId)
-        : []) as Record<string, unknown>[];
-
-  const collaborations = [];
-  for (const c of collabRows) {
-    const cid = String(c.id);
-    const offerRows = await db.prepare('SELECT * FROM offer_versions WHERE collaboration_id = ? ORDER BY version_number ASC').all(cid) as Record<string, unknown>[];
-    const offers = offerRows.map(o => {
-      let notes = '';
-      try { notes = String((JSON.parse(String(o.terms_json || '{}')) as { notes?: unknown }).notes ?? ''); } catch { notes = ''; }
-      return { id: o.id, version: Number(o.version_number), sellingPriceFils: Number(o.selling_price_fils), creatorRoyaltyBasisPoints: Number(o.creator_royalty_basis_points), platformFeeBasisPoints: Number(o.platform_fee_basis_points), status: o.status, notes };
-    });
-    const contractRow = await db.prepare('SELECT * FROM contract_versions WHERE collaboration_id = ? ORDER BY version_number DESC LIMIT 1').get(cid) as Record<string, unknown> | undefined;
-    let contract: Record<string, unknown> | null = null;
-    if (contractRow) {
-      const sigs = await db.prepare('SELECT * FROM contract_signatures WHERE contract_id = ?').all(String(contractRow.id)) as Record<string, unknown>[];
-      contract = { id: contractRow.id, version: Number(contractRow.version_number), status: contractRow.status, documentSha256: contractRow.document_sha256, signatures: sigs.map(sg => ({ id: sg.id, signerSide: sg.signer_side, signerUserId: sg.signer_user_id, signedAt: sg.signed_at })) };
-    }
-    const launchRow = await db.prepare('SELECT * FROM launches WHERE collaboration_id = ? ORDER BY created_at DESC LIMIT 1').get(cid) as Record<string, unknown> | undefined;
-    const org = await db.prepare('SELECT verification_status FROM organizations WHERE id = ?').get(String(c.organization_id)) as { verification_status?: string } | undefined;
-    let launch: Record<string, unknown> | null = null;
-    if (launchRow) {
-      launch = { id: launchRow.id, status: launchRow.status, quantityCap: launchRow.quantity_cap == null ? null : Number(launchRow.quantity_cap), startsAt: launchRow.starts_at, gate: { contractSigned: (contract?.status as string | undefined) === 'FULLY_SIGNED', hostVerified: org?.verification_status === 'VERIFIED' } };
-    }
-    const recipeRows = await db.prepare('SELECT id, version_number, payload_sha256, created_at FROM recipe_versions WHERE product_id = ? ORDER BY version_number DESC').all(String(c.product_id)) as Record<string, unknown>[];
-    const grantRows = await db.prepare('SELECT * FROM recipe_access_grants WHERE product_id = ? ORDER BY created_at DESC').all(String(c.product_id)) as Record<string, unknown>[];
-    collaborations.push({
-      id: c.id, productId: c.product_id, creatorId: c.creator_id, organizationId: c.organization_id, stage: c.stage,
-      offers, contract, launch,
-      recipeVersions: recipeRows.map(r => ({ id: r.id, versionNumber: Number(r.version_number), payloadSha256: r.payload_sha256, createdAt: r.created_at })),
-      recipeAccessGrants: grantRows.map(g => ({ id: g.id, disclosureLevel: Number(g.disclosure_level), status: g.status, organizationId: g.organization_id })),
-    });
-  }
-  return { products: productRows.map(richProduct), collaborations };
-}
-
 export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
   const router = Router();
   const authenticated = requireAuth(db, authConfig);
@@ -275,7 +345,8 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
   router.use(csrf);
 
   router.get('/snapshot', async (req: AuthenticatedRequest, res) => {
-    res.json(await buildDomainSnapshot(db, req.auth!.user as { role: string; creatorId?: string | null; hostBusinessId?: string | null }));
+    const snap = await buildDomainSnapshot(db, req.auth!.user);
+    res.json(snap);
   });
 
   router.post('/products', async (req: AuthenticatedRequest, res) => {

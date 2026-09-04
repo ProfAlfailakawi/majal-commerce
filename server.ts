@@ -22,9 +22,9 @@ installProcessSafetyHandlers();
 const isProduction = process.env.NODE_ENV === 'production';
 const simulatorsEnabled = !isProduction && process.env.ENABLE_INTEGRATION_SIMULATORS === 'true';
 const aiEnabled = process.env.ENABLE_AI_API === 'true';
-const configuredPort = Number(process.env.PORT || 3000);
-const port = Number.isInteger(configuredPort) && configuredPort > 0 && configuredPort < 65536 ? configuredPort : 3000;
-const bindHost = isProduction ? (process.env.HOST || '0.0.0.0') : (process.env.DEV_HOST || '0.0.0.0');
+// In AI Studio environment, dev server must bind to port 3000 and host 0.0.0.0.
+const port = 3000;
+const bindHost = '0.0.0.0';
 
 type RateEntry = { count: number; resetAt: number };
 const rateBuckets = new Map<string, RateEntry>();

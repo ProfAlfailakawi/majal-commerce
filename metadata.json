@@ -1,6 +1,6 @@
 {
   "name": "مجال — منصة الحاضن التجاري المرخّص",
   "description": "منصة تشغيل شراكات تجارية تربط المبدعين بالمنشآت المرخصة مع صلاحيات متعددة، خزنة وصفات، عقود، إطلاقات، امتثال، أدمن وسوبر أدمن.",
-  "majorCapabilities": ["SERVER_AUTH", "MFA_TOTP", "SQLITE_MIGRATIONS", "CURSOR_PAGINATION", "PAYMENT_ADAPTER_READY", "PACI_ADAPTER_READY", "SMART_NOTIFICATION_CENTER", "ROLE_BASED_DEMO", "SERVER_SIDE_AI_OPTIONAL"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API", "SERVER_AUTH", "MFA_TOTP", "SQLITE_MIGRATIONS", "CURSOR_PAGINATION", "PAYMENT_ADAPTER_READY", "PACI_ADAPTER_READY", "SMART_NOTIFICATION_CENTER", "ROLE_BASED_DEMO", "SERVER_SIDE_AI_OPTIONAL"],
   "version": "5.0.0-majal"
 }
