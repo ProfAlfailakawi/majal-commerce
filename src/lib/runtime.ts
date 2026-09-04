@@ -4,9 +4,6 @@
  */
 export const IS_DEMO_MODE = import.meta.env.DEV && import.meta.env.VITE_ENABLE_DEMO_MODE !== 'false';
 
-export const FIREBASE_SYNC_ENABLED =
-  IS_DEMO_MODE && import.meta.env.VITE_ENABLE_FIREBASE_SYNC === 'true';
-
 export const AI_ASSISTANT_ENABLED =
   IS_DEMO_MODE || import.meta.env.VITE_ENABLE_AI_ASSISTANT === 'true';
 
