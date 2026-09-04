@@ -63,7 +63,7 @@ export const SuperAdminDashboard: React.FC = () => {
             <p className="text-sm text-slate-400 leading-7">السوبر أدمن لا يدير شاشة فقط؛ يدير السوق نفسه: الأدوار، السياسات، المخاطر، سيولة العرض والطلب، سلامة الوصول والبيانات، ومؤشرات الشركة العليا.</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 min-w-[320px]">
+          <div className="grid grid-cols-2 gap-3 w-full xl:w-auto xl:min-w-[320px]">
             <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-[11px] text-slate-500">إجمالي المبيعات</div><div className="mt-2 text-2xl font-black text-gold-300 font-mono">{metrics.gmv.toFixed(3)}</div></div>
             <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-[11px] text-slate-500">رسوم مجال</div><div className="mt-2 text-2xl font-black text-emerald-300 font-mono">{metrics.platform.toFixed(3)}</div></div>
             <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-[11px] text-slate-500">إطلاقات حيّة</div><div className="mt-2 text-2xl font-black text-sky-300 font-mono">{metrics.live}</div></div>

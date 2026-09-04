@@ -121,7 +121,7 @@ export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => voi
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
-      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="integration-hub-title" className="bg-neutral-900 border border-neutral-700 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden text-neutral-100 flex flex-col max-h-[90vh]">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="integration-hub-title" className="bg-neutral-900 border border-neutral-700 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden text-neutral-100 flex flex-col max-h-[90dvh]">
         
         {/* Header */}
         <div className="p-5 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/80">

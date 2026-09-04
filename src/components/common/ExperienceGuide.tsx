@@ -93,7 +93,7 @@ const CommandPalette: React.FC<{ open: boolean; onClose: () => void; onSurfaceCh
           <input id="majal-command-search" value={query} onChange={event => setQuery(event.target.value)} placeholder="اكتب: السوق، وصفة، امتثال، قيادة…" className="flex-1 bg-transparent text-sm text-slate-100 placeholder:text-slate-500 outline-none" />
           <button onClick={onClose} aria-label="إغلاق الأوامر" className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5"><X className="w-4 h-4" /></button>
         </div>
-        <div className="p-2 max-h-[55vh] overflow-y-auto">
+        <div className="p-2 max-h-[55dvh] overflow-y-auto">
           {filtered.map(item => <button key={item.surface} onClick={() => { onSurfaceChange(item.surface); onClose(); }} className="w-full flex items-center justify-between gap-3 p-3.5 rounded-2xl text-right hover:bg-white/5 transition-colors">
             <span className="flex items-center gap-3"><span className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 grid place-items-center text-gold-300">{item.icon}</span><span><span className="block text-sm font-bold text-slate-100">{item.label}</span><span className="block text-[10px] text-slate-500 mt-1">متاح لدور {roleLabel(store.activeUser.role)}</span></span></span>
             <ArrowLeft className="w-4 h-4 text-slate-500" />

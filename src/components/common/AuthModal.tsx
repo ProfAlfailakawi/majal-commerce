@@ -89,7 +89,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
         role="dialog"
         aria-modal="true"
         aria-labelledby="auth-dialog-title"
-        className="w-full max-w-lg glass-panel rounded-[28px] border border-white/10 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+        className="w-full max-w-lg glass-panel rounded-[28px] border border-white/10 shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col"
       >
         <div className="p-5 border-b border-white/10 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">

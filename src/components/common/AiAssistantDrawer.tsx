@@ -62,7 +62,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
       <div className="absolute inset-y-0 left-0 max-w-full flex pl-0 sm:pl-10">
-        <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="ai-drawer-title" className="w-screen max-w-md bg-slate-900 border-r border-slate-800 shadow-2xl flex flex-col text-slate-100">
+        <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="ai-drawer-title" className="w-full max-w-md max-h-dvh bg-slate-900 border-r border-slate-800 shadow-2xl flex flex-col text-slate-100">
           
           {/* Header */}
           <div className="p-5 bg-slate-800/90 border-b border-slate-700 flex items-center justify-between">

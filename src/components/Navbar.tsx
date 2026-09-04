@@ -324,7 +324,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
 
               {showRoleDropdown && (
-                <div role="menu" aria-label="تبديل هوية العرض المحلية" className="absolute left-0 mt-2 w-80 max-w-[90vw] bg-ink-700/96 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 text-xs text-slate-200 max-h-[70vh] overflow-y-auto">
+                <div role="menu" aria-label="تبديل هوية العرض المحلية" className="absolute left-0 mt-2 w-80 max-w-[90vw] bg-ink-700/96 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 text-xs text-slate-200 max-h-[70dvh] overflow-y-auto">
                   <div className="px-2 py-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider border-b border-white/10 mb-1">
                     تبديل أدوار العرض — Creator / Host / Admin / Super Admin
                   </div>
