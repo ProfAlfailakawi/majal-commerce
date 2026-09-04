@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مجال — عرض الشراكة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ink-900:#070d18; --ink-850:#0a101b; --ink-800:#0b1220; --ink-700:#0f172a; --ink-600:#131c2d; --ink-500:#18243a;
+  --gold-100:#f8ecd0; --gold-200:#f4e1b0; --gold-300:#e8c880; --gold-500:#c7a55b; --gold-600:#a8843c; --gold-700:#7d612b;
+  --steel:#6b87bd; --emerald:#5fbf9a; --violet:#a996e0;
+  --text:#eef2f8; --muted:#9fb0c9; --faint:#67799a;
+  --line:rgba(199,165,91,.16); --line-soft:rgba(159,176,201,.14);
+  --edge-hi:rgba(255,255,255,.06);
+  --display:'Readex Pro','IBM Plex Sans Arabic',system-ui,sans-serif;
+  --body:'IBM Plex Sans Arabic','Readex Pro',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --pad: clamp(1.5rem, 5vw, 6rem);
+  --maxw: 74rem;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--ink-900); color:var(--text);
+  font-family:var(--body); font-weight:300; font-size:clamp(15px,1.05vw,17px); line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(90rem 50rem at 88% -12%, rgba(199,165,91,.09), transparent 62%),
+    radial-gradient(70rem 45rem at 6% 108%, rgba(75,106,163,.10), transparent 60%);
+}
+
+/* ---------- deck mechanics ---------- */
+.deck{height:100vh; overflow-y:auto; scroll-snap-type:y mandatory; position:relative; z-index:1;
+  scrollbar-width:none;}
+.deck::-webkit-scrollbar{display:none}
+.slide{
+  min-height:100vh; scroll-snap-align:start; scroll-snap-stop:always;
+  display:grid; align-content:center; gap:clamp(1.5rem,3vh,2.75rem);
+  padding:clamp(4.5rem,9vh,7rem) var(--pad) clamp(4rem,8vh,6rem);
+  border-top:1px solid transparent;
+}
+.slide > *{width:100%; max-width:var(--maxw); margin-inline:auto}
+
+/* ---------- typography ---------- */
+h1,h2,h3{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; line-height:1.25}
+h1{font-size:clamp(2.5rem,6.4vw,5rem); font-weight:300; letter-spacing:-.01em}
+h2{font-size:clamp(1.85rem,3.7vw,3.1rem); font-weight:300}
+h3{font-size:clamp(1.05rem,1.55vw,1.35rem); font-weight:500; color:var(--gold-200)}
+p{margin:0; max-width:62ch}
+.lede{font-size:clamp(1.05rem,1.5vw,1.3rem); color:var(--muted); line-height:1.85}
+.eyebrow{
+  font-family:var(--mono); font-size:.7rem; letter-spacing:.22em; text-transform:uppercase;
+  color:var(--gold-500); display:flex; align-items:center; gap:.85rem; margin:0;
+}
+.eyebrow::after{content:""; height:1px; flex:1; background:linear-gradient(to left,var(--line),transparent)}
+.muted{color:var(--muted)}
+.faint{color:var(--faint)}
+.gold{color:var(--gold-300)}
+em{font-style:normal; color:var(--gold-200)}
+
+/* ---------- title slide ---------- */
+.hero{align-content:center; text-align:start}
+.hero .mark{display:block}
+.hero h1{margin-block:.4rem .2rem}
+.hero .latin{font-family:var(--mono); font-size:.78rem; letter-spacing:.55em; color:var(--gold-600)}
+.hero-meta{display:flex; flex-wrap:wrap; gap:.6rem 2rem; font-family:var(--mono); font-size:.72rem;
+  letter-spacing:.12em; color:var(--faint); padding-top:1.6rem; border-top:1px solid var(--line-soft)}
+
+/* ---------- primitives ---------- */
+.grid{display:grid; gap:clamp(1rem,2vw,1.75rem)}
+.g2{grid-template-columns:repeat(auto-fit,minmax(20rem,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(15.5rem,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))}
+
+.panel{
+  background:linear-gradient(180deg,rgba(24,36,58,.55),rgba(11,18,32,.55));
+  border:1px solid var(--line-soft); border-radius:14px; padding:clamp(1.15rem,1.8vw,1.6rem);
+  box-shadow:inset 0 1px 0 var(--edge-hi); display:grid; gap:.6rem; align-content:start;
+}
+.panel p{font-size:.94rem; color:var(--muted)}
+
+/* plain list — no card, deliberately */
+.rows{display:grid; gap:0; border-top:1px solid var(--line-soft)}
+.row{display:grid; grid-template-columns:auto 1fr; gap:.4rem 1.4rem; align-items:baseline;
+  padding:clamp(.85rem,1.6vh,1.15rem) 0; border-bottom:1px solid var(--line-soft)}
+.row .k{font-family:var(--mono); font-size:.72rem; letter-spacing:.14em; color:var(--gold-600); padding-top:.35rem}
+.row .t{font-family:var(--display); font-weight:500; color:var(--text)}
+.row .d{grid-column:2; color:var(--muted); font-size:.94rem}
+
+/* journey rail */
+.journey{display:grid; grid-template-columns:repeat(6,1fr); gap:0; border-block:1px solid var(--line-soft)}
+.stage{padding:clamp(1.1rem,2.2vh,1.7rem) clamp(.7rem,1.2vw,1.15rem); display:grid; gap:.55rem; align-content:start;
+  border-inline-start:1px solid var(--line-soft); position:relative}
+.stage:first-child{border-inline-start:0}
+.stage .n{font-family:var(--display); font-size:1.5rem; color:var(--gold-500); line-height:1}
+.stage .a{font-family:var(--mono); font-size:.66rem; letter-spacing:.14em; color:var(--faint)}
+.stage h3{font-size:1.02rem; color:var(--text)}
+.stage p{font-size:.86rem; color:var(--muted); line-height:1.7}
+.stage::before{content:""; position:absolute; inset-block-start:-1px; inset-inline:0; height:1px;
+  background:var(--sc,var(--gold-500)); opacity:.55}
+@media (max-width:960px){ .journey{grid-template-columns:repeat(2,1fr)} .stage{border-inline-start:0} }
+@media (max-width:560px){ .journey{grid-template-columns:1fr} }
+
+/* disclosure ladder */
+.ladder{display:grid; gap:0; border:1px solid var(--line-soft); border-radius:14px; overflow:hidden}
+.rung{display:grid; grid-template-columns:5.5rem 1fr auto; gap:1.2rem; align-items:center;
+  padding:clamp(.9rem,1.8vh,1.3rem) clamp(1rem,2vw,1.5rem); border-bottom:1px solid var(--line-soft)}
+.rung:last-child{border-bottom:0}
+.rung .lvl{font-family:var(--mono); font-size:.8rem; letter-spacing:.1em; color:var(--gold-300)}
+.rung .txt{color:var(--muted); font-size:.94rem}
+.rung .txt b{color:var(--text); font-weight:500; font-family:var(--display)}
+.bar{width:clamp(3.5rem,8vw,7rem); height:4px; border-radius:2px; background:rgba(159,176,201,.13); overflow:hidden}
+.bar i{display:block; height:100%; background:var(--gold-500)}
+@media (max-width:640px){ .rung{grid-template-columns:1fr; gap:.4rem} .bar{width:100%} }
+
+/* money state machine */
+.flow{display:flex; flex-wrap:wrap; align-items:stretch; gap:0; border:1px solid var(--line-soft); border-radius:14px; overflow:hidden}
+.step{flex:1 1 12rem; padding:clamp(1rem,2vh,1.4rem) clamp(.9rem,1.6vw,1.3rem); display:grid; gap:.45rem;
+  border-inline-start:1px solid var(--line-soft)}
+.step:first-child{border-inline-start:0}
+.step code{font-family:var(--mono); font-size:.72rem; letter-spacing:.06em; color:var(--gold-300)}
+.step b{font-family:var(--display); font-weight:500; font-size:.98rem}
+.step span{color:var(--muted); font-size:.86rem; line-height:1.65}
+.step.locked{background:rgba(95,191,154,.05)}
+.step.locked code{color:var(--emerald)}
+
+/* surfaces */
+.surface{border-inline-start:2px solid var(--sc,var(--gold-500)); padding-inline-start:1.1rem; display:grid; gap:.45rem; align-content:start}
+.surface h3{font-size:1rem; color:var(--text)}
+.surface p{font-size:.88rem; color:var(--muted); line-height:1.7}
+.surface .who{font-family:var(--mono); font-size:.66rem; letter-spacing:.16em; color:var(--faint)}
+
+/* closing */
+.cta{display:flex; flex-wrap:wrap; gap:1.2rem 2.5rem; align-items:center; padding-top:1.8rem; border-top:1px solid var(--line)}
+.cta a{color:var(--ink-900); background:var(--gold-300); text-decoration:none; font-family:var(--display); font-weight:500;
+  padding:.7rem 1.6rem; border-radius:999px; transition:background .2s ease}
+.cta a:hover{background:var(--gold-200)}
+.cta a.ghost{background:transparent; color:var(--gold-200); border:1px solid var(--line); }
+.cta a.ghost:hover{background:rgba(199,165,91,.08)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--gold-300); outline-offset:3px; border-radius:6px}
+
+/* ---------- chrome: one thin rail, nothing else ---------- */
+.rail{position:fixed; inset-inline-start:clamp(.9rem,2vw,1.9rem); inset-block:0; z-index:5;
+  display:flex; flex-direction:column; justify-content:center; gap:.7rem}
+.rail button{appearance:none; background:none; border:0; padding:.28rem 0; cursor:pointer; display:block}
+.rail i{display:block; width:1.6rem; height:2px; background:rgba(159,176,201,.22); border-radius:2px;
+  transition:background .3s ease, width .3s ease}
+.rail button[aria-current="true"] i{background:var(--gold-300); width:2.6rem}
+.rail button:hover i{background:var(--gold-500)}
+@media (max-width:720px){ .rail{display:none} }
+
+.counter{position:fixed; inset-block-end:clamp(1rem,2.5vh,1.8rem); inset-inline-end:clamp(1.1rem,3vw,2.4rem); z-index:5;
+  font-family:var(--mono); font-size:.7rem; letter-spacing:.18em; color:var(--faint)}
+.counter b{color:var(--gold-300); font-weight:500}
+
+.brandmark{position:fixed; inset-block-start:clamp(1rem,2.5vh,1.8rem); inset-inline-end:clamp(1.1rem,3vw,2.4rem); z-index:5;
+  display:flex; align-items:center; gap:.55rem; font-family:var(--display); font-size:.95rem; color:var(--gold-200); opacity:.85}
+
+@media print{ .rail,.counter,.brandmark{display:none} .deck{height:auto;overflow:visible} .slide{min-height:auto;page-break-after:always} }
+@media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} *{transition:none!important; animation:none!important} }
+</style>
+</head>
+<body>
+
+<div class="brandmark" aria-hidden="true">
+  <svg width="22" height="22" viewBox="0 0 64 64" fill="none"><defs><linearGradient id="bm" x1="1" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#a8843c"/><stop offset="45%" stop-color="#c7a55b"/><stop offset="100%" stop-color="#f4e1b0"/></linearGradient></defs><path d="M11 53 V33 A21 21 0 0 1 53 33 V53" stroke="url(#bm)" stroke-width="6.5" stroke-linecap="round"/><circle cx="32" cy="34" r="9" stroke="url(#bm)" stroke-width="6"/></svg>
+  <span>مجال</span>
+</div>
+
+<nav class="rail" aria-label="محطات العرض"></nav>
+<div class="counter" aria-hidden="true"><b id="cur">١</b> / <span id="tot">١٢</span></div>
+
+<main class="deck" id="deck">
+
+  <!-- 1 -->
+  <section class="slide hero" data-label="الغلاف">
+    <div>
+      <svg class="mark" width="86" height="86" viewBox="0 0 64 64" fill="none" role="img" aria-label="شعار مجال">
+        <defs><linearGradient id="hm" x1="1" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#a8843c"/><stop offset="45%" stop-color="#c7a55b"/><stop offset="100%" stop-color="#f4e1b0"/></linearGradient></defs>
+        <path d="M7 57.5 H57" stroke="url(#hm)" stroke-width="4.5" stroke-linecap="round" opacity=".3"/>
+        <path d="M11 53 V33 A21 21 0 0 1 53 33 V53" stroke="url(#hm)" stroke-width="6.5" stroke-linecap="round"/>
+        <circle cx="32" cy="34" r="9" stroke="url(#hm)" stroke-width="6"/>
+      </svg>
+      <h1>مجال</h1>
+      <p class="latin">MAJAL</p>
+      <p class="lede" style="margin-top:1.6rem">
+        نظام تشغيل للشراكات التجارية بين المبدعين والمنشآت المرخّصة.
+        فكرة محفوظة، مطبخ مرخّص، عقد موقّع، وإطلاق لا يحدث إلا حين تكتمل شروطه.
+      </p>
+    </div>
+    <div class="hero-meta">
+      <span>الكويت</span><span>Absolute Edition</span><span>عرض شراكة للمنشآت</span>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide" data-label="المشكلة">
+    <p class="eyebrow">لماذا نحن هنا</p>
+    <h2>الطرفان يخسران في نفس النقطة</h2>
+    <div class="grid g2">
+      <div class="panel">
+        <h3>المبدع</h3>
+        <p>وصفة في دفتر، وثقة على كلمة. لا إثبات ملكية، ولا طريقة لعرضها على مطبخ محترف دون التنازل عنها فعليًا في أول اجتماع.</p>
+      </div>
+      <div class="panel">
+        <h3>المنشأة المرخّصة</h3>
+        <p>مطبخ وفريق وفروع بطاقة فائضة، ومنتج جديد يعني مخاطرة غير محسوبة: بلا اختبار موثّق، بلا تكلفة معروفة، وبلا عقد يحمي الطرفين.</p>
+      </div>
+    </div>
+    <p class="lede">النتيجة أن معظم الشراكات تموت قبل أول دفعة إنتاج — ليس لضعف الفكرة، بل لغياب البنية التي تحملها.</p>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide" data-label="الأطروحة">
+    <p class="eyebrow">الأطروحة</p>
+    <h2>لسنا سوقًا. نحن البنية التي تجعل الشراكة قابلة للتنفيذ.</h2>
+    <div class="rows">
+      <div class="row"><span class="k">01</span><span class="t">الفكرة تُحفظ قبل أن تُعرض</span><span class="d">إصدار غير قابل للتعديل بتاريخ ومالك، وثلاثة مستويات إفصاح تتحكم بمن يرى ماذا ومتى.</span></div>
+      <div class="row"><span class="k">02</span><span class="t">المطابقة بالقدرة لا بالصوت</span><span class="d">ترتيب المنشآت حسب الطاقة التشغيلية والهامش والامتثال، من بيانات النظام لا من تقدير بشري.</span></div>
+      <div class="row"><span class="k">03</span><span class="t">القرار يترك أثرًا</span><span class="d">كل ملاحظة ومخاطرة ومرحلة في غرفة الصفقة محفوظة باسم صاحبها ودوره ووقته.</span></div>
+      <div class="row"><span class="k">04</span><span class="t">لا إطلاق بضغطة زر</span><span class="d">بوابة الإطلاق مشتقة من السجلات: تحقّق، مستندات، عقد، فروع، صور. النظام يمنع، لا يذكّر.</span></div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide" data-label="الرحلة">
+    <p class="eyebrow">الرحلة — ست محطات</p>
+    <h2>من فكرة في دفتر إلى مستحقات في حساب</h2>
+    <div class="journey">
+      <article class="stage" style="--sc:#c7a55b"><span class="n">١</span><span class="a">المبدع</span><h3>ابتكار</h3><p>إصدار محفوظ للفكرة، بتاريخ ومالك واضحين.</p></article>
+      <article class="stage" style="--sc:#d18ae0"><span class="n">٢</span><span class="a">خزنة الوصفات</span><h3>حماية</h3><p>ثلاثة مستويات إفصاح ومنح زمنية، وكل فتح مسجّل.</p></article>
+      <article class="stage" style="--sc:#6b87bd"><span class="n">٣</span><span class="a">مجال</span><h3>مطابقة</h3><p>ترتيب بالقدرة والهامش والامتثال، لا بالصوت الأعلى.</p></article>
+      <article class="stage" style="--sc:#5fc7d1"><span class="n">٤</span><span class="a">المنشأة المرخّصة</span><h3>مختبر</h3><p>دفعات اختبار حقيقية بالتكلفة والوقت والهدر.</p></article>
+      <article class="stage" style="--sc:#a996e0"><span class="n">٥</span><span class="a">الطرفان</span><h3>اتفاق</h3><p>عقد موقّع يحدد النموذج والمدة والحصرية.</p></article>
+      <article class="stage" style="--sc:#5fbf9a"><span class="n">٦</span><span class="a">السوق</span><h3>إطلاق</h3><p>بوابة مشتقة من السجلات، ثم مبيعات ومستحقات.</p></article>
+    </div>
+    <p class="faint" style="font-size:.85rem">كل محطة تُسلّم مخرجًا موثّقًا للمحطة التالية. لا يمكن تخطّي محطة.</p>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide" data-label="خزنة الوصفات">
+    <p class="eyebrow">الحماية</p>
+    <h2>سلّم الإفصاح الثلاثي</h2>
+    <p class="lede">المنشأة لا تحتاج السر لتقرّر. تحتاج ما يكفي للتقييم، ثم ما يكفي للاختبار، ثم — بعد العقد — ما يكفي للإنتاج.</p>
+    <div class="ladder">
+      <div class="rung"><span class="lvl">L1</span><span class="txt"><b>الملف التعريفي</b> — الفئة، الجمهور، المكوّنات العامة، مؤشرات الجدوى. متاح للتقييم الأولي.</span><span class="bar"><i style="width:28%"></i></span></div>
+      <div class="rung"><span class="lvl">L2</span><span class="txt"><b>الوصفة التشغيلية</b> — الخطوات والكميات مع حجب الأسرار الجوهرية. تُمنح للاختبار المخبري.</span><span class="bar"><i style="width:64%"></i></span></div>
+      <div class="rung"><span class="lvl">L3</span><span class="txt"><b>الوصفة الكاملة</b> — تتطلب الدور والسياق والمنح الصريح من المبدع، ولها تاريخ انتهاء وإمكانية سحب.</span><span class="bar"><i style="width:100%"></i></span></div>
+    </div>
+    <p class="faint" style="font-size:.85rem">كل عملية عرض أو تصدير أو منح أو سحب تدخل سجل التدقيق باسم المستخدم ودوره ووقته.</p>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide" data-label="المختبر">
+    <p class="eyebrow">المختبر</p>
+    <h2>لا تشتري قصة. تشتري دفعة قِسْتَها بنفسك.</h2>
+    <div class="grid g4">
+      <div class="panel"><h3>الكمية</h3><p>الناتج الفعلي لكل دفعة، لا التقدير النظري.</p></div>
+      <div class="panel"><h3>التكلفة</h3><p>تكلفة الوحدة كما خرجت من مطبخك أنت.</p></div>
+      <div class="panel"><h3>الوقت</h3><p>زمن التحضير الحقيقي داخل جدول التشغيل.</p></div>
+      <div class="panel"><h3>الهدر</h3><p>الفاقد المقاس، ومقارنة مباشرة بين آخر دفعتين.</p></div>
+    </div>
+    <p class="lede">كل دفعة تُحفظ مرتبطة بإصدار الوصفة والقرار والتعديلات المقترحة. حين تصل غرفة التفاوض، أنت تتفاوض على أرقام، لا على انطباعات.</p>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide" data-label="بوابة الإطلاق">
+    <p class="eyebrow">بوابة الإطلاق</p>
+    <h2>الزر لا يفتح البوابة. السجلات تفتحها.</h2>
+    <div class="rows">
+      <div class="row"><span class="k">تحقّق</span><span class="t">هوية الطرفين والترخيص التجاري ساريان</span></div>
+      <div class="row"><span class="k">مستندات</span><span class="t">الشهادات الصحية والتشغيلية مرفوعة وغير منتهية</span></div>
+      <div class="row"><span class="k">عقد</span><span class="t">عقد موقّع يحدد النموذج والمدة والحصرية والعمولة</span></div>
+      <div class="row"><span class="k">حساسية</span><span class="t">إفصاح المُسبّبات ومنح الوصفة بالمستوى المطلوب للإنتاج</span></div>
+      <div class="row"><span class="k">تشغيل</span><span class="t">الفروع والصور والسعة اليومية مضبوطة ومعتمدة</span></div>
+    </div>
+    <p class="lede">ما دام شرط واحد ناقصًا، المنتج لا يصبح <em>LIVE</em> — لا للمبدع ولا للمنشأة ولا للإدارة. الشروط اليدوية معزولة ومراقبة عن الشروط المشتقة.</p>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide" data-label="المال">
+    <p class="eyebrow">نزاهة الحالة المالية</p>
+    <h2>لا يوجد بيع قبل أن يؤكده مزوّد الدفع</h2>
+    <div class="flow">
+      <div class="step"><code>PENDING_PAYMENT</code><b>حجز</b><span>لا ينشئ بيعًا ولا مستحقًا ولا يظهر في الإيراد.</span></div>
+      <div class="step"><code>CONFIRMED</code><b>بيع مؤكد</b><span>يدخل الإيراد ويولّد مستحقًا محسوبًا بالعمولة المعتمدة.</span></div>
+      <div class="step"><code>APPROVED</code><b>تسوية معتمدة</b><span>الاعتماد قرار محاسبي، وليس دفعًا.</span></div>
+      <div class="step locked"><code>PAID</code><b>مدفوع</b><span>مقفول حتى يصل مرجع موثّق من مزوّد الدفع إلى الخادم.</span></div>
+    </div>
+    <div class="grid g3" style="margin-top:.5rem">
+      <div class="panel"><h3>عمولة مجال</h3><p>قيمة واحدة معرّفة مركزيًا تدخل منطق الحساب والتدقيق، لا رقم يُكتب في كل صفقة.</p></div>
+      <div class="panel"><h3>دورة التسوية</h3><p>مدة ثابتة معلنة للطرفين، قابلة للضبط من مركز السياسات لا من الشاشة.</p></div>
+      <div class="panel"><h3>سجل التدقيق</h3><p>كل تغيّر في الحالة المالية له فاعل ووقت وسبب يمكن مراجعته لاحقًا.</p></div>
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide" data-label="الأسطح">
+    <p class="eyebrow">النظام</p>
+    <h2>خمسة أسطح، مصدر حقيقة واحد</h2>
+    <div class="grid g2">
+      <div class="surface" style="--sc:#c7a55b"><span class="who">CREATOR</span><h3>سطح المبدع</h3><p>جواز المبدع، رادار الفرص، تقديم المنتجات، خزنة الوصفات، التوأم الرقمي، غرفة الصفقة، العقود والمستحقات.</p></div>
+      <div class="surface" style="--sc:#6b87bd"><span class="who">HOST</span><h3>سطح المنشأة</h3><p>الاكتشاف، التحديات، المختبر، غرفة الصفقة، باني العروض، بوابة الإطلاق، غرفة عمليات الإطلاق، المالية، الفريق والصلاحيات.</p></div>
+      <div class="surface" style="--sc:#5fbf9a"><span class="who">ADMIN</span><h3>مركز التحكم</h3><p>الامتثال، الأذونات، العقود، التسويات، الإيقاف الطارئ للمنتجات، الثقة والمخاطر، التدقيق.</p></div>
+      <div class="surface" style="--sc:#a996e0"><span class="who">SUPER ADMIN</span><h3>غرفة قيادة المنصة</h3><p>نبض مجال، الأدوار، سيولة السوق، محرك الثقة، مركز السياسات، جاهزية النظام.</p></div>
+      <div class="surface" style="--sc:#d18ae0"><span class="who">PUBLIC</span><h3>السطح العام</h3><p>قصة مجال، الإطلاقات، الطلب والتقييم، والمركز القانوني الكامل — شرط مسبق لاعتماد المتجر لدى مزوّدي الدفع.</p></div>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide" data-label="الحوكمة">
+    <p class="eyebrow">الحوكمة والأمان</p>
+    <h2>مبني ليُدقَّق، لا ليُصدَّق</h2>
+    <div class="grid g3">
+      <div class="panel"><h3>مصادقة خادمية</h3><p>جلسات HttpOnly مع حماية CSRF، تجزئة كلمات المرور بـ scrypt، قفل مؤقت للمحاولات، وMFA اختياري.</p></div>
+      <div class="panel"><h3>صلاحيات ثلاثية الأبعاد</h3><p>الدور × السياق × الحساسية. عشرة أدوار معرّفة، والعمليات الخطرة يمنعها حارس المجال لا إخفاء الزر.</p></div>
+      <div class="panel"><h3>سجل تدقيق كامل</h3><p>الوصفات والعقود والتسويات والسياسات: كل فعل حسّاس يترك أثرًا قابلًا للاستخراج.</p></div>
+      <div class="panel"><h3>مركز السياسات</h3><p>العمولة، مدد المنح، حدود الطلب، نافذة تحذير الامتثال، عتبة المطابقة، دورة التسوية — قيم مركزية تؤثر في المنطق.</p></div>
+      <div class="panel"><h3>محرك الثقة</h3><p>مؤشر تفسيري يوضّح أسبابه للمراجع البشري، ولا يُصدر حكمًا آليًا نهائيًا على أحد.</p></div>
+      <div class="panel"><h3>الامتثال الكويتي</h3><p>الشروط والخصوصية والاسترجاع وصفحة التتبع منشورة، والمسار مهيّأ لمتطلبات مزوّدي الدفع المحليين.</p></div>
+    </div>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide" data-label="عرضنا لك">
+    <p class="eyebrow">ماذا تكسب المنشأة</p>
+    <h2>طاقة مطبخك الفائضة تتحوّل إلى خط منتجات</h2>
+    <div class="rows">
+      <div class="row"><span class="k">تدفّق</span><span class="t">مصدر منتجات مستمر بلا فريق تطوير داخلي</span><span class="d">مبدعون محقّقون بمنتجات موثّقة، مرتّبون بحسب ملاءمتهم لقدرتك التشغيلية أنت.</span></div>
+      <div class="row"><span class="k">مخاطرة</span><span class="t">لا التزام قبل دفعة اختبار بأرقامك</span><span class="d">تعرف التكلفة والوقت والهدر قبل توقيع أي شيء، ومن مطبخك لا من عرض تقديمي.</span></div>
+      <div class="row"><span class="k">حماية</span><span class="t">عقد يحدد الحصرية والمدة قبل الإنتاج</span><span class="d">وضوح كامل في الملكية والعمولة، ونزاع أقل لأن كل قرار موثّق بصاحبه.</span></div>
+      <div class="row"><span class="k">تشغيل</span><span class="t">غرفة عمليات الإطلاق</span><span class="d">المبيعات والوحدات ومعدل التصريف والفروع والتنبيهات في سياق منشأتك وصلاحيات فريقك.</span></div>
+      <div class="row"><span class="k">امتثال</span><span class="t">أثر كامل عند أي مراجعة</span><span class="d">مستندات سارية، وسجل يجيب عن «من فعل ماذا ومتى» دون بحث يدوي.</span></div>
+    </div>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide" data-label="الدخول">
+    <p class="eyebrow">الخطوة التالية</p>
+    <h2>ثلاث خطوات حتى أول إطلاق مشترك</h2>
+    <div class="grid g3">
+      <div class="panel"><h3>١ — التفعيل</h3><p>نفتح ملف منشأتك، نرفع الترخيص والشهادات، ونضبط الفروع والسعة والفريق وصلاحياته.</p></div>
+      <div class="panel"><h3>٢ — أول مطابقة</h3><p>نعرض عليك مبدعين ملائمين لقدرتك، وتختار منتجًا واحدًا لدفعة مختبر مقاسة.</p></div>
+      <div class="panel"><h3>٣ — العقد والإطلاق</h3><p>عرض مقابل وعقد موقّع، ثم بوابة الإطلاق حين تكتمل شروطها — لا قبلها.</p></div>
+    </div>
+    <p class="lede">لا نطلب منك تغيير مطبخك. نطلب منتجًا واحدًا نثبت عليه النموذج كاملًا.</p>
+    <div class="cta">
+      <a href="#deck">ابدأ التفعيل</a>
+      <a class="ghost" href="#deck">اطلب دفعة مختبر تجريبية</a>
+      <span class="faint" style="font-family:var(--mono);font-size:.72rem;letter-spacing:.14em">مجال — الكويت</span>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function(){
+  var deck = document.getElementById('deck');
+  var slides = Array.prototype.slice.call(deck.querySelectorAll('.slide'));
+  var rail = document.querySelector('.rail');
+  var cur = document.getElementById('cur');
+  var tot = document.getElementById('tot');
+  var ar = function(n){ return String(n).replace(/\d/g, function(d){ return '٠١٢٣٤٥٦٧٨٩'[d]; }); };
+  tot.textContent = ar(slides.length);
+
+  slides.forEach(function(s, i){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('aria-label', s.dataset.label || ('الشريحة ' + (i+1)));
+    b.appendChild(document.createElement('i'));
+    b.addEventListener('click', function(){ s.scrollIntoView({behavior:'smooth', block:'start'}); });
+    rail.appendChild(b);
+  });
+  var dots = Array.prototype.slice.call(rail.children);
+
+  var active = -1;
+  function setActive(i){
+    if (i === active) return;
+    active = i;
+    dots.forEach(function(d, j){ d.setAttribute('aria-current', j === i ? 'true' : 'false'); });
+    cur.textContent = ar(i + 1);
+  }
+  setActive(0);
+
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting && e.intersectionRatio > 0.5) setActive(slides.indexOf(e.target));
+    });
+  }, {root: deck, threshold: [0.51]});
+  slides.forEach(function(s){ io.observe(s); });
+
+  document.addEventListener('keydown', function(e){
+    var next = null;
+    if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') next = active + 1;
+    else if (e.key === 'ArrowUp' || e.key === 'PageUp') next = active - 1;
+    else if (e.key === 'ArrowLeft') next = active + 1;   /* RTL: left advances */
+    else if (e.key === 'ArrowRight') next = active - 1;
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = slides.length - 1;
+    else return;
+    if (next < 0 || next >= slides.length) { e.preventDefault(); return; }
+    e.preventDefault();
+    slides[next].scrollIntoView({behavior:'smooth', block:'start'});
+  });
+})();
+</script>
+</body>
+</html>
