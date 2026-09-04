@@ -587,7 +587,7 @@ export const INITIAL_REVIEWS: Review[] = [
     valueRating: 5,
     portionRating: 5,
     wouldBuyAgain: true,
-    comment: 'كيكة خيالية وطازجة! الكراميل مع الهيل خلطة كويتية جبارة.',
+    comment: 'قرص عقيلي خيالي وطازج! الزعفران مع الهيل خلطة كويتية جبارة، ووجهه ذهبي ومقرمش.',
     keepItVote: true,
     isVerifiedPurchase: true,
     createdAt: new Date(Date.now() - 1 * 86400000).toISOString()
