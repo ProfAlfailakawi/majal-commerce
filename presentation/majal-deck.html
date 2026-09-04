@@ -9,404 +9,499 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root{
-  --ink-900:#070d18; --ink-850:#0a101b; --ink-800:#0b1220; --ink-700:#0f172a; --ink-600:#131c2d; --ink-500:#18243a;
-  --gold-100:#f8ecd0; --gold-200:#f4e1b0; --gold-300:#e8c880; --gold-500:#c7a55b; --gold-600:#a8843c; --gold-700:#7d612b;
-  --steel:#6b87bd; --emerald:#5fbf9a; --violet:#a996e0;
-  --text:#eef2f8; --muted:#9fb0c9; --faint:#67799a;
-  --line:rgba(199,165,91,.16); --line-soft:rgba(159,176,201,.14);
-  --edge-hi:rgba(255,255,255,.06);
+  --paper:#f4f6fa; --paper-2:#eef1f7; --card:#ffffff;
+  --ink:#101a2c; --body:#3b4a63; --muted:#6b7a94; --faint:#8f9cb2;
+  --line:#e0e6ef; --line-2:#eef1f7;
+  --gold:#c7a55b; --gold-ink:#8a6a26; --gold-wash:#fbf3e2; --gold-edge:#e8d3a4;
+  --steel:#2f5aa8; --emerald:#14795a; --violet:#5b47a8; --magenta:#9c3a82; --cyan:#10708a;
   --display:'Readex Pro','IBM Plex Sans Arabic',system-ui,sans-serif;
-  --body:'IBM Plex Sans Arabic','Readex Pro',system-ui,sans-serif;
+  --body-f:'IBM Plex Sans Arabic','Readex Pro',system-ui,sans-serif;
   --mono:'IBM Plex Mono',ui-monospace,monospace;
-  --pad: clamp(1.5rem, 5vw, 6rem);
-  --maxw: 74rem;
+  --pad:clamp(1.4rem,4.5vw,5.5rem);
+  --maxw:76rem;
+  --shadow:0 1px 2px rgba(16,26,44,.04), 0 8px 24px -12px rgba(16,26,44,.14);
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{
-  margin:0; background:var(--ink-900); color:var(--text);
-  font-family:var(--body); font-weight:300; font-size:clamp(15px,1.05vw,17px); line-height:1.75;
+  margin:0; overflow-x:hidden; background:var(--paper); color:var(--body);
+  font-family:var(--body-f); font-weight:300; font-size:clamp(15px,1.02vw,17px); line-height:1.78;
   -webkit-font-smoothing:antialiased;
 }
 body::before{
   content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
   background:
-    radial-gradient(90rem 50rem at 88% -12%, rgba(199,165,91,.09), transparent 62%),
-    radial-gradient(70rem 45rem at 6% 108%, rgba(75,106,163,.10), transparent 60%);
+    radial-gradient(70rem 40rem at 92% -10%, rgba(199,165,91,.14), transparent 60%),
+    radial-gradient(60rem 38rem at 2% 105%, rgba(47,90,168,.07), transparent 58%);
 }
 
-/* ---------- deck mechanics ---------- */
-.deck{height:100vh; overflow-y:auto; scroll-snap-type:y mandatory; position:relative; z-index:1;
-  scrollbar-width:none;}
+/* deck mechanics */
+.deck{height:100vh; overflow-y:auto; scroll-snap-type:y proximity; position:relative; z-index:1; scrollbar-width:none}
 .deck::-webkit-scrollbar{display:none}
 .slide{
-  min-height:100vh; scroll-snap-align:start; scroll-snap-stop:always;
-  display:grid; align-content:center; gap:clamp(1.5rem,3vh,2.75rem);
-  padding:clamp(4.5rem,9vh,7rem) var(--pad) clamp(4rem,8vh,6rem);
-  border-top:1px solid transparent;
+  min-height:100vh; scroll-snap-align:start;
+  display:grid; align-content:center; gap:clamp(1.1rem,2.6vh,2.2rem);
+  padding:clamp(4.5rem,9vh,6.5rem) var(--pad) clamp(4rem,8vh,5.5rem);
 }
 .slide > *{width:100%; max-width:var(--maxw); margin-inline:auto}
+.slide.alt{background:var(--paper-2)}
 
-/* ---------- typography ---------- */
-h1,h2,h3{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; line-height:1.25}
-h1{font-size:clamp(2.5rem,6.4vw,5rem); font-weight:300; letter-spacing:-.01em}
-h2{font-size:clamp(1.85rem,3.7vw,3.1rem); font-weight:300}
-h3{font-size:clamp(1.05rem,1.55vw,1.35rem); font-weight:500; color:var(--gold-200)}
-p{margin:0; max-width:62ch}
-.lede{font-size:clamp(1.05rem,1.5vw,1.3rem); color:var(--muted); line-height:1.85}
-.eyebrow{
-  font-family:var(--mono); font-size:.7rem; letter-spacing:.22em; text-transform:uppercase;
-  color:var(--gold-500); display:flex; align-items:center; gap:.85rem; margin:0;
-}
-.eyebrow::after{content:""; height:1px; flex:1; background:linear-gradient(to left,var(--line),transparent)}
-.muted{color:var(--muted)}
-.faint{color:var(--faint)}
-.gold{color:var(--gold-300)}
-em{font-style:normal; color:var(--gold-200)}
+/* typography */
+h1,h2,h3{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; line-height:1.28; color:var(--ink)}
+h1{font-size:clamp(2.6rem,6.6vw,5.2rem); font-weight:300; letter-spacing:-.015em}
+h2{font-size:clamp(1.75rem,3.5vw,2.9rem); font-weight:300}
+h3{font-size:clamp(1rem,1.4vw,1.18rem); font-weight:500}
+p{margin:0; max-width:64ch}
+.lede{font-size:clamp(1.02rem,1.4vw,1.25rem); color:var(--body); line-height:1.85}
+.eyebrow{font-family:var(--mono); font-size:.7rem; letter-spacing:.22em; text-transform:uppercase;
+  color:var(--gold-ink); display:flex; align-items:center; gap:.85rem; margin:0}
+.eyebrow::after{content:""; height:1px; flex:1; background:linear-gradient(to left,var(--gold-edge),transparent)}
+.muted{color:var(--muted)} .faint{color:var(--faint); font-size:.85rem}
+em{font-style:normal; color:var(--gold-ink); font-weight:500}
 
-/* ---------- title slide ---------- */
-.hero{align-content:center; text-align:start}
-.hero .mark{display:block}
-.hero h1{margin-block:.4rem .2rem}
-.hero .latin{font-family:var(--mono); font-size:.78rem; letter-spacing:.55em; color:var(--gold-600)}
-.hero-meta{display:flex; flex-wrap:wrap; gap:.6rem 2rem; font-family:var(--mono); font-size:.72rem;
-  letter-spacing:.12em; color:var(--faint); padding-top:1.6rem; border-top:1px solid var(--line-soft)}
+/* hero */
+.hero{align-content:center}
+.hero h1{margin-block:.5rem .1rem}
+.hero .latin{font-family:var(--mono); font-size:.78rem; letter-spacing:.55em; color:var(--gold-ink)}
+.hero-meta{display:flex; flex-wrap:wrap; gap:.5rem 2.2rem; font-family:var(--mono); font-size:.72rem;
+  letter-spacing:.12em; color:var(--faint); padding-top:1.5rem; border-top:1px solid var(--line)}
+.pull{font-family:var(--display); font-weight:300; font-size:clamp(1.2rem,2.1vw,1.75rem);
+  color:var(--ink); line-height:1.6; border-inline-start:3px solid var(--gold); padding-inline-start:1.2rem; max-width:52ch}
 
-/* ---------- primitives ---------- */
-.grid{display:grid; gap:clamp(1rem,2vw,1.75rem)}
+/* primitives */
+.grid{display:grid; gap:clamp(.9rem,1.7vw,1.5rem)}
 .g2{grid-template-columns:repeat(auto-fit,minmax(20rem,1fr))}
-.g3{grid-template-columns:repeat(auto-fit,minmax(15.5rem,1fr))}
-.g4{grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(12.5rem,1fr))}
+.panel{background:var(--card); border:1px solid var(--line); border-radius:12px;
+  padding:clamp(1.05rem,1.7vw,1.5rem); box-shadow:var(--shadow); display:grid; gap:.5rem; align-content:start}
+.panel p{font-size:.92rem; color:var(--body)}
+.panel.gold{background:var(--gold-wash); border-color:var(--gold-edge); box-shadow:none}
 
-.panel{
-  background:linear-gradient(180deg,rgba(24,36,58,.55),rgba(11,18,32,.55));
-  border:1px solid var(--line-soft); border-radius:14px; padding:clamp(1.15rem,1.8vw,1.6rem);
-  box-shadow:inset 0 1px 0 var(--edge-hi); display:grid; gap:.6rem; align-content:start;
-}
-.panel p{font-size:.94rem; color:var(--muted)}
+.rows{display:grid; border-top:1px solid var(--line)}
+.row{display:grid; grid-template-columns:auto 1fr; gap:.25rem 1.4rem; align-items:baseline;
+  padding:clamp(.75rem,1.5vh,1.05rem) 0; border-bottom:1px solid var(--line)}
+.row .k{font-family:var(--mono); font-size:.7rem; letter-spacing:.14em; color:var(--gold-ink); padding-top:.4rem}
+.row .t{font-family:var(--display); font-weight:500; color:var(--ink)}
+.row .d{grid-column:2; color:var(--muted); font-size:.91rem}
 
-/* plain list — no card, deliberately */
-.rows{display:grid; gap:0; border-top:1px solid var(--line-soft)}
-.row{display:grid; grid-template-columns:auto 1fr; gap:.4rem 1.4rem; align-items:baseline;
-  padding:clamp(.85rem,1.6vh,1.15rem) 0; border-bottom:1px solid var(--line-soft)}
-.row .k{font-family:var(--mono); font-size:.72rem; letter-spacing:.14em; color:var(--gold-600); padding-top:.35rem}
-.row .t{font-family:var(--display); font-weight:500; color:var(--text)}
-.row .d{grid-column:2; color:var(--muted); font-size:.94rem}
-
-/* journey rail */
-.journey{display:grid; grid-template-columns:repeat(6,1fr); gap:0; border-block:1px solid var(--line-soft)}
-.stage{padding:clamp(1.1rem,2.2vh,1.7rem) clamp(.7rem,1.2vw,1.15rem); display:grid; gap:.55rem; align-content:start;
-  border-inline-start:1px solid var(--line-soft); position:relative}
-.stage:first-child{border-inline-start:0}
-.stage .n{font-family:var(--display); font-size:1.5rem; color:var(--gold-500); line-height:1}
-.stage .a{font-family:var(--mono); font-size:.66rem; letter-spacing:.14em; color:var(--faint)}
-.stage h3{font-size:1.02rem; color:var(--text)}
-.stage p{font-size:.86rem; color:var(--muted); line-height:1.7}
-.stage::before{content:""; position:absolute; inset-block-start:-1px; inset-inline:0; height:1px;
-  background:var(--sc,var(--gold-500)); opacity:.55}
-@media (max-width:960px){ .journey{grid-template-columns:repeat(2,1fr)} .stage{border-inline-start:0} }
-@media (max-width:560px){ .journey{grid-template-columns:1fr} }
-
-/* disclosure ladder */
-.ladder{display:grid; gap:0; border:1px solid var(--line-soft); border-radius:14px; overflow:hidden}
-.rung{display:grid; grid-template-columns:5.5rem 1fr auto; gap:1.2rem; align-items:center;
-  padding:clamp(.9rem,1.8vh,1.3rem) clamp(1rem,2vw,1.5rem); border-bottom:1px solid var(--line-soft)}
-.rung:last-child{border-bottom:0}
-.rung .lvl{font-family:var(--mono); font-size:.8rem; letter-spacing:.1em; color:var(--gold-300)}
-.rung .txt{color:var(--muted); font-size:.94rem}
-.rung .txt b{color:var(--text); font-weight:500; font-family:var(--display)}
-.bar{width:clamp(3.5rem,8vw,7rem); height:4px; border-radius:2px; background:rgba(159,176,201,.13); overflow:hidden}
-.bar i{display:block; height:100%; background:var(--gold-500)}
-@media (max-width:640px){ .rung{grid-template-columns:1fr; gap:.4rem} .bar{width:100%} }
-
-/* money state machine */
-.flow{display:flex; flex-wrap:wrap; align-items:stretch; gap:0; border:1px solid var(--line-soft); border-radius:14px; overflow:hidden}
-.step{flex:1 1 12rem; padding:clamp(1rem,2vh,1.4rem) clamp(.9rem,1.6vw,1.3rem); display:grid; gap:.45rem;
-  border-inline-start:1px solid var(--line-soft)}
-.step:first-child{border-inline-start:0}
-.step code{font-family:var(--mono); font-size:.72rem; letter-spacing:.06em; color:var(--gold-300)}
-.step b{font-family:var(--display); font-weight:500; font-size:.98rem}
-.step span{color:var(--muted); font-size:.86rem; line-height:1.65}
-.step.locked{background:rgba(95,191,154,.05)}
-.step.locked code{color:var(--emerald)}
-
-/* surfaces */
-.surface{border-inline-start:2px solid var(--sc,var(--gold-500)); padding-inline-start:1.1rem; display:grid; gap:.45rem; align-content:start}
-.surface h3{font-size:1rem; color:var(--text)}
+.surface{border-inline-start:2px solid var(--sc,var(--gold)); padding-inline-start:1.05rem; display:grid; gap:.35rem; align-content:start}
+.surface .who{font-family:var(--mono); font-size:.65rem; letter-spacing:.16em; color:var(--faint)}
 .surface p{font-size:.88rem; color:var(--muted); line-height:1.7}
-.surface .who{font-family:var(--mono); font-size:.66rem; letter-spacing:.16em; color:var(--faint)}
 
-/* closing */
-.cta{display:flex; flex-wrap:wrap; gap:1.2rem 2.5rem; align-items:center; padding-top:1.8rem; border-top:1px solid var(--line)}
-.cta a{color:var(--ink-900); background:var(--gold-300); text-decoration:none; font-family:var(--display); font-weight:500;
-  padding:.7rem 1.6rem; border-radius:999px; transition:background .2s ease}
-.cta a:hover{background:var(--gold-200)}
-.cta a.ghost{background:transparent; color:var(--gold-200); border:1px solid var(--line); }
-.cta a.ghost:hover{background:rgba(199,165,91,.08)}
-a:focus-visible,button:focus-visible{outline:2px solid var(--gold-300); outline-offset:3px; border-radius:6px}
+/* figures */
+figure{margin:0; display:grid; gap:.7rem}
+figure svg{width:100%; height:auto; display:block}
+figcaption{font-size:.84rem; color:var(--muted); font-family:var(--body-f)}
+.fig-card{background:var(--card); border:1px solid var(--line); border-radius:14px;
+  padding:clamp(1rem,2vw,1.8rem); box-shadow:var(--shadow); overflow-x:auto}
+figure svg{direction:ltr}
+svg text{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif; font-weight:400; direction:ltr}
+svg .mono{font-family:'IBM Plex Mono',monospace; letter-spacing:.04em}
+svg .ttl{font-family:'Readex Pro',system-ui,sans-serif; font-weight:500}
 
-/* ---------- chrome: one thin rail, nothing else ---------- */
-.rail{position:fixed; inset-inline-start:clamp(.9rem,2vw,1.9rem); inset-block:0; z-index:5;
-  display:flex; flex-direction:column; justify-content:center; gap:.7rem}
-.rail button{appearance:none; background:none; border:0; padding:.28rem 0; cursor:pointer; display:block}
-.rail i{display:block; width:1.6rem; height:2px; background:rgba(159,176,201,.22); border-radius:2px;
-  transition:background .3s ease, width .3s ease}
-.rail button[aria-current="true"] i{background:var(--gold-300); width:2.6rem}
-.rail button:hover i{background:var(--gold-500)}
-@media (max-width:720px){ .rail{display:none} }
+/* cta */
+.cta{display:flex; flex-wrap:wrap; gap:1rem 2rem; align-items:center; padding-top:1.6rem; border-top:1px solid var(--line)}
+.cta a{text-decoration:none; font-family:var(--display); font-weight:500; padding:.72rem 1.7rem; border-radius:999px;
+  background:var(--ink); color:#fff; transition:background .2s ease, transform .2s ease}
+.cta a:hover{background:#1d2b44; transform:translateY(-1px)}
+.cta a.ghost{background:transparent; color:var(--gold-ink); border:1px solid var(--gold-edge)}
+.cta a.ghost:hover{background:var(--gold-wash); transform:none}
+a:focus-visible,button:focus-visible{outline:2px solid var(--gold-ink); outline-offset:3px; border-radius:6px}
 
-.counter{position:fixed; inset-block-end:clamp(1rem,2.5vh,1.8rem); inset-inline-end:clamp(1.1rem,3vw,2.4rem); z-index:5;
+/* chrome */
+.rail{position:fixed; inset-inline-end:clamp(.8rem,1.9vw,1.7rem); inset-block:0; z-index:5;
+  display:flex; flex-direction:column; justify-content:center; gap:.65rem}
+.rail button{appearance:none; background:none; border:0; padding:.26rem 0; cursor:pointer}
+.rail i{display:block; width:1.5rem; height:2px; background:#c3ccdb; border-radius:2px; transition:background .3s, width .3s}
+.rail button[aria-current="true"] i{background:var(--gold-ink); width:2.5rem}
+.rail button:hover i{background:var(--gold)}
+@media (max-width:760px){.rail{display:none}}
+.counter{position:fixed; inset-block-end:clamp(.9rem,2.2vh,1.6rem); inset-inline-start:clamp(1rem,2.6vw,2.1rem); z-index:5;
   font-family:var(--mono); font-size:.7rem; letter-spacing:.18em; color:var(--faint)}
-.counter b{color:var(--gold-300); font-weight:500}
+.counter b{color:var(--gold-ink); font-weight:500}
+.brandmark{position:fixed; inset-block-start:clamp(.9rem,2.2vh,1.6rem); inset-inline-start:clamp(1rem,2.6vw,2.1rem); z-index:5;
+  display:flex; align-items:center; gap:.5rem; font-family:var(--display); font-size:.92rem; color:var(--ink)}
 
-.brandmark{position:fixed; inset-block-start:clamp(1rem,2.5vh,1.8rem); inset-inline-end:clamp(1.1rem,3vw,2.4rem); z-index:5;
-  display:flex; align-items:center; gap:.55rem; font-family:var(--display); font-size:.95rem; color:var(--gold-200); opacity:.85}
-
-@media print{ .rail,.counter,.brandmark{display:none} .deck{height:auto;overflow:visible} .slide{min-height:auto;page-break-after:always} }
-@media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} *{transition:none!important; animation:none!important} }
+@media print{.rail,.counter,.brandmark{display:none} .deck{height:auto;overflow:visible} .slide{min-height:auto;page-break-after:always}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto} *{transition:none!important}}
 </style>
 </head>
 <body>
 
 <div class="brandmark" aria-hidden="true">
-  <svg width="22" height="22" viewBox="0 0 64 64" fill="none"><defs><linearGradient id="bm" x1="1" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#a8843c"/><stop offset="45%" stop-color="#c7a55b"/><stop offset="100%" stop-color="#f4e1b0"/></linearGradient></defs><path d="M11 53 V33 A21 21 0 0 1 53 33 V53" stroke="url(#bm)" stroke-width="6.5" stroke-linecap="round"/><circle cx="32" cy="34" r="9" stroke="url(#bm)" stroke-width="6"/></svg>
+  <svg width="20" height="20" viewBox="0 0 64 64" fill="none"><path d="M11 53 V33 A21 21 0 0 1 53 33 V53" stroke="#c7a55b" stroke-width="6.5" stroke-linecap="round"/><circle cx="32" cy="34" r="9" stroke="#c7a55b" stroke-width="6"/></svg>
   <span>مجال</span>
 </div>
-
 <nav class="rail" aria-label="محطات العرض"></nav>
-<div class="counter" aria-hidden="true"><b id="cur">١</b> / <span id="tot">١٢</span></div>
+<div class="counter" aria-hidden="true"><b id="cur">١</b> / <span id="tot"></span></div>
 
 <main class="deck" id="deck">
 
-  <!-- 1 -->
-  <section class="slide hero" data-label="الغلاف">
-    <div>
-      <svg class="mark" width="86" height="86" viewBox="0 0 64 64" fill="none" role="img" aria-label="شعار مجال">
-        <defs><linearGradient id="hm" x1="1" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#a8843c"/><stop offset="45%" stop-color="#c7a55b"/><stop offset="100%" stop-color="#f4e1b0"/></linearGradient></defs>
-        <path d="M7 57.5 H57" stroke="url(#hm)" stroke-width="4.5" stroke-linecap="round" opacity=".3"/>
-        <path d="M11 53 V33 A21 21 0 0 1 53 33 V53" stroke="url(#hm)" stroke-width="6.5" stroke-linecap="round"/>
-        <circle cx="32" cy="34" r="9" stroke="url(#hm)" stroke-width="6"/>
-      </svg>
-      <h1>مجال</h1>
-      <p class="latin">MAJAL</p>
-      <p class="lede" style="margin-top:1.6rem">
-        نظام تشغيل للشراكات التجارية بين المبدعين والمنشآت المرخّصة.
-        فكرة محفوظة، مطبخ مرخّص، عقد موقّع، وإطلاق لا يحدث إلا حين تكتمل شروطه.
-      </p>
-    </div>
-    <div class="hero-meta">
-      <span>الكويت</span><span>Absolute Edition</span><span>عرض شراكة للمنشآت</span>
-    </div>
-  </section>
+<!-- 1 · الغلاف -->
+<section class="slide hero" data-label="الغلاف">
+  <div>
+    <svg width="92" height="92" viewBox="0 0 64 64" fill="none" role="img" aria-label="شعار مجال">
+      <defs><linearGradient id="hm" x1="1" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#8a6a26"/><stop offset="45%" stop-color="#c7a55b"/><stop offset="100%" stop-color="#e0be79"/></linearGradient></defs>
+      <path d="M7 57.5 H57" stroke="url(#hm)" stroke-width="4.5" stroke-linecap="round" opacity=".28"/>
+      <path d="M11 53 V33 A21 21 0 0 1 53 33 V53" stroke="url(#hm)" stroke-width="6.5" stroke-linecap="round"/>
+      <circle cx="32" cy="34" r="9" stroke="url(#hm)" stroke-width="6"/>
+    </svg>
+    <h1>مجال</h1>
+    <p class="latin">MAJAL</p>
+  </div>
+  <p class="pull">طاقة مطبخك الفائضة تتحوّل إلى خط منتجات — بفكرة محفوظة، ودفعة اختبار بأرقامك أنت، وعقد قبل أول إنتاج تجاري.</p>
+  <div class="hero-meta"><span>الكويت</span><span>عرض شراكة للمنشآت المرخّصة</span><span>Absolute Edition</span></div>
+</section>
 
-  <!-- 2 -->
-  <section class="slide" data-label="المشكلة">
-    <p class="eyebrow">لماذا نحن هنا</p>
-    <h2>الطرفان يخسران في نفس النقطة</h2>
-    <div class="grid g2">
-      <div class="panel">
-        <h3>المبدع</h3>
-        <p>وصفة في دفتر، وثقة على كلمة. لا إثبات ملكية، ولا طريقة لعرضها على مطبخ محترف دون التنازل عنها فعليًا في أول اجتماع.</p>
-      </div>
-      <div class="panel">
-        <h3>المنشأة المرخّصة</h3>
-        <p>مطبخ وفريق وفروع بطاقة فائضة، ومنتج جديد يعني مخاطرة غير محسوبة: بلا اختبار موثّق، بلا تكلفة معروفة، وبلا عقد يحمي الطرفين.</p>
-      </div>
-    </div>
-    <p class="lede">النتيجة أن معظم الشراكات تموت قبل أول دفعة إنتاج — ليس لضعف الفكرة، بل لغياب البنية التي تحملها.</p>
-  </section>
+<!-- 2 · المشكلة + الفرق -->
+<section class="slide alt" data-label="الفرق">
+  <p class="eyebrow">لماذا تموت معظم الشراكات</p>
+  <h2>نفس الطرفين. نفس المنتج. مساران مختلفان.</h2>
+  <figure class="fig-card">
+    <svg viewBox="0 0 1080 340" role="img" aria-label="مقارنة: المسار بلا بنية ينكسر عند غياب الإثبات والتكلفة والعقد، بينما مسار مجال يمر بأربع بوابات موثّقة وينتهي بإطلاق ومستحقات">
+      <defs>
+        <marker id="ar-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10 5 L0 0 L0 10 z" fill="#14795a"/></marker>
+        <marker id="ar-m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10 5 L0 0 L0 10 z" fill="#8f9cb2"/></marker>
+      </defs>
 
-  <!-- 3 -->
-  <section class="slide" data-label="الأطروحة">
-    <p class="eyebrow">الأطروحة</p>
-    <h2>لسنا سوقًا. نحن البنية التي تجعل الشراكة قابلة للتنفيذ.</h2>
-    <div class="rows">
-      <div class="row"><span class="k">01</span><span class="t">الفكرة تُحفظ قبل أن تُعرض</span><span class="d">إصدار غير قابل للتعديل بتاريخ ومالك، وثلاثة مستويات إفصاح تتحكم بمن يرى ماذا ومتى.</span></div>
-      <div class="row"><span class="k">02</span><span class="t">المطابقة بالقدرة لا بالصوت</span><span class="d">ترتيب المنشآت حسب الطاقة التشغيلية والهامش والامتثال، من بيانات النظام لا من تقدير بشري.</span></div>
-      <div class="row"><span class="k">03</span><span class="t">القرار يترك أثرًا</span><span class="d">كل ملاحظة ومخاطرة ومرحلة في غرفة الصفقة محفوظة باسم صاحبها ودوره ووقته.</span></div>
-      <div class="row"><span class="k">04</span><span class="t">لا إطلاق بضغطة زر</span><span class="d">بوابة الإطلاق مشتقة من السجلات: تحقّق، مستندات، عقد، فروع، صور. النظام يمنع، لا يذكّر.</span></div>
-    </div>
-  </section>
+      <!-- المسار الحالي -->
+      <text x="1060" y="30" text-anchor="end" class="ttl" font-size="16" fill="#101a2c">بلا بنية</text>
+      <line x1="1060" y1="90" x2="640" y2="90" stroke="#8f9cb2" stroke-width="2" marker-end="url(#ar-m)"/>
+      <text x="1055" y="80" text-anchor="end" font-size="13" fill="#6b7a94">مبدع بفكرة</text>
+      <text x="800" y="80" text-anchor="middle" font-size="13" fill="#6b7a94">اجتماع وكلام</text>
+      <!-- نقطة الانكسار -->
+      <line x1="640" y1="60" x2="600" y2="120" stroke="#c0392b" stroke-width="2.5"/>
+      <line x1="612" y1="60" x2="572" y2="120" stroke="#c0392b" stroke-width="2.5"/>
+      <text x="596" y="146" text-anchor="middle" class="ttl" font-size="13" fill="#c0392b">ينكسر هنا</text>
+      <text x="470" y="78" text-anchor="middle" font-size="12.5" fill="#6b7a94">بلا إثبات ملكية</text>
+      <text x="470" y="100" text-anchor="middle" font-size="12.5" fill="#6b7a94">بلا تكلفة معروفة</text>
+      <text x="470" y="122" text-anchor="middle" font-size="12.5" fill="#6b7a94">بلا عقد</text>
+      <rect x="120" y="66" width="190" height="48" rx="8" fill="#f4f6fa" stroke="#e0e6ef"/>
+      <text x="215" y="96" text-anchor="middle" class="ttl" font-size="14" fill="#6b7a94">لا إطلاق</text>
 
-  <!-- 4 -->
-  <section class="slide" data-label="الرحلة">
-    <p class="eyebrow">الرحلة — ست محطات</p>
-    <h2>من فكرة في دفتر إلى مستحقات في حساب</h2>
-    <div class="journey">
-      <article class="stage" style="--sc:#c7a55b"><span class="n">١</span><span class="a">المبدع</span><h3>ابتكار</h3><p>إصدار محفوظ للفكرة، بتاريخ ومالك واضحين.</p></article>
-      <article class="stage" style="--sc:#d18ae0"><span class="n">٢</span><span class="a">خزنة الوصفات</span><h3>حماية</h3><p>ثلاثة مستويات إفصاح ومنح زمنية، وكل فتح مسجّل.</p></article>
-      <article class="stage" style="--sc:#6b87bd"><span class="n">٣</span><span class="a">مجال</span><h3>مطابقة</h3><p>ترتيب بالقدرة والهامش والامتثال، لا بالصوت الأعلى.</p></article>
-      <article class="stage" style="--sc:#5fc7d1"><span class="n">٤</span><span class="a">المنشأة المرخّصة</span><h3>مختبر</h3><p>دفعات اختبار حقيقية بالتكلفة والوقت والهدر.</p></article>
-      <article class="stage" style="--sc:#a996e0"><span class="n">٥</span><span class="a">الطرفان</span><h3>اتفاق</h3><p>عقد موقّع يحدد النموذج والمدة والحصرية.</p></article>
-      <article class="stage" style="--sc:#5fbf9a"><span class="n">٦</span><span class="a">السوق</span><h3>إطلاق</h3><p>بوابة مشتقة من السجلات، ثم مبيعات ومستحقات.</p></article>
-    </div>
-    <p class="faint" style="font-size:.85rem">كل محطة تُسلّم مخرجًا موثّقًا للمحطة التالية. لا يمكن تخطّي محطة.</p>
-  </section>
+      <line x1="40" y1="175" x2="1040" y2="175" stroke="#e0e6ef" stroke-width="1"/>
 
-  <!-- 5 -->
-  <section class="slide" data-label="خزنة الوصفات">
-    <p class="eyebrow">الحماية</p>
-    <h2>سلّم الإفصاح الثلاثي</h2>
-    <p class="lede">المنشأة لا تحتاج السر لتقرّر. تحتاج ما يكفي للتقييم، ثم ما يكفي للاختبار، ثم — بعد العقد — ما يكفي للإنتاج.</p>
-    <div class="ladder">
-      <div class="rung"><span class="lvl">L1</span><span class="txt"><b>الملف التعريفي</b> — الفئة، الجمهور، المكوّنات العامة، مؤشرات الجدوى. متاح للتقييم الأولي.</span><span class="bar"><i style="width:28%"></i></span></div>
-      <div class="rung"><span class="lvl">L2</span><span class="txt"><b>الوصفة التشغيلية</b> — الخطوات والكميات مع حجب الأسرار الجوهرية. تُمنح للاختبار المخبري.</span><span class="bar"><i style="width:64%"></i></span></div>
-      <div class="rung"><span class="lvl">L3</span><span class="txt"><b>الوصفة الكاملة</b> — تتطلب الدور والسياق والمنح الصريح من المبدع، ولها تاريخ انتهاء وإمكانية سحب.</span><span class="bar"><i style="width:100%"></i></span></div>
-    </div>
-    <p class="faint" style="font-size:.85rem">كل عملية عرض أو تصدير أو منح أو سحب تدخل سجل التدقيق باسم المستخدم ودوره ووقته.</p>
-  </section>
+      <!-- مسار مجال -->
+      <text x="1060" y="215" text-anchor="end" class="ttl" font-size="16" fill="#101a2c">داخل مجال</text>
+      <text x="1055" y="265" text-anchor="end" font-size="13" fill="#3b4a63">مبدع بفكرة</text>
+      <line x1="960" y1="275" x2="130" y2="275" stroke="#14795a" stroke-width="2" marker-end="url(#ar-g)"/>
+      <g fill="#ffffff" stroke="#14795a" stroke-width="1.6">
+        <circle cx="840" cy="275" r="13"/><circle cx="670" cy="275" r="13"/><circle cx="500" cy="275" r="13"/><circle cx="330" cy="275" r="13"/>
+      </g>
+      <g text-anchor="middle" font-size="12.5" fill="#14795a" class="mono"><text x="840" y="280">١</text><text x="670" y="280">٢</text><text x="500" y="280">٣</text><text x="330" y="280">٤</text></g>
+      <g text-anchor="middle" font-size="12.5" fill="#3b4a63">
+        <text x="840" y="248">إصدار محفوظ</text><text x="670" y="248">إفصاح مُدار</text><text x="500" y="248">دفعة مقاسة</text><text x="330" y="248">عقد موقّع</text>
+      </g>
+      <g text-anchor="middle" font-size="11.5" fill="#8f9cb2">
+        <text x="840" y="306">ملكية بتاريخ</text><text x="670" y="306">سر محمي</text><text x="500" y="306">تكلفة الوحدة</text><text x="330" y="306">حصرية ومدة</text>
+      </g>
+      <rect x="40" y="251" width="80" height="48" rx="8" fill="#eaf5f0" stroke="#14795a"/>
+      <text x="80" y="281" text-anchor="middle" class="ttl" font-size="14" fill="#14795a">إطلاق</text>
+    </svg>
+    <figcaption>الفرق ليس في جودة الفكرة، بل في أربع بوابات لا يمكن تخطّيها: إصدار محفوظ، إفصاح مُدار، دفعة مقاسة، عقد نافذ. كل بوابة تسلّم مخرجًا موثّقًا للتي بعدها.</figcaption>
+  </figure>
+</section>
 
-  <!-- 6 -->
-  <section class="slide" data-label="المختبر">
-    <p class="eyebrow">المختبر</p>
-    <h2>لا تشتري قصة. تشتري دفعة قِسْتَها بنفسك.</h2>
-    <div class="grid g4">
-      <div class="panel"><h3>الكمية</h3><p>الناتج الفعلي لكل دفعة، لا التقدير النظري.</p></div>
-      <div class="panel"><h3>التكلفة</h3><p>تكلفة الوحدة كما خرجت من مطبخك أنت.</p></div>
-      <div class="panel"><h3>الوقت</h3><p>زمن التحضير الحقيقي داخل جدول التشغيل.</p></div>
-      <div class="panel"><h3>الهدر</h3><p>الفاقد المقاس، ومقارنة مباشرة بين آخر دفعتين.</p></div>
-    </div>
-    <p class="lede">كل دفعة تُحفظ مرتبطة بإصدار الوصفة والقرار والتعديلات المقترحة. حين تصل غرفة التفاوض، أنت تتفاوض على أرقام، لا على انطباعات.</p>
-  </section>
+<!-- 3 · الأطروحة -->
+<section class="slide" data-label="الأطروحة">
+  <p class="eyebrow">الأطروحة</p>
+  <h2>لسنا سوقًا. نحن البنية التي تجعل الشراكة قابلة للتنفيذ.</h2>
+  <div class="rows">
+    <div class="row"><span class="k">01</span><span class="t">الفكرة تُحفظ قبل أن تُعرض</span><span class="d">إصدار غير قابل للتعديل بتاريخ ومالك، وثلاثة مستويات إفصاح تحدد من يرى ماذا ومتى.</span></div>
+    <div class="row"><span class="k">02</span><span class="t">المطابقة بالقدرة لا بالصوت</span><span class="d">ترتيب المنشآت حسب الطاقة التشغيلية والهامش والامتثال، من بيانات النظام لا من تقدير بشري.</span></div>
+    <div class="row"><span class="k">03</span><span class="t">القرار يترك أثرًا</span><span class="d">كل ملاحظة ومخاطرة ومرحلة في غرفة الصفقة محفوظة باسم صاحبها ودوره ووقته.</span></div>
+    <div class="row"><span class="k">04</span><span class="t">لا إطلاق بضغطة زر</span><span class="d">بوابة الإطلاق مشتقة من السجلات: تحقّق، مستندات، عقد، فروع، صور. النظام يمنع، لا يذكّر.</span></div>
+  </div>
+</section>
 
-  <!-- 7 -->
-  <section class="slide" data-label="بوابة الإطلاق">
-    <p class="eyebrow">بوابة الإطلاق</p>
-    <h2>الزر لا يفتح البوابة. السجلات تفتحها.</h2>
-    <div class="rows">
-      <div class="row"><span class="k">تحقّق</span><span class="t">هوية الطرفين والترخيص التجاري ساريان</span></div>
-      <div class="row"><span class="k">مستندات</span><span class="t">الشهادات الصحية والتشغيلية مرفوعة وغير منتهية</span></div>
-      <div class="row"><span class="k">عقد</span><span class="t">عقد موقّع يحدد النموذج والمدة والحصرية والعمولة</span></div>
-      <div class="row"><span class="k">حساسية</span><span class="t">إفصاح المُسبّبات ومنح الوصفة بالمستوى المطلوب للإنتاج</span></div>
-      <div class="row"><span class="k">تشغيل</span><span class="t">الفروع والصور والسعة اليومية مضبوطة ومعتمدة</span></div>
-    </div>
-    <p class="lede">ما دام شرط واحد ناقصًا، المنتج لا يصبح <em>LIVE</em> — لا للمبدع ولا للمنشأة ولا للإدارة. الشروط اليدوية معزولة ومراقبة عن الشروط المشتقة.</p>
-  </section>
+<!-- 4 · الرحلة -->
+<section class="slide alt" data-label="الرحلة">
+  <p class="eyebrow">الرحلة</p>
+  <h2>من فكرة في دفتر إلى مستحقات في حساب</h2>
+  <figure class="fig-card">
+    <svg viewBox="0 0 1120 230" role="img" aria-label="خط إنتاج من ست محطات: ابتكار، حماية، مطابقة، مختبر، اتفاق، إطلاق — وكل محطة تسلّم مخرجًا محددًا للتالية">
+      <defs><marker id="ar-j" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10 5 L0 0 L0 10 z" fill="#b6c1d2"/></marker></defs>
+      <g stroke="#b6c1d2" stroke-width="1.6" marker-end="url(#ar-j)">
+        <line x1="1000" y1="112" x2="946" y2="112"/><line x1="820" y1="112" x2="766" y2="112"/>
+        <line x1="640" y1="112" x2="586" y2="112"/><line x1="460" y1="112" x2="406" y2="112"/>
+        <line x1="280" y1="112" x2="226" y2="112"/>
+      </g>
+      <g text-anchor="middle" font-size="11.5" fill="#8f9cb2">
+        <text x="973" y="96">إصدار موقّع</text><text x="793" y="96">ملف L1</text><text x="613" y="96">قائمة مطابقة</text>
+        <text x="433" y="96">تكلفة الوحدة</text><text x="253" y="96">عقد نافذ</text>
+      </g>
+      <g fill="#ffffff" stroke-width="2">
+        <circle cx="1060" cy="112" r="30" stroke="#c7a55b"/><circle cx="880" cy="112" r="30" stroke="#9c3a82"/>
+        <circle cx="700" cy="112" r="30" stroke="#2f5aa8"/><circle cx="520" cy="112" r="30" stroke="#10708a"/>
+        <circle cx="340" cy="112" r="30" stroke="#5b47a8"/><circle cx="160" cy="112" r="30" stroke="#14795a"/>
+      </g>
+      <g text-anchor="middle" font-size="19" class="ttl">
+        <text x="1060" y="120" fill="#c7a55b">١</text><text x="880" y="120" fill="#9c3a82">٢</text><text x="700" y="120" fill="#2f5aa8">٣</text>
+        <text x="520" y="120" fill="#10708a">٤</text><text x="340" y="120" fill="#5b47a8">٥</text><text x="160" y="120" fill="#14795a">٦</text>
+      </g>
+      <g text-anchor="middle" font-size="15" class="ttl" fill="#101a2c">
+        <text x="1060" y="180">ابتكار</text><text x="880" y="180">حماية</text><text x="700" y="180">مطابقة</text>
+        <text x="520" y="180">مختبر</text><text x="340" y="180">اتفاق</text><text x="160" y="180">إطلاق</text>
+      </g>
+      <g text-anchor="middle" font-size="11.5" fill="#8f9cb2">
+        <text x="1060" y="202">المبدع</text><text x="880" y="202">خزنة الوصفات</text><text x="700" y="202">مجال</text>
+        <text x="520" y="202">المنشأة</text><text x="340" y="202">الطرفان</text><text x="160" y="202">السوق</text>
+      </g>
+      <text x="1060" y="34" text-anchor="end" font-size="12" fill="#8f9cb2" class="mono">اتجاه المنتج ←</text>
+    </svg>
+    <figcaption>لا يمكن تخطّي محطة: ما فوق كل سهم هو المخرج الذي تشترطه المحطة التالية قبل أن تبدأ.</figcaption>
+  </figure>
+  <div class="grid g3">
+    <div class="panel"><h3>محطة ٢ — حماية</h3><p>الأسرار مقفلة خلف ثلاثة مستويات إفصاح ومنح زمنية، وكل فتح مسجّل باسم من فتحه.</p></div>
+    <div class="panel"><h3>محطة ٤ — مختبر</h3><p>دفعات اختبار بالكمية والتكلفة والوقت والهدر، ومقارنة مباشرة بين آخر دفعتين.</p></div>
+    <div class="panel"><h3>محطة ٦ — إطلاق</h3><p>بوابة مشتقة من السجلات، ثم مبيعات ومستحقات محسوبة بالعمولة المعتمدة.</p></div>
+  </div>
+</section>
 
-  <!-- 8 -->
-  <section class="slide" data-label="المال">
-    <p class="eyebrow">نزاهة الحالة المالية</p>
-    <h2>لا يوجد بيع قبل أن يؤكده مزوّد الدفع</h2>
-    <div class="flow">
-      <div class="step"><code>PENDING_PAYMENT</code><b>حجز</b><span>لا ينشئ بيعًا ولا مستحقًا ولا يظهر في الإيراد.</span></div>
-      <div class="step"><code>CONFIRMED</code><b>بيع مؤكد</b><span>يدخل الإيراد ويولّد مستحقًا محسوبًا بالعمولة المعتمدة.</span></div>
-      <div class="step"><code>APPROVED</code><b>تسوية معتمدة</b><span>الاعتماد قرار محاسبي، وليس دفعًا.</span></div>
-      <div class="step locked"><code>PAID</code><b>مدفوع</b><span>مقفول حتى يصل مرجع موثّق من مزوّد الدفع إلى الخادم.</span></div>
-    </div>
-    <div class="grid g3" style="margin-top:.5rem">
-      <div class="panel"><h3>عمولة مجال</h3><p>قيمة واحدة معرّفة مركزيًا تدخل منطق الحساب والتدقيق، لا رقم يُكتب في كل صفقة.</p></div>
-      <div class="panel"><h3>دورة التسوية</h3><p>مدة ثابتة معلنة للطرفين، قابلة للضبط من مركز السياسات لا من الشاشة.</p></div>
-      <div class="panel"><h3>سجل التدقيق</h3><p>كل تغيّر في الحالة المالية له فاعل ووقت وسبب يمكن مراجعته لاحقًا.</p></div>
-    </div>
-  </section>
+<!-- 5 · الإفصاح -->
+<section class="slide" data-label="خزنة الوصفات">
+  <p class="eyebrow">الحماية</p>
+  <h2>المنشأة لا تحتاج السر لتقرّر</h2>
+  <figure class="fig-card">
+    <svg viewBox="0 0 1120 300" role="img" aria-label="جدول يوضح ما ينكشف من الوصفة عند كل مستوى إفصاح: المستوى الأول يكشف الفئة والمكوّنات العامة، والثاني يضيف الخطوات، والثالث وحده يكشف النِسب والسر التقني">
+      <defs>
+        <pattern id="hatch" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+          <rect width="7" height="7" fill="#f4f6fa"/><line x1="0" y1="0" x2="0" y2="7" stroke="#cdd6e3" stroke-width="2.5"/>
+        </pattern>
+      </defs>
+      <g text-anchor="middle" font-size="12.5" fill="#6b7a94">
+        <text x="1004" y="34">الفئة والجمهور</text><text x="820" y="34">مكوّنات عامة</text><text x="636" y="34">خطوات التحضير</text>
+        <text x="452" y="34">النِسب الدقيقة</text><text x="268" y="34">السر التقني</text>
+      </g>
+      <g stroke="#e0e6ef" fill="none"><line x1="176" y1="48" x2="1096" y2="48"/></g>
 
-  <!-- 9 -->
-  <section class="slide" data-label="الأسطح">
-    <p class="eyebrow">النظام</p>
-    <h2>خمسة أسطح، مصدر حقيقة واحد</h2>
-    <div class="grid g2">
-      <div class="surface" style="--sc:#c7a55b"><span class="who">CREATOR</span><h3>سطح المبدع</h3><p>جواز المبدع، رادار الفرص، تقديم المنتجات، خزنة الوصفات، التوأم الرقمي، غرفة الصفقة، العقود والمستحقات.</p></div>
-      <div class="surface" style="--sc:#6b87bd"><span class="who">HOST</span><h3>سطح المنشأة</h3><p>الاكتشاف، التحديات، المختبر، غرفة الصفقة، باني العروض، بوابة الإطلاق، غرفة عمليات الإطلاق، المالية، الفريق والصلاحيات.</p></div>
-      <div class="surface" style="--sc:#5fbf9a"><span class="who">ADMIN</span><h3>مركز التحكم</h3><p>الامتثال، الأذونات، العقود، التسويات، الإيقاف الطارئ للمنتجات، الثقة والمخاطر، التدقيق.</p></div>
-      <div class="surface" style="--sc:#a996e0"><span class="who">SUPER ADMIN</span><h3>غرفة قيادة المنصة</h3><p>نبض مجال، الأدوار، سيولة السوق، محرك الثقة، مركز السياسات، جاهزية النظام.</p></div>
-      <div class="surface" style="--sc:#d18ae0"><span class="who">PUBLIC</span><h3>السطح العام</h3><p>قصة مجال، الإطلاقات، الطلب والتقييم، والمركز القانوني الكامل — شرط مسبق لاعتماد المتجر لدى مزوّدي الدفع.</p></div>
-    </div>
-  </section>
+      <!-- L1 -->
+      <text x="168" y="94" text-anchor="end" class="mono" font-size="13" fill="#8a6a26">L1</text>
+      <rect x="912" y="66" width="184" height="48" rx="6" fill="#fbf3e2" stroke="#e8d3a4"/>
+      <rect x="728" y="66" width="184" height="48" rx="6" fill="#fbf3e2" stroke="#e8d3a4"/>
+      <rect x="544" y="66" width="184" height="48" rx="6" fill="url(#hatch)" stroke="#e0e6ef"/>
+      <rect x="360" y="66" width="184" height="48" rx="6" fill="url(#hatch)" stroke="#e0e6ef"/>
+      <rect x="176" y="66" width="184" height="48" rx="6" fill="url(#hatch)" stroke="#e0e6ef"/>
 
-  <!-- 10 -->
-  <section class="slide" data-label="الحوكمة">
-    <p class="eyebrow">الحوكمة والأمان</p>
-    <h2>مبني ليُدقَّق، لا ليُصدَّق</h2>
-    <div class="grid g3">
-      <div class="panel"><h3>مصادقة خادمية</h3><p>جلسات HttpOnly مع حماية CSRF، تجزئة كلمات المرور بـ scrypt، قفل مؤقت للمحاولات، وMFA اختياري.</p></div>
-      <div class="panel"><h3>صلاحيات ثلاثية الأبعاد</h3><p>الدور × السياق × الحساسية. عشرة أدوار معرّفة، والعمليات الخطرة يمنعها حارس المجال لا إخفاء الزر.</p></div>
-      <div class="panel"><h3>سجل تدقيق كامل</h3><p>الوصفات والعقود والتسويات والسياسات: كل فعل حسّاس يترك أثرًا قابلًا للاستخراج.</p></div>
-      <div class="panel"><h3>مركز السياسات</h3><p>العمولة، مدد المنح، حدود الطلب، نافذة تحذير الامتثال، عتبة المطابقة، دورة التسوية — قيم مركزية تؤثر في المنطق.</p></div>
-      <div class="panel"><h3>محرك الثقة</h3><p>مؤشر تفسيري يوضّح أسبابه للمراجع البشري، ولا يُصدر حكمًا آليًا نهائيًا على أحد.</p></div>
-      <div class="panel"><h3>الامتثال الكويتي</h3><p>الشروط والخصوصية والاسترجاع وصفحة التتبع منشورة، والمسار مهيّأ لمتطلبات مزوّدي الدفع المحليين.</p></div>
-    </div>
-  </section>
+      <!-- L2 -->
+      <text x="168" y="170" text-anchor="end" class="mono" font-size="13" fill="#8a6a26">L2</text>
+      <rect x="912" y="142" width="184" height="48" rx="6" fill="#fbf3e2" stroke="#e8d3a4"/>
+      <rect x="728" y="142" width="184" height="48" rx="6" fill="#fbf3e2" stroke="#e8d3a4"/>
+      <rect x="544" y="142" width="184" height="48" rx="6" fill="#fbf3e2" stroke="#e8d3a4"/>
+      <rect x="360" y="142" width="184" height="48" rx="6" fill="url(#hatch)" stroke="#e0e6ef"/>
+      <rect x="176" y="142" width="184" height="48" rx="6" fill="url(#hatch)" stroke="#e0e6ef"/>
 
-  <!-- 11 -->
-  <section class="slide" data-label="عرضنا لك">
-    <p class="eyebrow">ماذا تكسب المنشأة</p>
-    <h2>طاقة مطبخك الفائضة تتحوّل إلى خط منتجات</h2>
-    <div class="rows">
-      <div class="row"><span class="k">تدفّق</span><span class="t">مصدر منتجات مستمر بلا فريق تطوير داخلي</span><span class="d">مبدعون محقّقون بمنتجات موثّقة، مرتّبون بحسب ملاءمتهم لقدرتك التشغيلية أنت.</span></div>
-      <div class="row"><span class="k">مخاطرة</span><span class="t">لا التزام قبل دفعة اختبار بأرقامك</span><span class="d">تعرف التكلفة والوقت والهدر قبل توقيع أي شيء، ومن مطبخك لا من عرض تقديمي.</span></div>
-      <div class="row"><span class="k">حماية</span><span class="t">عقد يحدد الحصرية والمدة قبل الإنتاج</span><span class="d">وضوح كامل في الملكية والعمولة، ونزاع أقل لأن كل قرار موثّق بصاحبه.</span></div>
-      <div class="row"><span class="k">تشغيل</span><span class="t">غرفة عمليات الإطلاق</span><span class="d">المبيعات والوحدات ومعدل التصريف والفروع والتنبيهات في سياق منشأتك وصلاحيات فريقك.</span></div>
-      <div class="row"><span class="k">امتثال</span><span class="t">أثر كامل عند أي مراجعة</span><span class="d">مستندات سارية، وسجل يجيب عن «من فعل ماذا ومتى» دون بحث يدوي.</span></div>
-    </div>
-  </section>
+      <!-- L3 -->
+      <text x="168" y="246" text-anchor="end" class="mono" font-size="13" fill="#8a6a26">L3</text>
+      <g fill="#f3e6c8" stroke="#c7a55b">
+        <rect x="912" y="218" width="184" height="48" rx="6"/><rect x="728" y="218" width="184" height="48" rx="6"/>
+        <rect x="544" y="218" width="184" height="48" rx="6"/><rect x="360" y="218" width="184" height="48" rx="6"/>
+        <rect x="176" y="218" width="184" height="48" rx="6"/>
+      </g>
 
-  <!-- 12 -->
-  <section class="slide" data-label="الدخول">
-    <p class="eyebrow">الخطوة التالية</p>
-    <h2>ثلاث خطوات حتى أول إطلاق مشترك</h2>
-    <div class="grid g3">
-      <div class="panel"><h3>١ — التفعيل</h3><p>نفتح ملف منشأتك، نرفع الترخيص والشهادات، ونضبط الفروع والسعة والفريق وصلاحياته.</p></div>
-      <div class="panel"><h3>٢ — أول مطابقة</h3><p>نعرض عليك مبدعين ملائمين لقدرتك، وتختار منتجًا واحدًا لدفعة مختبر مقاسة.</p></div>
-      <div class="panel"><h3>٣ — العقد والإطلاق</h3><p>عرض مقابل وعقد موقّع، ثم بوابة الإطلاق حين تكتمل شروطها — لا قبلها.</p></div>
-    </div>
-    <p class="lede">لا نطلب منك تغيير مطبخك. نطلب منتجًا واحدًا نثبت عليه النموذج كاملًا.</p>
-    <div class="cta">
-      <a href="#deck">ابدأ التفعيل</a>
-      <a class="ghost" href="#deck">اطلب دفعة مختبر تجريبية</a>
-      <span class="faint" style="font-family:var(--mono);font-size:.72rem;letter-spacing:.14em">مجال — الكويت</span>
-    </div>
-  </section>
+      <g text-anchor="middle" font-size="12" fill="#8a6a26">
+        <text x="1004" y="96">مكشوف</text><text x="820" y="96">مكشوف</text>
+        <text x="1004" y="172">مكشوف</text><text x="820" y="172">مكشوف</text><text x="636" y="172">مكشوف</text>
+        <text x="1004" y="248">مكشوف</text><text x="820" y="248">مكشوف</text><text x="636" y="248">مكشوف</text>
+        <text x="452" y="248">مكشوف</text><text x="268" y="248">مكشوف</text>
+      </g>
+      <g text-anchor="middle" font-size="12" fill="#8f9cb2">
+        <text x="636" y="96">محجوب</text><text x="452" y="96">محجوب</text><text x="268" y="96">محجوب</text>
+        <text x="452" y="172">محجوب</text><text x="268" y="172">محجوب</text>
+      </g>
+      <g text-anchor="end" font-size="11.5" fill="#8f9cb2">
+        <text x="168" y="112">تقييم أولي</text><text x="168" y="188">اختبار مخبري</text><text x="168" y="264">إنتاج بعد العقد</text>
+      </g>
+      <text x="1096" y="292" text-anchor="end" font-size="11.5" fill="#8f9cb2">كل فتح أو تصدير يدخل سجل التدقيق باسم المستخدم ودوره ووقته</text>
+    </svg>
+    <figcaption>المستوى الثالث لا يُفتح بالطلب: يحتاج الدور والسياق ومنحًا صريحًا من المبدع، وله تاريخ انتهاء وإمكانية سحب.</figcaption>
+  </figure>
+</section>
+
+<!-- 6 · المختبر -->
+<section class="slide alt" data-label="المختبر">
+  <p class="eyebrow">المختبر</p>
+  <h2>لا تشتري قصة. تشتري دفعة قِسْتَها في مطبخك.</h2>
+  <div class="grid g4">
+    <div class="panel"><h3>الكمية</h3><p>الناتج الفعلي لكل دفعة، لا التقدير النظري.</p></div>
+    <div class="panel"><h3>التكلفة</h3><p>تكلفة الوحدة كما خرجت من خطك أنت.</p></div>
+    <div class="panel"><h3>الوقت</h3><p>زمن التحضير الحقيقي داخل جدول التشغيل.</p></div>
+    <div class="panel"><h3>الهدر</h3><p>الفاقد المقاس، ومقارنة مباشرة بين آخر دفعتين.</p></div>
+  </div>
+  <p class="lede">كل دفعة تُحفظ مرتبطة بإصدار الوصفة والقرار والتعديلات المقترحة. حين تصل غرفة التفاوض، أنت تتفاوض على أرقام لا على انطباعات.</p>
+</section>
+
+<!-- 7 · بوابة الإطلاق -->
+<section class="slide" data-label="بوابة الإطلاق">
+  <p class="eyebrow">بوابة الإطلاق</p>
+  <h2>الزر لا يفتح البوابة. السجلات تفتحها.</h2>
+  <figure class="fig-card">
+    <svg viewBox="0 0 1080 300" role="img" aria-label="خمسة شروط مشتقة من السجلات تجتمع في بوابة واحدة؛ نقص شرط واحد يبقي المنتج خارج حالة الإطلاق">
+      <defs><marker id="ar-b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M10 5 L0 0 L0 10 z" fill="#b6c1d2"/></marker></defs>
+      <g fill="#ffffff" stroke="#e0e6ef">
+        <rect x="640" y="14" width="400" height="46" rx="23"/><rect x="640" y="72" width="400" height="46" rx="23"/>
+        <rect x="640" y="130" width="400" height="46" rx="23"/><rect x="640" y="188" width="400" height="46" rx="23"/>
+        <rect x="640" y="246" width="400" height="46" rx="23"/>
+      </g>
+      <g text-anchor="end" font-size="13.5" fill="#3b4a63">
+        <text x="1012" y="42">هوية الطرفين والترخيص ساريان</text>
+        <text x="1012" y="100">الشهادات الصحية غير منتهية</text>
+        <text x="1012" y="158">عقد موقّع بنموذج ومدة وعمولة</text>
+        <text x="1012" y="216">إفصاح المُسبّبات ومنح الوصفة</text>
+        <text x="1012" y="274">الفروع والصور والسعة معتمدة</text>
+      </g>
+      <g fill="#14795a" font-size="14" class="mono" text-anchor="middle">
+        <text x="666" y="43">✓</text><text x="666" y="101">✓</text><text x="666" y="159">✓</text><text x="666" y="217">✓</text><text x="666" y="275">✓</text>
+      </g>
+      <g stroke="#b6c1d2" stroke-width="1.5" fill="none" marker-end="url(#ar-b)">
+        <path d="M636 37 H560 L520 150"/><path d="M636 95 H560 L520 150"/><path d="M636 153 H524"/>
+        <path d="M636 211 H560 L520 150"/><path d="M636 269 H560 L520 150"/>
+      </g>
+      <rect x="486" y="34" width="14" height="232" rx="7" fill="#101a2c"/>
+      <text x="493" y="288" text-anchor="middle" font-size="11.5" fill="#6b7a94">الكل، لا الأغلبية</text>
+      <line x1="486" y1="150" x2="360" y2="150" stroke="#101a2c" stroke-width="2" marker-end="url(#ar-b)"/>
+      <g stroke="#c7a55b" fill="none" stroke-linecap="round">
+        <path d="M120 244 V176 A62 62 0 0 1 244 176 V244" stroke-width="13"/>
+        <circle cx="182" cy="177" r="26" stroke-width="12"/>
+      </g>
+      <text x="182" y="284" text-anchor="middle" class="mono" font-size="14" fill="#14795a">LIVE</text>
+      <text x="182" y="60" text-anchor="middle" font-size="12.5" fill="#8f9cb2">بوابة الإطلاق</text>
+    </svg>
+    <figcaption>الشروط المشتقة من السجلات مفصولة عن الشروط التشغيلية اليدوية ومراقبة عنها. ما دام شرط واحد ناقصًا، المنتج لا يصبح <em>LIVE</em> — لا للمبدع ولا للمنشأة ولا للإدارة.</figcaption>
+  </figure>
+</section>
+
+<!-- 8 · المال -->
+<section class="slide alt" data-label="نزاهة المال">
+  <p class="eyebrow">نزاهة الحالة المالية</p>
+  <h2>لا يوجد بيع قبل أن يؤكده مزوّد الدفع</h2>
+  <figure class="fig-card">
+    <svg viewBox="0 0 1120 260" role="img" aria-label="آلة حالات الطلب: حجز معلّق لا ينشئ بيعًا، ثم بيع مؤكد، ثم تسوية معتمدة، ثم حالة مدفوع المقفولة حتى وصول مرجع من مزوّد الدفع">
+      <defs><marker id="ar-s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10 5 L0 0 L0 10 z" fill="#8f9cb2"/></marker></defs>
+      <g fill="#ffffff" stroke="#e0e6ef" stroke-width="1.4">
+        <rect x="860" y="60" width="230" height="86" rx="10"/><rect x="590" y="60" width="230" height="86" rx="10"/>
+        <rect x="320" y="60" width="230" height="86" rx="10"/>
+      </g>
+      <rect x="50" y="60" width="230" height="86" rx="10" fill="#eaf5f0" stroke="#14795a" stroke-width="1.6"/>
+      <g class="mono" font-size="12" text-anchor="middle">
+        <text x="975" y="90" fill="#8a6a26">PENDING_PAYMENT</text><text x="705" y="90" fill="#8a6a26">CONFIRMED</text>
+        <text x="435" y="90" fill="#8a6a26">APPROVED</text><text x="165" y="90" fill="#14795a">PAID</text>
+      </g>
+      <g class="ttl" font-size="15" text-anchor="middle" fill="#101a2c">
+        <text x="975" y="118">حجز</text><text x="705" y="118">بيع مؤكد</text><text x="435" y="118">تسوية معتمدة</text><text x="165" y="118">مدفوع</text>
+      </g>
+      <g text-anchor="middle" font-size="11.5" fill="#8f9cb2">
+        <text x="975" y="138">لا بيع ولا مستحق</text><text x="705" y="138">يولّد المستحق</text><text x="435" y="138">قرار محاسبي</text><text x="165" y="138">أثر مالي نهائي</text>
+      </g>
+      <g stroke="#8f9cb2" stroke-width="1.6" marker-end="url(#ar-s)">
+        <line x1="856" y1="103" x2="826" y2="103"/><line x1="586" y1="103" x2="556" y2="103"/><line x1="316" y1="103" x2="286" y2="103"/>
+      </g>
+      <g text-anchor="middle" font-size="11.5" fill="#6b7a94">
+        <text x="841" y="46">تأكيد المزوّد</text><text x="571" y="46">نهاية دورة التسوية</text><text x="301" y="46">مرجع تحويل موثّق</text>
+      </g>
+      <path d="M975 150 V196 H840" stroke="#cdd6e3" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#ar-s)"/>
+      <text x="1090" y="200" text-anchor="end" font-size="11.5" fill="#8f9cb2">انتهاء المهلة ← إلغاء، بلا أثر مالي</text>
+      <g stroke="#14795a" fill="none" stroke-width="1.8">
+        <rect x="152" y="34" width="26" height="18" rx="3"/><path d="M158 34 V27 A7 7 0 0 1 172 27 V34"/>
+      </g>
+      <text x="190" y="48" text-anchor="start" font-size="11.5" fill="#14795a">مقفول على الخادم</text>
+    </svg>
+    <figcaption>الحجز التجريبي لا يظهر في الإيراد ولا ينشئ مستحقًا. واعتماد التسوية قرار محاسبي وليس دفعًا: التحويل إلى <em>PAID</em> لا يتم إلا بمرجع موثّق يصل من مزوّد الدفع إلى الخادم.</figcaption>
+  </figure>
+</section>
+
+<!-- 9 · الأسطح -->
+<section class="slide" data-label="الأسطح">
+  <p class="eyebrow">النظام</p>
+  <h2>خمسة أسطح، مصدر حقيقة واحد</h2>
+  <div class="grid g2">
+    <div class="surface" style="--sc:#c7a55b"><span class="who">CREATOR</span><h3>سطح المبدع</h3><p>جواز المبدع، رادار الفرص، تقديم المنتجات، خزنة الوصفات، التوأم الرقمي، غرفة الصفقة، العقود والمستحقات.</p></div>
+    <div class="surface" style="--sc:#2f5aa8"><span class="who">HOST</span><h3>سطح المنشأة</h3><p>الاكتشاف، التحديات، المختبر، غرفة الصفقة، باني العروض، بوابة الإطلاق، غرفة عمليات الإطلاق، المالية، الفريق والصلاحيات.</p></div>
+    <div class="surface" style="--sc:#14795a"><span class="who">ADMIN</span><h3>مركز التحكم</h3><p>الامتثال، الأذونات، العقود، التسويات، الإيقاف الطارئ للمنتجات، الثقة والمخاطر، التدقيق.</p></div>
+    <div class="surface" style="--sc:#5b47a8"><span class="who">SUPER ADMIN</span><h3>غرفة قيادة المنصة</h3><p>نبض مجال، الأدوار، سيولة السوق، محرك الثقة، مركز السياسات، جاهزية النظام.</p></div>
+    <div class="surface" style="--sc:#9c3a82"><span class="who">PUBLIC</span><h3>السطح العام</h3><p>قصة مجال، الإطلاقات، الطلب والتقييم، والمركز القانوني الكامل — شرط مسبق لاعتماد المتجر لدى مزوّدي الدفع.</p></div>
+  </div>
+</section>
+
+<!-- 10 · الحوكمة -->
+<section class="slide alt" data-label="الحوكمة">
+  <p class="eyebrow">الحوكمة والأمان</p>
+  <h2>مبني ليُدقَّق، لا ليُصدَّق</h2>
+  <div class="grid g3">
+    <div class="panel"><h3>مصادقة خادمية</h3><p>جلسات HttpOnly مع حماية CSRF، تجزئة كلمات المرور بـ scrypt، قفل مؤقت للمحاولات، وMFA اختياري.</p></div>
+    <div class="panel"><h3>صلاحيات ثلاثية الأبعاد</h3><p>الدور × السياق × الحساسية. عشرة أدوار معرّفة، والعمليات الخطرة يمنعها حارس المجال لا إخفاء الزر.</p></div>
+    <div class="panel"><h3>سجل تدقيق كامل</h3><p>الوصفات والعقود والتسويات والسياسات: كل فعل حسّاس يترك أثرًا قابلًا للاستخراج.</p></div>
+    <div class="panel"><h3>مركز السياسات</h3><p>العمولة، مدد المنح، حدود الطلب، نافذة تحذير الامتثال، عتبة المطابقة، دورة التسوية — قيم مركزية تؤثر في المنطق.</p></div>
+    <div class="panel"><h3>محرك الثقة</h3><p>مؤشر تفسيري يوضّح أسبابه للمراجع البشري، ولا يُصدر حكمًا آليًا نهائيًا على أحد.</p></div>
+    <div class="panel"><h3>الامتثال الكويتي</h3><p>الشروط والخصوصية والاسترجاع وصفحة التتبع منشورة، والمسار مهيّأ لمتطلبات مزوّدي الدفع المحليين.</p></div>
+  </div>
+</section>
+
+<!-- 11 · قيمة المنشأة -->
+<section class="slide" data-label="ماذا تكسب">
+  <p class="eyebrow">ماذا تكسب المنشأة</p>
+  <h2>خمسة مكاسب، بلا فريق تطوير داخلي</h2>
+  <div class="rows">
+    <div class="row"><span class="k">تدفّق</span><span class="t">مصدر منتجات مستمر</span><span class="d">مبدعون محقّقون بمنتجات موثّقة، مرتّبون بحسب ملاءمتهم لقدرتك التشغيلية أنت.</span></div>
+    <div class="row"><span class="k">مخاطرة</span><span class="t">لا التزام قبل دفعة اختبار بأرقامك</span><span class="d">تعرف التكلفة والوقت والهدر قبل توقيع أي شيء، ومن مطبخك لا من عرض تقديمي.</span></div>
+    <div class="row"><span class="k">حماية</span><span class="t">عقد يحدد الحصرية والمدة قبل الإنتاج</span><span class="d">وضوح كامل في الملكية والعمولة، ونزاع أقل لأن كل قرار موثّق بصاحبه.</span></div>
+    <div class="row"><span class="k">تشغيل</span><span class="t">غرفة عمليات الإطلاق</span><span class="d">المبيعات والوحدات ومعدل التصريف والفروع والتنبيهات في سياق منشأتك وصلاحيات فريقك.</span></div>
+    <div class="row"><span class="k">امتثال</span><span class="t">أثر كامل عند أي مراجعة</span><span class="d">مستندات سارية، وسجل يجيب عن «من فعل ماذا ومتى» دون بحث يدوي.</span></div>
+  </div>
+</section>
+
+<!-- 12 · الدخول -->
+<section class="slide alt" data-label="الدخول">
+  <p class="eyebrow">الخطوة التالية</p>
+  <h2>ثلاث خطوات حتى أول إطلاق مشترك</h2>
+  <div class="grid g3">
+    <div class="panel"><h3>١ — التفعيل</h3><p>نفتح ملف منشأتك، نرفع الترخيص والشهادات، ونضبط الفروع والسعة والفريق وصلاحياته.</p></div>
+    <div class="panel"><h3>٢ — أول مطابقة</h3><p>نعرض عليك مبدعين ملائمين لقدرتك، وتختار منتجًا واحدًا لدفعة مختبر مقاسة.</p></div>
+    <div class="panel gold"><h3>٣ — العقد والإطلاق</h3><p>عرض مقابل وعقد موقّع، ثم بوابة الإطلاق حين تكتمل شروطها — لا قبلها.</p></div>
+  </div>
+  <p class="pull">لا نطلب منك تغيير مطبخك. نطلب منتجًا واحدًا نثبت عليه النموذج كاملًا.</p>
+  <div class="cta">
+    <a href="#deck">ابدأ التفعيل</a>
+    <a class="ghost" href="#deck">اطلب دفعة مختبر تجريبية</a>
+    <span class="faint" style="font-family:var(--mono);letter-spacing:.14em">مجال — الكويت</span>
+  </div>
+</section>
 
 </main>
 
 <script>
 (function(){
-  var deck = document.getElementById('deck');
-  var slides = Array.prototype.slice.call(deck.querySelectorAll('.slide'));
-  var rail = document.querySelector('.rail');
-  var cur = document.getElementById('cur');
-  var tot = document.getElementById('tot');
-  var ar = function(n){ return String(n).replace(/\d/g, function(d){ return '٠١٢٣٤٥٦٧٨٩'[d]; }); };
-  tot.textContent = ar(slides.length);
-
-  slides.forEach(function(s, i){
-    var b = document.createElement('button');
-    b.type = 'button';
-    b.setAttribute('aria-label', s.dataset.label || ('الشريحة ' + (i+1)));
+  var deck=document.getElementById('deck');
+  var slides=[].slice.call(deck.querySelectorAll('.slide'));
+  var rail=document.querySelector('.rail'), cur=document.getElementById('cur'), tot=document.getElementById('tot');
+  var ar=function(n){return String(n).replace(/\d/g,function(d){return '٠١٢٣٤٥٦٧٨٩'[d];});};
+  tot.textContent=ar(slides.length);
+  slides.forEach(function(s,i){
+    var b=document.createElement('button');
+    b.type='button'; b.setAttribute('aria-label', s.dataset.label||('الشريحة '+(i+1)));
     b.appendChild(document.createElement('i'));
-    b.addEventListener('click', function(){ s.scrollIntoView({behavior:'smooth', block:'start'}); });
+    b.addEventListener('click',function(){ s.scrollIntoView({behavior:'smooth',block:'start'}); });
     rail.appendChild(b);
   });
-  var dots = Array.prototype.slice.call(rail.children);
-
-  var active = -1;
-  function setActive(i){
-    if (i === active) return;
-    active = i;
-    dots.forEach(function(d, j){ d.setAttribute('aria-current', j === i ? 'true' : 'false'); });
-    cur.textContent = ar(i + 1);
+  var dots=[].slice.call(rail.children), active=-1;
+  function setActive(i){ if(i===active||i<0)return; active=i;
+    dots.forEach(function(d,j){ d.setAttribute('aria-current', j===i?'true':'false'); });
+    cur.textContent=ar(i+1);
   }
   setActive(0);
-
-  var io = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if (e.isIntersecting && e.intersectionRatio > 0.5) setActive(slides.indexOf(e.target));
-    });
-  }, {root: deck, threshold: [0.51]});
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting&&e.intersectionRatio>0.5) setActive(slides.indexOf(e.target)); });
+  },{root:deck,threshold:[0.51]});
   slides.forEach(function(s){ io.observe(s); });
-
-  document.addEventListener('keydown', function(e){
-    var next = null;
-    if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') next = active + 1;
-    else if (e.key === 'ArrowUp' || e.key === 'PageUp') next = active - 1;
-    else if (e.key === 'ArrowLeft') next = active + 1;   /* RTL: left advances */
-    else if (e.key === 'ArrowRight') next = active - 1;
-    else if (e.key === 'Home') next = 0;
-    else if (e.key === 'End') next = slides.length - 1;
-    else return;
-    if (next < 0 || next >= slides.length) { e.preventDefault(); return; }
+  document.addEventListener('keydown',function(e){
+    var n=null;
+    if(e.key==='ArrowDown'||e.key==='PageDown'||e.key===' '||e.key==='ArrowLeft') n=active+1;
+    else if(e.key==='ArrowUp'||e.key==='PageUp'||e.key==='ArrowRight') n=active-1;
+    else if(e.key==='Home') n=0; else if(e.key==='End') n=slides.length-1; else return;
     e.preventDefault();
-    slides[next].scrollIntoView({behavior:'smooth', block:'start'});
+    if(n<0||n>=slides.length) return;
+    slides[n].scrollIntoView({behavior:'smooth',block:'start'});
   });
 })();
 </script>
