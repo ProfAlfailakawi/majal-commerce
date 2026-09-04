@@ -4,7 +4,8 @@ build/
 server-dist/
 var/
 .env
-.env.local
+.env.*
+!.env.example
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal

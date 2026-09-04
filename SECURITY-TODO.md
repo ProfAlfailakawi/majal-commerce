@@ -51,3 +51,15 @@
 - `firebase` (`^12.17.1`): بعد حذف `src/lib/firebase.ts` و`src/lib/cloudSync.ts` لم يعد مستورَداً في الكود.
 - `motion` (`^12.23.24`): غير مستورَد في أي مكان.
 - لم تُحذف من `package.json` تجنّباً لاعتماد بناء غير مباشر. القرار المطلوب: التحقق ثم الإزالة.
+
+## 11. تقارير التدقيق قبل الإطلاق (مرجع)
+تقارير جاهزية ما قبل الإطلاق محفوظة في `docs/changelog/` (نُقلت من الجذر في جولة التنظيف):
+`AUDIT_REPORT_PRELAUNCH.md`, `RELEASE_READINESS_REPORT.md`, `QA_REPORT.md`,
+`INTEGRATION_READINESS.md`, `RELEASE_CHECKLIST.md`, `BUILD_MANIFEST.md`, `CHANGES_REPORT.md`.
+ملاحظة: `RELEASE_READINESS_REPORT.md` (CONDITIONAL GO) و`AUDIT_REPORT_PRELAUNCH.md` (58/100) متعارضان — يحتاجان توحيداً قبل أي إعلان جاهزية.
+
+## 12. تنظيف إعداد Firebase الميت من .env.example
+أُزيلت من `.env.example` متغيّرات Firebase العميلية الميتة (`VITE_ENABLE_FIREBASE_SYNC` و`VITE_FIREBASE_*`)
+لأنها بلا مستهلك بعد حذف `src/lib/firebase.ts` و`src/lib/cloudSync.ts`.
+المزامنة الخادمية الحالية (`server/firebase-mirror.ts`) تستخدم `FIREBASE_PROJECT_ID` /
+`FIREBASE_SERVICE_ACCOUNT_JSON` / `GOOGLE_APPLICATION_CREDENTIALS` — غير مضمّنة في `.env.example` وتبقى قرار إعداد خادمي عند التفعيل.
