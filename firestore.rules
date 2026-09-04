@@ -10,9 +10,19 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.role in ['ADMIN', 'SUPER_ADMIN'];
+    }
+
     // Users Collection
+    // SECURITY: `allow read: if isAuthenticated()` let ANY signed-in account enumerate every
+    // user document — name, email, phone, role and tenant links — which is a full directory
+    // leak from a single throwaway registration. A user document is only ever needed by its
+    // own owner or by an administrator; nothing in the client reads this collection at all
+    // (the app is server-authoritative over the Express API and Firestore is a server-written
+    // mirror), so narrowing the read breaks no caller.
     match /users/{userId} {
-      allow read: if isAuthenticated();
+      allow read: if isOwner(userId) || isAdmin();
       allow write: if isOwner(userId);
     }
 

@@ -10,6 +10,12 @@ interface AuthModalProps {
   onAuthenticated: (session: AuthSession) => void;
 }
 
+// Mirrors the server-side reset token shape (server/auth.ts): 32 random bytes encoded as
+// base64url, i.e. exactly 43 characters. The bounds here are input hygiene only — the server
+// is the authority.
+const RESET_TOKEN_MIN_LENGTH = 43;
+const RESET_TOKEN_MAX_LENGTH = 64;
+
 
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthenticated }) => {
@@ -161,7 +167,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
           {mode === 'RESET_VERIFY' && (
             <label className="block space-y-1.5">
               <span className="text-xs font-bold text-slate-200">رمز التوثيق (المرسل للبريد)</span>
-              <input type="text" inputMode="numeric" pattern="[0-9]{6}" value={resetCode} onChange={event => setResetCode(event.target.value.replace(/\D/g, '').slice(0, 6))} required maxLength={6} dir="ltr" placeholder="123456" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-3 text-xl tracking-[0.4em] text-center text-slate-100 outline-none focus:border-gold-300/50" />
+              {/* The reset token is a 43-char base64url credential (256 bits of entropy), not a
+                  6-digit OTP: accept it verbatim without stripping characters. */}
+              <input type="text" value={resetCode} onChange={event => setResetCode(event.target.value.trim().slice(0, RESET_TOKEN_MAX_LENGTH))} required minLength={RESET_TOKEN_MIN_LENGTH} maxLength={RESET_TOKEN_MAX_LENGTH} autoComplete="one-time-code" spellCheck={false} dir="ltr" placeholder="الصق الرمز المرسل إليك" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-3 text-sm font-mono text-center text-slate-100 outline-none focus:border-gold-300/50" />
             </label>
           )}
 
@@ -215,7 +223,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
           {error && <div role="alert" aria-live="assertive" className="rounded-xl bg-rose-500/10 border border-rose-400/20 px-4 py-2.5 text-xs text-rose-200 leading-5">{error}</div>}
           {successMsg && <div role="alert" aria-live="polite" className="rounded-xl bg-emerald-500/10 border border-emerald-400/20 px-4 py-2.5 text-xs text-emerald-200 leading-5">{successMsg}</div>}
 
-          <button disabled={submitting || (needsMfa && mfaCode.length !== 6) || (mode === 'RESET_VERIFY' && resetCode.length !== 6)} className="w-full py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 font-black text-sm disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:brightness-105 transition">
+          <button disabled={submitting || (needsMfa && mfaCode.length !== 6) || (mode === 'RESET_VERIFY' && resetCode.length < RESET_TOKEN_MIN_LENGTH)} className="w-full py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 font-black text-sm disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:brightness-105 transition">
             {mode === 'LOGIN' ? <LogIn className="w-4 h-4" /> : (mode === 'RESET_REQUEST' || mode === 'RESET_VERIFY') ? <RefreshCcw className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
             {submitting ? 'جارٍ المعالجة…' : needsMfa ? 'تحقق وادخل' : mode === 'LOGIN' ? 'دخول فوري' : mode === 'RESET_REQUEST' ? 'إرسال رمز التوثيق للبريد' : mode === 'RESET_VERIFY' ? 'توثيق الرمز وتعيين كلمة المرور' : `إنشاء حساب (${role === 'SUPER_ADMIN' ? 'سوبر أدمن' : role === 'ADMIN' ? 'أدمن' : role === 'CREATOR' ? 'مبدع' : role === 'HOST_OWNER' ? 'منشأة' : 'عميل'})`}
           </button>

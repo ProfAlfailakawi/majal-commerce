@@ -13,7 +13,7 @@ import { createPaymentRegistry, createPaymentRouter, createPaymentWebhookHandler
 import { createDomainRouter } from './server/domain';
 import { createAdvancedRouter } from './server/advanced';
 import { deliveryReadiness, startNotificationDeliveryWorker } from './server/delivery';
-import { installProcessSafetyHandlers, requestTelemetry, structuredLog } from './server/observability';
+import { installProcessSafetyHandlers, requestTelemetry, resolveTrustProxyHops, structuredLog } from './server/observability';
 import { secureStorageReadiness } from './server/secure-storage';
 
 dotenv.config({ quiet: true });
@@ -237,8 +237,13 @@ async function initializeApplication(app: express.Express) {
 async function startServer() {
   const app = express();
   app.disable('x-powered-by');
-  const trustedProxyHops = Number(process.env.TRUST_PROXY_HOPS || 0);
-  if (Number.isInteger(trustedProxyHops) && trustedProxyHops > 0 && trustedProxyHops <= 5) app.set('trust proxy', trustedProxyHops);
+  // SECURITY: `req.ip` feeds rate limiting, login lockout and auth audit logs. Behind Cloud Run
+  // the client address only survives when Express is told how many proxy hops to trust — the
+  // previous default of 0 made every request look like it came from the proxy, turning the
+  // per-client limiter into a single global bucket.
+  const trustedProxyHops = resolveTrustProxyHops(process.env.TRUST_PROXY_HOPS, isProduction);
+  app.set('trust proxy', trustedProxyHops);
+  structuredLog('INFO', 'trust_proxy_configured', { hops: trustedProxyHops });
   app.use(requestTelemetry());
   app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
