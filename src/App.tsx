@@ -53,8 +53,8 @@ export default function App() {
     setShowOnboarding(true);
   }, [authStatus]);
 
-  const closeOnboarding = (intent: OnboardingIntent | null, skipped: boolean) => {
-    markOnboardingSeen(intent, skipped);
+  const closeOnboarding = (_intent: OnboardingIntent | null, skipped: boolean) => {
+    markOnboardingSeen(skipped);
     setShowOnboarding(false);
   };
 
