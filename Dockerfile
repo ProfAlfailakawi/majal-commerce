@@ -20,7 +20,6 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/server-dist ./server-dist
 COPY --from=builder /app/firebase-applet-config.json ./firebase-applet-config.json
 COPY --from=builder /app/firestore.rules ./firestore.rules
 
@@ -28,5 +27,5 @@ EXPOSE 3000
 
 USER node
 
-CMD ["node", "server-dist/server.cjs"]
+CMD ["node", "dist/server.cjs"]
 
