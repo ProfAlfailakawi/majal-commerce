@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "build": "npm run verify:pwa && vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "build:client": "vite build",
     "build:server": "esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
@@ -16,7 +16,8 @@
     "auth:bootstrap": "node --import tsx scripts/bootstrap-admin.ts",
     "simulate:scale": "node --import tsx scripts/simulate-scale.ts",
     "audit:production": "npm audit --omit=dev",
-    "deploy:cloudrun": "bash scripts/deploy-cloud-run.sh"
+    "deploy:cloudrun": "bash scripts/deploy-cloud-run.sh",
+    "verify:pwa": "node scripts/verify-pwa.mjs"
   },
   "engines": {
     "node": "22.x"

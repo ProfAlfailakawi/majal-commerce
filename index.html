@@ -22,9 +22,12 @@
 
     <!-- Arabic type. Preconnect first so the font handshake overlaps the bundle fetch;
          display=swap keeps the first paint readable if the font is slow or blocked. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Type is served from our own origin: no third-party DNS lookup, TLS handshake
+         and redirect before the first paint, and the installed app keeps its
+         typography offline. Regenerate public/fonts with the same css2 URLs if a
+         family or weight changes. -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/284d2adce0.woff2" crossorigin />
+    <link rel="stylesheet" href="/fonts/fonts.css" />
 
     <!-- Link previews (WhatsApp, X, LinkedIn) render from these, not from the page body. -->
     <meta property="og:type" content="website" />
