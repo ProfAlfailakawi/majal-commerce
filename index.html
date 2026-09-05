@@ -9,8 +9,16 @@
     <meta name="color-scheme" content="dark" />
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- iOS/Android standalone install hints. iOS ignores the manifest's display mode and
+         requires these meta tags to run the home-screen launch chrome-free; it also ignores
+         SVG apple-touch-icons, hence the PNG above. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="مجال" />
 
     <!-- Arabic type. Preconnect first so the font handshake overlaps the bundle fetch;
          display=swap keeps the first paint readable if the font is slow or blocked. -->
