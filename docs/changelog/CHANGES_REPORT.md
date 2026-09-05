@@ -46,8 +46,8 @@
 |--------|-------|---------|
 | Typecheck / Lint | `tsc --noEmit` | ✅ **0 أخطاء** |
 | Unit + Integration | `tsx --test src/lib/*.test.ts server/*.test.ts` | ✅ **13/13 pass, 0 fail** |
-| Production build | `npm run build` (vite + esbuild) | ✅ نجح (client + `server-dist/server.cjs`) |
-| Cloud Run bootstrap | `NODE_ENV=production node server-dist/server.cjs` | ✅ المنفذ يفتح فوراً على `0.0.0.0`؛ `/api/live`=200؛ `/api/ready`=**503 fail-closed** برمز آمن بلا تسريب أسرار؛ `SIGTERM` → إغلاق نظيف. |
+| Production build | `npm run build` (vite + esbuild) | ✅ نجح (client + `dist/server.cjs`) |
+| Cloud Run bootstrap | `NODE_ENV=production node dist/server.cjs` | ✅ المنفذ يفتح فوراً على `0.0.0.0`؛ `/api/live`=200؛ `/api/ready`=**503 fail-closed** برمز آمن بلا تسريب أسرار؛ `SIGTERM` → إغلاق نظيف. |
 
 ## 4) النواقص الخارجية (لا يمكن إنهاؤها داخل الكود)
 
