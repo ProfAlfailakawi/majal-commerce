@@ -13,12 +13,14 @@ export type OnboardingIntent = 'CREATOR' | 'HOST' | 'CONSUMER' | 'ADMIN';
 
 export interface OnboardingRecord {
   completedAt: string;
-  intent: OnboardingIntent | null;
   /** True when the visitor dismissed it early — worth distinguishing from a full read. */
   skipped: boolean;
 }
 
-/** Surface each declared intent ultimately wants to land on. */
+/**
+ * Surface each declared intent ultimately wants to land on. Used at the end of the flow to
+ * open the right place once; the choice is deliberately not persisted — see below.
+ */
 export const intentSurface: Record<OnboardingIntent, SurfaceType> = {
   CREATOR: 'CREATOR',
   HOST: 'HOST',
@@ -42,9 +44,16 @@ export function hasSeenOnboarding(): boolean {
   return readStorage() !== null;
 }
 
-export function markOnboardingSeen(intent: OnboardingIntent | null, skipped: boolean): void {
+/**
+ * The declared intent is intentionally not stored. It is answered once to open the right
+ * surface at the end of the flow, and nothing reads it back afterwards: routing a returning
+ * visitor from a months-old answer would send them somewhere they did not ask for, and the
+ * app already resolves the surface from their actual role. Keeping an unread declaration in
+ * storage buys nothing and is one more thing to reason about.
+ */
+export function markOnboardingSeen(skipped: boolean): void {
   try {
-    const record: OnboardingRecord = { completedAt: new Date().toISOString(), intent, skipped };
+    const record: OnboardingRecord = { completedAt: new Date().toISOString(), skipped };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
   } catch {
     // A visitor who cannot persist the flag simply sees the intro again next visit.
