@@ -28,7 +28,9 @@ async function request<T>(url: string, init: RequestInit = {}, idempotencyScope?
 }
 
 export const domainClient = {
-  snapshot: () => request<{products: unknown[]; collaborations: unknown[]}>('/api/v1/domain/snapshot'),
+  snapshot: () => request<{ products: any[]; collaborations: any[]; creators?: any[]; organizations?: any[] }>('/api/v1/domain/snapshot'),
+  profiles: () => request<any[]>('/api/v1/domain/profiles'),
+  listOrganizations: () => request<any[]>('/api/v1/domain/organizations'),
   createProduct: (body: unknown) => request<{id:string;recipeVersionId:string;status:string;recipeSha256:string}>('/api/v1/domain/products', { method: 'POST', body: JSON.stringify(body) }, 'product'),
   requestRecipeAccess: (body: unknown) => request<{id:string;status:string}>('/api/v1/domain/recipe-access', { method: 'POST', body: JSON.stringify(body) }, 'recipe-access'),
   approveRecipeAccess: (id: string, body: unknown) => request<any>(`/api/v1/domain/recipe-access/${encodeURIComponent(id)}/approve`, { method: 'POST', body: JSON.stringify(body) }),

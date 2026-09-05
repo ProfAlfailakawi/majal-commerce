@@ -88,6 +88,10 @@ test('snapshot for the collaborating host includes the same collaboration', asyn
     const snap = await buildDomainSnapshot(db, { role: 'HOST_OWNER', hostBusinessId: 'org_s' });
     assert.equal(snap.collaborations.length, 1);
     assert.equal((snap.collaborations[0] as any).offers.length, 1);
+    assert.ok(snap.creators.length >= 1);
+    assert.equal(snap.creators[0].displayName, 'مبدع الاختبار');
+    assert.ok(snap.organizations.length >= 1);
+    assert.equal(snap.organizations[0].commercialName, 'مطبخ الاختبار');
   } finally {
     await db.close();
   }

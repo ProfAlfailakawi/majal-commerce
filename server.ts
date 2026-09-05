@@ -206,6 +206,11 @@ async function initializeApplication(app: express.Express) {
     app.all('/api/v1/pos/*', (_req, res) => jsonError(res, 503, 'تكامل POS غير مربوط، والمحاكي مقفول في هذه البيئة.', 'POS_NOT_CONFIGURED'));
   }
 
+  const presentationPath = path.join(process.cwd(), 'presentation');
+  if (fs.existsSync(presentationPath)) {
+    app.use('/presentation', express.static(presentationPath));
+  }
+
   if (!isProduction) {
     const { createServer: createViteServer } = await import('vite');
     const disableHmr = process.env.DISABLE_HMR === 'true';

@@ -458,19 +458,7 @@ const migrations = [
         target_price_fils INTEGER NOT NULL CHECK(target_price_fils > 0),
         is_secret_recipe INTEGER NOT NULL DEFAULT 1 CHECK(is_secret_recipe IN (0, 1)),
         created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        internal_name TEXT,
-        story TEXT,
-        media_json TEXT,
-        general_ingredients_json TEXT,
-        allergens_json TEXT,
-        dietary_tags_json TEXT,
-        serving_size TEXT,
-        shelf_life TEXT,
-        prep_time_minutes INTEGER,
-        expected_equipment_json TEXT,
-        accepts_exclusivity INTEGER DEFAULT 0,
-        desired_partnership_type TEXT
+        updated_at TEXT NOT NULL
       );
 
       CREATE INDEX IF NOT EXISTS idx_products_creator_cursor
@@ -1180,6 +1168,50 @@ const migrations = [
 
       CREATE INDEX IF NOT EXISTS idx_accruals_batch_status
         ON accruals(settlement_batch_id, status);
+    `
+  },
+  {
+    version: 14,
+    sql: `
+      ALTER TABLE creator_profiles ADD COLUMN legal_name TEXT;
+      ALTER TABLE creator_profiles ADD COLUMN creator_type TEXT DEFAULT 'RECIPE_DEVELOPER';
+      ALTER TABLE creator_profiles ADD COLUMN bio TEXT;
+      ALTER TABLE creator_profiles ADD COLUMN region TEXT;
+      ALTER TABLE creator_profiles ADD COLUMN badges_json TEXT;
+      ALTER TABLE creator_profiles ADD COLUMN units_sold INTEGER DEFAULT 0;
+      ALTER TABLE creator_profiles ADD COLUMN repeat_purchase_rate REAL DEFAULT 0;
+      ALTER TABLE creator_profiles ADD COLUMN story TEXT;
+      ALTER TABLE creator_profiles ADD COLUMN avatar_url TEXT;
+    `
+  },
+  {
+    version: 15,
+    sql: `
+      ALTER TABLE organizations ADD COLUMN business_type TEXT;
+      ALTER TABLE organizations ADD COLUMN commercial_registration_no TEXT;
+      ALTER TABLE organizations ADD COLUMN logo_url TEXT;
+      ALTER TABLE organizations ADD COLUMN brand_positioning TEXT;
+      ALTER TABLE organizations ADD COLUMN target_audience TEXT;
+      ALTER TABLE organizations ADD COLUMN branches_json TEXT;
+      ALTER TABLE organizations ADD COLUMN capabilities_json TEXT;
+      ALTER TABLE organizations ADD COLUMN contacts_json TEXT;
+    `
+  },
+  {
+    version: 16,
+    sql: `
+      ALTER TABLE products ADD COLUMN internal_name TEXT;
+      ALTER TABLE products ADD COLUMN story TEXT;
+      ALTER TABLE products ADD COLUMN media_json TEXT;
+      ALTER TABLE products ADD COLUMN general_ingredients_json TEXT;
+      ALTER TABLE products ADD COLUMN allergens_json TEXT;
+      ALTER TABLE products ADD COLUMN dietary_tags_json TEXT;
+      ALTER TABLE products ADD COLUMN serving_size TEXT;
+      ALTER TABLE products ADD COLUMN shelf_life TEXT;
+      ALTER TABLE products ADD COLUMN prep_time_minutes INTEGER;
+      ALTER TABLE products ADD COLUMN expected_equipment_json TEXT;
+      ALTER TABLE products ADD COLUMN accepts_exclusivity INTEGER DEFAULT 0;
+      ALTER TABLE products ADD COLUMN desired_partnership_type TEXT;
     `
   }
 ] as const;

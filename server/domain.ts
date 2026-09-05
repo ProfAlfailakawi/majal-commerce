@@ -140,6 +140,57 @@ export function publicProduct(row: Record<string, unknown>) {
   };
 }
 
+export function publicCreatorProfile(row: Record<string, unknown>) {
+  const safeJson = (val: unknown) => {
+    if (!val) return undefined;
+    if (Array.isArray(val) || (typeof val === 'object' && val !== null)) return val;
+    try { return JSON.parse(String(val)); } catch { return undefined; }
+  };
+
+  return {
+    id: String(row.id),
+    userId: String(row.user_id),
+    displayName: String(row.display_name),
+    legalName: (row.legal_name as string) || undefined,
+    creatorType: (row.creator_type as string) || 'RECIPE_DEVELOPER',
+    specialty: String(row.specialty || ''),
+    bio: (row.bio as string) || '',
+    region: (row.region as string) || 'الكويت',
+    completionScore: Number(row.completion_score || 0),
+    badges: (safeJson(row.badges_json) as string[]) || ['TESTED'],
+    unitsSold: Number(row.units_sold || 0),
+    repeatPurchaseRate: Number(row.repeat_purchase_rate || 0),
+    story: (row.story as string) || '',
+    isAvailableForMatching: Boolean(row.matching_enabled),
+    hasSecretRecipe: true,
+    avatarUrl: (row.avatar_url as string) || '',
+    createdAt: String(row.created_at)
+  };
+}
+
+export function publicOrganization(row: Record<string, unknown>) {
+  const safeJson = (val: unknown) => {
+    if (!val) return undefined;
+    if (Array.isArray(val) || (typeof val === 'object' && val !== null)) return val;
+    try { return JSON.parse(String(val)); } catch { return undefined; }
+  };
+
+  return {
+    id: String(row.id),
+    commercialName: String(row.commercial_name),
+    businessType: (row.business_type as string) || 'CENTRAL_KITCHEN',
+    commercialRegistrationNo: (row.commercial_registration_no as string) || '',
+    verificationStatus: (row.verification_status as string) || 'UNVERIFIED',
+    branches: (safeJson(row.branches_json) as any[]) || [],
+    capabilities: (safeJson(row.capabilities_json) as any) || { canBake: true, canFry: true, canFreeze: true, dailyCapacityUnits: 500, storageTypes: ['CHILLED', 'DRY'] },
+    brandPositioning: (row.brand_positioning as string) || '',
+    targetAudience: (row.target_audience as string) || '',
+    contacts: (safeJson(row.contacts_json) as any[]) || [],
+    logoUrl: (row.logo_url as string) || '',
+    createdAt: String(row.created_at)
+  };
+}
+
 export interface SnapshotUser {
   role?: string;
   creatorId?: string | null;
@@ -265,9 +316,14 @@ export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser)
     };
   }));
 
+  const creatorRows = await db.prepare('SELECT * FROM creator_profiles ORDER BY created_at DESC LIMIT 200').all<Record<string, unknown>>();
+  const orgRows = await db.prepare('SELECT * FROM organizations ORDER BY created_at DESC LIMIT 200').all<Record<string, unknown>>();
+
   return {
     products: products.map(publicProduct),
-    collaborations
+    collaborations,
+    creators: creatorRows.map(publicCreatorProfile),
+    organizations: orgRows.map(publicOrganization)
   };
 }
 
@@ -347,6 +403,47 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
   router.get('/snapshot', async (req: AuthenticatedRequest, res) => {
     const snap = await buildDomainSnapshot(db, req.auth!.user);
     res.json(snap);
+  });
+
+  router.get('/profiles', async (req: AuthenticatedRequest, res) => {
+    try {
+      const rows = await db.prepare('SELECT * FROM creator_profiles ORDER BY created_at DESC LIMIT 500').all<Record<string, unknown>>();
+      res.json(rows.map(publicCreatorProfile));
+    } catch (e) {
+      handleDomainError(res, e);
+    }
+  });
+
+  router.get('/profiles/me', async (req: AuthenticatedRequest, res) => {
+    try {
+      const crId = req.auth!.user.creatorId;
+      const row = crId
+        ? await db.prepare('SELECT * FROM creator_profiles WHERE id = ?').get<Record<string, unknown>>(crId)
+        : await db.prepare('SELECT * FROM creator_profiles WHERE user_id = ?').get<Record<string, unknown>>(req.auth!.user.id);
+      if (!row) return jsonError(res, 404, 'الملف التعريفي للمبدع غير موجود.', 'PROFILE_NOT_FOUND');
+      res.json(publicCreatorProfile(row));
+    } catch (e) {
+      handleDomainError(res, e);
+    }
+  });
+
+  router.get('/organizations', async (req: AuthenticatedRequest, res) => {
+    try {
+      const rows = await db.prepare('SELECT * FROM organizations ORDER BY created_at DESC LIMIT 500').all<Record<string, unknown>>();
+      res.json(rows.map(publicOrganization));
+    } catch (e) {
+      handleDomainError(res, e);
+    }
+  });
+
+  router.get('/organizations/:id', async (req: AuthenticatedRequest, res) => {
+    try {
+      const row = await db.prepare('SELECT * FROM organizations WHERE id = ?').get<Record<string, unknown>>(req.params.id);
+      if (!row) return jsonError(res, 404, 'المنشأة غير موجودة.', 'ORGANIZATION_NOT_FOUND');
+      res.json(publicOrganization(row));
+    } catch (e) {
+      handleDomainError(res, e);
+    }
   });
 
   router.post('/products', async (req: AuthenticatedRequest, res) => {

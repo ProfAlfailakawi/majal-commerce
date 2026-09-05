@@ -338,6 +338,276 @@ export class Store {
     return true;
   }
 
+  public async hydrateFromServer(): Promise<boolean> {
+    if (IS_DEMO_MODE) return false;
+    try {
+      const snap = await domainClient.snapshot();
+      if (!snap) return false;
+
+      // 1. Hydrate products
+      if (Array.isArray(snap.products) && snap.products.length > 0) {
+        const serverProducts: CreatorProduct[] = snap.products.map((p: any) => ({
+          id: String(p.id),
+          creatorId: String(p.creatorId || p.creator_id),
+          internalName: String(p.internalName || p.internal_name || p.publicName || p.public_name || ''),
+          publicName: String(p.publicName || p.public_name || ''),
+          category: String(p.category || 'حلويات'),
+          shortDescription: String(p.shortDescription || p.short_description || ''),
+          story: String(p.story || ''),
+          status: (p.status || 'ACTIVE') as any,
+          mediaUrls: Array.isArray(p.media) ? p.media : (Array.isArray(p.mediaUrls) ? p.mediaUrls : ['https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&auto=format&fit=crop&q=80']),
+          generalIngredients: Array.isArray(p.generalIngredients) ? p.generalIngredients : [],
+          allergens: Array.isArray(p.allergens) ? p.allergens : [],
+          dietaryTags: Array.isArray(p.dietaryTags) ? p.dietaryTags : [],
+          servingSize: String(p.servingSize || p.serving_size || 'قطعة واحدة'),
+          shelfLife: String(p.shelfLife || p.shelf_life || 'يومان مبرد'),
+          estimatedPrepTimeMinutes: Number(p.estimatedPrepTimeMinutes || p.prep_time_minutes || 30),
+          estimatedUnitCostKwd: (p.estimatedUnitCostFils ?? p.estimated_unit_cost_fils ?? 0) / 1000,
+          targetSellingPriceKwd: (p.targetPriceFils ?? p.target_price_fils ?? 0) / 1000,
+          expectedEquipment: Array.isArray(p.expectedEquipment) ? p.expectedEquipment : [],
+          isSecretRecipe: Boolean(p.isSecretRecipe ?? p.is_secret_recipe ?? true),
+          acceptsExclusivity: Boolean(p.acceptsExclusivity ?? p.accepts_exclusivity ?? false),
+          desiredPartnershipType: (p.desiredPartnershipType || p.desired_partnership_type || 'PERCENTAGE_ROYALTY') as any,
+          createdAt: String(p.createdAt || p.created_at || new Date().toISOString()),
+          currentRecipeVersion: 'V1.0'
+        }));
+
+        this.products = serverProducts;
+      }
+
+      // 2. Hydrate collaborations and nested models
+      if (Array.isArray(snap.collaborations)) {
+        const serverCollabs: Collaboration[] = [];
+        const allOffers: OfferTerms[] = [];
+        const allContracts: Contract[] = [];
+        const allLaunches: Launch[] = [];
+        const allRecipeVersions: RecipeVersion[] = [];
+        const allRecipeGrants: RecipeAccessGrant[] = [];
+
+        for (const c of snap.collaborations as any[]) {
+          const collabOffers: OfferTerms[] = (c.offers || []).map((o: any) => {
+            const offer: OfferTerms = {
+              id: String(o.id),
+              version: Number(o.versionNumber || o.version_number || 1),
+              collaborationId: String(c.id),
+              senderRole: (o.proposedByRole === 'CREATOR' || o.proposed_by_role === 'CREATOR') ? 'CREATOR' : 'HOST',
+              sellingPriceKwd: (o.sellingPriceFils ?? o.selling_price_fils ?? 0) / 1000,
+              creatorRoyaltyModel: 'PERCENTAGE',
+              creatorRoyaltyRatePercent: (o.creatorRoyaltyBasisPoints ?? o.creator_royalty_basis_points ?? 1500) / 100,
+              fixedAmountPerUnitKwd: 0,
+              platformFeePercent: (o.platformFeeBasisPoints ?? o.platform_fee_basis_points ?? 500) / 100,
+              termMonths: Number(o.termMonths || o.term_months || 12),
+              exclusivityType: (o.exclusivityScope || o.exclusivity_scope || 'NON_EXCLUSIVE') === 'EXCLUSIVE' ? 'EXCLUSIVE' : 'NON_EXCLUSIVE',
+              territory: 'الكويت',
+              channels: ['DINE_IN', 'DELIVERY'],
+              minimumCommitmentUnits: Number(o.productionBatchSize || o.production_batch_size || 50),
+              notes: String(o.notes || ''),
+              status: (o.status || 'PENDING') as any,
+              createdAt: String(o.createdAt || o.created_at || new Date().toISOString())
+            };
+            return offer;
+          });
+
+          allOffers.push(...collabOffers);
+          const currentOffer = collabOffers.length > 0 ? collabOffers[collabOffers.length - 1] : undefined;
+
+          let contract: Contract | undefined = undefined;
+          if (c.contract) {
+            const ct = c.contract;
+            const matchedOffer = collabOffers.find(o => o.id === (ct.offerId || ct.offer_id)) || currentOffer || {
+              id: 'off_fallback',
+              version: 1,
+              collaborationId: String(c.id),
+              senderRole: 'CREATOR',
+              sellingPriceKwd: 1.5,
+              creatorRoyaltyModel: 'PERCENTAGE',
+              creatorRoyaltyRatePercent: 15,
+              fixedAmountPerUnitKwd: 0,
+              platformFeePercent: 5,
+              termMonths: 12,
+              exclusivityType: 'NON_EXCLUSIVE',
+              territory: 'الكويت',
+              channels: ['DINE_IN'],
+              minimumCommitmentUnits: 50,
+              notes: '',
+              status: 'ACCEPTED',
+              createdAt: new Date().toISOString()
+            };
+
+            contract = {
+              id: String(ct.id),
+              collaborationId: String(c.id),
+              versionNumber: String(ct.versionNumber || ct.version_number || '1'),
+              terms: matchedOffer,
+              creatorLegalName: String(ct.creatorLegalName || ct.creator_legal_name || 'المبدع المتعاقد'),
+              hostCommercialName: String(ct.hostCommercialName || ct.host_commercial_name || 'المنشأة المضيفة'),
+              contractPdfUrl: '/presentation/majal-deck.pdf',
+              creatorSignedAt: ct.creatorSignedAt || ct.creator_signed_at,
+              creatorSignerIp: '127.0.0.1',
+              hostSignedAt: ct.hostSignedAt || ct.host_signed_at,
+              hostSignerIp: '127.0.0.1',
+              status: (ct.status || 'FULLY_SIGNED') as any,
+              createdAt: String(ct.createdAt || ct.created_at || new Date().toISOString())
+            };
+            allContracts.push(contract);
+          }
+
+          let activeLaunch: Launch | undefined = undefined;
+          if (c.launch) {
+            const l = c.launch;
+            activeLaunch = {
+              id: String(l.id),
+              collaborationId: String(c.id),
+              productId: String(c.productId || c.product_id),
+              creatorId: String(c.creatorId || c.creator_id),
+              hostBusinessId: String(c.organizationId || c.organization_id),
+              launchType: 'LIMITED_DROP',
+              title: 'إطلاق التعاون',
+              sellingPriceKwd: currentOffer?.sellingPriceKwd || 2.5,
+              unitsSold: Number(l.actualDailyUnitsSold || l.actual_daily_units_sold || 0),
+              branches: ['فرع العاصمة'],
+              startDate: String(l.launchDate || l.launch_date || new Date().toISOString()),
+              status: (l.status || 'SCHEDULED') as any,
+              gateChecklist: {
+                hostVerified: Boolean(l.gates?.hostVerified ?? true),
+                requiredDocsValid: Boolean(l.gates?.requiredDocsValid ?? true),
+                contractSigned: Boolean(l.gates?.contractSigned ?? true),
+                productionRecipeApproved: Boolean(l.gates?.productionRecipeApproved ?? false),
+                productNamePriceApproved: Boolean(l.gates?.productNamePriceApproved ?? false),
+                allergensCompleted: true,
+                packagingDataCompleted: Boolean(l.gates?.packagingDataCompleted ?? false),
+                productionLocationSelected: Boolean(l.gates?.productionLocationSelected ?? false),
+                branchAvailabilitySelected: true,
+                settlementConfigApproved: Boolean(l.gates?.settlementConfigApproved ?? false),
+                photosReady: true,
+                allRequirementsPassed: Boolean(l.status === 'LIVE' || l.status === 'PERMANENT')
+              },
+              createdAt: String(l.createdAt || l.created_at || new Date().toISOString())
+            };
+            allLaunches.push(activeLaunch);
+          }
+
+          if (Array.isArray(c.recipeVersions)) {
+            for (const rv of c.recipeVersions) {
+              allRecipeVersions.push({
+                id: String(rv.id),
+                productId: String(rv.productId || rv.product_id || c.productId || c.product_id),
+                versionNumber: `V${rv.versionNumber || rv.version_number || 1}.0`,
+                createdById: String(c.creatorId || c.creator_id),
+                createdAt: String(rv.createdAt || rv.created_at || new Date().toISOString()),
+                yield: 10,
+                batchSize: '5 كجم',
+                ingredients: [],
+                preparationSteps: [rv.instructionsSecret || ''],
+                criticalSecrets: rv.instructionsSecret || '',
+                equipmentNeeded: [],
+                qualityCheckpoints: [],
+                allergenNotes: '',
+                changeLogNote: rv.changelog || 'النسخة المعتمدة'
+              });
+            }
+          }
+
+          if (Array.isArray(c.recipeAccessGrants)) {
+            for (const rg of c.recipeAccessGrants) {
+              allRecipeGrants.push({
+                id: String(rg.id),
+                productId: String(rg.productId || rg.product_id || c.productId || c.product_id),
+                creatorId: String(rg.creatorId || rg.creator_id || c.creatorId || c.creator_id),
+                hostBusinessId: String(rg.organizationId || rg.organization_id || c.organizationId || c.organization_id),
+                disclosureLevel: Number(rg.disclosureLevel ?? rg.disclosure_level ?? 1) as any,
+                status: (rg.status || 'REQUESTED') as any,
+                requestedByUserId: String(rg.requestedByUserId || rg.requested_by_user_id || ''),
+                requestedAt: String(rg.createdAt || rg.created_at || new Date().toISOString()),
+                grantedByUserId: rg.grantedByUserId || rg.granted_by_user_id,
+                grantedAt: rg.updatedAt || rg.updated_at,
+                expiresAt: rg.expiresAt || rg.expires_at,
+                purpose: String(rg.purpose || '')
+              });
+            }
+          }
+
+          serverCollabs.push({
+            id: String(c.id),
+            productId: String(c.productId || c.product_id),
+            creatorId: String(c.creatorId || c.creator_id),
+            hostBusinessId: String(c.organizationId || c.organization_id),
+            stage: c.stage,
+            currentOffer,
+            offerHistory: collabOffers,
+            contract,
+            activeLaunch,
+            createdAt: String(c.createdAt || c.created_at || new Date().toISOString()),
+            updatedAt: String(c.updatedAt || c.updated_at || new Date().toISOString())
+          });
+        }
+
+        if (serverCollabs.length > 0) this.collaborations = serverCollabs;
+        if (allOffers.length > 0) this.offers = allOffers;
+        if (allContracts.length > 0) this.contracts = allContracts;
+        if (allLaunches.length > 0) this.launches = allLaunches;
+        if (allRecipeVersions.length > 0) this.recipeVersions = allRecipeVersions;
+        if (allRecipeGrants.length > 0) this.recipeGrants = allRecipeGrants;
+      }
+
+      // 3. Hydrate creators/profiles if available
+      if (Array.isArray(snap.creators) && snap.creators.length > 0) {
+        const serverCreators: CreatorProfile[] = snap.creators.map((cr: any) => ({
+          id: String(cr.id),
+          userId: String(cr.userId || cr.user_id),
+          displayName: String(cr.displayName || cr.display_name),
+          legalName: cr.legalName || cr.legal_name,
+          creatorType: cr.creatorType || cr.creator_type || 'CREATOR',
+          specialty: String(cr.specialty || ''),
+          bio: String(cr.bio || ''),
+          region: String(cr.region || 'الكويت'),
+          completionScore: Number(cr.completionScore ?? cr.completion_score ?? 100),
+          badges: Array.isArray(cr.badges) ? cr.badges : ['SIGNATURE_CREATOR'],
+          unitsSold: Number(cr.unitsSold ?? cr.units_sold ?? 0),
+          repeatPurchaseRate: Number(cr.repeatPurchaseRate ?? cr.repeat_purchase_rate ?? 0),
+          story: String(cr.story || ''),
+          isAvailableForMatching: Boolean(cr.isAvailableForMatching ?? cr.matching_enabled ?? true),
+          hasSecretRecipe: true,
+          avatarUrl: String(cr.avatarUrl || cr.avatar_url || ''),
+          createdAt: String(cr.createdAt || cr.created_at || new Date().toISOString())
+        }));
+        this.creators = serverCreators;
+      }
+
+      // 4. Hydrate organizations/hosts if available
+      if (Array.isArray(snap.organizations) && snap.organizations.length > 0) {
+        const serverHosts: HostBusiness[] = snap.organizations.map((org: any) => ({
+          id: String(org.id),
+          commercialName: String(org.commercialName || org.commercial_name),
+          businessType: org.businessType || org.business_type || 'CENTRAL_KITCHEN',
+          commercialRegistrationNo: String(org.commercialRegistrationNo || org.commercial_registration_no || ''),
+          verificationStatus: org.verificationStatus || org.verification_status || 'VERIFIED',
+          branches: Array.isArray(org.branches) && org.branches.length > 0 ? org.branches : [
+            { id: 'b_1', name: 'الفرع الرئيسي', area: 'العاصمة', isActive: true }
+          ],
+          capabilities: org.capabilities || {
+            canBake: true,
+            canFry: true,
+            canFreeze: true,
+            dailyCapacityUnits: 500,
+            storageTypes: ['CHILLED', 'DRY']
+          },
+          brandPositioning: String(org.brandPositioning || org.brand_positioning || ''),
+          targetAudience: String(org.targetAudience || org.target_audience || ''),
+          contacts: Array.isArray(org.contacts) ? org.contacts : [],
+          logoUrl: String(org.logoUrl || org.logo_url || ''),
+          createdAt: String(org.createdAt || org.created_at || new Date().toISOString())
+        }));
+        this.hosts = serverHosts;
+      }
+
+      this.notify();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   public setLanguage(lang: Language) {
     this.language = lang;
     this.notify();

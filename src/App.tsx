@@ -69,6 +69,7 @@ export default function App() {
           setAuthStatus('AUTHENTICATED');
           setActiveSurface(surface);
           store.setSurface(surface);
+          void store.hydrateFromServer();
         } else {
           setAuthStatus('ANONYMOUS');
         }
@@ -91,6 +92,7 @@ export default function App() {
     setAuthStatus('AUTHENTICATED');
     setActiveSurface(surface);
     store.setSurface(surface);
+    void store.hydrateFromServer();
   };
 
   const handleLogout = async () => {
