@@ -1,6 +1,5 @@
 node_modules
 dist
-server-dist
 .git
 .github
 .env*
