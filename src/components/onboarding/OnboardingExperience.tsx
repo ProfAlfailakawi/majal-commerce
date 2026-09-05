@@ -301,7 +301,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                   style={rise(1)}
                   className="text-2xl sm:text-4xl font-black text-slate-100 outline-none"
                 >
-                  وش يجيبك لمجال؟
+                  ما الذي أتى بك إلى مجال؟
                 </h2>
                 <p style={rise(2)} className="text-xs sm:text-sm text-slate-400 leading-7 max-w-lg mx-auto">
                   نستخدم إجابتك لنبدأ من المكان الصحيح. تقدر تغيّرها في أي وقت من شريط التنقل.
