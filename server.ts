@@ -269,6 +269,10 @@ async function startServer() {
   app.get('/api/ready', (_req, res) => res.status(boot.phase === 'READY' ? 200 : 503).json({ ready: boot.phase === 'READY', phase: boot.phase, failureCode: boot.failureCode ?? null }));
 
   let resources: { db: MajalDatabase; shutdown: () => Promise<void> } | undefined;
+  const server = app.listen(port, bindHost, () => {
+    structuredLog('INFO', 'server_listening', { mode: isProduction ? 'production' : 'development', host: bindHost, port });
+  });
+
   try {
     resources = await initializeApplication(app);
     boot.phase = 'READY'; boot.readyAt = new Date().toISOString();
@@ -279,10 +283,6 @@ async function startServer() {
     // Fail closed while keeping the Cloud Run port open so startup diagnostics are truthful.
     app.use((_req, res) => jsonError(res, 503, 'الخدمة غير جاهزة بسبب إعداد إنتاج مفقود أو فشل تهيئة.', boot.failureCode));
   }
-
-  const server = app.listen(port, bindHost, () => {
-    structuredLog('INFO', 'server_listening', { mode: isProduction ? 'production' : 'development', host: bindHost, port });
-  });
 
   let shuttingDown = false;
   const shutdown = async (signal: string) => {
