@@ -32,6 +32,16 @@ const POLL_MS = 120_000;                        // شبكة الأمان الب�
 const BUSY_RETRY_MS = 4_000;                    // الصفحة مشغولة: نعيد المحاولة بعد أربع ثوانٍ
 const VERSION_URL = '/api/version';
 
+/**
+ * وضع الإنتاج. لا نكتب `import.meta.env.PROD` مباشرةً: بعض إعدادات tsconfig في هذه
+ * المستودعات لا تعرف أنواع Vite، فيسقط `tsc --noEmit` على أن `env` غير موجودة على
+ * ImportMeta. القراءة عبر نوع محلّي تعطي السلوك نفسه وتُجمَّع في كل مكان.
+ */
+function isProduction(): boolean {
+  const meta = import.meta as unknown as { env?: { PROD?: boolean; DEV?: boolean } };
+  return meta.env?.PROD === true;
+}
+
 let updating = false;
 let dragging = 0;
 let installed = false;
@@ -285,7 +295,7 @@ export function installAppUpdate(options: { chunkRecovery?: boolean } = {}): voi
     window.addEventListener('load', () => markShellHealthy());
   }
 
-  if (!import.meta.env.PROD) return;
+  if (!isProduction()) return;
 
   if (reconcileAfterReload()) return; // الصفحة على وشك إعادة التحميل بعد مسح كامل
 
