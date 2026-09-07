@@ -2,6 +2,8 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
+// @ts-ignore -- إضافة بلا أنواع: تحقن بصمة البناء وتطبعها في dist/build-id.json و sw.js
+import {buildStamp} from './scripts/build-stamp.mjs';
 
 /**
  * Resolves __PUBLIC_ORIGIN__ in index.html.
@@ -26,7 +28,7 @@ function publicOriginPlugin() {
 
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss(), publicOriginPlugin()],
+    plugins: [react(), tailwindcss(), publicOriginPlugin(), buildStamp()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

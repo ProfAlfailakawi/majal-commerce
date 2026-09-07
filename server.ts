@@ -84,6 +84,24 @@ async function initializeApplication(app: express.Express) {
   app.use(express.json({ limit: '64kb', strict: true }));
   app.use('/api', rateLimit(240, 15 * 60_000, 'api'));
 
+  /*
+   * نقطة خفيفة تعرض بصمة البناء الحالية على الخادم: هي الحقيقة الوحيدة التي يقارنها
+   * العميل بثابت الحزمة (__BUILD_ID__)، وتُكتب في dist/build-id.json عند البناء.
+   */
+  let cachedBuildId = '';
+  const currentBuildId = () => {
+    if (cachedBuildId) return cachedBuildId;
+    try {
+      cachedBuildId = String(JSON.parse(fs.readFileSync(path.join(process.cwd(), 'dist', 'build-id.json'), 'utf8')).build || '');
+    } catch { cachedBuildId = ''; }
+    if (!cachedBuildId) cachedBuildId = process.env.BUILD_ID || 'dev';
+    return cachedBuildId;
+  };
+  app.get('/api/version', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.json({ build: currentBuildId() });
+  });
+
   app.get('/api/health', async (_req, res) => {
     const database = await databaseHealth(db);
     res.json({
@@ -219,7 +237,20 @@ async function initializeApplication(app: express.Express) {
   } else {
     const distPath = path.join(process.cwd(), 'dist'), indexPath = path.join(distPath, 'index.html');
     if (!fs.existsSync(indexPath)) throw new Error('Production client bundle is missing. Run npm run build first.');
-    app.use(express.static(distPath, { index: false, maxAge: '1h', immutable: false }));
+    app.use(express.static(distPath, {
+      index: false,
+      maxAge: '1h',
+      immutable: false,
+      setHeaders(res, filePath) {
+        // الغلاف وعامل الخدمة وبصمة البناء لا تُخزَّن: نسخة قديمة منها تُجمّد التبويب
+        // على إصدار سابق ولا يرى المتصفح تحديثاً أصلاً.
+        if (filePath.endsWith('.html') || filePath.endsWith('sw.js') || filePath.endsWith('build-id.json')) {
+          res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+        } else if (/[-.][A-Za-z0-9_-]{8,}\.[a-z0-9]+$/i.test(filePath)) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+      },
+    }));
     app.get('*', (req, res) => path.extname(req.path) ? jsonError(res, 404, 'الملف غير موجود.') : res.sendFile(indexPath));
   }
 

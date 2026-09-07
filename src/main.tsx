@@ -2,6 +2,7 @@ import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import {installAppUpdate} from './lib/app-update';
 
 /**
  * Lifts the boot screen painted by index.html.
@@ -42,6 +43,9 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>,
 );
+
+// التحديث الذاتي الصامت: بصمة الإصدار، منارتها، ثم التحديث والتصعيد عند اللزوم.
+installAppUpdate();
 
 // Two frames: the first is the commit React just scheduled, the second is the browser
 // having actually painted it. Dismissing on the first would cross-fade the splash into
