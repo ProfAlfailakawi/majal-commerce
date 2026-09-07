@@ -13,7 +13,12 @@
  *
  * Bump CACHE_VERSION to force a full precache refresh.
  */
-const CACHE_VERSION = 'majal-v1';
+/* بصمة البناء تُطبع هنا عند البناء (scripts/build-stamp.mjs). بايتات هذا الملف يجب أن
+   تتغيّر مع كل إصدار، وإلا لم يرَ المتصفح تحديثاً أصلاً ولم تعلم التبويبات المفتوحة بشيء. */
+const BUILD = '__BUILD_ID__';
+const CACHE_VERSION = `majal-${BUILD}`;
+/* الأصول المبصومة بهاش في اسمها وحدها تُقدَّم من الكاش مباشرة. */
+const HASHED = /\/assets\/.+[-.][A-Za-z0-9_]{8,}\.[a-z0-9]+$/i;
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -65,10 +70,11 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/api')) return;
 
-  // App navigations: network-first, fall back to the cached shell offline.
+  /* Navigations (HTML) always come from the network with cache: "no-store" — a stored
+     shell names hashed bundles the next deploy removed. Cache is an offline fallback only. */
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
+      fetch(url.pathname + url.search, {cache: 'no-store', credentials: 'same-origin'})
         .then((response) => {
           const copy = response.clone();
           caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
@@ -83,8 +89,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Hashed, immutable build assets: cache-first.
-  if (url.pathname.startsWith('/assets/')) {
+  // Hashed, immutable build assets: cache-first — their names change with their bytes.
+  if (HASHED.test(url.pathname)) {
     event.respondWith(
       caches.match(request).then(
         (cached) =>
@@ -99,8 +105,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Everything else same-origin (icons, manifest): cache-first with network fallback.
+  // Everything else same-origin (icons, manifest, unhashed files): network first, so a
+  // deploy is never masked by a stored copy; the cache stays as the offline fallback.
   event.respondWith(
-    caches.match(request).then((cached) => cached || fetch(request)),
+    fetch(request)
+      .then((response) => {
+        if (response && response.ok) {
+          const copy = response.clone();
+          caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
+        }
+        return response;
+      })
+      .catch(() => caches.match(request).then((cached) => cached || Response.error())),
   );
 });
