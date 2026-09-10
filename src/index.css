@@ -337,6 +337,65 @@
 .majal-drift-slow { animation: majal-drift 26s var(--ease-in-out) infinite reverse; }
 .majal-orbit { animation: majal-orbit 5.5s linear infinite; }
 
+/* ── Hero entrance choreography ────────────────────────────────────────────────
+   Plays once per page entry. The four movements start scattered across the hero
+   (per-element offsets via --scatter-* inline vars), drift back with the long
+   settle curve, and take their seats around the mark; only then does the copy
+   rise in. Transform + opacity only — positions are pre-laid-out, the animation
+   never touches layout. Fully suppressed under prefers-reduced-motion below. */
+@keyframes majal-hero-phase-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(var(--scatter-x), var(--scatter-y), 0) rotate(var(--scatter-r)) scale(1.3);
+  }
+  45% { opacity: 1; }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+}
+
+@keyframes majal-hero-settle {
+  from { opacity: 0; transform: scale(0.88); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes majal-hero-veil {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.majal-hero-phase {
+  animation: majal-hero-phase-in 1500ms var(--ease-out) var(--scatter-d, 0ms) both;
+  will-change: transform, opacity;
+}
+
+.majal-hero-mark { animation: majal-hero-settle 1100ms var(--ease-out) 380ms both; }
+
+.majal-hero-ring { animation: majal-hero-veil 900ms var(--ease-out) 1050ms both; }
+
+/* The orbit glow already carries its infinite rotation — the entrance fade has to
+   ride alongside it in one declaration, or the shorthand would cancel the spin. */
+.majal-hero-ring.majal-orbit {
+  animation:
+    majal-orbit 5.5s linear infinite,
+    majal-hero-veil 900ms var(--ease-out) 1050ms both;
+}
+
+/* The copy waits for the constellation to settle on wide screens; on smaller ones
+   the aside is hidden, so holding the headline back 1.5s would just read as lag. */
+.majal-hero-copy { --hero-copy-hold: 150ms; }
+@media (min-width: 1280px) {
+  .majal-hero-copy { --hero-copy-hold: 1450ms; }
+}
+.majal-hero-copy > * {
+  animation: majal-onboard-rise 750ms var(--ease-out) both;
+}
+.majal-hero-copy > *:nth-child(1) { animation-delay: var(--hero-copy-hold); }
+.majal-hero-copy > *:nth-child(2) { animation-delay: calc(var(--hero-copy-hold) + 120ms); }
+.majal-hero-copy > *:nth-child(3) { animation-delay: calc(var(--hero-copy-hold) + 240ms); }
+.majal-hero-copy > *:nth-child(4) { animation-delay: calc(var(--hero-copy-hold) + 360ms); }
+
 html {
   scroll-behavior: smooth;
   text-rendering: optimizeLegibility;
@@ -478,6 +537,19 @@ textarea:disabled {
   }
 
   [style*="majal-onboard-rise"] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* The hero entrance is `both`-filled behind long delays, and the global rule
+     above zeroes durations but NOT delays — the constellation and copy would sit
+     invisible on their `from` frames for over a second. Skip the choreography
+     outright and render the settled composition. */
+  .majal-hero-phase,
+  .majal-hero-mark,
+  .majal-hero-ring,
+  .majal-hero-copy > * {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
