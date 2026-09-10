@@ -29,6 +29,17 @@ const phases = [
   { icon: <Store className="w-5 h-5" />, label: 'إطلاق', tone: 'text-emerald-300 border-emerald-400/25 bg-emerald-500/10' }
 ];
 
+/** Where each movement starts before drifting into its seat on the ring —
+    hand-placed so the four arrive from the hero's four quarters, offsets and
+    rotations deliberately unequal so the choreography reads as gathered rather
+    than mechanical. Consumed by the `majal-hero-phase-in` keyframes. */
+const scatter = [
+  { x: '-16rem', y: '-7rem', r: '-14deg', d: '0ms' },
+  { x: '13rem', y: '-10rem', r: '10deg', d: '110ms' },
+  { x: '15rem', y: '8rem', r: '-8deg', d: '220ms' },
+  { x: '-12rem', y: '11rem', r: '12deg', d: '330ms' }
+];
+
 export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange }) => {
   const openDemoRole = (role: UserRole, surface: SurfaceType) => {
     if (!IS_DEMO_MODE) return;
@@ -62,18 +73,20 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
         */}
         <aside aria-label="رحلة مجال المختصرة" className="hidden xl:block absolute left-12 top-1/2 -translate-y-1/2">
           <div className="relative w-[17rem] h-[17rem] grid place-items-center">
-            <span aria-hidden="true" className="absolute inset-0 rounded-full border border-gold-500/12" />
-            <span aria-hidden="true" className="absolute inset-[13%] rounded-full border border-gold-500/[0.08]" />
+            <span aria-hidden="true" className="absolute inset-0 rounded-full border border-gold-500/12 majal-hero-ring" />
+            <span aria-hidden="true" className="absolute inset-[13%] rounded-full border border-gold-500/[0.08] majal-hero-ring" />
             <span
               aria-hidden="true"
-              className="absolute inset-[-6%] rounded-full majal-orbit"
+              className="absolute inset-[-6%] rounded-full majal-orbit majal-hero-ring"
               style={{
                 background: 'conic-gradient(from 0deg, transparent 0deg, rgba(199,165,91,0.22) 75deg, transparent 185deg)',
                 filter: 'blur(24px)'
               }}
             />
 
-            <MajalMark size={92} withGround />
+            <span className="majal-hero-mark">
+              <MajalMark size={92} withGround />
+            </span>
 
             {/* Positioned on the ring rather than in a grid: the four movements are a
                 cycle around the platform, not a stack of features. */}
@@ -85,23 +98,36 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
               const radius = 8.5;
               const x = Math.cos((angle * Math.PI) / 180) * radius;
               const y = Math.sin((angle * Math.PI) / 180) * radius;
+              // The seat transform stays on the outer span; the entrance animates a
+              // nested wrapper. One element can't carry both — the keyframes' final
+              // `translate3d(0,0,0)` with fill-mode `both` would overwrite the seat.
               return (
                 <span
                   key={phase.label}
-                  className="absolute flex flex-col items-center gap-1.5"
+                  className="absolute"
                   style={{ transform: `translate(${x}rem, ${y}rem)` }}
                 >
-                  <span className={`w-11 h-11 rounded-2xl border grid place-items-center backdrop-blur-sm ${phase.tone}`}>
-                    {phase.icon}
+                  <span
+                    className="flex flex-col items-center gap-1.5 majal-hero-phase"
+                    style={{
+                      '--scatter-x': scatter[index].x,
+                      '--scatter-y': scatter[index].y,
+                      '--scatter-r': scatter[index].r,
+                      '--scatter-d': scatter[index].d
+                    } as React.CSSProperties}
+                  >
+                    <span className={`w-11 h-11 rounded-2xl border grid place-items-center backdrop-blur-sm ${phase.tone}`}>
+                      {phase.icon}
+                    </span>
+                    <span className="text-[10px] font-black text-slate-300">{phase.label}</span>
                   </span>
-                  <span className="text-[10px] font-black text-slate-300">{phase.label}</span>
                 </span>
               );
             })}
           </div>
         </aside>
 
-        <div className="relative z-10 max-w-4xl xl:mr-auto xl:ml-[21rem] space-y-6">
+        <div className="relative z-10 max-w-4xl xl:mr-auto xl:ml-[21rem] space-y-6 majal-hero-copy">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card border border-gold-300/20 text-gold-300 text-xs font-semibold">
             <LayoutPanelTop className="w-4 h-4" />
             <span>مجال — منصة تشغيل الشراكات التجارية بين المبدعين والمنشآت المرخّصة</span>
