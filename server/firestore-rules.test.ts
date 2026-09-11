@@ -32,3 +32,25 @@ test('firestore.rules enforces strict rules', () => {
     assert.ok(rules.includes('request.auth.uid == resource.data.userId &&') && rules.includes('request.auth.uid == request.resource.data.userId;'), 'creators update prevents transfer');
     assert.ok(rules.includes('request.auth.uid == resource.data.creatorId &&') && rules.includes('request.auth.uid == request.resource.data.creatorId;'), 'products update prevents transfer');
 });
+
+test('firebase-blueprint.json never carries weaker rules than firestore.rules', () => {
+    const blueprint = JSON.parse(fs.readFileSync('firebase-blueprint.json', 'utf8'));
+    const entities = blueprint.entities as Record<string, { rules: Record<string, string> }>;
+
+    // SECURITY regression: the blueprint used to grant `write: request.auth != null` on
+    // creators/hosts/products (any signed-in account rewrites any document, prices included)
+    // and `read/write: request.auth != null` on orders/contracts (full order/contract IDOR).
+    // If this file is ever deployed as a rules source, it must be at least as strict as
+    // firestore.rules.
+    for (const [name, entity] of Object.entries(entities)) {
+        for (const [op, rule] of Object.entries(entity.rules)) {
+            assert.notEqual(rule.trim(), 'request.auth != null',
+                `${name}.${op} must not be a bare authenticated-only rule`);
+        }
+    }
+    assert.equal(entities.Order.rules.write, 'false', 'orders deny direct client writes');
+    assert.equal(entities.Contract.rules.write, 'false', 'contracts deny direct client writes');
+    assert.ok(entities.Order.rules.read.includes('resource.data.consumerId'), 'orders read scoped to consumer');
+    assert.ok(entities.Contract.rules.read.includes('resource.data.creatorId'), 'contracts read scoped to creator');
+    assert.ok(entities.User.rules.write.includes('request.auth.uid == resource.id'), 'user write owner-scoped');
+});

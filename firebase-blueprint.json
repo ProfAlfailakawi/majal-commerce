@@ -12,7 +12,7 @@
       },
       "rules": {
         "read": "request.auth != null && (request.auth.uid == resource.id || request.auth.token.role in ['ADMIN', 'SUPER_ADMIN'])",
-        "write": "request.auth != null && (request.auth.uid == resource.id || request.auth.token.role in ['ADMIN', 'SUPER_ADMIN'])"
+        "write": "request.auth != null && request.auth.uid == resource.id"
       }
     },
     "Creator": {
@@ -29,7 +29,9 @@
       },
       "rules": {
         "read": "true",
-        "write": "request.auth != null"
+        "create": "request.auth != null && request.auth.uid == request.resource.data.userId",
+        "update": "request.auth != null && request.auth.uid == resource.data.userId && request.auth.uid == request.resource.data.userId",
+        "delete": "false"
       }
     },
     "Host": {
@@ -43,7 +45,7 @@
       },
       "rules": {
         "read": "true",
-        "write": "request.auth != null"
+        "write": "request.auth != null && request.auth.token.role in ['ADMIN', 'SUPER_ADMIN']"
       }
     },
     "Product": {
@@ -58,7 +60,9 @@
       },
       "rules": {
         "read": "true",
-        "write": "request.auth != null"
+        "create": "request.auth != null && request.auth.uid == request.resource.data.creatorId",
+        "update": "request.auth != null && request.auth.uid == resource.data.creatorId && request.auth.uid == request.resource.data.creatorId",
+        "delete": "false"
       }
     },
     "Order": {
@@ -73,8 +77,8 @@
         "createdAt": { "type": "string", "required": false }
       },
       "rules": {
-        "read": "request.auth != null",
-        "write": "request.auth != null"
+        "read": "request.auth != null && (request.auth.uid == resource.data.consumerId || request.auth.uid == resource.data.hostId || request.auth.token.role in ['ADMIN', 'SUPER_ADMIN'])",
+        "write": "false"
       }
     },
     "Contract": {
@@ -88,8 +92,8 @@
         "createdAt": { "type": "string", "required": false }
       },
       "rules": {
-        "read": "request.auth != null",
-        "write": "request.auth != null"
+        "read": "request.auth != null && (request.auth.uid == resource.data.creatorId || request.auth.uid == resource.data.hostId || request.auth.token.role in ['ADMIN', 'SUPER_ADMIN'])",
+        "write": "false"
       }
     }
   }
