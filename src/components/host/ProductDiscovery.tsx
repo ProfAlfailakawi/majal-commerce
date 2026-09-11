@@ -118,16 +118,16 @@ export const ProductDiscovery: React.FC = () => {
                 
                 {/* Header Row */}
                 <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-3">
-                  <div className="flex items-center gap-3">
-                    <img src={p.mediaUrls[0]} alt={p.publicName} loading="lazy" decoding="async" className="w-14 h-14 rounded-xl object-cover ring-1 ring-slate-700" />
-                    <div>
-                      <h3 className="font-black text-slate-100 text-base">{p.publicName}</h3>
-                      <span className="text-xs text-slate-400 block">بواسطة: <strong className="text-amber-400">{creator?.displayName}</strong></span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <img src={p.mediaUrls[0]} alt={p.publicName} loading="lazy" decoding="async" className="w-14 h-14 rounded-xl object-cover ring-1 ring-slate-700 shrink-0" />
+                    <div className="min-w-0">
+                      <h3 className="font-black text-slate-100 text-base truncate">{p.publicName}</h3>
+                      <span className="text-xs text-slate-400 block truncate">بواسطة: <strong className="text-amber-400">{creator?.displayName}</strong></span>
                     </div>
                   </div>
 
                   {/* Match Score Badge */}
-                  <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 text-center">
+                  <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 text-center shrink-0">
                     <span className="text-[10px] text-slate-400 block">نسبة المطابقة</span>
                     <span className="text-lg font-black font-mono">{matchCalc.overallScore}٪</span>
                   </div>
