@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Rocket,
   CheckCircle2,
@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { store } from '../../lib/store';
 import { LaunchGateChecklist, Collaboration } from '../../types/majal';
+import { MajalLoader } from '../brand/MajalLoader';
+import { StatusPill } from '../common/StatusPill';
 
 interface LaunchGateManagerProps {
   collaboration: Collaboration;
@@ -32,6 +34,10 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
   const gate = store.getLaunchGate(collaboration.id);
   const canOperate = ['HOST_OWNER', 'HOST_OPERATIONS'].includes(store.activeUser.role) && store.activeUser.hostBusinessId === collaboration.hostBusinessId;
   const hasLaunch = !!(collaboration.activeLaunch || store.launches.find(l => l.collaborationId === collaboration.id));
+  const liveLaunch = store.launches.find(l => l.collaborationId === collaboration.id && (l.status === 'LIVE' || l.status === 'PERMANENT'))
+    || (collaboration.activeLaunch && ['LIVE', 'PERMANENT'].includes(collaboration.activeLaunch.status) ? collaboration.activeLaunch : undefined);
+  const product = store.products.find(p => p.id === collaboration.productId);
+  const [isLaunching, setIsLaunching] = useState(false);
 
   const itemsConfig: { key: keyof Omit<LaunchGateChecklist, 'allRequirementsPassed'>; label: string; desc: string; source: 'SYSTEM' | 'HOST' }[] = [
     { key: 'hostVerified', label: 'التحقق من المنشأة المرخّصة', desc: 'مشتق آليًا من حالة التحقق الخاصة بالمنشأة.', source: 'SYSTEM' },
@@ -49,6 +55,20 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
 
   const completedItems = gate ? itemsConfig.filter(item => gate[item.key]).length : 0;
   const isAllReady = !!gate?.allRequirementsPassed;
+
+  // When the last requirement completes, the checked items calmly compress
+  // toward the ready state instead of any celebratory effect.
+  const wasAllReady = useRef(isAllReady);
+  const [justBecameReady, setJustBecameReady] = useState(false);
+  useEffect(() => {
+    if (isAllReady && !wasAllReady.current) {
+      setJustBecameReady(true);
+      const timer = window.setTimeout(() => setJustBecameReady(false), 800);
+      wasAllReady.current = isAllReady;
+      return () => window.clearTimeout(timer);
+    }
+    wasAllReady.current = isAllReady;
+  }, [isAllReady]);
 
   const readinessLabel = useMemo(() => {
     if (!gate) return 'غير مهيأ';
@@ -68,7 +88,13 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
   };
 
   const handleLaunch = async () => {
-    await Promise.resolve(store.activateLaunch(collaboration.id));
+    if (isLaunching) return;
+    setIsLaunching(true);
+    try {
+      await Promise.resolve(store.activateLaunch(collaboration.id));
+    } finally {
+      setIsLaunching(false);
+    }
   };
 
   return (
@@ -118,7 +144,9 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
                   checked
                     ? 'bg-emerald-500/8 border-emerald-400/20 text-slate-100'
                     : 'bg-white/4 border-white/8 text-slate-400'
-                } ${interactive ? 'hover:border-gold-300/30 cursor-pointer' : 'cursor-default'}`}
+                } ${interactive ? 'hover:border-gold-300/30 cursor-pointer' : 'cursor-default'} ${
+                  checked && justBecameReady ? 'majal-gate-converge' : ''
+                }`}
               >
                 <div className="mt-0.5">
                   {checked ? <CheckCircle2 className="w-5 h-5 text-emerald-300" /> : <Circle className="w-5 h-5 text-slate-600" />}
@@ -139,10 +167,34 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
         </div>
       )}
 
+      {liveLaunch ? (
+        /* The ready state itself becomes the Live product card — real data, no confetti. */
+        <div key={liveLaunch.id} className="pt-4 border-t border-white/10">
+          <div className="majal-settle-in rounded-2xl border border-emerald-400/25 bg-emerald-500/8 p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+            {product?.mediaUrls[0] && (
+              <img src={product.mediaUrls[0]} alt={product.publicName} loading="lazy" decoding="async" className="w-16 h-16 rounded-2xl object-cover ring-1 ring-emerald-400/30 shrink-0" />
+            )}
+            <div className="flex-1 space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="font-black text-sm text-slate-100">{product?.publicName || liveLaunch.title}</h4>
+                {product && <StatusPill status={product.status} />}
+              </div>
+              <p className="text-[11px] text-slate-400 leading-5">
+                المنتج الآن {liveLaunch.status === 'PERMANENT' ? 'إطلاق دائم' : 'LIVE'} — سعر البيع {liveLaunch.sellingPriceKwd.toFixed(3)} د.ك
+                {liveLaunch.startDate ? ` — منذ ${new Date(liveLaunch.startDate).toLocaleDateString('ar-KW')}` : ''}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-emerald-300 text-xs font-black shrink-0">
+              <BadgeCheck className="w-4 h-4" />
+              <span>{liveLaunch.status === 'PERMANENT' ? 'إطلاق دائم' : 'إطلاق نشط'}</span>
+            </div>
+          </div>
+        </div>
+      ) : (
       <div className="pt-4 border-t border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start gap-2 text-xs">
           {isAllReady ? (
-            <><ShieldCheck className="w-4 h-4 text-emerald-300 mt-0.5" /><span className="text-emerald-300 font-bold">جميع المتطلبات اجتازت البوابة. يمكن تحويل الإطلاق إلى LIVE.</span></>
+            <span key="ready" className="majal-settle-in flex items-start gap-2"><ShieldCheck className="w-4 h-4 text-emerald-300 mt-0.5" /><span className="text-emerald-300 font-bold">جميع المتطلبات اجتازت البوابة. يمكن تحويل الإطلاق إلى LIVE.</span></span>
           ) : (
             <><AlertTriangle className="w-4 h-4 text-amber-300 mt-0.5" /><span className="text-amber-200">الإطلاق مقفول حتى تكتمل جميع المتطلبات النظامية والتشغيلية.</span></>
           )}
@@ -150,17 +202,19 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
 
         <button
           onClick={handleLaunch}
-          disabled={!isAllReady || !canOperate}
+          disabled={!isAllReady || !canOperate || isLaunching}
+          aria-busy={isLaunching}
           className={`px-6 py-3.5 rounded-2xl font-black text-xs transition-all flex items-center gap-2 ${
             isAllReady && canOperate
               ? 'bg-gradient-to-r from-emerald-500 to-emerald-400 text-slate-950 hover:brightness-110 shadow-xl'
               : 'bg-white/5 text-slate-600 cursor-not-allowed border border-white/10'
           }`}
         >
-          {isAllReady ? <BadgeCheck className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-          <span>{canOperate ? 'تحويل المنتج إلى LIVE' : 'المشاهدة فقط حسب صلاحيتك'}</span>
+          {isLaunching ? <MajalLoader size={16} label="جاري تفعيل الإطلاق…" /> : isAllReady ? <BadgeCheck className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+          <span>{isLaunching ? 'جاري التفعيل…' : canOperate ? 'تحويل المنتج إلى LIVE' : 'المشاهدة فقط حسب صلاحيتك'}</span>
         </button>
       </div>
+      )}
     </section>
   );
 };

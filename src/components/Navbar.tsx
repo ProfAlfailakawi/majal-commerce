@@ -16,11 +16,11 @@ import {
   LayoutGrid,
   Zap,
   LogIn,
-  LogOut,
-  LoaderCircle
+  LogOut
 } from 'lucide-react';
 import { SurfaceType, User, UserRole } from '../types/majal';
 import { MajalMark } from './brand/MajalMark';
+import { MajalLoader } from './brand/MajalLoader';
 import { store } from '../lib/store';
 import { AI_ASSISTANT_ENABLED, INTEGRATION_SIMULATORS_ENABLED, IS_DEMO_MODE } from '../lib/runtime';
 import { fetchNotifications, markAllNotificationsRead, markNotificationRead, NotificationItem } from '../lib/notificationClient';
@@ -212,7 +212,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
 
           <div className="flex items-center gap-2.5">
-            {!IS_DEMO_MODE && authStatus === 'LOADING' && <span role="status" aria-label="جاري التحقق من الجلسة" className="p-2.5 text-slate-400"><LoaderCircle className="w-4 h-4 animate-spin" /></span>}
+            {!IS_DEMO_MODE && authStatus === 'LOADING' && <span className="p-2.5 text-gold-300"><MajalLoader size={16} label="جاري التحقق من الجلسة" /></span>}
 
             {!IS_DEMO_MODE && authStatus === 'ANONYMOUS' && <button
               onClick={onOpenAuth}
