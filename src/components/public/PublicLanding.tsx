@@ -16,6 +16,7 @@ import { store } from '../../lib/store';
 import { IS_DEMO_MODE } from '../../lib/runtime';
 import { JourneyInfographic } from './JourneyInfographic';
 import { MajalMark } from '../brand/MajalMark';
+import { Overture, shouldPlayOverture } from './Overture';
 
 interface PublicLandingProps {
   onSurfaceChange: (surface: SurfaceType) => void;
@@ -41,6 +42,15 @@ const scatter = [
 ];
 
 export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange }) => {
+  // The white-room overture. Decided once, synchronously, before first paint:
+  // if it plays, the in-hero entrance below is held on its opening frame and
+  // released as the veil lifts, so the two read as one continuous sequence.
+  // Gated off (repeat session, reduced motion), nothing here exists and the
+  // page renders exactly as it always has.
+  const [overture, setOverture] = React.useState(() => (shouldPlayOverture() ? { mounted: true, hold: true } : { mounted: false, hold: false }));
+  const releaseHold = React.useCallback(() => setOverture(o => ({ ...o, hold: false })), []);
+  const dismissOverture = React.useCallback(() => setOverture({ mounted: false, hold: false }), []);
+
   const openDemoRole = (role: UserRole, surface: SurfaceType) => {
     if (!IS_DEMO_MODE) return;
     const user = store.users.find(u => u.role === role && u.status !== 'SUSPENDED');
@@ -59,7 +69,8 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
+    <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16 ${overture.hold ? 'majal-overture-hold' : ''}`}>
+      {overture.mounted && <Overture onReveal={releaseHold} onDone={dismissOverture} />}
       <div className="glass-panel majal-grain rounded-[32px] p-8 sm:p-12 relative overflow-hidden text-center sm:text-right border border-white/10 elev-3">
         <div className="majal-glow -top-[18rem] -left-[18rem] w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
         <div className="majal-glow -bottom-[18rem] -right-[18rem] w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(75,106,163,0.10)' } as React.CSSProperties} />
@@ -84,7 +95,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
               }}
             />
 
-            <span className="majal-hero-mark">
+            <span className="majal-hero-mark" data-hero-mark>
               <MajalMark size={92} withGround />
             </span>
 
