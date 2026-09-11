@@ -96,11 +96,15 @@
   (`mirrorDoc` بلا مستدعٍ إنتاجي، والإعداد غير مضبوط). **يجب حسمها قبل تفعيل المرآة**، وإلا فأي حقل
   يُنسخ إلى `creators` سيصبح عالمي القراءة.
 
-## 7. [قرار مالك] انحراف firebase-blueprint.json عن firestore.rules
-- `firebase-blueprint.json` يحمل قواعد **أضعف** من `firestore.rules`: يمنح `write: request.auth != null`
-  على `creators`/`hosts`/`products` (أي مستخدم مسجّل يكتب أي وثيقة)، بينما `firestore.rules` تقيّد
-  الكتابة على المالك. كما أنه لم يُحدَّث بتضييق `users` أعلاه.
-- **القرار المطلوب:** مواءمة الملف مع `firestore.rules` أو حذفه، حتى لا يُنشر بالخطأ كمصدر قواعد.
+## 7. [نُفِّذ] انحراف firebase-blueprint.json عن firestore.rules
+- كان `firebase-blueprint.json` يحمل قواعد **أضعف** من `firestore.rules`: `write: request.auth != null`
+  على `creators`/`hosts`/`products` (أي مستخدم مسجّل يعدّل أي وثيقة — بما فيها الأسعار)،
+  و`read/write: request.auth != null` على `orders`/`contracts` (قراءة/كتابة طلبات وعقود الآخرين — IDOR).
+- صار الملف مطابقاً لـ`firestore.rules`: كتابة `users` للمالك فقط، `creators`/`products` إنشاء/تحديث
+  للمالك مع منع نقل الملكية ومنع الحذف، `hosts` كتابة للأدمن فقط، `orders`/`contracts` قراءة مقيّدة
+  بالأطراف والكتابة `false` (تمرّ عبر الخادم).
+- اختبار حماية ضد الانحراف مستقبلاً في `server/firestore-rules.test.ts`
+  («firebase-blueprint.json never carries weaker rules than firestore.rules»).
 
 ## 8. [نُفِّذ جزئياً] Rate limit — موثوقية IP العميل
 ### نُفِّذ — TRUST_PROXY_HOPS
