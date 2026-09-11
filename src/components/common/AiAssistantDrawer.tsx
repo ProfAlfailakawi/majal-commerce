@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, Bot, Sparkles, Send, Lightbulb, RefreshCw, Check } from 'lucide-react';
+import { X, Bot, Sparkles, Send, Lightbulb, Check } from 'lucide-react';
 import { store } from '../../lib/store';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
+import { MajalLoader } from '../brand/MajalLoader';
 
 interface AiAssistantDrawerProps {
   isOpen: boolean;
@@ -133,8 +134,8 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
             >
               {loading ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>جاري المعالجة بواسطة Gemini...</span>
+                  <MajalLoader size={16} label="جاري المعالجة بواسطة الذكاء الاصطناعي" />
+                  <span>جاري المعالجة…</span>
                 </>
               ) : (
                 <>

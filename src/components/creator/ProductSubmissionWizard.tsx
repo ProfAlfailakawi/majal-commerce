@@ -3,16 +3,21 @@ import { X, Sparkles, Check, ArrowRight, Lock, AlertCircle } from 'lucide-react'
 import { store } from '../../lib/store';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { PRODUCT_CATEGORIES } from '../../data/catalog';
+import { MajalLoader } from '../brand/MajalLoader';
+import { CreatorProduct } from '../../types/majal';
 
 interface ProductSubmissionWizardProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Called with the REAL saved product so the parent can settle its card into the list. */
+  onSubmitted?: (product: CreatorProduct) => void;
 }
 
-export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = ({ isOpen, onClose }) => {
+export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = ({ isOpen, onClose, onSubmitted }) => {
   const dialogRef = useDialogBehavior<HTMLDivElement>(isOpen, onClose);
   const [step, setStep] = useState<number>(1);
   const [formError, setFormError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form state
   const [publicName, setPublicName] = useState('');
@@ -62,12 +67,14 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
     const error = validateStep(3);
     if (error) {
       setFormError(error);
       return;
     }
 
+    setIsSubmitting(true);
     const product = await Promise.resolve(store.submitNewProduct(
       {
         creatorId: store.activeUser.creatorId || '',
@@ -108,6 +115,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
       }
     ));
 
+    setIsSubmitting(false);
     if (!product) {
       setFormError('تعذر حفظ المنتج. راجع البيانات والصلاحية ثم حاول مرة أخرى.');
       return;
@@ -115,6 +123,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
     setFormError('');
     setStep(1);
     onClose();
+    onSubmitted?.(product as CreatorProduct);
   };
 
   return (
@@ -343,10 +352,12 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
           ) : (
             <button
               onClick={handleSubmit}
-              className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl transition-colors flex items-center gap-1.5 shadow-lg"
+              disabled={isSubmitting}
+              aria-busy={isSubmitting}
+              className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-80 text-slate-950 font-black rounded-xl transition-colors flex items-center gap-1.5 shadow-lg"
             >
-              <Check className="w-4 h-4" />
-              <span>تقديم المنتج للمراجعة والربط</span>
+              {isSubmitting ? <MajalLoader size={16} label="جاري حفظ المنتج…" /> : <Check className="w-4 h-4" />}
+              <span>{isSubmitting ? 'جاري الحفظ…' : 'تقديم المنتج للمراجعة والربط'}</span>
             </button>
           )}
         </div>

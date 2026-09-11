@@ -15,6 +15,7 @@ import { store } from '../../lib/store';
 import { PaymentGatewayProvider, PosSystemProvider } from '../../types/majal';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { authCsrfToken } from '../../lib/authClient';
+import { MajalLoader } from '../brand/MajalLoader';
 import { paciClient } from '../../lib/paciClient';
 import { IS_DEMO_MODE } from '../../lib/runtime';
 import { StatusPill } from './StatusPill';
@@ -229,7 +230,7 @@ export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => voi
                   disabled={isProcessingPayment}
                   className="w-full bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
                 >
-                  {isProcessingPayment ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  {isProcessingPayment ? <MajalLoader size={16} label="جاري تشغيل محاكاة الدفع…" /> : <Send className="w-4 h-4" />}
                   تشغيل محاكاة دفع غير مالية عبر {selectedProvider}
                 </button>
               </div>
@@ -295,7 +296,7 @@ export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => voi
                   disabled={isRequestingPaci}
                   className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
                 >
-                  {isRequestingPaci ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Smartphone className="w-4 h-4" />}
+                  {isRequestingPaci ? <MajalLoader size={16} label="جاري إنشاء طلب هويتي…" /> : <Smartphone className="w-4 h-4" />}
                   {IS_DEMO_MODE ? 'بدء اختبار هويتي' : 'إنشاء طلب هويتي الرسمي'}
                 </button>
               </div>

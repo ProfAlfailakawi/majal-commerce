@@ -627,3 +627,97 @@ textarea:disabled {
     transform: none !important;
   }
 }
+
+/* ============================================================
+   MAJAL micro loader — four pieces (ابتكار/حماية/إنتاج/إطلاق)
+   converging once into a seed, then a calm idle pulse.
+   transform + opacity only; color inherits from currentColor.
+   ============================================================ */
+.majal-loader {
+  position: relative;
+  display: inline-block;
+  flex: none;
+}
+.majal-loader > i {
+  position: absolute;
+  pointer-events: none;
+  background: currentColor;
+}
+.majal-loader .ml-leaf {
+  width: 34%;
+  height: 22%;
+  border-radius: 100% 0 100% 0;
+  opacity: 0;
+  animation: ml-assemble 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.majal-loader .ml-l2 { animation-delay: 0.06s; }
+.majal-loader .ml-l3 { animation-delay: 0.12s; }
+.majal-loader .ml-l4 { animation-delay: 0.18s; }
+.majal-loader .ml-seed {
+  left: 50%;
+  top: 50%;
+  width: 26%;
+  height: 26%;
+  margin: -13% 0 0 -13%;
+  border-radius: 50%;
+  opacity: 0;
+  animation:
+    ml-assemble 0.5s 0.24s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+    ml-idle 2.4s 1s ease-in-out infinite;
+}
+@keyframes ml-assemble {
+  from { opacity: 0; transform: translate(var(--sx, 0), var(--sy, 0)) rotate(var(--r, 0deg)) scale(0.55); }
+  60%  { opacity: 1; }
+  to   { opacity: 1; transform: rotate(var(--r, 0deg)) scale(1); }
+}
+/* Assembled once; afterwards only the seed breathes. */
+@keyframes ml-idle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.55; transform: scale(0.9); }
+}
+/* Delayed appearance: nothing is painted before ~250ms so sub-250ms
+   operations never flash a loader (the box itself reserves the space). */
+.majal-loader.ml-delayed > i { animation-play-state: paused; visibility: hidden; }
+.majal-loader.ml-shown > i { animation-play-state: running; visibility: visible; }
+
+@media (prefers-reduced-motion: reduce) {
+  .majal-loader .ml-leaf,
+  .majal-loader .ml-seed {
+    animation: ml-reduced 2.4s ease-in-out infinite !important;
+    opacity: 1;
+    transform: rotate(var(--r, 0deg));
+  }
+}
+@keyframes ml-reduced {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
+
+/* ============================================================
+   Semantic entrances — a REAL element (product card / live card)
+   settling into place. Short, once, transform + opacity only.
+   ============================================================ */
+.majal-settle-in {
+  animation: majal-settle 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes majal-settle {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+/* Launch-gate: checked items calmly compress toward the ready state. */
+.majal-gate-converge {
+  animation: majal-gate-compress 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes majal-gate-compress {
+  0%   { transform: scale(1); }
+  55%  { transform: scale(0.98); opacity: 0.85; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .majal-settle-in,
+  .majal-gate-converge {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

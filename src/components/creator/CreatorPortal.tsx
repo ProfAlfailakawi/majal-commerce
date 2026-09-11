@@ -34,6 +34,13 @@ export const CreatorPortal: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'HOME' | 'RADAR' | 'PRODUCTS' | 'DEALS' | 'EARNINGS'>('HOME');
   const [showWizard, setShowWizard] = useState(false);
+  // The just-saved product settles into the list as a REAL card (no artificial delay).
+  const [settlingProductId, setSettlingProductId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!settlingProductId) return;
+    const timer = window.setTimeout(() => setSettlingProductId(null), 700);
+    return () => window.clearTimeout(timer);
+  }, [settlingProductId]);
   const [selectedProductForVault, setSelectedProductForVault] = useState<CreatorProduct | null>(null);
   const [selectedContract, setSelectedContract] = useState<any>(null);
   const [showCalculator, setShowCalculator] = useState(false);
@@ -143,7 +150,7 @@ export const CreatorPortal: React.FC = () => {
         <div className="space-y-6">
           <div className="grid md:grid-cols-2 gap-5">
             {myProducts.map(product => (
-              <article key={product.id} className="glass-card rounded-3xl border border-white/10 overflow-hidden">
+              <article key={product.id} className={`glass-card rounded-3xl border border-white/10 overflow-hidden ${product.id === settlingProductId ? 'majal-settle-in' : ''}`}>
                 <img src={product.mediaUrls[0]} alt={product.publicName} loading="lazy" decoding="async" className="w-full h-48 object-cover" />
                 <div className="p-5 space-y-4">
                   <div className="flex items-start justify-between gap-3">
@@ -234,7 +241,14 @@ export const CreatorPortal: React.FC = () => {
 
       {activeTab === 'EARNINGS' && <CreatorEarnings />}
 
-      <ProductSubmissionWizard isOpen={showWizard} onClose={() => setShowWizard(false)} />
+      <ProductSubmissionWizard
+        isOpen={showWizard}
+        onClose={() => setShowWizard(false)}
+        onSubmitted={product => {
+          setActiveTab('PRODUCTS');
+          setSettlingProductId(product.id);
+        }}
+      />
       {selectedProductForVault && (
         <RecipeVaultModal
           isOpen={!!selectedProductForVault}
