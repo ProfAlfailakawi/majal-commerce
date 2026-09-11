@@ -6,6 +6,7 @@ import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { IS_DEMO_MODE } from '../../lib/runtime';
 import { paciClient } from '../../lib/paciClient';
 import { statusLabel } from '../../lib/statusLabels';
+import { MajalLoader } from '../brand/MajalLoader';
 
 interface ContractModalProps {
   isOpen: boolean;
@@ -258,9 +259,10 @@ export const ContractModal: React.FC<ContractModalProps> = ({
               <button
                 onClick={handleSign}
                 disabled={!agreedTerms || isSigning}
+                aria-busy={isSigning}
                 className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 font-black rounded-xl transition-colors flex items-center justify-center gap-2"
               >
-                <ShieldCheck className="w-4 h-4" />
+                {isSigning ? <MajalLoader size={16} label="جارٍ التحقق من التوقيع…" /> : <ShieldCheck className="w-4 h-4" />}
                 <span>{isSigning ? 'جارٍ التحقق…' : IS_DEMO_MODE ? 'محاكاة الموافقة على المسودة' : paciRequestId ? 'تحقق من هويتي وثبّت التوقيع' : 'ابدأ طلب التوقيع عبر هويتي'}</span>
               </button>
             </div>
