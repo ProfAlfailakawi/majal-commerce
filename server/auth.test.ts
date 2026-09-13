@@ -265,3 +265,68 @@ test('SECURITY regression: reset tokens are CSPRNG-generated, high entropy and s
     await db.close();
   }
 });
+
+test('IDENTITY regression: new creator, host and consumer are provisioned into isolated role-owned identities', async () => {
+  const db = await openMajalDatabase({ filename: ':memory:' });
+  const now = new Date().toISOString();
+  const legacyUser = await createUser(db, {
+    name: 'أم عبدالله', email: 'old-creator@example.test', phone: '+96550000111',
+    password: fixturePassword('Old-Creator'), role: 'CREATOR'
+  });
+  await db.prepare("INSERT INTO creator_profiles(id,user_id,display_name,specialty,completion_score,matching_enabled,created_at,updated_at) VALUES('cr_main',?,'أم عبدالله','حلويات',100,1,?,?)")
+    .run(legacyUser.id, now, now);
+  await db.prepare("UPDATE users SET creator_id='cr_main' WHERE id=?").run(legacyUser.id);
+
+  const app = express();
+  app.use(express.json());
+  app.use('/api/v1/auth', createAuthRouter(db, config));
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise<void>(resolve => server.once('listening', resolve));
+  const baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+
+  try {
+    const creatorRes = await fetch(`${baseUrl}/api/v1/auth/register`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'عمر', email: 'omar-creator@example.test', phone: '+96550000112', password: fixturePassword('Omar-Creator'), role: 'CREATOR' })
+    });
+    assert.equal(creatorRes.status, 201);
+    const creatorBody = await creatorRes.json() as { user: { id:string; role:string; creatorId?:string; hostBusinessId?:string } };
+    assert.equal(creatorBody.user.role, 'CREATOR');
+    assert.ok(creatorBody.user.creatorId);
+    assert.notEqual(creatorBody.user.creatorId, 'cr_main');
+    assert.equal(creatorBody.user.hostBusinessId, undefined);
+    const omarProfile = await db.prepare('SELECT user_id,display_name FROM creator_profiles WHERE id=?').get<{user_id:string;display_name:string}>(creatorBody.user.creatorId!);
+    assert.equal(omarProfile?.user_id, creatorBody.user.id);
+    assert.equal(omarProfile?.display_name, 'عمر');
+
+    const hostRes = await fetch(`${baseUrl}/api/v1/auth/register`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        name: 'مالك المطعم', email: 'host-owner@example.test', phone: '+96550000113', password: fixturePassword('Host-Owner'), role: 'HOST_OWNER',
+        organization: { commercialName: 'مطعم عمر', businessType: 'RESTAURANT', commercialRegistrationNo: 'CR-OMAR-001' }
+      })
+    });
+    assert.equal(hostRes.status, 201);
+    const hostBody = await hostRes.json() as { user: { id:string; role:string; creatorId?:string; hostBusinessId?:string } };
+    assert.equal(hostBody.user.role, 'HOST_OWNER');
+    assert.ok(hostBody.user.hostBusinessId);
+    assert.equal(hostBody.user.creatorId, undefined);
+    const org = await db.prepare('SELECT commercial_name,verification_status,business_type FROM organizations WHERE id=?').get<{commercial_name:string;verification_status:string;business_type:string}>(hostBody.user.hostBusinessId!);
+    assert.deepEqual(org, { commercial_name: 'مطعم عمر', verification_status: 'UNVERIFIED', business_type: 'RESTAURANT' });
+    const membership = await db.prepare('SELECT role,status FROM organization_memberships WHERE organization_id=? AND user_id=?').get<{role:string;status:string}>(hostBody.user.hostBusinessId!, hostBody.user.id);
+    assert.deepEqual(membership, { role: 'HOST_OWNER', status: 'ACTIVE' });
+
+    const consumerRes = await fetch(`${baseUrl}/api/v1/auth/register`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'عميل جديد', email: 'consumer-new@example.test', phone: '+96550000114', password: fixturePassword('Consumer-New'), role: 'CONSUMER' })
+    });
+    assert.equal(consumerRes.status, 201);
+    const consumerBody = await consumerRes.json() as { user: { role:string; creatorId?:string; hostBusinessId?:string } };
+    assert.equal(consumerBody.user.role, 'CONSUMER');
+    assert.equal(consumerBody.user.creatorId, undefined);
+    assert.equal(consumerBody.user.hostBusinessId, undefined);
+  } finally {
+    await new Promise<void>(resolve => server.close(() => resolve()));
+    await db.close();
+  }
+});

@@ -96,3 +96,70 @@ test('snapshot for the collaborating host includes the same collaboration', asyn
     await db.close();
   }
 });
+
+test('IDENTITY regression: snapshots never mix unrelated creator or tenant identities', async () => {
+  const db = await openMajalDatabase({ filename: ':memory:' });
+  try {
+    const { creatorUser } = await seed(db);
+    const now = new Date().toISOString();
+    const otherCreatorUser = await createUser(db, { name: 'مبدع آخر', email: 'other-creator@example.test', password: 'Majal-Other-Creator-2026!', role: 'CREATOR' });
+    await db.prepare("INSERT INTO creator_profiles(id,user_id,display_name,specialty,completion_score,matching_enabled,created_at,updated_at) VALUES('cr_other',?,'مبدع آخر','قهوة',50,1,?,?)").run(otherCreatorUser.id, now, now);
+    await db.prepare("INSERT INTO organizations(id,commercial_name,organization_type,verification_status,created_at,updated_at) VALUES('org_other','منشأة أخرى','HOST','UNVERIFIED',?,?)").run(now, now);
+    await db.prepare("INSERT INTO products(id,creator_id,public_name,category,short_description,status,estimated_unit_cost_fils,target_price_fils,is_secret_recipe,created_at,updated_at) VALUES('prod_other','cr_other','منتج خاص','COFFEE','خاص بالمبدع الآخر','DRAFT',100,1000,1,?,?)").run(now, now);
+
+    const creatorSnap = await buildDomainSnapshot(db, { role: 'CREATOR', creatorId: 'cr_s' });
+    assert.deepEqual(creatorSnap.creators.map((c: any) => c.id), ['cr_s']);
+    assert.equal(creatorSnap.products.some((p: any) => p.id === 'prod_other'), false);
+    assert.equal(creatorSnap.organizations.some((o: any) => o.id === 'org_other'), false, 'unverified unrelated tenants are not exposed to creators');
+    assert.equal((creatorSnap.creators[0] as any).userId, creatorUser.id, 'owner sees only their own full creator profile');
+
+    const hostSnap = await buildDomainSnapshot(db, { role: 'HOST_OWNER', hostBusinessId: 'org_s' });
+    assert.deepEqual(hostSnap.organizations.map((o: any) => o.id), ['org_s']);
+    assert.equal((hostSnap.creators[0] as any).userId, undefined, 'host discovery never receives the creator user id');
+    assert.equal((hostSnap.creators[0] as any).legalName, undefined, 'host discovery never receives creator legal identity');
+  } finally {
+    await db.close();
+  }
+});
+
+test('consumer snapshot contains live marketplace only and no private collaboration state', async () => {
+  const db = await openMajalDatabase({ filename: ':memory:' });
+  try {
+    await seed(db);
+    const now = new Date().toISOString();
+    const privateCreator = await createUser(db, { name: 'Private', email: 'private@example.test', password: 'Majal-Private-2026!', role: 'CREATOR' });
+    await db.prepare("INSERT INTO creator_profiles(id,user_id,display_name,specialty,completion_score,matching_enabled,created_at,updated_at) VALUES('cr_private',?,'Private','خاص',1,0,?,?)").run(privateCreator.id, now, now);
+    await db.prepare("INSERT INTO products(id,creator_id,public_name,category,short_description,status,estimated_unit_cost_fils,target_price_fils,is_secret_recipe,created_at,updated_at) VALUES('prod_private','cr_private','مسودة سرية','DESSERT','ليست في السوق','DRAFT',900,2000,1,?,?)").run(now, now);
+
+    const snap = await buildDomainSnapshot(db, { role: 'CONSUMER' });
+    assert.deepEqual(snap.products.map((p: any) => p.id), ['prod_s']);
+    assert.equal((snap.products[0] as any).estimatedUnitCostFils, undefined, 'consumer market projection must not expose internal unit cost');
+    assert.equal((snap.products[0] as any).internalName, undefined, 'consumer market projection must not expose internal product name');
+    assert.equal(snap.collaborations.length, 0);
+    assert.equal(snap.marketLaunches.length, 1);
+    assert.equal((snap.marketLaunches[0] as any).productId, 'prod_s');
+    assert.deepEqual(snap.creators.map((c: any) => c.id), ['cr_s']);
+    assert.equal((snap.creators[0] as any).userId, undefined);
+    assert.deepEqual(snap.organizations.map((o: any) => o.id), ['org_s']);
+    assert.equal((snap.organizations[0] as any).commercialRegistrationNo, '');
+    assert.deepEqual((snap.organizations[0] as any).contacts, []);
+  } finally {
+    await db.close();
+  }
+});
+
+test('collaboration without a launch returns launch=null rather than a fabricated launch object', async () => {
+  const db = await openMajalDatabase({ filename: ':memory:' });
+  try {
+    const now = new Date().toISOString();
+    const creatorUser = await createUser(db, { name: 'Creator 2', email: 'creator2@example.test', password: 'Majal-Creator2-2026!', role: 'CREATOR' });
+    await db.prepare("INSERT INTO creator_profiles(id,user_id,display_name,specialty,completion_score,matching_enabled,created_at,updated_at) VALUES('cr_nl',?,'Creator 2','حلويات',20,1,?,?)").run(creatorUser.id, now, now);
+    await db.prepare("INSERT INTO organizations(id,commercial_name,organization_type,verification_status,created_at,updated_at) VALUES('org_nl','Host 2','HOST','UNVERIFIED',?,?)").run(now, now);
+    await db.prepare("INSERT INTO products(id,creator_id,public_name,category,short_description,status,estimated_unit_cost_fils,target_price_fils,is_secret_recipe,created_at,updated_at) VALUES('prod_nl','cr_nl','منتج بلا إطلاق','DESSERT','اختبار','AVAILABLE_FOR_MATCHING',100,500,1,?,?)").run(now, now);
+    await db.prepare("INSERT INTO collaborations(id,product_id,creator_id,organization_id,stage,created_at,updated_at) VALUES('col_nl','prod_nl','cr_nl','org_nl','ACCESS_REQUESTED',?,?)").run(now, now);
+    const snap = await buildDomainSnapshot(db, { role: 'CREATOR', creatorId: 'cr_nl' });
+    assert.equal((snap.collaborations[0] as any).launch, null);
+  } finally {
+    await db.close();
+  }
+});

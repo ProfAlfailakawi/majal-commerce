@@ -54,35 +54,48 @@ import { canAccessSurface, hasPermission } from './permissions';
 import { DEMO_STORAGE_KEY, IS_DEMO_MODE } from './runtime';
 import { domainClient, DomainApiError } from './domainClient';
 
+const ANONYMOUS_USER: User = {
+  id: 'anonymous',
+  name: 'زائر',
+  email: '',
+  phone: '',
+  role: 'CONSUMER',
+  status: 'ACTIVE'
+};
+
+const demoData = <T,>(items: readonly T[]): T[] => IS_DEMO_MODE ? [...items] : [];
+
 export class Store {
   private static instance: Store;
 
   public activeSurface: SurfaceType = 'PUBLIC';
-  public activeUser: User = INITIAL_USERS.find(user => user.role === 'CONSUMER') ?? INITIAL_USERS[0];
+  public activeUser: User = IS_DEMO_MODE
+    ? (INITIAL_USERS.find(user => user.role === 'CONSUMER') ?? INITIAL_USERS[0])
+    : { ...ANONYMOUS_USER };
   public language: Language = 'ar';
   public guardNotice: { message: string; occurredAt: string } | null = null;
 
-  public users: User[] = [...INITIAL_USERS];
-  public creators: CreatorProfile[] = [...INITIAL_CREATORS];
-  public hosts: HostBusiness[] = [...INITIAL_HOSTS];
-  public products: CreatorProduct[] = [...INITIAL_PRODUCTS];
-  public recipeVersions: RecipeVersion[] = [...INITIAL_RECIPE_VERSIONS];
-  public recipeGrants: RecipeAccessGrant[] = [...INITIAL_RECIPE_GRANTS];
-  public matches: ProductMatch[] = [...INITIAL_MATCHES];
-  public challenges: Challenge[] = [...INITIAL_CHALLENGES];
-  public tastings: TastingSession[] = [...INITIAL_TASTINGS];
-  public labBatches: LabBatch[] = [...INITIAL_LAB_BATCHES];
-  public offers: OfferTerms[] = [...INITIAL_OFFERS];
-  public contracts: Contract[] = [...INITIAL_CONTRACTS];
-  public launches: Launch[] = [...INITIAL_LAUNCHES];
-  public collaborations: Collaboration[] = [...INITIAL_COLLABORATIONS];
-  public orders: Order[] = [...INITIAL_ORDERS];
-  public accruals: Accrual[] = [...INITIAL_ACCRUALS];
-  public settlements: SettlementBatch[] = [...INITIAL_SETTLEMENTS];
-  public reviews: Review[] = [...INITIAL_REVIEWS];
-  public compliance: ComplianceRequirement[] = [...INITIAL_COMPLIANCE];
-  public disputes: DisputeCase[] = [...INITIAL_DISPUTES];
-  public auditLogs: AuditLog[] = [...INITIAL_AUDIT_LOGS];
+  public users: User[] = demoData(INITIAL_USERS);
+  public creators: CreatorProfile[] = demoData(INITIAL_CREATORS);
+  public hosts: HostBusiness[] = demoData(INITIAL_HOSTS);
+  public products: CreatorProduct[] = demoData(INITIAL_PRODUCTS);
+  public recipeVersions: RecipeVersion[] = demoData(INITIAL_RECIPE_VERSIONS);
+  public recipeGrants: RecipeAccessGrant[] = demoData(INITIAL_RECIPE_GRANTS);
+  public matches: ProductMatch[] = demoData(INITIAL_MATCHES);
+  public challenges: Challenge[] = demoData(INITIAL_CHALLENGES);
+  public tastings: TastingSession[] = demoData(INITIAL_TASTINGS);
+  public labBatches: LabBatch[] = demoData(INITIAL_LAB_BATCHES);
+  public offers: OfferTerms[] = demoData(INITIAL_OFFERS);
+  public contracts: Contract[] = demoData(INITIAL_CONTRACTS);
+  public launches: Launch[] = demoData(INITIAL_LAUNCHES);
+  public collaborations: Collaboration[] = demoData(INITIAL_COLLABORATIONS);
+  public orders: Order[] = demoData(INITIAL_ORDERS);
+  public accruals: Accrual[] = demoData(INITIAL_ACCRUALS);
+  public settlements: SettlementBatch[] = demoData(INITIAL_SETTLEMENTS);
+  public reviews: Review[] = demoData(INITIAL_REVIEWS);
+  public compliance: ComplianceRequirement[] = demoData(INITIAL_COMPLIANCE);
+  public disputes: DisputeCase[] = demoData(INITIAL_DISPUTES);
+  public auditLogs: AuditLog[] = demoData(INITIAL_AUDIT_LOGS);
   public dealDecisions: DealDecision[] = [];
   public policy: PlatformPolicy = {
     platformFeePercent: 5,
@@ -96,6 +109,9 @@ export class Store {
   };
 
   private listeners: (() => void)[] = [];
+  /** Incremented whenever the authenticated identity changes.  A late response from a
+   * previous account is discarded instead of hydrating the next account with stale data. */
+  private authGeneration = 0;
 
   private constructor() {
     this.purgeLegacyBrowserState();
@@ -103,8 +119,29 @@ export class Store {
     this.refreshTemporalStates();
   }
 
-  private clearSeedDomainData() {
-    // Keep baseline data populated so admin dashboards and metrics always show full ecosystem state
+  private clearLiveDomainData() {
+    if (IS_DEMO_MODE) return;
+    this.creators = [];
+    this.hosts = [];
+    this.products = [];
+    this.recipeVersions = [];
+    this.recipeGrants = [];
+    this.matches = [];
+    this.challenges = [];
+    this.tastings = [];
+    this.labBatches = [];
+    this.offers = [];
+    this.contracts = [];
+    this.launches = [];
+    this.collaborations = [];
+    this.orders = [];
+    this.accruals = [];
+    this.settlements = [];
+    this.reviews = [];
+    this.compliance = [];
+    this.disputes = [];
+    this.auditLogs = [];
+    this.dealDecisions = [];
   }
 
   public static getInstance(): Store {
@@ -228,49 +265,13 @@ export class Store {
   }
 
   public setUser(user: User) {
-    let trustedUser = this.users.find(candidate => candidate.id === user.id);
-    if (!trustedUser) {
-      trustedUser = { ...user };
-      this.users.push(trustedUser);
-    }
-    if (trustedUser.status === 'SUSPENDED') return false;
+    // Role switching is a demo-only affordance.  A live identity is established only by
+    // the server session and must never be synthesized from browser state.
+    if (!IS_DEMO_MODE) return false;
+    const trustedUser = this.users.find(candidate => candidate.id === user.id);
+    if (!trustedUser || trustedUser.status === 'SUSPENDED' || trustedUser.status === 'INVITED') return false;
 
-    if (trustedUser.role === 'CREATOR' && !trustedUser.creatorId) {
-      let profile = this.creators.find(c => c.userId === trustedUser!.id);
-      if (!profile) {
-        profile = {
-          id: 'cr_' + Math.random().toString(36).substr(2, 9),
-          userId: trustedUser.id,
-          displayName: trustedUser.name,
-          legalName: trustedUser.name,
-          creatorType: 'CREATOR',
-          specialty: 'ابتكار الوصفات والمنتجات العصرية',
-          bio: 'مبدع معتمد في منصة مجال للابتكار والإنتاج التجاري.',
-          region: 'العاصمة، الكويت',
-          completionScore: 100,
-          badges: ['SIGNATURE_CREATOR'],
-          unitsSold: 0,
-          repeatPurchaseRate: 0,
-          story: 'شغف ابتكار الأطباق والمنتجات المبتكرة.',
-          isAvailableForMatching: true,
-          hasSecretRecipe: true,
-          avatarUrl: trustedUser.avatar || '',
-          createdAt: new Date().toISOString()
-        };
-        this.creators.push(profile);
-      }
-      trustedUser = { ...trustedUser, creatorId: profile.id };
-      const idx = this.users.findIndex(u => u.id === trustedUser!.id);
-      if (idx >= 0) this.users[idx] = trustedUser;
-    } else if (trustedUser.role.startsWith('HOST_') && !trustedUser.hostBusinessId) {
-      if (this.hosts.length > 0) {
-        trustedUser = { ...trustedUser, hostBusinessId: this.hosts[0].id };
-        const idx = this.users.findIndex(u => u.id === trustedUser!.id);
-        if (idx >= 0) this.users[idx] = trustedUser;
-      }
-    }
-
-    this.activeUser = trustedUser;
+    this.activeUser = { ...trustedUser };
     if (trustedUser.role === 'SUPER_ADMIN') this.activeSurface = 'SUPER_ADMIN';
     else if (trustedUser.role === 'ADMIN') this.activeSurface = 'ADMIN';
     else if (trustedUser.role === 'CREATOR') this.activeSurface = 'CREATOR';
@@ -282,45 +283,17 @@ export class Store {
   }
 
   public setAuthenticatedUser(user: User) {
+    if (IS_DEMO_MODE) return this.setUser(user);
     if (user.status === 'SUSPENDED' || user.status === 'INVITED') return false;
-    
-    let updatedUser = { ...user };
-    if (updatedUser.role === 'CREATOR' && !updatedUser.creatorId) {
-      let profile = this.creators.find(c => c.userId === updatedUser.id || c.id === 'cr_main');
-      if (!profile) {
-        profile = {
-          id: 'cr_' + Math.random().toString(36).substr(2, 9),
-          userId: updatedUser.id,
-          displayName: updatedUser.name,
-          legalName: updatedUser.name,
-          creatorType: 'CREATOR',
-          specialty: 'ابتكار الوصفات والمنتجات العصرية',
-          bio: 'مبدع معتمد في منصة مجال للابتكار والإنتاج التجاري.',
-          region: 'العاصمة، الكويت',
-          completionScore: 100,
-          badges: ['SIGNATURE_CREATOR'],
-          unitsSold: 0,
-          repeatPurchaseRate: 0,
-          story: 'شغف ابتكار الأطباق والمنتجات المبتكرة.',
-          isAvailableForMatching: true,
-          hasSecretRecipe: true,
-          avatarUrl: updatedUser.avatar || '',
-          createdAt: new Date().toISOString()
-        };
-        this.creators.push(profile);
-      }
-      updatedUser.creatorId = profile.id;
-    } else if (updatedUser.role.startsWith('HOST_') && !updatedUser.hostBusinessId) {
-      if (this.hosts.length > 0) {
-        updatedUser.hostBusinessId = this.hosts[0].id;
-      }
-    }
 
-    const index = this.users.findIndex(candidate => candidate.id === updatedUser.id);
-    if (index >= 0) this.users[index] = { ...updatedUser };
-    else this.users = [updatedUser, ...this.users.filter(candidate => candidate.email !== updatedUser.email)];
+    // Clear the previous tenant/read-model BEFORE exposing the new identity.  This prevents
+    // even a single React render from showing account A's products/profile under account B.
+    this.authGeneration += 1;
+    this.clearLiveDomainData();
+    const updatedUser = { ...user };
+    this.users = [updatedUser];
     this.activeUser = updatedUser;
-    
+
     if (updatedUser.role === 'SUPER_ADMIN') this.activeSurface = 'SUPER_ADMIN';
     else if (updatedUser.role === 'ADMIN') this.activeSurface = 'ADMIN';
     else if (updatedUser.role === 'CREATOR') this.activeSurface = 'CREATOR';
@@ -332,7 +305,17 @@ export class Store {
   }
 
   public clearAuthenticatedUser() {
-    this.activeUser = INITIAL_USERS.find(user => user.role === 'CONSUMER') ?? INITIAL_USERS[0];
+    if (IS_DEMO_MODE) {
+      this.activeUser = INITIAL_USERS.find(user => user.role === 'CONSUMER') ?? INITIAL_USERS[0];
+      this.activeSurface = 'PUBLIC';
+      this.notify();
+      return true;
+    }
+
+    this.authGeneration += 1;
+    this.clearLiveDomainData();
+    this.users = [];
+    this.activeUser = { ...ANONYMOUS_USER };
     this.activeSurface = 'PUBLIC';
     this.notify();
     return true;
@@ -340,12 +323,18 @@ export class Store {
 
   public async hydrateFromServer(): Promise<boolean> {
     if (IS_DEMO_MODE) return false;
+    const generation = this.authGeneration;
+    const userId = this.activeUser.id;
+    if (!userId || userId === ANONYMOUS_USER.id) return false;
     try {
       const snap = await domainClient.snapshot();
       if (!snap) return false;
+      // A request started by the previous account is not allowed to mutate the current
+      // account's browser model, even if the network response arrives later.
+      if (generation !== this.authGeneration || userId !== this.activeUser.id) return false;
 
       // 1. Hydrate products
-      if (Array.isArray(snap.products) && snap.products.length > 0) {
+      if (Array.isArray(snap.products)) {
         const serverProducts: CreatorProduct[] = snap.products.map((p: any) => ({
           id: String(p.id),
           creatorId: String(p.creatorId || p.creator_id),
@@ -373,6 +362,8 @@ export class Store {
         }));
 
         this.products = serverProducts;
+      } else {
+        this.products = [];
       }
 
       // 2. Hydrate collaborations and nested models
@@ -390,7 +381,7 @@ export class Store {
               id: String(o.id),
               version: Number(o.versionNumber || o.version_number || 1),
               collaborationId: String(c.id),
-              senderRole: (o.proposedByRole === 'CREATOR' || o.proposed_by_role === 'CREATOR') ? 'CREATOR' : 'HOST',
+              senderRole: (o.senderRole === 'CREATOR' || o.sender_role === 'CREATOR' || o.proposedByRole === 'CREATOR' || o.proposed_by_role === 'CREATOR') ? 'CREATOR' : 'HOST',
               sellingPriceKwd: (o.sellingPriceFils ?? o.selling_price_fils ?? 0) / 1000,
               creatorRoyaltyModel: 'PERCENTAGE',
               creatorRoyaltyRatePercent: (o.creatorRoyaltyBasisPoints ?? o.creator_royalty_basis_points ?? 1500) / 100,
@@ -463,24 +454,24 @@ export class Store {
               hostBusinessId: String(c.organizationId || c.organization_id),
               launchType: 'LIMITED_DROP',
               title: 'إطلاق التعاون',
-              sellingPriceKwd: currentOffer?.sellingPriceKwd || 2.5,
+              sellingPriceKwd: currentOffer?.sellingPriceKwd || 0,
               unitsSold: Number(l.actualDailyUnitsSold || l.actual_daily_units_sold || 0),
-              branches: ['فرع العاصمة'],
-              startDate: String(l.launchDate || l.launch_date || new Date().toISOString()),
+              branches: [],
+              startDate: String(l.startsAt || l.starts_at || l.launchDate || l.launch_date || l.createdAt || l.created_at || new Date().toISOString()),
               status: (l.status || 'SCHEDULED') as any,
               gateChecklist: {
-                hostVerified: Boolean(l.gates?.hostVerified ?? true),
-                requiredDocsValid: Boolean(l.gates?.requiredDocsValid ?? true),
-                contractSigned: Boolean(l.gates?.contractSigned ?? true),
-                productionRecipeApproved: Boolean(l.gates?.productionRecipeApproved ?? false),
-                productNamePriceApproved: Boolean(l.gates?.productNamePriceApproved ?? false),
-                allergensCompleted: true,
-                packagingDataCompleted: Boolean(l.gates?.packagingDataCompleted ?? false),
-                productionLocationSelected: Boolean(l.gates?.productionLocationSelected ?? false),
-                branchAvailabilitySelected: true,
-                settlementConfigApproved: Boolean(l.gates?.settlementConfigApproved ?? false),
-                photosReady: true,
-                allRequirementsPassed: Boolean(l.status === 'LIVE' || l.status === 'PERMANENT')
+                hostVerified: Boolean((l.gate || l.gates)?.hostVerified ?? false),
+                requiredDocsValid: Boolean((l.gate || l.gates)?.requiredDocsValid ?? false),
+                contractSigned: Boolean((l.gate || l.gates)?.contractSigned ?? false),
+                productionRecipeApproved: Boolean((l.gate || l.gates)?.productionRecipeApproved ?? false),
+                productNamePriceApproved: Boolean((l.gate || l.gates)?.productNamePriceApproved ?? false),
+                allergensCompleted: Boolean((l.gate || l.gates)?.allergensCompleted ?? false),
+                packagingDataCompleted: Boolean((l.gate || l.gates)?.packagingDataCompleted ?? false),
+                productionLocationSelected: Boolean((l.gate || l.gates)?.productionLocationSelected ?? false),
+                branchAvailabilitySelected: Boolean((l.gate || l.gates)?.branchAvailabilitySelected ?? false),
+                settlementConfigApproved: Boolean((l.gate || l.gates)?.settlementConfigApproved ?? false),
+                photosReady: Boolean((l.gate || l.gates)?.photosReady ?? false),
+                allRequirementsPassed: Boolean((l.gate || l.gates)?.allRequirementsPassed ?? (l.status === 'LIVE' || l.status === 'PERMANENT'))
               },
               createdAt: String(l.createdAt || l.created_at || new Date().toISOString())
             };
@@ -542,27 +533,73 @@ export class Store {
           });
         }
 
-        if (serverCollabs.length > 0) this.collaborations = serverCollabs;
-        if (allOffers.length > 0) this.offers = allOffers;
-        if (allContracts.length > 0) this.contracts = allContracts;
-        if (allLaunches.length > 0) this.launches = allLaunches;
-        if (allRecipeVersions.length > 0) this.recipeVersions = allRecipeVersions;
-        if (allRecipeGrants.length > 0) this.recipeGrants = allRecipeGrants;
+        this.collaborations = serverCollabs;
+        this.offers = allOffers;
+        this.contracts = allContracts;
+        this.launches = allLaunches;
+        this.recipeVersions = allRecipeVersions;
+        this.recipeGrants = allRecipeGrants;
+      } else {
+        this.collaborations = [];
+        this.offers = [];
+        this.contracts = [];
+        this.launches = [];
+        this.recipeVersions = [];
+        this.recipeGrants = [];
+      }
+
+      // Public market launches are deliberately hydrated outside private collaborations so a
+      // brand-new consumer account sees the live marketplace without receiving negotiation data.
+      if (Array.isArray(snap.marketLaunches)) {
+        const marketLaunches: Launch[] = snap.marketLaunches.map((l: any) => ({
+          id: String(l.id),
+          collaborationId: String(l.collaborationId || l.collaboration_id || ''),
+          productId: String(l.productId || l.product_id || ''),
+          creatorId: String(l.creatorId || l.creator_id || ''),
+          hostBusinessId: String(l.organizationId || l.organization_id || l.hostBusinessId || ''),
+          launchType: (l.launchType || l.launch_type || (l.status === 'PERMANENT' ? 'PERMANENT_MENU' : 'LIMITED_DROP')) as any,
+          title: String(l.title || 'إطلاق مجال'),
+          sellingPriceKwd: Number(l.sellingPriceFils ?? l.selling_price_fils ?? 0) / 1000,
+          quantityCapUnits: l.quantityCap ?? l.quantity_cap ?? undefined,
+          unitsSold: Number(l.unitsSold ?? l.units_sold ?? 0),
+          branches: Array.isArray(l.branches) ? l.branches.map(String) : [],
+          startDate: String(l.startsAt || l.starts_at || l.createdAt || l.created_at || new Date().toISOString()),
+          endDate: l.endsAt || l.ends_at || undefined,
+          status: (l.status || 'SCHEDULED') as any,
+          gateChecklist: {
+            hostVerified: true,
+            requiredDocsValid: true,
+            contractSigned: true,
+            productionRecipeApproved: true,
+            productNamePriceApproved: true,
+            allergensCompleted: true,
+            packagingDataCompleted: true,
+            productionLocationSelected: true,
+            branchAvailabilitySelected: true,
+            settlementConfigApproved: true,
+            photosReady: true,
+            allRequirementsPassed: true
+          },
+          createdAt: String(l.createdAt || l.created_at || new Date().toISOString())
+        }));
+        const privateById = new Map(this.launches.map(item => [item.id, item]));
+        for (const item of marketLaunches) if (!privateById.has(item.id)) privateById.set(item.id, item);
+        this.launches = [...privateById.values()];
       }
 
       // 3. Hydrate creators/profiles if available
-      if (Array.isArray(snap.creators) && snap.creators.length > 0) {
+      if (Array.isArray(snap.creators)) {
         const serverCreators: CreatorProfile[] = snap.creators.map((cr: any) => ({
           id: String(cr.id),
-          userId: String(cr.userId || cr.user_id),
+          userId: String(cr.userId || cr.user_id || ''),
           displayName: String(cr.displayName || cr.display_name),
           legalName: cr.legalName || cr.legal_name,
           creatorType: cr.creatorType || cr.creator_type || 'CREATOR',
           specialty: String(cr.specialty || ''),
           bio: String(cr.bio || ''),
           region: String(cr.region || 'الكويت'),
-          completionScore: Number(cr.completionScore ?? cr.completion_score ?? 100),
-          badges: Array.isArray(cr.badges) ? cr.badges : ['SIGNATURE_CREATOR'],
+          completionScore: Number(cr.completionScore ?? cr.completion_score ?? 0),
+          badges: Array.isArray(cr.badges) ? cr.badges : [],
           unitsSold: Number(cr.unitsSold ?? cr.units_sold ?? 0),
           repeatPurchaseRate: Number(cr.repeatPurchaseRate ?? cr.repeat_purchase_rate ?? 0),
           story: String(cr.story || ''),
@@ -572,25 +609,23 @@ export class Store {
           createdAt: String(cr.createdAt || cr.created_at || new Date().toISOString())
         }));
         this.creators = serverCreators;
+      } else {
+        this.creators = [];
       }
 
       // 4. Hydrate organizations/hosts if available
-      if (Array.isArray(snap.organizations) && snap.organizations.length > 0) {
+      if (Array.isArray(snap.organizations)) {
         const serverHosts: HostBusiness[] = snap.organizations.map((org: any) => ({
           id: String(org.id),
           commercialName: String(org.commercialName || org.commercial_name),
           businessType: org.businessType || org.business_type || 'CENTRAL_KITCHEN',
           commercialRegistrationNo: String(org.commercialRegistrationNo || org.commercial_registration_no || ''),
-          verificationStatus: org.verificationStatus || org.verification_status || 'VERIFIED',
-          branches: Array.isArray(org.branches) && org.branches.length > 0 ? org.branches : [
-            { id: 'b_1', name: 'الفرع الرئيسي', area: 'العاصمة', isActive: true }
-          ],
-          capabilities: org.capabilities || {
-            canBake: true,
-            canFry: true,
-            canFreeze: true,
-            dailyCapacityUnits: 500,
-            storageTypes: ['CHILLED', 'DRY']
+          verificationStatus: org.verificationStatus || org.verification_status || 'UNVERIFIED',
+          branches: Array.isArray(org.branches) ? org.branches : [],
+          capabilities: {
+            equipment: [], cuisines: [], dietary: [], packaging: [], storage: [],
+            batchCapacityMin: 0, batchCapacityMax: 0, serviceModels: [], priceBand: '', leadTimeDays: 0,
+            ...(org.capabilities || {})
           },
           brandPositioning: String(org.brandPositioning || org.brand_positioning || ''),
           targetAudience: String(org.targetAudience || org.target_audience || ''),
@@ -599,6 +634,8 @@ export class Store {
           createdAt: String(org.createdAt || org.created_at || new Date().toISOString())
         }));
         this.hosts = serverHosts;
+      } else {
+        this.hosts = [];
       }
 
       this.notify();
@@ -693,13 +730,13 @@ export class Store {
   private isCreatorFor(creatorId: string) {
     if (['ADMIN', 'SUPER_ADMIN'].includes(this.activeUser.role)) return true;
     if (this.activeUser.role !== 'CREATOR') return false;
-    return !creatorId || !this.activeUser.creatorId || this.activeUser.creatorId === creatorId;
+    return Boolean(creatorId && this.activeUser.creatorId && this.activeUser.creatorId === creatorId);
   }
 
   private isHostMemberFor(hostBusinessId: string) {
     if (['ADMIN', 'SUPER_ADMIN'].includes(this.activeUser.role)) return true;
     if (!this.activeUser.role.startsWith('HOST_')) return false;
-    return !hostBusinessId || !this.activeUser.hostBusinessId || this.activeUser.hostBusinessId === hostBusinessId;
+    return Boolean(hostBusinessId && this.activeUser.hostBusinessId && this.activeUser.hostBusinessId === hostBusinessId);
   }
 
   private canManageHostCommercials(hostBusinessId: string) {
@@ -738,20 +775,73 @@ export class Store {
     }
   }
 
-  public submitNewProduct(productData: Omit<CreatorProduct, 'id' | 'createdAt' | 'status' | 'currentRecipeVersion'>, initialRecipe: Omit<RecipeVersion, 'id' | 'productId' | 'versionNumber' | 'createdAt' | 'createdById'>) {
+  public async submitNewProduct(productData: Omit<CreatorProduct, 'id' | 'createdAt' | 'status' | 'currentRecipeVersion'>, initialRecipe: Omit<RecipeVersion, 'id' | 'productId' | 'versionNumber' | 'createdAt' | 'createdById'>) {
+    if (this.activeUser.role !== 'CREATOR' || !this.activeUser.creatorId) {
+      return this.fail('حساب المبدع غير مربوط بملف مبدع صالح. أعد تسجيل الدخول ثم حاول مرة أخرى.');
+    }
+    if (productData.creatorId && productData.creatorId !== this.activeUser.creatorId) {
+      return this.fail('لا يمكن تسجيل منتج باسم مبدع آخر.');
+    }
     if (productData.publicName.trim().length < 2) return this.fail('اسم المنتج يجب أن يتكون من حرفين على الأقل.');
     if (productData.shortDescription.trim().length < 5) return this.fail('يرجى كتابة وصف أطول للمنتج.');
 
-    const productId = `prod_${Date.now()}`;
-    const creatorId = productData.creatorId || this.activeUser.creatorId || 'cr_main';
+    const creatorId = this.activeUser.creatorId;
+    const createdAt = new Date().toISOString();
 
+    if (!IS_DEMO_MODE) {
+      const result = await this.serverMutation(() => domainClient.createProduct({
+        publicName: productData.publicName,
+        internalName: productData.internalName,
+        category: productData.category,
+        shortDescription: productData.shortDescription,
+        story: productData.story,
+        mediaUrls: productData.mediaUrls,
+        generalIngredients: productData.generalIngredients,
+        allergens: productData.allergens,
+        dietaryTags: productData.dietaryTags,
+        servingSize: productData.servingSize,
+        shelfLife: productData.shelfLife,
+        estimatedPrepTimeMinutes: productData.estimatedPrepTimeMinutes,
+        estimatedUnitCostFils: Math.round(productData.estimatedUnitCostKwd * 1000),
+        targetPriceFils: Math.round(productData.targetSellingPriceKwd * 1000),
+        expectedEquipment: productData.expectedEquipment,
+        isSecretRecipe: productData.isSecretRecipe,
+        acceptsExclusivity: productData.acceptsExclusivity,
+        desiredPartnershipType: productData.desiredPartnershipType,
+        recipe: initialRecipe
+      }));
+      if (!result) return undefined;
+
+      const newProduct: CreatorProduct = {
+        ...productData,
+        creatorId,
+        id: result.id,
+        status: result.status as CreatorProduct['status'],
+        currentRecipeVersion: 'V1.0',
+        createdAt
+      };
+      const newRecipe: RecipeVersion = {
+        ...initialRecipe,
+        id: result.recipeVersionId,
+        productId: result.id,
+        versionNumber: 'V1.0',
+        createdById: this.activeUser.id,
+        createdAt
+      };
+      this.products = [newProduct, ...this.products.filter(item => item.id !== newProduct.id)];
+      this.recipeVersions = [newRecipe, ...this.recipeVersions.filter(item => item.id !== newRecipe.id)];
+      this.notify();
+      return newProduct;
+    }
+
+    const productId = `prod_${Date.now()}`;
     const newProduct: CreatorProduct = {
       ...productData,
       creatorId,
       id: productId,
       status: 'SCREENING',
       currentRecipeVersion: 'V1.0',
-      createdAt: new Date().toISOString()
+      createdAt
     };
 
     const newRecipe: RecipeVersion = {
@@ -760,13 +850,11 @@ export class Store {
       productId,
       versionNumber: 'V1.0',
       createdById: this.activeUser.id,
-      createdAt: new Date().toISOString()
+      createdAt
     };
 
     this.products.unshift(newProduct);
     this.recipeVersions.unshift(newRecipe);
-
-    // Create automatic match calculation against verified hosts
     this.hosts.forEach(host => {
       const matchScore = this.calculateMatchScore(newProduct, host);
       this.matches.push({
@@ -775,24 +863,11 @@ export class Store {
         hostBusinessId: host.id,
         matchScore,
         status: 'DISCOVERED',
-        createdAt: new Date().toISOString()
+        createdAt
       });
     });
-
     this.addAuditLog('LOGIN_SENSITIVE', 'PRODUCT', productId, `تم تقديم منتج جديد للمراجعة: ${newProduct.publicName}`);
     this.notify();
-
-    if (!IS_DEMO_MODE) {
-      domainClient.createProduct({
-        publicName: productData.publicName,
-        category: productData.category,
-        shortDescription: productData.shortDescription,
-        estimatedUnitCostFils: Math.round(productData.estimatedUnitCostKwd * 1000),
-        targetPriceFils: Math.round(productData.targetSellingPriceKwd * 1000),
-        recipe: initialRecipe
-      }).catch(err => console.warn('Server background product sync note:', err));
-    }
-
     return newProduct;
   }
 
@@ -828,18 +903,20 @@ export class Store {
   }
 
   public requestRecipeAccess(productId: string, hostBusinessId: string, disclosureLevel: 0 | 1 | 2 | 3, purpose: string) {
-    if (!IS_DEMO_MODE) return this.serverMutation(async () => {
-      const response = await domainClient.requestRecipeAccess({ productId, disclosureLevel, purpose });
-      const product = this.products.find(p => p.id === productId);
-      const grant: RecipeAccessGrant = { id: response.id, productId, creatorId: product?.creatorId || '', hostBusinessId, disclosureLevel, status: 'REQUESTED', requestedByUserId: this.activeUser.id, requestedAt: new Date().toISOString(), purpose };
-      this.recipeGrants.unshift(grant); this.notify(); return grant;
-    });
-    const product = this.products.find(p => p.id === productId);
-    if (!product) return this.fail('المنتج غير موجود.');
     if (!this.isHostMemberFor(hostBusinessId)) return this.fail('طلب الوصول يجب أن يصدر من عضو في المنشأة نفسها.');
     if (disclosureLevel === 3 && !['HOST_OWNER', 'HOST_CHEF'].includes(this.activeUser.role)) return this.fail('الوصول الكامل يمكن طلبه فقط من مالك المنشأة أو الشيف المخول.');
     if (disclosureLevel < 1 || disclosureLevel > 3) return this.fail('مستوى الإفصاح غير صالح.');
-
+    if (!IS_DEMO_MODE) return this.serverMutation(async () => {
+      const response = await domainClient.requestRecipeAccess({ productId, disclosureLevel, purpose });
+      await this.hydrateFromServer();
+      return this.recipeGrants.find(g => g.id === response.id) || {
+        id: response.id, productId, creatorId: this.products.find(p => p.id === productId)?.creatorId || '', hostBusinessId,
+        disclosureLevel: (response.disclosureLevel ?? disclosureLevel) as any, status: response.status as any,
+        requestedByUserId: this.activeUser.id, requestedAt: new Date().toISOString(), purpose
+      };
+    });
+    const product = this.products.find(p => p.id === productId);
+    if (!product) return this.fail('المنتج غير موجود.');
     const existing = this.recipeGrants.find(g =>
       g.productId === productId &&
       g.hostBusinessId === hostBusinessId &&

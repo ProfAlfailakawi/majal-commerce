@@ -88,10 +88,14 @@ export const HostPortal: React.FC = () => {
           <h2 className="text-xl font-bold text-slate-200">لا توجد منشأة مرتبطة بحسابك</h2>
           <p>للبدء في استخدام منصة المنشآت، يرجى إنشاء ملف منشأتك.</p>
           {!IS_DEMO_MODE && (
-            <p className="text-xs text-amber-300/90 leading-6 max-w-md mx-auto">
-              ربط حسابك بمنشأة يتم عبر عملية تأهيل معتمدة من فريق مجال (توثيق السجل التجاري والتصاريح).
-              تواصل مع الدعم لإتمام التأهيل — لا يمكن إنشاء منشأة تلقائيًا في بيئة الإنتاج.
-            </p>
+            <div className="space-y-3">
+              <p className="text-xs text-amber-300/90 leading-6 max-w-md mx-auto">
+                حساب مالك المنشأة ينشئ منشأته المستقلة أثناء التسجيل. إذا ظهرت هذه الرسالة فتعذّر تحميل الربط الآمن، ولن نربطك تلقائيًا بأي منشأة أخرى.
+              </p>
+              <button type="button" onClick={() => void store.hydrateFromServer()} className="px-5 py-2.5 rounded-xl bg-sky-500/15 border border-sky-400/20 text-sky-200 text-xs font-black">
+                إعادة تحميل منشأتي
+              </button>
+            </div>
           )}
           {IS_DEMO_MODE && <button
             onClick={() => {
@@ -151,7 +155,7 @@ export const HostPortal: React.FC = () => {
             <Avatar name={host.commercialName} src={host.logoUrl} size={80} shape="squircle" className="ring-2 ring-sky-400/25 shadow-xl" />
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-2.5 py-1 rounded-full bg-sky-500/10 text-sky-300 border border-sky-400/20 text-[10px] font-black">LICENSED HOST</span>
+                <span className={`px-2.5 py-1 rounded-full border text-[10px] font-black ${host.verificationStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'}`}>{host.verificationStatus === 'VERIFIED' ? 'LICENSED HOST' : 'بانتظار التحقق من المنشأة'}</span>
                 <span className="px-2.5 py-1 rounded-full bg-gold-500/10 text-gold-300 border border-gold-300/20 text-[10px] font-black">{roleLabel(store.activeUser.role)}</span>
               </div>
               <h1 className="text-2xl md:text-3xl font-black mt-2">{host.commercialName}</h1>

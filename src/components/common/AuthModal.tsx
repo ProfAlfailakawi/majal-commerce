@@ -8,7 +8,7 @@ import { UserRole } from '../../types/majal';
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAuthenticated: (session: AuthSession) => void;
+  onAuthenticated: (session: AuthSession) => void | Promise<void>;
 }
 
 // Mirrors the server-side reset token shape (server/auth.ts): 32 random bytes encoded as
@@ -27,6 +27,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [commercialName, setCommercialName] = useState('');
+  const [businessType, setBusinessType] = useState<'RESTAURANT' | 'BAKERY' | 'CENTRAL_KITCHEN' | 'CAFE' | 'FACTORY'>('RESTAURANT');
+  const [commercialRegistrationNo, setCommercialRegistrationNo] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
   const [resetCode, setResetCode] = useState('');
@@ -54,7 +57,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
     try {
       if (mode === 'LOGIN') {
         const session = await login(email, password, needsMfa ? mfaCode : undefined);
-        onAuthenticated(session);
+        await onAuthenticated(session);
         onClose();
       } else if (mode === 'RESET_REQUEST') {
         const { requestPasswordReset } = await import('../../lib/authClient');
@@ -64,11 +67,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
       } else if (mode === 'RESET_VERIFY') {
         const { verifyPasswordReset } = await import('../../lib/authClient');
         const session = await verifyPasswordReset(email, resetCode, password);
-        onAuthenticated(session);
+        await onAuthenticated(session);
         onClose();
       } else {
-        const session = await register({ name, email, phone, password, role });
-        onAuthenticated(session);
+        const session = await register({
+          name,
+          email,
+          phone,
+          password,
+          role,
+          ...(role === 'HOST_OWNER' ? {
+            organization: {
+              commercialName,
+              businessType,
+              ...(commercialRegistrationNo.trim() ? { commercialRegistrationNo: commercialRegistrationNo.trim() } : {})
+            }
+          } : {})
+        });
+        await onAuthenticated(session);
         onClose();
       }
     } catch (caught) {
@@ -123,7 +139,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {[
                   { id: 'CREATOR', label: 'مبدع وصفات', icon: <Sparkles className="w-4 h-4" />, desc: 'ابتكار وحفظ أسرار الأطباق' },
-                  { id: 'HOST_OWNER', label: 'منشأة حاضنة', icon: <Building2 className="w-4 h-4" />, desc: 'يبدأ الحساب كعميل ويُرقّى بعد تأهيل المنشأة' },
+                  { id: 'HOST_OWNER', label: 'منشأة حاضنة', icon: <Building2 className="w-4 h-4" />, desc: 'ينشئ منشأة مستقلة بحالة غير موثقة حتى اكتمال التأهيل' },
                   { id: 'CONSUMER', label: 'متذوق / عميل', icon: <Store className="w-4 h-4" />, desc: 'تصفح وتجربة وشراء الأطباق' }
                 ].map((item) => (
                   <button
@@ -149,6 +165,52 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
               <span className="text-xs font-bold text-slate-200">الاسم الكامل</span>
               <input value={name} onChange={event => setName(event.target.value)} autoComplete="name" required minLength={2} maxLength={120} placeholder="مثال: محمد عبدالله" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-gold-300/50" />
             </label>
+          )}
+
+          {mode === 'REGISTER' && !needsMfa && role === 'HOST_OWNER' && (
+            <div className="grid sm:grid-cols-2 gap-3 rounded-2xl bg-sky-500/5 border border-sky-400/15 p-4">
+              <label className="block space-y-1.5 sm:col-span-2">
+                <span className="text-xs font-bold text-slate-200">الاسم التجاري للمنشأة</span>
+                <input
+                  value={commercialName}
+                  onChange={event => setCommercialName(event.target.value)}
+                  required
+                  minLength={2}
+                  maxLength={160}
+                  placeholder="مثال: مطبخ الديرة المركزي"
+                  className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-sky-300/50"
+                />
+              </label>
+              <label className="block space-y-1.5">
+                <span className="text-xs font-bold text-slate-200">نوع النشاط</span>
+                <select
+                  value={businessType}
+                  onChange={event => setBusinessType(event.target.value as typeof businessType)}
+                  className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-sky-300/50"
+                >
+                  <option value="RESTAURANT">مطعم</option>
+                  <option value="CAFE">مقهى</option>
+                  <option value="BAKERY">مخبز / حلويات</option>
+                  <option value="CENTRAL_KITCHEN">مطبخ مركزي</option>
+                  <option value="FACTORY">مصنع غذائي</option>
+                </select>
+              </label>
+              <label className="block space-y-1.5">
+                <span className="text-xs font-bold text-slate-200">رقم السجل التجاري <span className="text-slate-500">(اختياري الآن)</span></span>
+                <input
+                  value={commercialRegistrationNo}
+                  onChange={event => setCommercialRegistrationNo(event.target.value)}
+                  minLength={3}
+                  maxLength={80}
+                  dir="ltr"
+                  placeholder="CR / license no."
+                  className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-sky-300/50 text-left"
+                />
+              </label>
+              <p className="sm:col-span-2 text-[10px] leading-5 text-slate-400">
+                تُنشأ المنشأة لك وحدك فورًا، وتبقى «غير موثقة» إلى أن يكتمل التحقق من السجل والتصاريح. لا يتم ربط حسابك بأي منشأة موجودة مسبقًا.
+              </p>
+            </div>
           )}
 
           {!needsMfa && mode !== 'RESET_VERIFY' && (
@@ -179,7 +241,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-200">{mode === 'RESET_VERIFY' ? 'كلمة المرور الجديدة' : 'كلمة المرور'}</span>
                 {(mode === 'REGISTER' || mode === 'RESET_VERIFY') && (
-                  <span className="text-[10px] text-slate-400">6 محارف على الأقل</span>
+                  <span className="text-[10px] text-slate-400">12 محرفًا على الأقل</span>
                 )}
               </div>
               <div className="relative">

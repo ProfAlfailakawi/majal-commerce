@@ -81,7 +81,18 @@ export async function verifyPasswordReset(email: string, code: string, newPasswo
   }));
 }
 
-export async function register(input: { name: string; email: string; phone: string; password: string; role?: string }) {
+export async function register(input: {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  role?: string;
+  organization?: {
+    commercialName: string;
+    businessType: 'RESTAURANT' | 'BAKERY' | 'CENTRAL_KITCHEN' | 'CAFE' | 'FACTORY';
+    commercialRegistrationNo?: string;
+  };
+}) {
   return rememberSession(await request<AuthSession>('/api/v1/auth/register', {
     method: 'POST',
     body: JSON.stringify(input)

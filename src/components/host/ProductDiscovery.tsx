@@ -31,9 +31,17 @@ export const ProductDiscovery: React.FC = () => {
     <EmptyState
       icon={<Building2 className="w-6 h-6" />}
       title="ما فيه منشأة مرتبطة بحسابك"
-      body="الاكتشاف يعتمد على قدرة منشأتك التشغيلية وهامشها، فيحتاج حساب مربوط بمنشأة مرخّصة أول."
+      body="الاكتشاف يعتمد على قدرة منشأتك التشغيلية وهامشها، فيحتاج حساب مربوط بمنشأة أول. أعد تحميل الحساب، ولن يتم ربطك تلقائيًا بمنشأة أخرى."
     />
   );
+
+  const visibleProducts = availableProducts.filter(p => {
+    const creator = store.creators.find(cr => cr.id === p.creatorId);
+    const haystack = [p.publicName, p.internalName, p.shortDescription, p.story, p.category, creator?.displayName, ...p.generalIngredients].filter(Boolean).join(' ').toLowerCase();
+    if (searchTerm.trim() && !haystack.includes(searchTerm.trim().toLowerCase())) return false;
+    if (selectedCategory !== 'ALL' && p.category !== selectedCategory) return false;
+    return store.calculateMatchScore(p, host).overallScore >= minMatchScore;
+  });
 
   return (
     <div className="space-y-6 text-slate-100">
@@ -99,13 +107,9 @@ export const ProductDiscovery: React.FC = () => {
 
       {/* Product Match Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {availableProducts.map(p => {
+        {visibleProducts.map(p => {
           const creator = store.creators.find(cr => cr.id === p.creatorId);
-          const haystack = [p.publicName, p.internalName, p.shortDescription, p.story, p.category, creator?.displayName, ...p.generalIngredients].filter(Boolean).join(' ').toLowerCase();
-          if (searchTerm.trim() && !haystack.includes(searchTerm.trim().toLowerCase())) return null;
           const matchCalc = store.calculateMatchScore(p, host);
-          if (matchCalc.overallScore < minMatchScore) return null;
-          if (selectedCategory !== 'ALL' && p.category !== selectedCategory) return null;
           const grant = store.recipeGrants.find(g => g.productId === p.id && g.hostBusinessId === currentHostId && (g.status === 'REQUESTED' || g.status === 'APPROVED'));
           const hasApprovedGrant = grant?.status === 'APPROVED';
           const maxRoleLevel: DisclosureLevel = hasPermission(store.activeUser, 'VIEW_RECIPE_L3') ? 3 : hasPermission(store.activeUser, 'VIEW_RECIPE_L2') ? 2 : 1;
@@ -207,6 +211,17 @@ export const ProductDiscovery: React.FC = () => {
             </div>
           );
         })}
+        {visibleProducts.length === 0 && (
+          <div className="md:col-span-2">
+            <EmptyState
+              icon={<Search className="w-6 h-6" />}
+              title={availableProducts.length === 0 ? 'لا توجد منتجات متاحة للمطابقة حاليًا' : 'لا توجد نتائج بهذه الفلاتر'}
+              body={availableProducts.length === 0
+                ? 'حساب منشأتك يعمل بصورة صحيحة. ستظهر هنا المنتجات التي يعتمدها المبدعون للمطابقة، من دون استخدام أي بيانات تجريبية أو بيانات منشأة أخرى.'
+                : 'خفّض حد المطابقة أو غيّر الفئة أو عبارة البحث لرؤية منتجات أخرى.'}
+            />
+          </div>
+        )}
       </div>
 
       {selectedProductForVault && (

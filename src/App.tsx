@@ -62,19 +62,21 @@ export default function App() {
     if (IS_DEMO_MODE) return;
     let active = true;
     restoreAuthSession()
-      .then(session => {
+      .then(async session => {
         if (!active) return;
         if (session && store.setAuthenticatedUser(session.user)) {
           const surface = surfaceForRole(session.user.role);
+          await store.hydrateFromServer();
+          if (!active) return;
           setAuthStatus('AUTHENTICATED');
           setActiveSurface(surface);
           store.setSurface(surface);
-          void store.hydrateFromServer();
         } else {
+          store.clearAuthenticatedUser();
           setAuthStatus('ANONYMOUS');
         }
       })
-      .catch(() => active && setAuthStatus('ANONYMOUS'));
+      .catch(() => { if (active) { store.clearAuthenticatedUser(); setAuthStatus('ANONYMOUS'); } });
     return () => { active = false; };
   }, []);
 
@@ -86,13 +88,13 @@ export default function App() {
     return 'CONSUMER';
   };
 
-  const handleAuthenticated = (session: AuthSession) => {
+  const handleAuthenticated = async (session: AuthSession) => {
     if (!store.setAuthenticatedUser(session.user)) return;
     const surface = surfaceForRole(session.user.role);
+    await store.hydrateFromServer();
     setAuthStatus('AUTHENTICATED');
     setActiveSurface(surface);
     store.setSurface(surface);
-    void store.hydrateFromServer();
   };
 
   const handleLogout = async () => {

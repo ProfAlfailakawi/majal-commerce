@@ -9,7 +9,7 @@ import {
   timingSafeEqual
 } from 'node:crypto';
 import { NextFunction, Request, Response, Router } from 'express';
-import { MajalDatabase } from './database';
+import { MajalDatabase, withTransaction } from './database';
 
 export type AuthRole =
   | 'CREATOR'
@@ -345,6 +345,108 @@ export async function createUser(db: MajalDatabase, input: CreateUserInput) {
   return await db.prepare('SELECT * FROM users WHERE id = ?').get<UserRow>(id) as UserRow;
 }
 
+const HOST_BUSINESS_TYPES = ['RESTAURANT', 'BAKERY', 'CENTRAL_KITCHEN', 'CAFE', 'FACTORY'] as const;
+type HostBusinessType = typeof HOST_BUSINESS_TYPES[number];
+
+interface PublicRegistrationProvisioning {
+  commercialName?: string;
+  businessType?: HostBusinessType;
+  commercialRegistrationNo?: string;
+}
+
+/**
+ * Creates the account and its role-owned domain identity in one transaction.
+ *
+ * The old registration path returned a CREATOR with no creator profile and deliberately
+ * downgraded HOST_OWNER to CONSUMER.  The browser then tried to "help" by attaching the
+ * first seeded creator/host it could find, which is exactly how a fresh account could open
+ * with another person's data.  Provisioning now happens server-side, atomically, and every
+ * tenant link is born from the new user's own row.
+ */
+export async function createPublicRegistration(
+  db: MajalDatabase,
+  input: CreateUserInput,
+  provisioning: PublicRegistrationProvisioning = {}
+) {
+  return withTransaction(db, async tx => {
+    const user = await createUser(tx, input);
+    const createdAt = new Date().toISOString();
+
+    if (user.role === 'CREATOR') {
+      const creatorId = `cr_${randomUUID()}`;
+      await tx.prepare(`
+        INSERT INTO creator_profiles(
+          id, user_id, display_name, specialty, completion_score, matching_enabled,
+          legal_name, creator_type, bio, region, badges_json, units_sold,
+          repeat_purchase_rate, story, avatar_url, created_at, updated_at
+        ) VALUES(?, ?, ?, ?, 20, 1, ?, 'CREATOR', '', 'الكويت', '[]', 0, 0, '', '', ?, ?)
+      `).run(
+        creatorId,
+        user.id,
+        user.name,
+        'ابتكار الوصفات والمنتجات',
+        user.name,
+        createdAt,
+        createdAt
+      );
+      await tx.prepare('UPDATE users SET creator_id = ?, updated_at = ? WHERE id = ?')
+        .run(creatorId, createdAt, user.id);
+    }
+
+    if (user.role === 'HOST_OWNER') {
+      const commercialName = cleanText(provisioning.commercialName, 2, 160);
+      if (!commercialName) throw new Error('اسم المنشأة التجاري مطلوب.');
+      const businessType = provisioning.businessType && HOST_BUSINESS_TYPES.includes(provisioning.businessType)
+        ? provisioning.businessType
+        : 'RESTAURANT';
+      const commercialRegistrationNo = provisioning.commercialRegistrationNo
+        ? cleanText(provisioning.commercialRegistrationNo, 3, 80)
+        : '';
+      if (provisioning.commercialRegistrationNo && commercialRegistrationNo === undefined) {
+        throw new Error('رقم السجل التجاري غير صالح.');
+      }
+
+      const organizationId = `org_${randomUUID()}`;
+      const emptyCapabilities = JSON.stringify({
+        equipment: [],
+        cuisines: [],
+        dietary: [],
+        packaging: [],
+        storage: [],
+        batchCapacityMin: 0,
+        batchCapacityMax: 0,
+        serviceModels: [],
+        priceBand: '',
+        leadTimeDays: 0
+      });
+      await tx.prepare(`
+        INSERT INTO organizations(
+          id, commercial_name, organization_type, verification_status,
+          business_type, commercial_registration_no, logo_url, brand_positioning,
+          target_audience, branches_json, capabilities_json, contacts_json,
+          created_at, updated_at
+        ) VALUES(?, ?, 'HOST', 'UNVERIFIED', ?, ?, '', '', '', '[]', ?, '[]', ?, ?)
+      `).run(
+        organizationId,
+        commercialName,
+        businessType,
+        commercialRegistrationNo || '',
+        emptyCapabilities,
+        createdAt,
+        createdAt
+      );
+      await tx.prepare(`
+        INSERT INTO organization_memberships(organization_id, user_id, role, status, created_at)
+        VALUES(?, ?, 'HOST_OWNER', 'ACTIVE', ?)
+      `).run(organizationId, user.id, createdAt);
+      await tx.prepare('UPDATE users SET host_business_id = ?, updated_at = ? WHERE id = ?')
+        .run(organizationId, createdAt, user.id);
+    }
+
+    return await tx.prepare('SELECT * FROM users WHERE id = ?').get<UserRow>(user.id) as UserRow;
+  });
+}
+
 async function createSession(db: MajalDatabase, config: AuthConfig, req: Request, user: UserRow) {
   const token = randomBytes(32).toString('base64url');
   const csrfToken = randomBytes(32).toString('base64url');
@@ -385,42 +487,65 @@ export function requireAuth(db: MajalDatabase, config: AuthConfig) {
       return jsonError(res, 401, 'انتهت الجلسة أو الحساب غير متاح.', 'SESSION_EXPIRED');
     }
 
-    if (!row.creator_id && (['CREATOR', 'ADMIN', 'SUPER_ADMIN'].includes(row.role))) {
+    // Repair/validate the role-owned identity from authoritative relationships only.
+    // Never attach a user to "the first" creator or organization in the database.
+    if (row.role === 'CREATOR') {
       try {
-        const existingCr = await db.prepare('SELECT id FROM creator_profiles WHERE user_id = ?').get<{id: string}>(row.id);
-        let crId = existingCr?.id;
-        if (!crId) {
-          crId = `cr_${randomUUID().slice(0, 8)}`;
-          const nowStr = new Date().toISOString();
-          await db.prepare("INSERT INTO creator_profiles(id, user_id, display_name, specialty, completion_score, matching_enabled, created_at, updated_at) VALUES(?, ?, ?, ?, 100, 1, ?, ?)")
-            .run(crId, row.id, row.name || 'مبدع طهي معتمد', 'ابتكار الأطباق والمنتجات', nowStr, nowStr);
+        const linked = row.creator_id
+          ? await db.prepare('SELECT id FROM creator_profiles WHERE id = ? AND user_id = ? LIMIT 1').get<{id: string}>(row.creator_id, row.id)
+          : undefined;
+        if (!linked) {
+          const existingCr = await db.prepare('SELECT id FROM creator_profiles WHERE user_id = ? LIMIT 1').get<{id: string}>(row.id);
+          let crId = existingCr?.id;
+          if (!crId) {
+            crId = `cr_${randomUUID()}`;
+            const createdAt = new Date().toISOString();
+            await db.prepare(`
+              INSERT INTO creator_profiles(
+                id, user_id, display_name, specialty, completion_score, matching_enabled,
+                legal_name, creator_type, bio, region, badges_json, units_sold,
+                repeat_purchase_rate, story, avatar_url, created_at, updated_at
+              ) VALUES(?, ?, ?, ?, 20, 1, ?, 'CREATOR', '', 'الكويت', '[]', 0, 0, '', '', ?, ?)
+            `).run(crId, row.id, row.name, 'ابتكار الوصفات والمنتجات', row.name, createdAt, createdAt);
+          }
+          await db.prepare('UPDATE users SET creator_id = ?, updated_at = ? WHERE id = ?')
+            .run(crId, new Date().toISOString(), row.id);
+          row.creator_id = crId;
         }
-        await db.prepare('UPDATE users SET creator_id = ? WHERE id = ?').run(crId, row.id);
-        row.creator_id = crId;
       } catch {
-        // Fallback
+        // Leave the identity unbound on failure; downstream role endpoints fail closed.
+        row.creator_id = null;
       }
     }
 
-    // SECURITY: never infer tenant membership in production. Auto-attaching a HOST_*/ADMIN
-    // user to an arbitrary existing host business is a cross-tenant escalation. This
-    // convenience seeding is limited to non-production (demo/dev); in production a host
-    // user must be linked to an org explicitly through an approved onboarding flow.
-    if (process.env.NODE_ENV !== 'production'
-        && !row.host_business_id && (row.role.startsWith('HOST_') || ['ADMIN', 'SUPER_ADMIN'].includes(row.role))) {
+    if (row.role.startsWith('HOST_')) {
       try {
-        const existingHb = await db.prepare('SELECT id FROM host_businesses LIMIT 1').get<{id: string}>();
-        let hbId = existingHb?.id;
-        if (!hbId) {
-          hbId = `hb_${randomUUID().slice(0, 8)}`;
-          const nowStr = new Date().toISOString();
-          await db.prepare("INSERT INTO host_businesses(id, commercial_name, legal_entity, cr_number, status, health_permit_number, health_permit_status, health_permit_expires_at, verified_at, created_at, updated_at) VALUES(?, ?, ?, ?, 'VERIFIED', 'HLT-8821', 'VALID', ?, ?, ?, ?)")
-            .run(hbId, 'منشأة مجال الحاضنة', 'شركة ذات مسؤولية محدودة', 'KWT-CR-1020', new Date(Date.now() + 180*86400000).toISOString(), nowStr, nowStr, nowStr);
+        const currentMembership = row.host_business_id
+          ? await db.prepare(`
+              SELECT organization_id, role FROM organization_memberships
+              WHERE organization_id = ? AND user_id = ? AND status = 'ACTIVE' LIMIT 1
+            `).get<{organization_id:string;role:AuthRole}>(row.host_business_id, row.id)
+          : undefined;
+
+        if (!currentMembership || currentMembership.role !== row.role) {
+          const memberships = await db.prepare(`
+            SELECT organization_id, role FROM organization_memberships
+            WHERE user_id = ? AND status = 'ACTIVE' ORDER BY created_at ASC LIMIT 2
+          `).all<{organization_id:string;role:AuthRole}>(row.id);
+          // A missing link is auto-repaired only when membership is unambiguous.  If a user
+          // belongs to multiple organizations, choosing one implicitly would be another form
+          // of cross-tenant confusion; an explicit org switcher is required instead.
+          if (memberships.length === 1) {
+            row.host_business_id = memberships[0].organization_id;
+            row.role = memberships[0].role;
+            await db.prepare('UPDATE users SET host_business_id = ?, role = ?, updated_at = ? WHERE id = ?')
+              .run(row.host_business_id, row.role, new Date().toISOString(), row.id);
+          } else {
+            row.host_business_id = null;
+          }
         }
-        await db.prepare('UPDATE users SET host_business_id = ? WHERE id = ?').run(hbId, row.id);
-        row.host_business_id = hbId;
       } catch {
-        // Fallback
+        row.host_business_id = null;
       }
     }
 
@@ -515,21 +640,33 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
       if (SUPER_ADMIN_EMAILS.has(email)) {
         assignedRole = 'SUPER_ADMIN';
       } else {
-        // SECURITY: public self-registration may only pick unprivileged roles. HOST_OWNER
-        // is a tenant-privileged role and must be granted through an approved onboarding +
-        // explicit org binding, never self-assigned at signup.
+        // HOST_OWNER is safe for public self-registration only because the same transaction
+        // creates a brand-new UNVERIFIED organization owned by that user.  Registration can
+        // never bind the caller to an existing tenant supplied by the client.
         const requestedRole = req.body?.role;
-        const allowedPublicRoles: AuthRole[] = ['CREATOR', 'CONSUMER'];
+        const allowedPublicRoles: AuthRole[] = ['CREATOR', 'HOST_OWNER', 'CONSUMER'];
         assignedRole = allowedPublicRoles.includes(requestedRole) ? requestedRole : 'CONSUMER';
       }
 
-      const user = await createUser(db, {
-        name: req.body?.name,
-        email,
-        phone: req.body?.phone,
-        password: req.body?.password,
-        role: assignedRole
-      });
+      const rawBusinessType = cleanText(req.body?.organization?.businessType ?? req.body?.businessType, 4, 40);
+      const businessType = rawBusinessType && HOST_BUSINESS_TYPES.includes(rawBusinessType as HostBusinessType)
+        ? rawBusinessType as HostBusinessType
+        : undefined;
+      if (assignedRole === 'HOST_OWNER' && rawBusinessType && !businessType) {
+        return jsonError(res, 400, 'نوع نشاط المنشأة غير صالح.', 'INVALID_BUSINESS_TYPE');
+      }
+
+      const user = await createPublicRegistration(db, {
+          name: req.body?.name,
+          email,
+          phone: req.body?.phone,
+          password: req.body?.password,
+          role: assignedRole
+        }, {
+          commercialName: req.body?.organization?.commercialName ?? req.body?.commercialName,
+          businessType,
+          commercialRegistrationNo: req.body?.organization?.commercialRegistrationNo ?? req.body?.commercialRegistrationNo
+        });
       const session = await createSession(db, config, req, user);
       setSessionCookies(res, config, session.token, session.csrfToken, session.expiresAt);
       await logAuthEvent(db, config, { userId: user.id, email, eventType: 'REGISTERED', requestId, ip: req.ip });

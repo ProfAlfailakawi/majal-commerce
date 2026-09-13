@@ -1213,6 +1213,58 @@ const migrations = [
       ALTER TABLE products ADD COLUMN accepts_exclusivity INTEGER DEFAULT 0;
       ALTER TABLE products ADD COLUMN desired_partnership_type TEXT;
     `
+  },
+  {
+    // Identity/tenant repair.  Earlier builds could leave CREATOR/HOST users without
+    // their own pointer, and some host memberships existed while the users row still said
+    // CONSUMER.  Repair only relationships that are provably owned by the same user; never
+    // guess an organization when more than one active membership exists.
+    version: 17,
+    sql: `
+      UPDATE users
+      SET creator_id = (
+        SELECT cp.id FROM creator_profiles cp WHERE cp.user_id = users.id LIMIT 1
+      ), updated_at = CURRENT_TIMESTAMP
+      WHERE role = 'CREATOR'
+        AND EXISTS (SELECT 1 FROM creator_profiles cp WHERE cp.user_id = users.id)
+        AND (
+          creator_id IS NULL OR NOT EXISTS (
+            SELECT 1 FROM creator_profiles own
+            WHERE own.id = users.creator_id AND own.user_id = users.id
+          )
+        );
+
+      UPDATE users
+      SET host_business_id = NULL, updated_at = CURRENT_TIMESTAMP
+      WHERE role LIKE 'HOST_%'
+        AND host_business_id IS NOT NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM organization_memberships om
+          WHERE om.organization_id = users.host_business_id
+            AND om.user_id = users.id
+            AND om.status = 'ACTIVE'
+            AND om.role = users.role
+        );
+
+      UPDATE users
+      SET host_business_id = (
+            SELECT om.organization_id FROM organization_memberships om
+            WHERE om.user_id = users.id AND om.status = 'ACTIVE'
+            ORDER BY om.created_at ASC LIMIT 1
+          ),
+          role = (
+            SELECT om.role FROM organization_memberships om
+            WHERE om.user_id = users.id AND om.status = 'ACTIVE'
+            ORDER BY om.created_at ASC LIMIT 1
+          ),
+          updated_at = CURRENT_TIMESTAMP
+      WHERE (role LIKE 'HOST_%' OR role = 'CONSUMER')
+        AND host_business_id IS NULL
+        AND (
+          SELECT COUNT(*) FROM organization_memberships om
+          WHERE om.user_id = users.id AND om.status = 'ACTIVE'
+        ) = 1;
+    `
   }
 ] as const;
 

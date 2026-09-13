@@ -12,7 +12,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { store } from '../../lib/store';
-import { CreatorProduct, CreatorProfile } from '../../types/majal';
+import { CreatorProduct } from '../../types/majal';
 import { ProductSubmissionWizard } from './ProductSubmissionWizard';
 import { CreatorEarnings } from './CreatorEarnings';
 import { RecipeVaultModal } from '../common/RecipeVaultModal';
@@ -69,41 +69,17 @@ export const CreatorPortal: React.FC = () => {
           <Sparkles className="w-8 h-8" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-2xl font-black text-slate-100">مرحباً بك في مساحة المبدعين منصة مجال</h2>
+          <h2 className="text-2xl font-black text-slate-100">تعذّر تحميل ملف المبدع الخاص بحسابك</h2>
           <p className="text-sm text-slate-400 max-w-lg mx-auto leading-6">
-            لم يتم تفعيل ملف المبدع الخاص بحسابك بعد. انقر على الزر أدناه لإنشاء ملف المبدع والبدء باكتشاف الفرص، تقديم المنتجات، وتوقيع العقود التجارية.
+            ملف المبدع يُنشأ على الخادم مع الحساب ويُربط بهوية حسابك فقط. لن تنشئ الواجهة ملفًا محليًا أو تربطك بمبدع آخر.
           </p>
         </div>
         <button
-          onClick={() => {
-            const newCreator: CreatorProfile = {
-              id: 'cr_' + Math.random().toString(36).substr(2, 9),
-              userId: store.activeUser.id,
-              displayName: store.activeUser.name || 'المبدع المبتكر',
-              legalName: store.activeUser.name || 'مبدع طهي معتمد',
-              creatorType: 'CREATOR',
-              specialty: 'ابتكار الأطباق والمأكولات العصرية',
-              bio: 'صانع محتوى وطاهي مبتكر للمنتجات التجارية الحصرية.',
-              region: 'العاصمة، الكويت',
-              completionScore: 100,
-              badges: ['SIGNATURE_CREATOR'],
-              unitsSold: 0,
-              repeatPurchaseRate: 0,
-              story: 'شغف تحويل الوصفات المنزلية والسرية إلى خطوط إنتاج وتجارب ناجحة.',
-              isAvailableForMatching: true,
-              hasSecretRecipe: true,
-              avatarUrl: store.activeUser.avatar || '',
-              createdAt: new Date().toISOString()
-            };
-            store.creators = [...store.creators, newCreator];
-            store.activeUser = { ...store.activeUser, creatorId: newCreator.id };
-            store.setUser(store.activeUser);
-            setTick(t => t + 1);
-          }}
+          onClick={() => void store.hydrateFromServer()}
           className="px-6 py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 text-sm font-black inline-flex items-center gap-2 shadow-xl hover:brightness-110 transition-transform cursor-pointer"
         >
-          <Plus className="w-5 h-5" />
-          <span>إنشاء وتفعيل ملف المبدع الآن</span>
+          <Sparkles className="w-5 h-5" />
+          <span>إعادة تحميل ملفي الآمن</span>
         </button>
       </div>
     );

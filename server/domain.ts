@@ -23,6 +23,9 @@ const integer = (value: unknown, min: number, max: number) => {
   return Number.isInteger(n) && n >= min && n <= max ? n : undefined;
 };
 const bool = (value: unknown) => value === true || value === false ? value : undefined;
+const stringArray = (value: unknown, maxItems = 40, maxLength = 160) => Array.isArray(value)
+  ? value.map(item => text(item, 1, maxLength)).filter((item): item is string => !!item).slice(0, maxItems)
+  : [];
 const requestId = (req: AuthenticatedRequest) => text(req.header('x-request-id'), 8, 128) || randomUUID();
 
 type CollabRow = { id: string; product_id: string; creator_id: string; organization_id: string; stage: string; version: number };
@@ -140,6 +143,19 @@ export function publicProduct(row: Record<string, unknown>) {
   };
 }
 
+export function publicMarketplaceProduct(row: Record<string, unknown>) {
+  const product = publicProduct(row);
+  const {
+    estimatedUnitCostFils: _estimatedUnitCostFils,
+    internalName: _internalName,
+    expectedEquipment: _expectedEquipment,
+    acceptsExclusivity: _acceptsExclusivity,
+    desiredPartnershipType: _desiredPartnershipType,
+    ...safe
+  } = product;
+  return safe;
+}
+
 export function publicCreatorProfile(row: Record<string, unknown>) {
   const safeJson = (val: unknown) => {
     if (!val) return undefined;
@@ -149,15 +165,15 @@ export function publicCreatorProfile(row: Record<string, unknown>) {
 
   return {
     id: String(row.id),
-    userId: String(row.user_id),
+    userId: String(row.user_id || ''),
     displayName: String(row.display_name),
     legalName: (row.legal_name as string) || undefined,
-    creatorType: (row.creator_type as string) || 'RECIPE_DEVELOPER',
+    creatorType: (row.creator_type as string) || 'CREATOR',
     specialty: String(row.specialty || ''),
     bio: (row.bio as string) || '',
     region: (row.region as string) || 'الكويت',
     completionScore: Number(row.completion_score || 0),
-    badges: (safeJson(row.badges_json) as string[]) || ['TESTED'],
+    badges: (safeJson(row.badges_json) as string[]) || [],
     unitsSold: Number(row.units_sold || 0),
     repeatPurchaseRate: Number(row.repeat_purchase_rate || 0),
     story: (row.story as string) || '',
@@ -168,12 +184,36 @@ export function publicCreatorProfile(row: Record<string, unknown>) {
   };
 }
 
+export function publicCreatorSummary(row: Record<string, unknown>) {
+  const profile = publicCreatorProfile(row);
+  const { userId: _userId, legalName: _legalName, ...safe } = profile;
+  return safe;
+}
+
+const EMPTY_CAPABILITIES = {
+  equipment: [] as string[],
+  cuisines: [] as string[],
+  dietary: [] as string[],
+  packaging: [] as string[],
+  storage: [] as string[],
+  batchCapacityMin: 0,
+  batchCapacityMax: 0,
+  serviceModels: [] as string[],
+  priceBand: '',
+  leadTimeDays: 0
+};
+
 export function publicOrganization(row: Record<string, unknown>) {
   const safeJson = (val: unknown) => {
     if (!val) return undefined;
     if (Array.isArray(val) || (typeof val === 'object' && val !== null)) return val;
     try { return JSON.parse(String(val)); } catch { return undefined; }
   };
+
+  const rawCapabilities = safeJson(row.capabilities_json);
+  const capabilities = rawCapabilities && typeof rawCapabilities === 'object' && !Array.isArray(rawCapabilities)
+    ? { ...EMPTY_CAPABILITIES, ...(rawCapabilities as Record<string, unknown>) }
+    : { ...EMPTY_CAPABILITIES };
 
   return {
     id: String(row.id),
@@ -182,12 +222,21 @@ export function publicOrganization(row: Record<string, unknown>) {
     commercialRegistrationNo: (row.commercial_registration_no as string) || '',
     verificationStatus: (row.verification_status as string) || 'UNVERIFIED',
     branches: (safeJson(row.branches_json) as any[]) || [],
-    capabilities: (safeJson(row.capabilities_json) as any) || { canBake: true, canFry: true, canFreeze: true, dailyCapacityUnits: 500, storageTypes: ['CHILLED', 'DRY'] },
+    capabilities,
     brandPositioning: (row.brand_positioning as string) || '',
     targetAudience: (row.target_audience as string) || '',
     contacts: (safeJson(row.contacts_json) as any[]) || [],
     logoUrl: (row.logo_url as string) || '',
     createdAt: String(row.created_at)
+  };
+}
+
+export function publicOrganizationSummary(row: Record<string, unknown>) {
+  const organization = publicOrganization(row);
+  return {
+    ...organization,
+    commercialRegistrationNo: '',
+    contacts: []
   };
 }
 
@@ -198,38 +247,55 @@ export interface SnapshotUser {
 }
 
 export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser) {
-  const isAdminUser = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
-  const filter = isAdminUser
-    ? { clause: '1=1', args: [] as unknown[] }
-    : user.creatorId
-    ? { clause: 'p.creator_id = ?', args: [user.creatorId] }
-    : user.hostBusinessId
-    ? { clause: 'EXISTS (SELECT 1 FROM collaborations c WHERE c.product_id=p.id AND c.organization_id=?)', args: [user.hostBusinessId] }
-    : { clause: '1=0', args: [] };
+  const role = user.role || 'CONSUMER';
+  const isAdminUser = role === 'ADMIN' || role === 'SUPER_ADMIN';
+  const isCreatorUser = role === 'CREATOR' && !!user.creatorId;
+  const isHostUser = role.startsWith('HOST_') && !!user.hostBusinessId;
+  const isConsumerUser = role === 'CONSUMER';
 
-  const products = await db.prepare(`SELECT p.* FROM products p WHERE ${filter.clause} ORDER BY p.created_at DESC LIMIT 500`).all(...filter.args) as Record<string, unknown>[];
+  // Products are selected for the signed-in identity, never by a generic "first row"
+  // fallback. Host discovery can see only market-matchable products (plus products already
+  // collaborating with that same tenant). Consumers see only products that are actually live.
+  let productRows: Record<string, unknown>[] = [];
+  if (isAdminUser) {
+    productRows = await db.prepare('SELECT p.* FROM products p ORDER BY p.created_at DESC LIMIT 500').all<Record<string, unknown>>();
+  } else if (isCreatorUser) {
+    productRows = await db.prepare('SELECT p.* FROM products p WHERE p.creator_id=? ORDER BY p.created_at DESC LIMIT 500').all<Record<string, unknown>>(user.creatorId!);
+  } else if (isHostUser) {
+    productRows = await db.prepare(`SELECT DISTINCT p.* FROM products p
+      WHERE p.status IN ('APPROVED_FOR_MARKETPLACE','AVAILABLE_FOR_MATCHING','IN_DISCUSSION','TESTING','COMMERCIAL_NEGOTIATION','CONTRACTING','LAUNCH_GATE','READY_TO_LAUNCH','LIVE_DROP','LIVE_TRIAL','LIVE_PERMANENT')
+         OR EXISTS (SELECT 1 FROM collaborations c WHERE c.product_id=p.id AND c.organization_id=?)
+      ORDER BY p.created_at DESC LIMIT 500`).all<Record<string, unknown>>(user.hostBusinessId!);
+  } else if (isConsumerUser) {
+    productRows = await db.prepare(`SELECT DISTINCT p.* FROM products p
+      WHERE EXISTS (SELECT 1 FROM launches l WHERE l.product_id=p.id AND l.status IN ('LIVE','PERMANENT'))
+      ORDER BY p.created_at DESC LIMIT 500`).all<Record<string, unknown>>();
+  }
 
   const collabs = (isAdminUser
     ? await db.prepare('SELECT * FROM collaborations ORDER BY updated_at DESC LIMIT 500').all()
-    : user.creatorId
-    ? await db.prepare('SELECT * FROM collaborations WHERE creator_id = ? ORDER BY updated_at DESC LIMIT 500').all(user.creatorId)
-    : user.hostBusinessId
-    ? await db.prepare('SELECT * FROM collaborations WHERE organization_id = ? ORDER BY updated_at DESC LIMIT 500').all(user.hostBusinessId)
+    : isCreatorUser
+    ? await db.prepare('SELECT * FROM collaborations WHERE creator_id = ? ORDER BY updated_at DESC LIMIT 500').all(user.creatorId!)
+    : isHostUser
+    ? await db.prepare('SELECT * FROM collaborations WHERE organization_id = ? ORDER BY updated_at DESC LIMIT 500').all(user.hostBusinessId!)
     : []) as CollabRow[];
 
   const collaborations = await Promise.all(collabs.map(async (collab) => {
-    const offerRows = await db.prepare('SELECT * FROM offer_versions WHERE collaboration_id = ? ORDER BY version_number ASC').all<Record<string, unknown>>(collab.id);
+    const offerRows = await db.prepare(`SELECT ov.*, u.role AS sender_role
+      FROM offer_versions ov JOIN users u ON u.id=ov.sender_user_id
+      WHERE ov.collaboration_id = ? ORDER BY ov.version_number ASC`).all<Record<string, unknown>>(collab.id);
     const offers = offerRows.map(o => {
       let terms: Record<string, unknown> = {};
       try {
         if (typeof o.terms_json === 'string') terms = JSON.parse(o.terms_json);
         else if (o.terms_json && typeof o.terms_json === 'object') terms = o.terms_json as Record<string, unknown>;
-      } catch { /* ignore */ }
+      } catch { /* ignore malformed historical terms rather than leaking/failing snapshot */ }
       return {
         id: o.id,
         collaborationId: o.collaboration_id,
         versionNumber: Number(o.version_number),
         senderUserId: o.sender_user_id,
+        senderRole: String(o.sender_role || '').startsWith('HOST_') ? 'HOST' : 'CREATOR',
         sellingPriceFils: Number(o.selling_price_fils),
         creatorRoyaltyBasisPoints: Number(o.creator_royalty_basis_points),
         platformFeeBasisPoints: Number(o.platform_fee_basis_points),
@@ -266,19 +332,19 @@ export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser)
     }
 
     const launchRow = await db.prepare('SELECT * FROM launches WHERE collaboration_id = ? ORDER BY created_at DESC LIMIT 1').get<Record<string, unknown>>(collab.id);
-    const gate = await launchGate(db, collab);
     const launch = launchRow ? {
       id: launchRow.id,
       collaborationId: launchRow.collaboration_id,
       productId: launchRow.product_id,
       organizationId: launchRow.organization_id,
       status: launchRow.status,
-      quantityCap: launchRow.quantity_cap ? Number(launchRow.quantity_cap) : null,
+      quantityCap: launchRow.quantity_cap !== null && launchRow.quantity_cap !== undefined ? Number(launchRow.quantity_cap) : null,
       startsAt: launchRow.starts_at,
+      endsAt: launchRow.ends_at,
       createdAt: launchRow.created_at,
       updatedAt: launchRow.updated_at,
-      gate
-    } : { gate };
+      gate: await launchGate(db, collab)
+    } : null;
 
     const recipeRows = await db.prepare('SELECT id, product_id, version_number, payload_sha256, created_by_user_id, created_at FROM recipe_versions WHERE product_id = ? ORDER BY version_number ASC').all<Record<string, unknown>>(collab.product_id);
     const recipeVersions = recipeRows.map(r => ({
@@ -306,24 +372,87 @@ export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser)
       updatedAt: g.updated_at
     }));
 
-    return {
-      ...collab,
-      offers,
-      contract,
-      launch,
-      recipeVersions,
-      recipeAccessGrants
-    };
+    return { ...collab, offers, contract, launch, recipeVersions, recipeAccessGrants };
   }));
 
-  const creatorRows = await db.prepare('SELECT * FROM creator_profiles ORDER BY created_at DESC LIMIT 200').all<Record<string, unknown>>();
-  const orgRows = await db.prepare('SELECT * FROM organizations ORDER BY created_at DESC LIMIT 200').all<Record<string, unknown>>();
+  // Public live-market projection. It is intentionally separate from private collaboration
+  // state and contains no contract/recipe/contact/registration data.
+  const liveRows = await db.prepare(`SELECT l.*, c.creator_id, p.public_name, p.target_price_fils,
+      o.branches_json,
+      COALESCE((SELECT ov.selling_price_fils FROM offer_versions ov WHERE ov.collaboration_id=c.id AND ov.status='ACCEPTED' ORDER BY ov.version_number DESC LIMIT 1), p.target_price_fils) AS selling_price_fils,
+      COALESCE((SELECT SUM(ord.units) FROM orders ord WHERE ord.launch_id=l.id AND ord.status IN ('PAID','FULFILLED')), 0) AS units_sold
+    FROM launches l
+    JOIN collaborations c ON c.id=l.collaboration_id
+    JOIN products p ON p.id=l.product_id
+    JOIN organizations o ON o.id=l.organization_id
+    WHERE l.status IN ('LIVE','PERMANENT')
+    ORDER BY COALESCE(l.starts_at,l.created_at) DESC LIMIT 500`).all<Record<string, unknown>>();
+
+  const marketLaunches = liveRows.map(row => {
+    let branches: any[] = [];
+    try { branches = row.branches_json ? JSON.parse(String(row.branches_json)) : []; } catch { branches = []; }
+    return {
+      id: String(row.id),
+      collaborationId: String(row.collaboration_id),
+      productId: String(row.product_id),
+      creatorId: String(row.creator_id),
+      organizationId: String(row.organization_id),
+      launchType: row.status === 'PERMANENT' ? 'PERMANENT_MENU' : 'LIMITED_DROP',
+      title: String(row.public_name || 'إطلاق مجال'),
+      sellingPriceFils: Number(row.selling_price_fils || row.target_price_fils || 0),
+      quantityCap: row.quantity_cap !== null && row.quantity_cap !== undefined ? Number(row.quantity_cap) : null,
+      unitsSold: Number(row.units_sold || 0),
+      branches: branches.filter(b => b && b.isActive !== false).map(b => String(b.id || b.name || '')).filter(Boolean),
+      startsAt: row.starts_at,
+      endsAt: row.ends_at,
+      status: row.status,
+      createdAt: row.created_at
+    };
+  });
+
+  // Identity projections are role-scoped. This closes the old cross-tenant leak where every
+  // signed-in account downloaded every creator and every organization.
+  let creators: Record<string, unknown>[] = [];
+  let organizations: Record<string, unknown>[] = [];
+  if (isAdminUser) {
+    const creatorRows = await db.prepare('SELECT * FROM creator_profiles ORDER BY created_at DESC LIMIT 500').all<Record<string, unknown>>();
+    const orgRows = await db.prepare('SELECT * FROM organizations ORDER BY created_at DESC LIMIT 500').all<Record<string, unknown>>();
+    creators = creatorRows.map(publicCreatorProfile);
+    organizations = orgRows.map(publicOrganization);
+  } else if (isCreatorUser) {
+    const own = await db.prepare('SELECT * FROM creator_profiles WHERE id=? AND user_id IS NOT NULL LIMIT 1').get<Record<string, unknown>>(user.creatorId!);
+    creators = own ? [publicCreatorProfile(own)] : [];
+    const orgRows = await db.prepare(`SELECT DISTINCT o.* FROM organizations o
+      WHERE o.verification_status='VERIFIED'
+         OR EXISTS (SELECT 1 FROM collaborations c WHERE c.organization_id=o.id AND c.creator_id=?)
+      ORDER BY o.created_at DESC LIMIT 500`).all<Record<string, unknown>>(user.creatorId!);
+    organizations = orgRows.map(publicOrganizationSummary);
+  } else if (isHostUser) {
+    const ownOrg = await db.prepare('SELECT * FROM organizations WHERE id=? LIMIT 1').get<Record<string, unknown>>(user.hostBusinessId!);
+    organizations = ownOrg ? [publicOrganization(ownOrg)] : [];
+    const creatorRows = await db.prepare(`SELECT DISTINCT cp.* FROM creator_profiles cp
+      JOIN products p ON p.creator_id=cp.id
+      WHERE p.status IN ('APPROVED_FOR_MARKETPLACE','AVAILABLE_FOR_MATCHING','IN_DISCUSSION','TESTING','COMMERCIAL_NEGOTIATION','CONTRACTING','LAUNCH_GATE','READY_TO_LAUNCH','LIVE_DROP','LIVE_TRIAL','LIVE_PERMANENT')
+         OR EXISTS (SELECT 1 FROM collaborations c WHERE c.creator_id=cp.id AND c.organization_id=?)
+      ORDER BY cp.created_at DESC LIMIT 500`).all<Record<string, unknown>>(user.hostBusinessId!);
+    creators = creatorRows.map(publicCreatorSummary);
+  } else {
+    const creatorRows = await db.prepare(`SELECT DISTINCT cp.* FROM creator_profiles cp
+      JOIN products p ON p.creator_id=cp.id JOIN launches l ON l.product_id=p.id
+      WHERE l.status IN ('LIVE','PERMANENT') ORDER BY cp.created_at DESC LIMIT 500`).all<Record<string, unknown>>();
+    const orgRows = await db.prepare(`SELECT DISTINCT o.* FROM organizations o
+      JOIN launches l ON l.organization_id=o.id WHERE l.status IN ('LIVE','PERMANENT')
+      ORDER BY o.created_at DESC LIMIT 500`).all<Record<string, unknown>>();
+    creators = creatorRows.map(publicCreatorSummary);
+    organizations = orgRows.map(publicOrganizationSummary);
+  }
 
   return {
-    products: products.map(publicProduct),
+    products: productRows.map(isConsumerUser ? publicMarketplaceProduct : publicProduct),
     collaborations,
-    creators: creatorRows.map(publicCreatorProfile),
-    organizations: orgRows.map(publicOrganization)
+    creators,
+    organizations,
+    marketLaunches
   };
 }
 
@@ -407,8 +536,8 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
 
   router.get('/profiles', async (req: AuthenticatedRequest, res) => {
     try {
-      const rows = await db.prepare('SELECT * FROM creator_profiles ORDER BY created_at DESC LIMIT 500').all<Record<string, unknown>>();
-      res.json(rows.map(publicCreatorProfile));
+      const snap = await buildDomainSnapshot(db, req.auth!.user);
+      res.json(snap.creators);
     } catch (e) {
       handleDomainError(res, e);
     }
@@ -416,6 +545,7 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
 
   router.get('/profiles/me', async (req: AuthenticatedRequest, res) => {
     try {
+      if (req.auth!.user.role !== 'CREATOR') return jsonError(res, 403, 'هذا المسار متاح لحساب المبدع فقط.', 'CREATOR_REQUIRED');
       const crId = req.auth!.user.creatorId;
       const row = crId
         ? await db.prepare('SELECT * FROM creator_profiles WHERE id = ?').get<Record<string, unknown>>(crId)
@@ -429,8 +559,8 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
 
   router.get('/organizations', async (req: AuthenticatedRequest, res) => {
     try {
-      const rows = await db.prepare('SELECT * FROM organizations ORDER BY created_at DESC LIMIT 500').all<Record<string, unknown>>();
-      res.json(rows.map(publicOrganization));
+      const snap = await buildDomainSnapshot(db, req.auth!.user);
+      res.json(snap.organizations);
     } catch (e) {
       handleDomainError(res, e);
     }
@@ -440,7 +570,11 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
     try {
       const row = await db.prepare('SELECT * FROM organizations WHERE id = ?').get<Record<string, unknown>>(req.params.id);
       if (!row) return jsonError(res, 404, 'المنشأة غير موجودة.', 'ORGANIZATION_NOT_FOUND');
-      res.json(publicOrganization(row));
+      if (isAdmin(req) || req.auth!.user.hostBusinessId === req.params.id) return res.json(publicOrganization(row));
+      const snap = await buildDomainSnapshot(db, req.auth!.user);
+      const visible = snap.organizations.find(org => String((org as any).id) === req.params.id);
+      if (!visible) return jsonError(res, 404, 'المنشأة غير متاحة لهذا الحساب.', 'ORGANIZATION_NOT_FOUND');
+      res.json(visible);
     } catch (e) {
       handleDomainError(res, e);
     }
@@ -448,27 +582,47 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
 
   router.post('/products', async (req: AuthenticatedRequest, res) => {
     try {
-      if (!req.auth!.user.creatorId) {
-        const existingCr = await db.prepare('SELECT id FROM creator_profiles WHERE user_id = ?').get<{id: string}>(req.auth!.user.id);
-        let crId = existingCr?.id;
-        if (!crId) {
-          crId = `cr_${randomUUID().slice(0, 8)}`;
-          const nowStr = new Date().toISOString();
-          await db.prepare("INSERT INTO creator_profiles(id, user_id, display_name, specialty, completion_score, matching_enabled, created_at, updated_at) VALUES(?, ?, ?, ?, 100, 1, ?, ?)")
-            .run(crId, req.auth!.user.id, req.auth!.user.name || 'مبدع طهي معتمد', 'ابتكار الأطباق والمنتجات', nowStr, nowStr);
-        }
-        await db.prepare('UPDATE users SET creator_id = ? WHERE id = ?').run(crId, req.auth!.user.id);
-        req.auth!.user.creatorId = crId;
+      if (req.auth!.user.role !== 'CREATOR' || !req.auth!.user.creatorId) {
+        return jsonError(res, 403, 'تسجيل المنتجات متاح لحساب المبدع المرتبط بملفه فقط.', 'CREATOR_REQUIRED');
       }
+      const ownedProfile = await db.prepare('SELECT id FROM creator_profiles WHERE id=? AND user_id=? LIMIT 1')
+        .get<{id:string}>(req.auth!.user.creatorId, req.auth!.user.id);
+      if (!ownedProfile) return jsonError(res, 409, 'ارتباط حساب المبدع غير صالح. أعد تسجيل الدخول.', 'CREATOR_IDENTITY_MISMATCH');
+
       const publicName=text(req.body?.publicName,2,140), category=text(req.body?.category,2,80), description=text(req.body?.shortDescription,5,1500);
+      const internalName=text(req.body?.internalName,1,140) || publicName;
+      const story=text(req.body?.story,0,4000) || '';
+      const servingSize=text(req.body?.servingSize,0,120) || '';
+      const shelfLife=text(req.body?.shelfLife,0,120) || '';
+      const prepMinutes=integer(req.body?.estimatedPrepTimeMinutes,0,10080) ?? 0;
       const cost=integer(req.body?.estimatedUnitCostFils,0,50_000_000), price=integer(req.body?.targetPriceFils,1,50_000_000), recipe=req.body?.recipe;
+      const desiredPartnershipType=text(req.body?.desiredPartnershipType,2,80) || 'PERCENTAGE_ROYALTY';
+      const isSecretRecipe=bool(req.body?.isSecretRecipe) ?? true;
+      const acceptsExclusivity=bool(req.body?.acceptsExclusivity) ?? false;
       if (!publicName||!category||!description||cost===undefined||price===undefined||!recipe||typeof recipe!=='object') return jsonError(res,400,'بيانات المنتج أو الوصفة غير صالحة.','INVALID_PRODUCT');
+
+      const mediaUrls=stringArray(req.body?.mediaUrls, 12, 1000);
+      const generalIngredients=stringArray(req.body?.generalIngredients, 80, 160);
+      const allergens=stringArray(req.body?.allergens, 40, 120);
+      const dietaryTags=stringArray(req.body?.dietaryTags, 40, 120);
+      const expectedEquipment=stringArray(req.body?.expectedEquipment, 80, 160);
+
       const result = await withIdempotency(db, req, 'PRODUCT_CREATE', async () => {
         const productId=`prd_${randomUUID()}`, recipeId=`rcp_${randomUUID()}`, created=now();
         const receipt=await putEncryptedJson('recipes',recipeId,recipe);
         await withTransaction(db, async tx => {
-          await tx.prepare('INSERT INTO products(id, creator_id, public_name, category, short_description, status, estimated_unit_cost_fils, target_price_fils, is_secret_recipe, created_at, updated_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)')
-            .run(productId,req.auth!.user.creatorId,publicName,category,description,'DRAFT',cost,price,created,created);
+          await tx.prepare(`INSERT INTO products(
+            id, creator_id, public_name, category, short_description, status,
+            estimated_unit_cost_fils, target_price_fils, is_secret_recipe,
+            internal_name, story, media_json, general_ingredients_json, allergens_json,
+            dietary_tags_json, serving_size, shelf_life, prep_time_minutes,
+            expected_equipment_json, accepts_exclusivity, desired_partnership_type,
+            created_at, updated_at
+          ) VALUES(?,?,?,?,?,'DRAFT',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+            .run(productId,req.auth!.user.creatorId,publicName,category,description,cost,price,isSecretRecipe?1:0,
+              internalName,story,JSON.stringify(mediaUrls),JSON.stringify(generalIngredients),JSON.stringify(allergens),
+              JSON.stringify(dietaryTags),servingSize,shelfLife,prepMinutes,JSON.stringify(expectedEquipment),acceptsExclusivity?1:0,
+              desiredPartnershipType,created,created);
           await tx.prepare('INSERT INTO recipe_versions(id, product_id, version_number, encrypted_payload, payload_sha256, created_by_user_id, created_at) VALUES(?, ?, 1, ?, ?, ?, ?)')
             .run(recipeId,productId,JSON.stringify({objectKey:receipt.objectKey,storage:receipt.storageProvider,ciphertextSha256:receipt.ciphertextSha256}),receipt.plaintextSha256,req.auth!.user.id,created);
           await audit(tx,req,'PRODUCT_CREATED','PRODUCT',productId,undefined,{publicName,category,recipeSha256:receipt.plaintextSha256});
@@ -484,23 +638,51 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
       const productId=text(req.body?.productId,3,120), level=integer(req.body?.disclosureLevel,1,3), purpose=text(req.body?.purpose,3,500);
       const org=req.auth!.user.hostBusinessId;
       if(!productId||level===undefined||!purpose||!org||!isHost(req,org)) return jsonError(res,403,'بيانات الطلب أو الصلاحية غير صالحة.','FORBIDDEN');
-      const product=await db.prepare('SELECT creator_id FROM products WHERE id=?').get<{creator_id:string}>(productId); if(!product) return jsonError(res,404,'المنتج غير موجود.','NOT_FOUND');
-      const result=await withIdempotency(db,req,'RECIPE_ACCESS_REQUEST',async()=>{
-        const id=`rag_${randomUUID()}`, created=now();
-        await db.prepare('INSERT INTO recipe_access_grants(id, product_id, creator_id, organization_id, disclosure_level, status, purpose, requested_by_user_id, created_at, updated_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      const product=await db.prepare('SELECT creator_id FROM products WHERE id=?').get<{creator_id:string}>(productId);
+      if(!product) return jsonError(res,404,'المنتج غير موجود.','NOT_FOUND');
+      const result=await withIdempotency(db,req,'RECIPE_ACCESS_REQUEST',async()=>withTransaction(db, async tx => {
+        let collab=await tx.prepare('SELECT id,stage FROM collaborations WHERE product_id=? AND organization_id=? LIMIT 1').get<{id:string;stage:string}>(productId,org);
+        const created=now();
+        if(!collab){
+          const collaborationId=`col_${randomUUID()}`;
+          await tx.prepare("INSERT INTO collaborations(id,product_id,creator_id,organization_id,stage,version,created_at,updated_at) VALUES(?,?,?,?, 'ACCESS_REQUESTED',1,?,?)")
+            .run(collaborationId,productId,product.creator_id,org,created,created);
+          collab={id:collaborationId,stage:'ACCESS_REQUESTED'};
+        } else if (collab.stage === 'INTEREST') {
+          await tx.prepare("UPDATE collaborations SET stage='ACCESS_REQUESTED',version=version+1,updated_at=? WHERE id=?").run(created,collab.id);
+          collab.stage='ACCESS_REQUESTED';
+        }
+
+        const existing=await tx.prepare("SELECT id,status,disclosure_level FROM recipe_access_grants WHERE product_id=? AND organization_id=? AND status IN ('REQUESTED','APPROVED') ORDER BY created_at DESC LIMIT 1")
+          .get<{id:string;status:string;disclosure_level:number|string}>(productId,org);
+        if(existing){
+          return {id:existing.id,status:existing.status,disclosureLevel:Number(existing.disclosure_level),collaborationId:collab.id};
+        }
+
+        const id=`rag_${randomUUID()}`;
+        await tx.prepare('INSERT INTO recipe_access_grants(id, product_id, creator_id, organization_id, disclosure_level, status, purpose, requested_by_user_id, created_at, updated_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
           .run(id,productId,product.creator_id,org,level,'REQUESTED',purpose,req.auth!.user.id,created,created);
-        await audit(db,req,'RECIPE_ACCESS_REQUESTED','RECIPE_ACCESS_GRANT',id,undefined,{productId,level,purpose},org);
-        return {id,status:'REQUESTED'};
-      }); res.status(201).json(result);
+        await audit(tx,req,'RECIPE_ACCESS_REQUESTED','RECIPE_ACCESS_GRANT',id,undefined,{productId,level,purpose,collaborationId:collab.id},org);
+        return {id,status:'REQUESTED',disclosureLevel:level,collaborationId:collab.id};
+      }));
+      res.status(201).json(result);
     }catch(e){handleDomainError(res,e)}
   });
 
   router.post('/recipe-access/:id/approve', async (req: AuthenticatedRequest,res)=>{
-    try { const grant=await db.prepare('SELECT * FROM recipe_access_grants WHERE id=?').get<Record<string,unknown>>(req.params.id); if(!grant)return jsonError(res,404,'الطلب غير موجود.','NOT_FOUND');
+    try {
+      const grant=await db.prepare('SELECT * FROM recipe_access_grants WHERE id=?').get<Record<string,unknown>>(req.params.id);
+      if(!grant)return jsonError(res,404,'الطلب غير موجود.','NOT_FOUND');
       if(!isCreator(req,String(grant.creator_id)))return jsonError(res,403,'الاعتماد للمبدع المالك فقط.','FORBIDDEN');
       const level=integer(req.body?.disclosureLevel,1,3) ?? Number(grant.disclosure_level), days=integer(req.body?.days,1,365) ?? 30, updated=now(), expires=new Date(Date.now()+days*86400000).toISOString();
-      await db.prepare("UPDATE recipe_access_grants SET disclosure_level=?, status='APPROVED', granted_by_user_id=?, expires_at=?, updated_at=? WHERE id=? AND status IN ('REQUESTED','APPROVED')").run(level,req.auth!.user.id,expires,updated,req.params.id);
-      await audit(db,req,'RECIPE_ACCESS_APPROVED','RECIPE_ACCESS_GRANT',req.params.id,grant,{level,expires},String(grant.organization_id)); res.json({id:req.params.id,status:'APPROVED',disclosureLevel:level,expiresAt:expires});
+      await withTransaction(db, async tx => {
+        await tx.prepare("UPDATE recipe_access_grants SET disclosure_level=?, status='APPROVED', granted_by_user_id=?, expires_at=?, updated_at=? WHERE id=? AND status IN ('REQUESTED','APPROVED')")
+          .run(level,req.auth!.user.id,expires,updated,req.params.id);
+        await tx.prepare("UPDATE collaborations SET stage='ACCESS_GRANTED',version=version+1,updated_at=? WHERE product_id=? AND organization_id=? AND stage IN ('INTEREST','ACCESS_REQUESTED')")
+          .run(updated,String(grant.product_id),String(grant.organization_id));
+        await audit(tx,req,'RECIPE_ACCESS_APPROVED','RECIPE_ACCESS_GRANT',req.params.id,grant,{level,expires},String(grant.organization_id));
+      });
+      res.json({id:req.params.id,status:'APPROVED',disclosureLevel:level,expiresAt:expires});
     }catch(e){handleDomainError(res,e)}
   });
 
