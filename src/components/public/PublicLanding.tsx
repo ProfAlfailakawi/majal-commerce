@@ -141,7 +141,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
         <div className="relative z-10 max-w-4xl xl:mr-auto xl:ml-[21rem] space-y-6 majal-hero-copy">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card border border-gold-300/20 text-gold-300 text-xs font-semibold">
             <LayoutPanelTop className="w-4 h-4" />
-            <span>مجال — منصة تشغيل الشراكات التجارية بين المبدعين والمنشآت المرخّصة</span>
+            <span>مجال — منظومة تربط المبدع والمنشأة والمورد والسوق بصلاحيات مستقلة</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black text-slate-100 leading-tight">
@@ -151,7 +151,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
           </h1>
 
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-3xl">
-            مسار واحد بصري وواضح: ابتكار، حماية، مطابقة، اختبار، اتفاق، ثم إطلاق عبر منشأة مرخّصة.
+            مسار واحد واضح: المبدع يملك الوصفة، المنشأة تحتضن وتطلق، المورد يجهّز سلسلة التوريد، والسوق يقيس الطلب — مع بوابة توظيف كويتية لا تنشر أي إعلان قبل اعتماد الإدارة.
           </p>
 
           {IS_DEMO_MODE ? <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-4">
@@ -215,7 +215,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
         {[
           { icon: <Users className="w-5 h-5" />, title: 'فصل الأدوار', body: 'كل طرف يرى ما يخصه فقط، حتى داخل المنشأة نفسها توجد صلاحيات مختلفة للمالك، الشيف، المالية، والتسويق.' },
           { icon: <Coins className="w-5 h-5" />, title: 'مستحقات شفافة', body: 'المبدع يتابع مبيعاته ومستحقاته، والمنشأة تتابع الهوامش والإطلاقات، والأدمن يراقب دورة التسوية.' },
-          { icon: <Store className="w-5 h-5" />, title: 'سوق قابل للتوسع', body: 'المنصة تبدأ بالطعام، لكن بنيتها تصلح لاحقًا لقطاعات أخرى مع نفس منطق الحاضن التجاري.' }
+          { icon: <Store className="w-5 h-5" />, title: 'منظومة بلا تداخل', body: 'هوية المبدع مستقلة عن المنشأة والمورد، وكل وظيفة كويتية تمر عبر مراجعة الإدارة قبل أن تظهر للجمهور.' }
         ].map((item, idx) => (
           <div key={idx} className="glass-card glass-card-hover rounded-2xl p-6 border border-white/10 space-y-4">
             <div className="w-11 h-11 rounded-xl bg-gold-500/10 border border-gold-300/20 flex items-center justify-center text-gold-300">{item.icon}</div>

@@ -11,6 +11,7 @@ import { createNotificationRouter } from './server/notifications';
 import { createPaciCallbackHandler, createPaciRegistry, createPaciRouter } from './server/paci';
 import { createPaymentRegistry, createPaymentRouter, createPaymentWebhookHandler } from './server/payments';
 import { createDomainRouter } from './server/domain';
+import { createEcosystemRouter } from './server/ecosystem';
 import { createAdvancedRouter } from './server/advanced';
 import { deliveryReadiness, startNotificationDeliveryWorker } from './server/delivery';
 import { installProcessSafetyHandlers, requestTelemetry, resolveTrustProxyHops, structuredLog } from './server/observability';
@@ -122,6 +123,7 @@ async function initializeApplication(app: express.Express) {
   app.use('/api/v1/payments', createPaymentRouter(db, authConfig, paymentRegistry));
   app.use('/api/v1/paci', createPaciRouter(db, authConfig, paciRegistry));
   app.use('/api/v1/domain', createDomainRouter(db, authConfig));
+  app.use('/api/v1/ecosystem', createEcosystemRouter(db, authConfig));
   app.use('/api/v1/advanced', createAdvancedRouter(db, authConfig));
 
   const authenticated = requireAuth(db, authConfig);

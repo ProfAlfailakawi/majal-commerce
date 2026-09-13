@@ -32,6 +32,8 @@ export interface SessionUser {
   status: 'ACTIVE' | 'SUSPENDED' | 'INVITED';
   creatorId?: string;
   hostBusinessId?: string;
+  accountType?: 'STANDARD' | 'SUPPLIER';
+  supplierId?: string;
   lastLoginAt?: string;
   mfaEnabled: boolean;
 }
@@ -45,6 +47,8 @@ interface UserRow {
   status: 'ACTIVE' | 'SUSPENDED' | 'INVITED';
   creator_id: string | null;
   host_business_id: string | null;
+  account_type: 'STANDARD' | 'SUPPLIER';
+  supplier_id: string | null;
   password_hash: string;
   password_salt: string;
   mfa_secret_encrypted: string | null;
@@ -259,6 +263,8 @@ function publicUser(row: UserRow): SessionUser {
     status: row.status,
     ...(row.creator_id ? { creatorId: row.creator_id } : {}),
     ...(row.host_business_id ? { hostBusinessId: row.host_business_id } : {}),
+    ...(row.account_type && row.account_type !== 'STANDARD' ? { accountType: row.account_type } : {}),
+    ...(row.supplier_id ? { supplierId: row.supplier_id } : {}),
     ...(row.last_login_at ? { lastLoginAt: row.last_login_at } : {}),
     mfaEnabled: row.mfa_enabled === 1
   };
@@ -352,6 +358,11 @@ interface PublicRegistrationProvisioning {
   commercialName?: string;
   businessType?: HostBusinessType;
   commercialRegistrationNo?: string;
+  accountType?: 'STANDARD' | 'SUPPLIER';
+  supplierCommercialName?: string;
+  supplierCategory?: string;
+  supplierCommercialRegistrationNo?: string;
+  supplierDescription?: string;
 }
 
 /**
@@ -441,6 +452,31 @@ export async function createPublicRegistration(
       `).run(organizationId, user.id, createdAt);
       await tx.prepare('UPDATE users SET host_business_id = ?, updated_at = ? WHERE id = ?')
         .run(organizationId, createdAt, user.id);
+    }
+
+    if (provisioning.accountType === 'SUPPLIER') {
+      if (user.role !== 'CONSUMER') throw new Error('حساب المورد يجب أن يبدأ كحساب تجاري مستقل.');
+      const commercialName = cleanText(provisioning.supplierCommercialName, 2, 160);
+      const category = cleanText(provisioning.supplierCategory, 2, 120);
+      if (!commercialName || !category) throw new Error('اسم المورد وفئة التوريد مطلوبان.');
+      const registrationNo = provisioning.supplierCommercialRegistrationNo
+        ? cleanText(provisioning.supplierCommercialRegistrationNo, 3, 80)
+        : '';
+      if (provisioning.supplierCommercialRegistrationNo && registrationNo === undefined) {
+        throw new Error('رقم السجل التجاري للمورد غير صالح.');
+      }
+      const description = provisioning.supplierDescription
+        ? cleanText(provisioning.supplierDescription, 0, 1200) ?? ''
+        : '';
+      const supplierId = `sup_${randomUUID()}`;
+      await tx.prepare(`
+        INSERT INTO supplier_profiles(
+          id,user_id,commercial_name,category,verification_status,commercial_registration_no,
+          description,region,contact_phone,contact_email,created_at,updated_at
+        ) VALUES(?,?,?,?,'UNVERIFIED',?,?,'الكويت',?,?,?,?)
+      `).run(supplierId,user.id,commercialName,category,registrationNo || '',description,user.phone,user.email,createdAt,createdAt);
+      await tx.prepare("UPDATE users SET account_type='SUPPLIER', supplier_id=?, updated_at=? WHERE id=?")
+        .run(supplierId,createdAt,user.id);
     }
 
     return await tx.prepare('SELECT * FROM users WHERE id = ?').get<UserRow>(user.id) as UserRow;
@@ -551,7 +587,26 @@ export function requireAuth(db: MajalDatabase, config: AuthConfig) {
 
     req.auth = { user: publicUser(row), tokenHash: row.token_hash, csrfHash: row.csrf_hash, expiresAt: row.expires_at };
     if (Date.now() - new Date(row.last_seen_at).getTime() > 15 * 60_000) {
-      await db.prepare('UPDATE sessions SET last_seen_at = ? WHERE token_hash = ?').run(new Date().toISOString(), row.token_hash);
+      if (row.account_type === 'SUPPLIER') {
+      try {
+        const linked = row.supplier_id
+          ? await db.prepare('SELECT id FROM supplier_profiles WHERE id=? AND user_id=? LIMIT 1').get<{id:string}>(row.supplier_id,row.id)
+          : undefined;
+        if (!linked) {
+          const owned = await db.prepare('SELECT id FROM supplier_profiles WHERE user_id=? LIMIT 1').get<{id:string}>(row.id);
+          if (!owned) {
+            row.supplier_id = null;
+          } else {
+            await db.prepare('UPDATE users SET supplier_id=?, updated_at=? WHERE id=?').run(owned.id,new Date().toISOString(),row.id);
+            row.supplier_id = owned.id;
+          }
+        }
+      } catch {
+        row.supplier_id = null;
+      }
+    }
+
+    await db.prepare('UPDATE sessions SET last_seen_at = ? WHERE token_hash = ?').run(new Date().toISOString(), row.token_hash);
     }
     next();
   };
@@ -656,6 +711,10 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
         return jsonError(res, 400, 'نوع نشاط المنشأة غير صالح.', 'INVALID_BUSINESS_TYPE');
       }
 
+      const requestedAccountType = req.body?.accountType === 'SUPPLIER' ? 'SUPPLIER' : 'STANDARD';
+      // A supplier is a commercial identity owned by a normal account, not an RBAC escalation.
+      // Ignore supplier provisioning for privileged/creator/host registrations.
+      const accountType = assignedRole === 'CONSUMER' ? requestedAccountType : 'STANDARD';
       const user = await createPublicRegistration(db, {
           name: req.body?.name,
           email,
@@ -665,7 +724,12 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
         }, {
           commercialName: req.body?.organization?.commercialName ?? req.body?.commercialName,
           businessType,
-          commercialRegistrationNo: req.body?.organization?.commercialRegistrationNo ?? req.body?.commercialRegistrationNo
+          commercialRegistrationNo: req.body?.organization?.commercialRegistrationNo ?? req.body?.commercialRegistrationNo,
+          accountType,
+          supplierCommercialName: req.body?.supplier?.commercialName,
+          supplierCategory: req.body?.supplier?.category,
+          supplierCommercialRegistrationNo: req.body?.supplier?.commercialRegistrationNo,
+          supplierDescription: req.body?.supplier?.description
         });
       const session = await createSession(db, config, req, user);
       setSessionCookies(res, config, session.token, session.csrfToken, session.expiresAt);

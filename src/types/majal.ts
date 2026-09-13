@@ -10,7 +10,7 @@ export type UserRole =
   | 'SUPER_ADMIN'
   | 'CONSUMER';
 
-export type SurfaceType = 'PUBLIC' | 'CREATOR' | 'HOST' | 'CONSUMER' | 'ADMIN' | 'SUPER_ADMIN';
+export type SurfaceType = 'PUBLIC' | 'CREATOR' | 'HOST' | 'SUPPLIER' | 'CONSUMER' | 'ADMIN' | 'SUPER_ADMIN';
 
 export type Language = 'ar' | 'en';
 
@@ -25,6 +25,8 @@ export interface User {
   lastLoginAt?: string;
   creatorId?: string;
   hostBusinessId?: string;
+  accountType?: 'STANDARD' | 'SUPPLIER';
+  supplierId?: string;
 }
 
 export type CreatorType = 'CREATOR' | 'MAKER' | 'BRAND_CREATOR' | 'EXPERT_CREATOR';
@@ -77,6 +79,78 @@ export interface HostBusiness {
   contacts: { name: string; role: string; phone: string; email: string }[];
   logoUrl: string;
   createdAt: string;
+}
+
+
+export type SupplierVerificationStatus = 'UNVERIFIED' | 'PENDING' | 'VERIFIED' | 'NEEDS_ACTION' | 'SUSPENDED';
+
+export interface SupplierProfile {
+  id: string;
+  commercialName: string;
+  category: string;
+  verificationStatus: SupplierVerificationStatus;
+  commercialRegistrationNo?: string;
+  description: string;
+  region: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  adminNote?: string;
+  reviewedAt?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface SupplierOffering {
+  id: string;
+  supplierId: string;
+  name: string;
+  category: string;
+  description: string;
+  unit: string;
+  minOrderQty: number;
+  leadTimeDays: number;
+  priceFromFils: number | null;
+  status: 'ACTIVE' | 'PAUSED';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type JobEmploymentType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
+export type JobPostStatus = 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED' | 'CLOSED';
+
+export interface KuwaitiJobPost {
+  id: string;
+  employerType: 'HOST' | 'SUPPLIER';
+  employerId: string;
+  employerName: string;
+  title: string;
+  department: string;
+  employmentType: JobEmploymentType;
+  location: string;
+  description: string;
+  requirements: string[];
+  salaryMinFils: number | null;
+  salaryMaxFils: number | null;
+  kuwaitiOnly: true;
+  status: JobPostStatus;
+  adminNote?: string;
+  reviewedAt?: string | null;
+  submittedAt: string;
+  createdAt: string;
+}
+
+export interface KuwaitiJobApplication {
+  id: string;
+  jobId: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  summary: string;
+  yearsExperience: number;
+  kuwaitiDeclaration: true;
+  status: 'SUBMITTED' | 'SHORTLISTED' | 'REJECTED' | 'HIRED' | 'WITHDRAWN';
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type ProductStatus = 

@@ -5,7 +5,7 @@ import { databaseHealth, openMajalDatabase } from './database';
 test('database migrations create the auth, payment, PACI and notification boundaries', async () => {
   const db = await openMajalDatabase({ filename: ':memory:' });
   try {
-    assert.deepEqual(await databaseHealth(db), { ready: true, schemaVersion: 17, dialect: 'sqlite' });
+    assert.deepEqual(await databaseHealth(db), { ready: true, schemaVersion: 18, dialect: 'sqlite' });
     const tables = (await db.prepare(`SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name`).all()).map(row => String(row.name));
     for (const required of [
       'users',
@@ -26,8 +26,15 @@ test('database migrations create the auth, payment, PACI and notification bounda
       'accruals',
       'settlement_batches',
       'catalog_records',
-      'order_events'
+      'order_events',
+      'supplier_profiles',
+      'supplier_offerings',
+      'job_posts',
+      'job_applications'
     ]) assert.ok(tables.includes(required), `missing table ${required}`);
+    const userColumns = (await db.prepare('PRAGMA table_info(users)').all()).map(row => String(row.name));
+    assert.ok(userColumns.includes('account_type'), 'missing users.account_type');
+    assert.ok(userColumns.includes('supplier_id'), 'missing users.supplier_id');
     assert.equal((await db.prepare('PRAGMA foreign_key_check').all()).length, 0);
     assert.equal(String((await db.prepare('PRAGMA integrity_check').get())?.integrity_check), 'ok');
   } finally {

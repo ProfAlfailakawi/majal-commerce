@@ -1265,6 +1265,100 @@ const migrations = [
           WHERE om.user_id = users.id AND om.status = 'ACTIVE'
         ) = 1;
     `
+  },
+  {
+    // Supplier identity + Kuwait employment gateway. Supplier is an account/domain type,
+    // not a privileged RBAC role: authorization stays on the existing CONSUMER role while
+    // ownership is anchored to supplier_profiles.user_id. This avoids widening the legacy
+    // users.role CHECK constraint and keeps tenant isolation explicit.
+    version: 18,
+    sql: `
+      ALTER TABLE users ADD COLUMN account_type TEXT NOT NULL DEFAULT 'STANDARD'
+        CHECK(account_type IN ('STANDARD', 'SUPPLIER'));
+      ALTER TABLE users ADD COLUMN supplier_id TEXT;
+
+      CREATE TABLE IF NOT EXISTS supplier_profiles (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL UNIQUE REFERENCES users(id) ON DELETE RESTRICT,
+        commercial_name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        verification_status TEXT NOT NULL DEFAULT 'UNVERIFIED'
+          CHECK(verification_status IN ('UNVERIFIED','PENDING','VERIFIED','NEEDS_ACTION','SUSPENDED')),
+        commercial_registration_no TEXT NOT NULL DEFAULT '',
+        description TEXT NOT NULL DEFAULT '',
+        region TEXT NOT NULL DEFAULT 'الكويت',
+        contact_phone TEXT NOT NULL DEFAULT '',
+        contact_email TEXT NOT NULL DEFAULT '',
+        admin_note TEXT NOT NULL DEFAULT '',
+        reviewed_by_user_id TEXT REFERENCES users(id) ON DELETE RESTRICT,
+        reviewed_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_supplier_profiles_status ON supplier_profiles(verification_status, created_at DESC, id);
+
+      CREATE TABLE IF NOT EXISTS supplier_offerings (
+        id TEXT PRIMARY KEY,
+        supplier_id TEXT NOT NULL REFERENCES supplier_profiles(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        unit TEXT NOT NULL DEFAULT '',
+        min_order_qty INTEGER NOT NULL DEFAULT 1 CHECK(min_order_qty >= 1),
+        lead_time_days INTEGER NOT NULL DEFAULT 0 CHECK(lead_time_days BETWEEN 0 AND 3650),
+        price_from_fils INTEGER CHECK(price_from_fils IS NULL OR price_from_fils >= 0),
+        status TEXT NOT NULL DEFAULT 'ACTIVE' CHECK(status IN ('ACTIVE','PAUSED')),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_supplier_offerings_supplier_status ON supplier_offerings(supplier_id, status, created_at DESC, id);
+
+      CREATE TABLE IF NOT EXISTS job_posts (
+        id TEXT PRIMARY KEY,
+        employer_type TEXT NOT NULL CHECK(employer_type IN ('HOST','SUPPLIER')),
+        employer_id TEXT NOT NULL,
+        created_by_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+        employer_name TEXT NOT NULL,
+        title TEXT NOT NULL,
+        department TEXT NOT NULL DEFAULT '',
+        employment_type TEXT NOT NULL CHECK(employment_type IN ('FULL_TIME','PART_TIME','CONTRACT','INTERNSHIP')),
+        location TEXT NOT NULL DEFAULT 'الكويت',
+        description TEXT NOT NULL,
+        requirements_json TEXT NOT NULL DEFAULT '[]',
+        salary_min_fils INTEGER CHECK(salary_min_fils IS NULL OR salary_min_fils >= 0),
+        salary_max_fils INTEGER CHECK(salary_max_fils IS NULL OR salary_max_fils >= 0),
+        kuwaiti_only INTEGER NOT NULL DEFAULT 1 CHECK(kuwaiti_only = 1),
+        status TEXT NOT NULL DEFAULT 'PENDING_REVIEW'
+          CHECK(status IN ('PENDING_REVIEW','APPROVED','REJECTED','CLOSED')),
+        admin_note TEXT NOT NULL DEFAULT '',
+        reviewed_by_user_id TEXT REFERENCES users(id) ON DELETE RESTRICT,
+        submitted_at TEXT NOT NULL,
+        reviewed_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_job_posts_review_queue ON job_posts(status, submitted_at DESC, id);
+      CREATE INDEX IF NOT EXISTS idx_job_posts_employer ON job_posts(employer_type, employer_id, status, created_at DESC, id);
+
+      CREATE TABLE IF NOT EXISTS job_applications (
+        id TEXT PRIMARY KEY,
+        job_post_id TEXT NOT NULL REFERENCES job_posts(id) ON DELETE CASCADE,
+        applicant_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+        full_name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        summary TEXT NOT NULL DEFAULT '',
+        years_experience INTEGER NOT NULL DEFAULT 0 CHECK(years_experience BETWEEN 0 AND 80),
+        kuwaiti_declaration INTEGER NOT NULL CHECK(kuwaiti_declaration = 1),
+        status TEXT NOT NULL DEFAULT 'SUBMITTED'
+          CHECK(status IN ('SUBMITTED','SHORTLISTED','REJECTED','HIRED','WITHDRAWN')),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE(job_post_id, applicant_user_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_job_applications_job_status ON job_applications(job_post_id, status, created_at DESC, id);
+      CREATE INDEX IF NOT EXISTS idx_job_applications_applicant ON job_applications(applicant_user_id, created_at DESC, id);
+    `
   }
 ] as const;
 

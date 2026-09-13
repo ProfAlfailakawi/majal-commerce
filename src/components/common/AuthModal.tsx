@@ -1,5 +1,5 @@
 import React, { FormEvent, useState } from 'react';
-import { Building2, Crown, Eye, EyeOff, KeyRound, LogIn, RefreshCcw, ShieldCheck, Sparkles, Store, UserPlus, Users, X } from 'lucide-react';
+import { Building2, Eye, EyeOff, KeyRound, LogIn, RefreshCcw, ShieldCheck, Sparkles, Store, Truck, UserPlus, X } from 'lucide-react';
 import { AuthApiError, AuthSession, login, register } from '../../lib/authClient';
 import { MajalLoader } from '../brand/MajalLoader';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
@@ -23,6 +23,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
   const dialogRef = useDialogBehavior<HTMLDivElement>(isOpen, onClose);
   const [mode, setMode] = useState<'LOGIN' | 'REGISTER' | 'RESET_REQUEST' | 'RESET_VERIFY'>('LOGIN');
   const [role, setRole] = useState<UserRole>('CREATOR');
+  const [accountType, setAccountType] = useState<'STANDARD' | 'SUPPLIER'>('STANDARD');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -30,6 +31,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
   const [commercialName, setCommercialName] = useState('');
   const [businessType, setBusinessType] = useState<'RESTAURANT' | 'BAKERY' | 'CENTRAL_KITCHEN' | 'CAFE' | 'FACTORY'>('RESTAURANT');
   const [commercialRegistrationNo, setCommercialRegistrationNo] = useState('');
+  const [supplierCommercialName, setSupplierCommercialName] = useState('');
+  const [supplierCategory, setSupplierCategory] = useState('');
+  const [supplierRegistrationNo, setSupplierRegistrationNo] = useState('');
+  const [supplierDescription, setSupplierDescription] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
   const [resetCode, setResetCode] = useState('');
@@ -76,11 +81,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
           phone,
           password,
           role,
+          accountType,
           ...(role === 'HOST_OWNER' ? {
             organization: {
               commercialName,
               businessType,
               ...(commercialRegistrationNo.trim() ? { commercialRegistrationNo: commercialRegistrationNo.trim() } : {})
+            }
+          } : {}),
+          ...(accountType === 'SUPPLIER' ? {
+            supplier: {
+              commercialName: supplierCommercialName,
+              category: supplierCategory,
+              ...(supplierRegistrationNo.trim() ? { commercialRegistrationNo: supplierRegistrationNo.trim() } : {}),
+              ...(supplierDescription.trim() ? { description: supplierDescription.trim() } : {})
             }
           } : {})
         });
@@ -136,18 +150,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
           {mode === 'REGISTER' && !needsMfa && (
             <div className="space-y-2">
               <span className="text-xs font-bold text-slate-200 block">اختر نوع الحساب في المنصة:</span>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
-                  { id: 'CREATOR', label: 'مبدع وصفات', icon: <Sparkles className="w-4 h-4" />, desc: 'ابتكار وحفظ أسرار الأطباق' },
-                  { id: 'HOST_OWNER', label: 'منشأة حاضنة', icon: <Building2 className="w-4 h-4" />, desc: 'ينشئ منشأة مستقلة بحالة غير موثقة حتى اكتمال التأهيل' },
-                  { id: 'CONSUMER', label: 'متذوق / عميل', icon: <Store className="w-4 h-4" />, desc: 'تصفح وتجربة وشراء الأطباق' }
+                  { id: 'CREATOR', label: 'مبدع', icon: <Sparkles className="w-4 h-4" />, desc: 'صاحب الخلطة أو الوصفة والمنتج الإبداعي' },
+                  { id: 'HOST_OWNER', label: 'منشأة', icon: <Building2 className="w-4 h-4" />, desc: 'مطعم أو مقهى أو مصنع يحتضن المنتج ويطلقه' },
+                  { id: 'SUPPLIER', label: 'مورد', icon: <Truck className="w-4 h-4" />, desc: 'مواد ومكونات وتغليف وخدمات توريد موثقة' },
+                  { id: 'CONSUMER', label: 'عميل', icon: <Store className="w-4 h-4" />, desc: 'تصفح وتجربة المنتجات والفرص العامة' }
                 ].map((item) => (
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() => setRole(item.id as UserRole)}
+                    onClick={() => {
+                      if (item.id === 'SUPPLIER') { setRole('CONSUMER'); setAccountType('SUPPLIER'); }
+                      else { setRole(item.id as UserRole); setAccountType('STANDARD'); }
+                    }}
                     className={`p-3 rounded-xl border text-right transition cursor-pointer ${
-                      role === item.id
+                      (item.id === 'SUPPLIER' ? accountType === 'SUPPLIER' : accountType === 'STANDARD' && role === item.id)
                         ? 'bg-gold-500/15 border-gold-300 text-slate-100 shadow-sm'
                         : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
                     }`}
@@ -210,6 +228,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
               <p className="sm:col-span-2 text-[10px] leading-5 text-slate-400">
                 تُنشأ المنشأة لك وحدك فورًا، وتبقى «غير موثقة» إلى أن يكتمل التحقق من السجل والتصاريح. لا يتم ربط حسابك بأي منشأة موجودة مسبقًا.
               </p>
+            </div>
+          )}
+
+          {mode === 'REGISTER' && !needsMfa && accountType === 'SUPPLIER' && (
+            <div className="grid sm:grid-cols-2 gap-3 rounded-2xl bg-emerald-500/5 border border-emerald-400/15 p-4">
+              <label className="block space-y-1.5 sm:col-span-2">
+                <span className="text-xs font-bold text-slate-200">الاسم التجاري للمورد</span>
+                <input value={supplierCommercialName} onChange={event => setSupplierCommercialName(event.target.value)} required minLength={2} maxLength={160} placeholder="مثال: شركة التوريد الكويتية" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-emerald-300/50" />
+              </label>
+              <label className="block space-y-1.5">
+                <span className="text-xs font-bold text-slate-200">فئة التوريد</span>
+                <input value={supplierCategory} onChange={event => setSupplierCategory(event.target.value)} required minLength={2} maxLength={120} placeholder="مواد خام، تغليف، معدات…" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-emerald-300/50" />
+              </label>
+              <label className="block space-y-1.5">
+                <span className="text-xs font-bold text-slate-200">رقم السجل التجاري <span className="text-slate-500">(اختياري الآن)</span></span>
+                <input value={supplierRegistrationNo} onChange={event => setSupplierRegistrationNo(event.target.value)} minLength={3} maxLength={80} dir="ltr" placeholder="CR / license no." className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-emerald-300/50 text-left" />
+              </label>
+              <label className="block space-y-1.5 sm:col-span-2">
+                <span className="text-xs font-bold text-slate-200">نبذة قصيرة <span className="text-slate-500">(اختياري)</span></span>
+                <textarea value={supplierDescription} onChange={event => setSupplierDescription(event.target.value)} maxLength={1200} rows={2} placeholder="ما الذي تورّده ولأي نوع من المنشآت؟" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-emerald-300/50 resize-none" />
+              </label>
+              <p className="sm:col-span-2 text-[10px] leading-5 text-slate-400">يُنشأ ملف المورد مستقلًا ولا يظهر للعامة قبل تحقق الإدارة واعتماد المورد.</p>
             </div>
           )}
 
@@ -288,7 +328,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
 
           <button disabled={submitting || (needsMfa && mfaCode.length !== 6) || (mode === 'RESET_VERIFY' && resetCode.length < RESET_TOKEN_MIN_LENGTH)} aria-busy={submitting} className="w-full py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 font-black text-sm disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:brightness-105 transition">
             {submitting ? <MajalLoader size={16} label="جارٍ معالجة الطلب…" /> : mode === 'LOGIN' ? <LogIn className="w-4 h-4" /> : (mode === 'RESET_REQUEST' || mode === 'RESET_VERIFY') ? <RefreshCcw className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
-            {submitting ? 'جارٍ المعالجة…' : needsMfa ? 'تحقق وادخل' : mode === 'LOGIN' ? 'دخول فوري' : mode === 'RESET_REQUEST' ? 'إرسال رمز التوثيق للبريد' : mode === 'RESET_VERIFY' ? 'توثيق الرمز وتعيين كلمة المرور' : `إنشاء حساب (${role === 'SUPER_ADMIN' ? 'سوبر أدمن' : role === 'ADMIN' ? 'أدمن' : role === 'CREATOR' ? 'مبدع' : role === 'HOST_OWNER' ? 'منشأة' : 'عميل'})`}
+            {submitting ? 'جارٍ المعالجة…' : needsMfa ? 'تحقق وادخل' : mode === 'LOGIN' ? 'دخول فوري' : mode === 'RESET_REQUEST' ? 'إرسال رمز التوثيق للبريد' : mode === 'RESET_VERIFY' ? 'توثيق الرمز وتعيين كلمة المرور' : `إنشاء حساب (${accountType === 'SUPPLIER' ? 'مورد' : role === 'SUPER_ADMIN' ? 'سوبر أدمن' : role === 'ADMIN' ? 'أدمن' : role === 'CREATOR' ? 'مبدع' : role === 'HOST_OWNER' ? 'منشأة' : 'عميل'})`}
           </button>
         </form>
       </div>

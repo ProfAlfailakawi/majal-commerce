@@ -312,9 +312,34 @@ test('IDENTITY regression: new creator, host and consumer are provisioned into i
     assert.ok(hostBody.user.hostBusinessId);
     assert.equal(hostBody.user.creatorId, undefined);
     const org = await db.prepare('SELECT commercial_name,verification_status,business_type FROM organizations WHERE id=?').get<{commercial_name:string;verification_status:string;business_type:string}>(hostBody.user.hostBusinessId!);
-    assert.deepEqual(org, { commercial_name: 'مطعم عمر', verification_status: 'UNVERIFIED', business_type: 'RESTAURANT' });
+    // node:sqlite returns null-prototype rows; compare fields so the regression test
+    // validates identity data rather than an implementation-specific row prototype.
+    assert.equal(org?.commercial_name, 'مطعم عمر');
+    assert.equal(org?.verification_status, 'UNVERIFIED');
+    assert.equal(org?.business_type, 'RESTAURANT');
     const membership = await db.prepare('SELECT role,status FROM organization_memberships WHERE organization_id=? AND user_id=?').get<{role:string;status:string}>(hostBody.user.hostBusinessId!, hostBody.user.id);
-    assert.deepEqual(membership, { role: 'HOST_OWNER', status: 'ACTIVE' });
+    assert.equal(membership?.role, 'HOST_OWNER');
+    assert.equal(membership?.status, 'ACTIVE');
+
+    const supplierRes = await fetch(`${baseUrl}/api/v1/auth/register`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        name: 'مورد جديد', email: 'supplier-new@example.test', phone: '+96550000115', password: fixturePassword('Supplier-New'),
+        role: 'CONSUMER', accountType: 'SUPPLIER',
+        supplier: { commercialName: 'توريدات الكويت', category: 'مواد غذائية', commercialRegistrationNo: 'SUP-001', description: 'توريد مكونات للمطاعم' }
+      })
+    });
+    assert.equal(supplierRes.status, 201);
+    const supplierBody = await supplierRes.json() as { user: { id:string; role:string; accountType?:string; supplierId?:string; creatorId?:string; hostBusinessId?:string } };
+    assert.equal(supplierBody.user.role, 'CONSUMER');
+    assert.equal(supplierBody.user.accountType, 'SUPPLIER');
+    assert.ok(supplierBody.user.supplierId);
+    assert.equal(supplierBody.user.creatorId, undefined);
+    assert.equal(supplierBody.user.hostBusinessId, undefined);
+    const supplier = await db.prepare('SELECT user_id,commercial_name,verification_status FROM supplier_profiles WHERE id=?').get<{user_id:string;commercial_name:string;verification_status:string}>(supplierBody.user.supplierId!);
+    assert.equal(supplier?.user_id, supplierBody.user.id);
+    assert.equal(supplier?.commercial_name, 'توريدات الكويت');
+    assert.equal(supplier?.verification_status, 'UNVERIFIED');
 
     const consumerRes = await fetch(`${baseUrl}/api/v1/auth/register`, {
       method: 'POST', headers: { 'content-type': 'application/json' },

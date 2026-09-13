@@ -31,6 +31,9 @@ import { StatusPill } from '../common/StatusPill';
 import { SurfaceTabs } from '../common/SurfaceTabs';
 import { EmptyState } from '../common/EmptyState';
 import { Avatar } from '../common/Avatar';
+import { JobComposer } from '../jobs/JobComposer';
+import { EmployerJobsStrip } from '../jobs/EmployerJobsStrip';
+import { SupplierDirectory } from './SupplierDirectory';
 
 export const HostPortal: React.FC = () => {
   const [, setTick] = useState(0);
@@ -38,6 +41,7 @@ export const HostPortal: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'DISCOVERY' | 'CHALLENGES' | 'LAB' | 'WAR_ROOM' | 'FINANCE' | 'TEAM'>('OVERVIEW');
   const [showPublisher, setShowPublisher] = useState(false);
+  const [showJobComposer, setShowJobComposer] = useState(false);
   const [selectedContract, setSelectedContract] = useState<any>(null);
 
   const currentHostId = store.activeUser.hostBusinessId || '';
@@ -184,6 +188,9 @@ export const HostPortal: React.FC = () => {
             ))}
           </div>
 
+          {['HOST_OWNER', 'HOST_OPERATIONS'].includes(store.activeUser.role) && <EmployerJobsStrip onCreate={() => setShowJobComposer(true)} />}
+
+          {canDiscover && <SupplierDirectory />}
           {canDiscover && <ProductDiscovery />}
           {canSeeTwin && activeProduct && activeCol && (
             <DigitalTwinPanel product={activeProduct} hostBusinessId={currentHostId} collaborationId={activeCol.id} />
@@ -242,6 +249,7 @@ export const HostPortal: React.FC = () => {
 
       {activeTab === 'TEAM' && <TeamPermissions hostBusinessId={currentHostId} />}
 
+      <JobComposer isOpen={showJobComposer} onClose={() => setShowJobComposer(false)} employerLabel={host.commercialName} />
       {showPublisher && <ChallengePublisher isOpen={showPublisher} onClose={() => setShowPublisher(false)} />}
       {selectedContract && <ContractModal isOpen={!!selectedContract} onClose={() => setSelectedContract(null)} contract={selectedContract} />}
     </div>

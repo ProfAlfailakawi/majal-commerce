@@ -298,6 +298,7 @@ export class Store {
     else if (updatedUser.role === 'ADMIN') this.activeSurface = 'ADMIN';
     else if (updatedUser.role === 'CREATOR') this.activeSurface = 'CREATOR';
     else if (updatedUser.role.startsWith('HOST_')) this.activeSurface = 'HOST';
+    else if (updatedUser.accountType === 'SUPPLIER') this.activeSurface = 'SUPPLIER';
     else this.activeSurface = 'CONSUMER';
 
     this.notify();

@@ -87,10 +87,17 @@ export async function register(input: {
   phone: string;
   password: string;
   role?: string;
+  accountType?: 'STANDARD' | 'SUPPLIER';
   organization?: {
     commercialName: string;
     businessType: 'RESTAURANT' | 'BAKERY' | 'CENTRAL_KITCHEN' | 'CAFE' | 'FACTORY';
     commercialRegistrationNo?: string;
+  };
+  supplier?: {
+    commercialName: string;
+    category: string;
+    commercialRegistrationNo?: string;
+    description?: string;
   };
 }) {
   return rememberSession(await request<AuthSession>('/api/v1/auth/register', {

@@ -17,6 +17,7 @@ import { OnboardingIntent, hasSeenOnboarding, markOnboardingSeen } from './lib/o
 
 const CreatorPortal = lazy(() => import('./components/creator/CreatorPortal').then(module => ({ default: module.CreatorPortal })));
 const HostPortal = lazy(() => import('./components/host/HostPortal').then(module => ({ default: module.HostPortal })));
+const SupplierPortal = lazy(() => import('./components/supplier/SupplierPortal').then(module => ({ default: module.SupplierPortal })));
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard').then(module => ({ default: module.AdminDashboard })));
 const SuperAdminDashboard = lazy(() => import('./components/admin/SuperAdminDashboard').then(module => ({ default: module.SuperAdminDashboard })));
 const AiAssistantDrawer = lazy(() => import('./components/common/AiAssistantDrawer').then(module => ({ default: module.AiAssistantDrawer })));
@@ -65,7 +66,7 @@ export default function App() {
       .then(async session => {
         if (!active) return;
         if (session && store.setAuthenticatedUser(session.user)) {
-          const surface = surfaceForRole(session.user.role);
+          const surface = surfaceForUser(session.user);
           await store.hydrateFromServer();
           if (!active) return;
           setAuthStatus('AUTHENTICATED');
@@ -80,17 +81,18 @@ export default function App() {
     return () => { active = false; };
   }, []);
 
-  const surfaceForRole = (role: string): SurfaceType => {
-    if (role === 'SUPER_ADMIN') return 'SUPER_ADMIN';
-    if (role === 'ADMIN') return 'ADMIN';
-    if (role === 'CREATOR') return 'CREATOR';
-    if (role.startsWith('HOST_')) return 'HOST';
+  const surfaceForUser = (user: { role: string; accountType?: string }): SurfaceType => {
+    if (user.role === 'SUPER_ADMIN') return 'SUPER_ADMIN';
+    if (user.role === 'ADMIN') return 'ADMIN';
+    if (user.role === 'CREATOR') return 'CREATOR';
+    if (user.role.startsWith('HOST_')) return 'HOST';
+    if (user.accountType === 'SUPPLIER') return 'SUPPLIER';
     return 'CONSUMER';
   };
 
   const handleAuthenticated = async (session: AuthSession) => {
     if (!store.setAuthenticatedUser(session.user)) return;
-    const surface = surfaceForRole(session.user.role);
+    const surface = surfaceForUser(session.user);
     await store.hydrateFromServer();
     setAuthStatus('AUTHENTICATED');
     setActiveSurface(surface);
@@ -159,6 +161,7 @@ export default function App() {
               {activeSurface === 'CONSUMER' && <ConsumerDashboard onSurfaceChange={handleSurfaceChange} />}
               {activeSurface === 'CREATOR' && <CreatorPortal />}
               {activeSurface === 'HOST' && <HostPortal />}
+              {activeSurface === 'SUPPLIER' && <SupplierPortal />}
               {activeSurface === 'ADMIN' && <AdminDashboard />}
               {activeSurface === 'SUPER_ADMIN' && <SuperAdminDashboard />}
             </>}

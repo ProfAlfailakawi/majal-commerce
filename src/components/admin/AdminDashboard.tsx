@@ -15,7 +15,8 @@ import {
   ShieldAlert,
   ShieldCheck,
   Users,
-  Wallet
+  Wallet,
+  ClipboardCheck
 } from 'lucide-react';
 import { store } from '../../lib/store';
 import { AdminAuditLogs } from './AdminAuditLogs';
@@ -23,9 +24,10 @@ import { TrustEngine } from './TrustEngine';
 import { StatusPill } from '../common/StatusPill';
 import { EmptyState } from '../common/EmptyState';
 import { SurfaceTabs } from '../common/SurfaceTabs';
+import { EcosystemApprovals } from './EcosystemApprovals';
 
 export const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'COMPLIANCE' | 'ACCESS' | 'SETTLEMENTS' | 'RISK' | 'AUDIT'>('OVERVIEW');
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'APPROVALS' | 'COMPLIANCE' | 'ACCESS' | 'SETTLEMENTS' | 'RISK' | 'AUDIT'>('OVERVIEW');
   const [notice, setNotice] = useState<string | null>(null);
 
   const totals = {
@@ -101,6 +103,7 @@ export const AdminDashboard: React.FC = () => {
       <SurfaceTabs
         tabs={[
           { id: 'OVERVIEW' as const, label: 'نظرة تشغيلية', icon: <LayoutDashboard className="w-4 h-4" /> },
+          { id: 'APPROVALS' as const, label: 'الاعتمادات', icon: <ClipboardCheck className="w-4 h-4" /> },
           { id: 'COMPLIANCE' as const, label: 'الامتثال والمنشآت', icon: <ShieldCheck className="w-4 h-4" /> },
           { id: 'ACCESS' as const, label: 'أذونات الوصفات والعقود', icon: <KeyRound className="w-4 h-4" /> },
           { id: 'SETTLEMENTS' as const, label: 'التسويات', icon: <Banknote className="w-4 h-4" /> },
@@ -121,7 +124,7 @@ export const AdminDashboard: React.FC = () => {
               <h2 className="text-lg font-black">أولويات الأدمن اليومية</h2>
             </div>
             {[
-              'مراجعة الطلبات الجديدة للمبدعين والمنشآت قبل نشرها.',
+              'مراجعة طلبات الموردين وإعلانات التوظيف الكويتية قبل النشر، مع متابعة طلبات المبدعين والمنشآت.',
               'متابعة أذونات الإفصاح للوصفات عالية الحساسية.',
               'حل التعارضات بين المبدع والمنشأة حول الشروط التجارية.',
               'تشغيل التسويات المالية وإصدار إشعارات الاستحقاق.',
@@ -152,6 +155,8 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </section>
       )}
+
+      {activeTab === 'APPROVALS' && <EcosystemApprovals />}
 
       {activeTab === 'COMPLIANCE' && (
         <section className="glass-panel rounded-3xl p-6 border border-white/10 space-y-4">

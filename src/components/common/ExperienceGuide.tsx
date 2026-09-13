@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   Sparkles,
   Store as StoreIcon,
+  Truck,
   X
 } from 'lucide-react';
 import { store } from '../../lib/store';
@@ -31,6 +32,7 @@ const surfaceMeta: Record<SurfaceType, { label: string; icon: React.ReactNode; k
   CONSUMER: { label: 'السوق والإطلاقات', icon: <StoreIcon className="w-4 h-4" />, keywords: 'سوق شراء منتجات consumer market' },
   CREATOR: { label: 'مساحة المبدع', icon: <Sparkles className="w-4 h-4" />, keywords: 'مبدع منتج وصفة creator product recipe' },
   HOST: { label: 'مساحة المنشأة', icon: <Building2 className="w-4 h-4" />, keywords: 'منشأة مصنع مطعم host factory' },
+  SUPPLIER: { label: 'مساحة المورد', icon: <Truck className="w-4 h-4" />, keywords: 'مورد توريد مواد تغليف supplier supply' },
   ADMIN: { label: 'مركز العمليات', icon: <ShieldCheck className="w-4 h-4" />, keywords: 'ادمن امتثال نزاعات admin compliance' },
   SUPER_ADMIN: { label: 'مركز القيادة', icon: <Crown className="w-4 h-4" />, keywords: 'سوبر سياسة مستخدمين super admin policy' }
 };
@@ -60,6 +62,10 @@ function deriveNextMove(activeSurface: SurfaceType) {
     return { eyebrow: 'أفضل خطوة الآن', title: 'اكتشف منتجاً مناسباً لقدراتك', reason: 'ابدأ من القدرة التشغيلية والهامش، ثم افتح الوصفة بالمستوى اللازم فقط.', action: 'افتح الاكتشاف', surface: 'HOST' as SurfaceType, signal: store.matches.length };
   }
 
+  if (user.accountType === 'SUPPLIER' && user.supplierId) {
+    return { eyebrow: 'مساحة المورد', title: 'حدّث التوريد أو أرسل فرصة كويتية', reason: 'عروض التوريد والوظائف تبقى في مسار مستقل وواضح، وكل إعلان توظيف يمر باعتماد الإدارة.', action: 'افتح مساحة المورد', surface: 'SUPPLIER' as SurfaceType, signal: 1 };
+  }
+
   if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
     const openDisputes = store.disputes.filter(item => ['OPEN', 'UNDER_INVESTIGATION'].includes(item.status)).length;
     const complianceIssues = store.compliance.filter(item => ['EXPIRED', 'EXPIRING_SOON'].includes(item.status)).length;
@@ -80,7 +86,7 @@ const CommandPalette: React.FC<{ open: boolean; onClose: () => void; onSurfaceCh
   const [query, setQuery] = useState('');
   const actions = useMemo(() => Object.entries(surfaceMeta)
     .filter(([surface]) => canAccessSurface(store.activeUser, surface as SurfaceType))
-    .map(([surface, meta]) => ({ surface: surface as SurfaceType, ...meta })), [store.activeUser.id, store.activeUser.role]);
+    .map(([surface, meta]) => ({ surface: surface as SurfaceType, ...meta })), [store.activeUser.id, store.activeUser.role, store.activeUser.accountType]);
   const normalized = query.trim().toLowerCase();
   const filtered = actions.filter(item => !normalized || `${item.label} ${item.keywords}`.toLowerCase().includes(normalized));
   if (!open) return null;
@@ -95,7 +101,7 @@ const CommandPalette: React.FC<{ open: boolean; onClose: () => void; onSurfaceCh
         </div>
         <div className="p-2 max-h-[55dvh] overflow-y-auto">
           {filtered.map(item => <button key={item.surface} onClick={() => { onSurfaceChange(item.surface); onClose(); }} className="w-full flex items-center justify-between gap-3 p-3.5 rounded-2xl text-right hover:bg-white/5 transition-colors">
-            <span className="flex items-center gap-3"><span className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 grid place-items-center text-gold-300">{item.icon}</span><span><span className="block text-sm font-bold text-slate-100">{item.label}</span><span className="block text-[10px] text-slate-500 mt-1">متاح لدور {roleLabel(store.activeUser.role)}</span></span></span>
+            <span className="flex items-center gap-3"><span className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 grid place-items-center text-gold-300">{item.icon}</span><span><span className="block text-sm font-bold text-slate-100">{item.label}</span><span className="block text-[10px] text-slate-500 mt-1">متاح لدور {store.activeUser.accountType === 'SUPPLIER' ? 'مورد' : roleLabel(store.activeUser.role)}</span></span></span>
             <ArrowLeft className="w-4 h-4 text-slate-500" />
           </button>)}
           {!filtered.length && <div className="p-8 text-center text-sm text-slate-500">لا توجد وجهة متاحة بهذه العبارة.</div>}

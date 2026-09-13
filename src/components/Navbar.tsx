@@ -12,6 +12,7 @@ import {
   Crown,
   Shield,
   Factory,
+  Truck,
   Users,
   LayoutGrid,
   Zap,
@@ -87,6 +88,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       { id: 'CONSUMER', labelAr: 'السوق', icon: <Store className="w-4 h-4" /> },
       { id: 'CREATOR', labelAr: 'المبدعون', icon: <Sparkles className="w-4 h-4" /> },
       { id: 'HOST', labelAr: 'المنشآت', icon: <Factory className="w-4 h-4" /> },
+      { id: 'SUPPLIER', labelAr: 'المورد', icon: <Truck className="w-4 h-4" /> },
       { id: 'ADMIN', labelAr: 'الأدمن', icon: <ShieldCheck className="w-4 h-4" /> },
       { id: 'SUPER_ADMIN', labelAr: 'السوبر أدمن', icon: <Crown className="w-4 h-4" /> }
     ];
@@ -95,8 +97,9 @@ export const Navbar: React.FC<NavbarProps> = ({
     if (activeUser.role === 'ADMIN') return all.filter(s => ['PUBLIC', 'CONSUMER', 'ADMIN'].includes(s.id));
     if (activeUser.role === 'CREATOR') return all.filter(s => ['PUBLIC', 'CONSUMER', 'CREATOR'].includes(s.id));
     if (activeUser.role.startsWith('HOST_')) return all.filter(s => ['PUBLIC', 'CONSUMER', 'HOST'].includes(s.id));
+    if (activeUser.accountType === 'SUPPLIER') return all.filter(s => ['PUBLIC', 'CONSUMER', 'SUPPLIER'].includes(s.id));
     return all.filter(s => ['PUBLIC', 'CONSUMER'].includes(s.id));
-  }, [activeUser.role]);
+  }, [activeUser.role, activeUser.accountType]);
 
   const demoNotifications = useMemo(() => {
     const items: string[] = [];
@@ -227,7 +230,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="hidden sm:grid w-7 h-7 rounded-full bg-gold-500/20 text-gold-300 place-items-center font-black text-xs" aria-hidden="true">{activeUser.name.slice(0, 1)}</span>
               <div className="hidden sm:flex flex-col text-right">
                 <span className="max-w-28 truncate text-[11px] font-bold text-slate-100">{activeUser.name}</span>
-                <span className="text-[9px] text-gold-300 font-semibold">{roleLabels[activeUser.role]}</span>
+                <span className="text-[9px] text-gold-300 font-semibold">{activeUser.accountType === 'SUPPLIER' ? 'مورد' : roleLabels[activeUser.role]}</span>
               </div>
               {['SUPER_ADMIN', 'ADMIN'].includes(activeUser.role) && (
                 <button

@@ -90,6 +90,7 @@ export function canAccessSurface(user: User, surface: SurfaceType): boolean {
   if (user.status === 'SUSPENDED' || user.status === 'INVITED') return false;
   if (surface === 'CREATOR') return user.role === 'CREATOR';
   if (surface === 'HOST') return user.role.startsWith('HOST_');
+  if (surface === 'SUPPLIER') return user.accountType === 'SUPPLIER' && !!user.supplierId;
   if (surface === 'ADMIN') return user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
   if (surface === 'SUPER_ADMIN') return user.role === 'SUPER_ADMIN';
   return false;

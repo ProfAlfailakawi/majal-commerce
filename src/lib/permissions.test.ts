@@ -7,7 +7,7 @@ const roles: UserRole[] = [
   'CONSUMER', 'CREATOR', 'HOST_OWNER', 'HOST_OPERATIONS', 'HOST_CHEF',
   'HOST_FINANCE', 'HOST_MARKETING', 'HOST_SUPPORT', 'ADMIN', 'SUPER_ADMIN'
 ];
-const surfaces: SurfaceType[] = ['PUBLIC', 'CONSUMER', 'CREATOR', 'HOST', 'ADMIN', 'SUPER_ADMIN'];
+const surfaces: SurfaceType[] = ['PUBLIC', 'CONSUMER', 'CREATOR', 'HOST', 'SUPPLIER', 'ADMIN', 'SUPER_ADMIN'];
 
 const expected: Record<UserRole, SurfaceType[]> = {
   CONSUMER: ['PUBLIC', 'CONSUMER'],
@@ -66,4 +66,12 @@ test('permission matrix contains no duplicate actions', () => {
     const permissions = getRolePermissions(role);
     assert.equal(new Set(permissions).size, permissions.length, role);
   }
+});
+
+
+test('supplier surface is account-identity bound without widening RBAC role', () => {
+  const supplier: User = { ...userFor('CONSUMER'), accountType: 'SUPPLIER', supplierId: 'sup-1' };
+  assert.equal(canAccessSurface(supplier, 'SUPPLIER'), true);
+  assert.equal(canAccessSurface(userFor('CONSUMER'), 'SUPPLIER'), false);
+  assert.equal(hasPermission(supplier, 'VIEW_ADMIN_PORTAL'), false);
 });
