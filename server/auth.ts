@@ -585,19 +585,17 @@ export function requireAuth(db: MajalDatabase, config: AuthConfig) {
       }
     }
 
-    req.auth = { user: publicUser(row), tokenHash: row.token_hash, csrfHash: row.csrf_hash, expiresAt: row.expires_at };
-    if (Date.now() - new Date(row.last_seen_at).getTime() > 15 * 60_000) {
-      if (row.account_type === 'SUPPLIER') {
+    if (row.account_type === 'SUPPLIER') {
       try {
         const linked = row.supplier_id
-          ? await db.prepare('SELECT id FROM supplier_profiles WHERE id=? AND user_id=? LIMIT 1').get<{id:string}>(row.supplier_id,row.id)
+          ? await db.prepare('SELECT id FROM supplier_profiles WHERE id = ? AND user_id = ? LIMIT 1').get<{ id: string }>(row.supplier_id, row.id)
           : undefined;
         if (!linked) {
-          const owned = await db.prepare('SELECT id FROM supplier_profiles WHERE user_id=? LIMIT 1').get<{id:string}>(row.id);
+          const owned = await db.prepare('SELECT id FROM supplier_profiles WHERE user_id = ? LIMIT 1').get<{ id: string }>(row.id);
           if (!owned) {
             row.supplier_id = null;
           } else {
-            await db.prepare('UPDATE users SET supplier_id=?, updated_at=? WHERE id=?').run(owned.id,new Date().toISOString(),row.id);
+            await db.prepare('UPDATE users SET supplier_id = ?, updated_at = ? WHERE id = ?').run(owned.id, new Date().toISOString(), row.id);
             row.supplier_id = owned.id;
           }
         }
@@ -606,7 +604,9 @@ export function requireAuth(db: MajalDatabase, config: AuthConfig) {
       }
     }
 
-    await db.prepare('UPDATE sessions SET last_seen_at = ? WHERE token_hash = ?').run(new Date().toISOString(), row.token_hash);
+    req.auth = { user: publicUser(row), tokenHash: row.token_hash, csrfHash: row.csrf_hash, expiresAt: row.expires_at };
+    if (Date.now() - new Date(row.last_seen_at).getTime() > 15 * 60_000) {
+      await db.prepare('UPDATE sessions SET last_seen_at = ? WHERE token_hash = ?').run(new Date().toISOString(), row.token_hash);
     }
     next();
   };
