@@ -52,6 +52,7 @@ import {
 
 import { canAccessSurface, hasPermission } from './permissions';
 import { DEMO_STORAGE_KEY, IS_DEMO_MODE } from './runtime';
+import { buildDemoUniverse } from '../data/demoUniverse';
 import { domainClient, moderationClient, DomainApiError } from './domainClient';
 
 const ANONYMOUS_USER: User = {
@@ -65,6 +66,13 @@ const ANONYMOUS_USER: User = {
 
 const demoData = <T,>(items: readonly T[]): T[] => IS_DEMO_MODE ? [...items] : [];
 
+/* In demo the collections come from the amplified universe rather than the bare
+ * seed: a marketplace with one creator and two orders has no marketplace in it.
+ * Outside demo this is never called, so the live build's behaviour is unchanged. */
+type DemoUniverseShape = ReturnType<typeof buildDemoUniverse>;
+const demoUniverse = <K extends keyof DemoUniverseShape>(key: K): DemoUniverseShape[K] =>
+  (IS_DEMO_MODE ? buildDemoUniverse()[key] : []) as DemoUniverseShape[K];
+
 export class Store {
   private static instance: Store;
 
@@ -75,10 +83,10 @@ export class Store {
   public language: Language = 'ar';
   public guardNotice: { message: string; occurredAt: string } | null = null;
 
-  public users: User[] = demoData(INITIAL_USERS);
-  public creators: CreatorProfile[] = demoData(INITIAL_CREATORS);
-  public hosts: HostBusiness[] = demoData(INITIAL_HOSTS);
-  public products: CreatorProduct[] = demoData(INITIAL_PRODUCTS);
+  public users: User[] = demoUniverse('users');
+  public creators: CreatorProfile[] = demoUniverse('creators');
+  public hosts: HostBusiness[] = demoUniverse('hosts');
+  public products: CreatorProduct[] = demoUniverse('products');
   public recipeVersions: RecipeVersion[] = demoData(INITIAL_RECIPE_VERSIONS);
   public recipeGrants: RecipeAccessGrant[] = demoData(INITIAL_RECIPE_GRANTS);
   public matches: ProductMatch[] = demoData(INITIAL_MATCHES);
@@ -87,15 +95,15 @@ export class Store {
   public labBatches: LabBatch[] = demoData(INITIAL_LAB_BATCHES);
   public offers: OfferTerms[] = demoData(INITIAL_OFFERS);
   public contracts: Contract[] = demoData(INITIAL_CONTRACTS);
-  public launches: Launch[] = demoData(INITIAL_LAUNCHES);
-  public collaborations: Collaboration[] = demoData(INITIAL_COLLABORATIONS);
-  public orders: Order[] = demoData(INITIAL_ORDERS);
-  public accruals: Accrual[] = demoData(INITIAL_ACCRUALS);
-  public settlements: SettlementBatch[] = demoData(INITIAL_SETTLEMENTS);
-  public reviews: Review[] = demoData(INITIAL_REVIEWS);
+  public launches: Launch[] = demoUniverse('launches');
+  public collaborations: Collaboration[] = demoUniverse('collaborations');
+  public orders: Order[] = demoUniverse('orders');
+  public accruals: Accrual[] = demoUniverse('accruals');
+  public settlements: SettlementBatch[] = demoUniverse('settlements');
+  public reviews: Review[] = demoUniverse('reviews');
   public compliance: ComplianceRequirement[] = demoData(INITIAL_COMPLIANCE);
-  public disputes: DisputeCase[] = demoData(INITIAL_DISPUTES);
-  public auditLogs: AuditLog[] = demoData(INITIAL_AUDIT_LOGS);
+  public disputes: DisputeCase[] = demoUniverse('disputes');
+  public auditLogs: AuditLog[] = demoUniverse('auditLogs');
   public dealDecisions: DealDecision[] = [];
   public policy: PlatformPolicy = {
     platformFeePercent: 5,
