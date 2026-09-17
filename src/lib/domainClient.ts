@@ -42,4 +42,19 @@ export const domainClient = {
   setLaunchGate: (collaborationId: string, key: string, value: boolean, evidence: unknown = {}) => request<any>(`/api/v1/domain/collaborations/${encodeURIComponent(collaborationId)}/launch-gate/${encodeURIComponent(key)}`, { method:'PUT', body: JSON.stringify({ value, evidence }) }),
   activateLaunch: (collaborationId: string) => request<any>(`/api/v1/domain/collaborations/${encodeURIComponent(collaborationId)}/launch/activate`, { method:'POST', body:'{}' }),
   approveSettlement: (creatorId: string) => request<any>(`/api/v1/domain/settlements/${encodeURIComponent(creatorId)}/approve`, { method:'POST', body:'{}' }, 'settlement'),
+
+  // دورة الشراء والتقييم. السعر يُحسب على الخادم من العرض المعتمد، فلا يُرسل من هنا إطلاقاً.
+  placeOrder: (launchId: string, units: number) => request<{ order: { id: string; units: number; unitPriceFils: number; totalFils: number; status: string }; checkoutUrl: string | null; paymentStatus: string | null; replayed?: boolean }>('/api/v1/orders', { method: 'POST', body: JSON.stringify({ launchId, units }) }, 'order'),
+  myOrders: () => request<{ orders: any[] }>('/api/v1/orders'),
+  submitReview: (orderId: string, body: unknown) => request<{ review: any }>(`/api/v1/orders/${encodeURIComponent(orderId)}/review`, { method: 'POST', body: JSON.stringify(body) }),
+  launchReviews: (launchId: string) => request<{ summary: { count: number; taste: number; value: number; portion: number; keepItPercent: number }; reviews: any[] }>(`/api/v1/public/launches/${encodeURIComponent(launchId)}/reviews`),
+};
+
+/** إجراءات الإشراف الإدارية — كلها تتطلب سبباً مكتوباً يُحفظ في سجل التدقيق. */
+export const moderationClient = {
+  changeUserRole: (userId: string, role: string, reason: string) => request<{ user: { id: string; role: string; status: string }; changed: boolean }>(`/api/v1/moderation/users/${encodeURIComponent(userId)}/role`, { method: 'POST', body: JSON.stringify({ role, reason }) }),
+  setUserStatus: (userId: string, status: string, reason: string) => request<{ user: { id: string; role: string; status: string }; changed: boolean }>(`/api/v1/moderation/users/${encodeURIComponent(userId)}/status`, { method: 'POST', body: JSON.stringify({ status, reason }) }),
+  pauseProduct: (productId: string, reason: string) => request<{ product: { id: string; status: string }; pausedLaunches: number }>(`/api/v1/moderation/products/${encodeURIComponent(productId)}/pause`, { method: 'POST', body: JSON.stringify({ reason }) }),
+  resumeProduct: (productId: string, reason: string) => request<{ product: { id: string; status: string }; note: string }>(`/api/v1/moderation/products/${encodeURIComponent(productId)}/resume`, { method: 'POST', body: JSON.stringify({ reason }) }),
+  actions: (targetType?: 'USER' | 'PRODUCT') => request<{ actions: any[] }>(`/api/v1/moderation/actions${targetType ? `?targetType=${targetType}` : ''}`),
 };

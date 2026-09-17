@@ -1359,6 +1359,57 @@ const migrations = [
       CREATE INDEX IF NOT EXISTS idx_job_applications_job_status ON job_applications(job_post_id, status, created_at DESC, id);
       CREATE INDEX IF NOT EXISTS idx_job_applications_applicant ON job_applications(applicant_user_id, created_at DESC, id);
     `
+  },
+  {
+    version: 19,
+    sql: `
+      /*
+       * تقييم موثّق الشراء. الربط بـ order_id (UNIQUE) هو ما يجعل «الشراء موثّق» خاصيةً
+       * بنيوية لا ادعاءً: لا يوجد تقييم بلا طلب مدفوع يخصّ صاحبه، وتقييم واحد لكل طلب.
+       * لا يُخزَّن اسم عميل حر — الهوية تأتي من الطلب وصاحبه.
+       */
+      CREATE TABLE IF NOT EXISTS product_reviews (
+        id TEXT PRIMARY KEY,
+        order_id TEXT NOT NULL UNIQUE REFERENCES orders(id) ON DELETE RESTRICT,
+        launch_id TEXT NOT NULL REFERENCES launches(id) ON DELETE RESTRICT,
+        product_id TEXT NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
+        reviewer_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+        taste_rating INTEGER NOT NULL CHECK(taste_rating BETWEEN 1 AND 5),
+        value_rating INTEGER NOT NULL CHECK(value_rating BETWEEN 1 AND 5),
+        portion_rating INTEGER NOT NULL CHECK(portion_rating BETWEEN 1 AND 5),
+        keep_it_vote INTEGER NOT NULL CHECK(keep_it_vote IN (0, 1)),
+        comment TEXT NOT NULL DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'PUBLISHED' CHECK(status IN ('PUBLISHED','HIDDEN')),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_product_reviews_launch ON product_reviews(launch_id, status, created_at DESC, id);
+      CREATE INDEX IF NOT EXISTS idx_product_reviews_product ON product_reviews(product_id, status, created_at DESC, id);
+      CREATE INDEX IF NOT EXISTS idx_product_reviews_reviewer ON product_reviews(reviewer_user_id, created_at DESC, id);
+
+      /* الطلبات تُقرأ كثيراً بحسب الإطلاق (سقف الكمية) وبحسب المشتري (طلباتي). */
+      CREATE INDEX IF NOT EXISTS idx_orders_launch_status ON orders(launch_id, status, created_at DESC, id);
+      CREATE INDEX IF NOT EXISTS idx_orders_consumer ON orders(consumer_user_id, created_at DESC, id);
+
+      /*
+       * سجل الإجراءات الإدارية على الحسابات والمنتجات. domain_audit_events يحفظ البصمات،
+       * وهذا يحفظ القيمة قبل/بعد والسبب المكتوب ليقرأه إنسان عند المراجعة أو النزاع.
+       */
+      CREATE TABLE IF NOT EXISTS moderation_actions (
+        id TEXT PRIMARY KEY,
+        actor_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+        actor_role TEXT NOT NULL,
+        target_type TEXT NOT NULL CHECK(target_type IN ('USER','PRODUCT')),
+        target_id TEXT NOT NULL,
+        action TEXT NOT NULL,
+        previous_value TEXT NOT NULL DEFAULT '',
+        new_value TEXT NOT NULL DEFAULT '',
+        reason TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_moderation_actions_target ON moderation_actions(target_type, target_id, created_at DESC, id);
+      CREATE INDEX IF NOT EXISTS idx_moderation_actions_actor ON moderation_actions(actor_user_id, created_at DESC, id);
+    `
   }
 ] as const;
 
