@@ -53,23 +53,45 @@ jobs:
       - name: الاختبارات
         run: npm test
 
+      # إعدادٌ لمرة واحدة لم يُنفَّذ بعد ليس عطبًا في هذا التغيير: لا شيء انكسر، ولا
+      # شيء يُصلَح في الشيفرة. و`exit 1` كان يضع علامةً حمراء على كل دمجٍ إلى الأبد،
+      # فتفقد العلامة معناها ولا يُميَّز بعدها فشلٌ حقيقي حين يقع.
+      #
+      # فتقف المهمة وتقول لماذا — تنبيهٌ على صفحة التشغيل وملخّصٌ مقروء — ولا تدّعي
+      # نشرًا لم يقع: كل خطوة بعدها مشروطة بأن الهوية مضبوطة.
       - name: التحقق من إعداد هوية النشر
+        id: identity
         shell: bash
         env:
           WIF_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           DEPLOY_SERVICE_ACCOUNT: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
         run: |
           set -euo pipefail
-          if [[ -z "$WIF_PROVIDER" || -z "$DEPLOY_SERVICE_ACCOUNT" ]]; then
-            echo "هوية النشر غير مُعدّة بعد، فلا يمكن النشر." >&2
-            echo "تُضبط مرة واحدة فقط — الخطوات في docs/deploy-majal.md" >&2
-            echo "ثم يُضاف في GitHub → Settings → Secrets and variables → Actions → Variables:" >&2
-            echo "  GCP_WORKLOAD_IDENTITY_PROVIDER" >&2
-            echo "  GCP_DEPLOY_SERVICE_ACCOUNT" >&2
-            exit 1
+          MISSING=""
+          if [[ -z "$WIF_PROVIDER" ]]; then MISSING="$MISSING GCP_WORKLOAD_IDENTITY_PROVIDER"; fi
+          if [[ -z "$DEPLOY_SERVICE_ACCOUNT" ]]; then MISSING="$MISSING GCP_DEPLOY_SERVICE_ACCOUNT"; fi
+          if [[ -n "$MISSING" ]]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=لم يُنشر شيء::هوية النشر غير مُعدّة بعد. الخطوات في docs/deploy-majal.md"
+            {
+              echo "## لم يُنشر شيء — والتغيير سليم"
+              echo ""
+              echo "الفحوص مرّت، ولم يُنشر شيء لأن **هوية النشر غير مُعدّة بعد**."
+              echo "هذا إعدادٌ لمرة واحدة على صاحب المستودع، لا عطبٌ في هذا التغيير."
+              echo ""
+              echo "الناقص:$MISSING"
+              echo ""
+              echo "الخطوات في \`docs/deploy-majal.md\`، ثم تُضاف القيم في:"
+              echo "Settings → Secrets and variables → Actions → **Variables**"
+              echo ""
+              echo "وبمجرد إضافتها يمضي النشر تلقائيًا عند الدمج التالي بلا تعديلٍ هنا."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
           fi
+          echo "configured=true" >> "$GITHUB_OUTPUT"
 
       - name: مصادقة Google Cloud بلا مفتاح دائم
+        if: steps.identity.outputs.configured == 'true'
         uses: google-github-actions/auth@v2
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
@@ -77,6 +99,7 @@ jobs:
           service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
 
       - uses: google-github-actions/setup-gcloud@v2
+        if: steps.identity.outputs.configured == 'true'
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
 
@@ -84,6 +107,7 @@ jobs:
       # هو مضبوط على الخدمة اليوم، والنشر لا يجوز أن يمحو إعدادًا لم يطلب أحد
       # تغييره. نحدّث الشيفرة وحدها.
       - name: نشر الخدمة
+        if: steps.identity.outputs.configured == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -96,6 +120,7 @@ jobs:
             --quiet
 
       - name: التحقق أن الخدمة تردّ بعد النشر
+        if: steps.identity.outputs.configured == 'true'
         shell: bash
         run: |
           set -euo pipefail
