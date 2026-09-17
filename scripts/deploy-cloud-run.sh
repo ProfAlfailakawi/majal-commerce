@@ -34,7 +34,7 @@ fi
 gcloud config set project "$PROJECT_ID" >/dev/null
 step() { echo; echo "── $* ────────────────────────────────"; }
 
-step "١/٤  جمع ما أنشأه سكربت التجهيز"
+step "١/٥  جمع ما أنشأه سكربت التجهيز"
 
 CONNECTION_NAME="$(gcloud sql instances describe "$SQL_INSTANCE" \
   --format='value(connectionName)' 2>/dev/null || true)"
@@ -90,7 +90,25 @@ for NAME in DATABASE_URL AUTH_SESSION_SECRET AUTH_ENCRYPTION_KEY \
   fi
 done
 
-step "٢/٤  البناء والنشر"
+step "٢/٥  صلاحية حساب البناء"
+# `gcloud run deploy --source` يبني عبر Cloud Build منتحلاً حساب الحوسبة
+# الافتراضي. في المشاريع المنشأة بعد تغيير Google لحساب البناء الافتراضي، هذا
+# الحساب يأتي بلا أدوار، فيفشل رفع المصدر بـ "could not resolve source:
+# permission_denied" — رسالة تبدو كأنها مشكلة في حسابك أنت لا في حساب الخدمة.
+PROJECT_NUMBER="$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')"
+BUILD_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+if gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+     --member="serviceAccount:${BUILD_SA}" \
+     --role=roles/cloudbuild.builds.builder \
+     --condition=None --quiet >/dev/null 2>&1; then
+  echo "  ✓ $BUILD_SA"
+else
+  echo "  ⚠ تعذّر منح الدور لـ $BUILD_SA. إن فشل النشر بخطأ صلاحيات، امنحه يدوياً:" >&2
+  echo "    gcloud projects add-iam-policy-binding $PROJECT_ID \\" >&2
+  echo "      --member=serviceAccount:${BUILD_SA} --role=roles/cloudbuild.builds.builder" >&2
+fi
+
+step "٣/٥  البناء والنشر"
 DEPLOY=(gcloud run deploy "$SERVICE_NAME"
   --source . --project "$PROJECT_ID" --region "$REGION"
   --allow-unauthenticated --update-env-vars "$ENV_VARS" --quiet)
@@ -98,7 +116,7 @@ DEPLOY=(gcloud run deploy "$SERVICE_NAME"
 [[ -n "$SECRETS" ]] && DEPLOY+=(--update-secrets "$SECRETS")
 "${DEPLOY[@]}"
 
-step "٣/٤  تثبيت APP_URL"
+step "٤/٥  تثبيت APP_URL"
 URL="$(gcloud run services describe "$SERVICE_NAME" --project "$PROJECT_ID" \
   --region "$REGION" --format='value(status.url)')"
 if [[ -z "$URL" ]]; then
@@ -109,7 +127,7 @@ fi
 gcloud run services update "$SERVICE_NAME" --project "$PROJECT_ID" --region "$REGION" \
   --update-env-vars "APP_URL=$URL" --quiet >/dev/null
 
-step "٤/٤  ما يبقى عليك"
+step "٥/٥  ما يبقى عليك"
 cat <<EOM
 هذه حسابات لدى أطراف أخرى، لا تُنشأ من هنا. احفظ كلاً منها في Secret Manager
 ثم أعد تشغيل هذا السكربت — سيلتقطها بنفسه:
