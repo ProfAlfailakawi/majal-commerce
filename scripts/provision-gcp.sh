@@ -31,7 +31,6 @@ SERVICE_NAME="${SERVICE_NAME:-majal}"
 
 DB_NAME="${DB_NAME:-majal}"
 DB_USER="${DB_USER:-majal_app}"
-BUCKET="${BUCKET:-${PROJECT_ID}-majal-vault}"
 KEYRING="${KEYRING:-majal}"
 KEY_NAME="${KEY_NAME:-recipe-vault}"
 
@@ -42,6 +41,10 @@ if [[ -z "$PROJECT_ID" || "$PROJECT_ID" == "(unset)" ]]; then
   echo "اضبط PROJECT_ID أولاً:  export PROJECT_ID=your-project-id" >&2
   exit 1
 fi
+
+# بعد استقرار PROJECT_ID لا قبله: كان اسم الدلو يُبنى منه وهو ما زال فارغاً،
+# فيخرج "-majal-vault" ويرفضه Cloud Storage كاسم غير صالح.
+BUCKET="${BUCKET:-${PROJECT_ID}-majal-vault}"
 
 gcloud config set project "$PROJECT_ID" >/dev/null
 echo "المشروع: $PROJECT_ID · المنطقة: $REGION"
@@ -87,8 +90,18 @@ exists "gcloud sql databases describe '$DB_NAME' --instance='$SQL_INSTANCE'" \
 
 # كلمة مرور قاعدة البيانات تُولَّد هنا وتُحفظ في Secret Manager فقط — لا تُطبع.
 if exists "gcloud sql users describe '$DB_USER' --instance='$SQL_INSTANCE'"; then
-  echo "✓ المستخدم $DB_USER موجود — كلمة مروره لم تُمس"
-  DB_PASSWORD=""
+  if exists "gcloud secrets describe DATABASE_URL"; then
+    echo "✓ المستخدم $DB_USER موجود وDATABASE_URL محفوظ — لم يُمسّ أيّهما"
+    DB_PASSWORD=""
+  else
+    # المستخدم موجود بلا سرّ محفوظ: إمّا تعثّر تشغيل سابق بعد إنشائه وقبل حفظ
+    # السرّ، أو حُذف السرّ. كلمة المرور حينها ضائعة لا يعرفها أحد، فالمشروع عالق
+    # بلا DATABASE_URL ولا يقلع الخادم. نولّد بديلاً ونحفظه.
+    echo "⚠ المستخدم $DB_USER موجود لكن DATABASE_URL غير محفوظ — تُضبط كلمة مرور جديدة"
+    DB_PASSWORD="$(openssl rand -base64 32 | tr -d '/+=' | head -c 32)"
+    gcloud sql users set-password "$DB_USER" --instance="$SQL_INSTANCE" \
+      --password="$DB_PASSWORD" --quiet
+  fi
 else
   DB_PASSWORD="$(openssl rand -base64 32 | tr -d '/+=' | head -c 32)"
   gcloud sql users create "$DB_USER" --instance="$SQL_INSTANCE" --password="$DB_PASSWORD" --quiet
@@ -147,7 +160,7 @@ done
 if [[ -n "$DB_PASSWORD" ]]; then
   put_secret DATABASE_URL "postgresql://$DB_USER:$DB_PASSWORD@/$DB_NAME?host=/cloudsql/$CONNECTION_NAME"
 else
-  echo "  = DATABASE_URL لم يُحدَّث (المستخدم كان موجوداً، فكلمة مروره غير معروفة هنا)"
+  echo "  = DATABASE_URL موجود مسبقاً — لم يُمسّ"
 fi
 
 step "٦/٦  صلاحيات حساب خدمة Cloud Run"
