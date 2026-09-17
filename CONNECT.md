@@ -15,6 +15,35 @@ npm run verify:env
 
 ---
 
+## أسرع طريق: أمران في Cloud Shell
+
+إن كنت تنشر على Google Cloud، لا تضبط شيئاً يدوياً. افتح
+[Cloud Shell](https://shell.cloud.google.com) — أنت مسجَّل الدخول هناك أصلاً —
+ثم:
+
+```bash
+export PROJECT_ID=your-project-id
+bash scripts/provision-gcp.sh      # قاعدة البيانات، الخزنة، مفتاح KMS، الأسرار، الصلاحيات
+bash scripts/deploy-cloud-run.sh   # يبني وينشر ويربط كل ما سبق بنفسه
+```
+
+سكربت النشر يكتشف Cloud SQL والدلو ومفتاح KMS وكل سرّ في Secret Manager
+ويربطها بالخدمة. **لا شيء يُنسخ باليد.** كلاهما آمن للإعادة: لا يحذف مورداً
+ولا يدوّر سرّاً موجوداً.
+
+يبقى بعدهما شيء واحد فقط: مفاتيح مزوّد الدفع والبريد — حسابات لدى أطراف
+أخرى لا تُنشأ من سطر الأوامر. احفظها في Secret Manager وأعد تشغيل سكربت
+النشر، سيلتقطها:
+
+```bash
+printf '%s' 'ضع-المفتاح-هنا' | gcloud secrets create MYFATOORAH_API_TOKEN --data-file=-
+bash scripts/deploy-cloud-run.sh
+```
+
+بقية هذا الملف يشرح من أين يأتي كل مفتاح، وما الذي ينكسر بدونه.
+
+---
+
 ## الخطوة ١ — الأسرار التي لا تحتاج أحداً (دقيقتان)
 
 هذه عشوائية محضة، لا حساب ولا اشتراك:
