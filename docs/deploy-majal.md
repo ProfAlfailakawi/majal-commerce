@@ -24,12 +24,12 @@ NAME=majal
 SA=majal-deployer
 REPO=ProfAlfailakawi/majal-commerce
 
-gcloud config set project "$PROJECT"
 PROJECT_NUMBER="$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')"
 
-# ١. حساب خدمة للنشر — يُسأل عنه ثم يُنشأ، ولا يُبتلع خطأٌ غير «غير موجود»
-gcloud iam service-accounts describe "$SA@$PROJECT.iam.gserviceaccount.com" >/dev/null 2>&1 \
-  || gcloud iam service-accounts create "$SA"
+# ١. حساب خدمة للنشر — يُسأل عنه ثم يُنشأ
+gcloud iam service-accounts describe "$SA@$PROJECT.iam.gserviceaccount.com" \
+  --project="$PROJECT" >/dev/null 2>&1 \
+  || gcloud iam service-accounts create "$SA" --project="$PROJECT"
 
 for ROLE in roles/run.admin \
             roles/cloudbuild.builds.editor \
@@ -41,30 +41,29 @@ for ROLE in roles/run.admin \
     --role "$ROLE" --condition=None >/dev/null
 done
 
-# ٢. المجمّع — قد يكون منشأً من قبل في هذا المشروع
-gcloud iam workload-identity-pools describe "$POOL" --location global >/dev/null 2>&1 \
-  || gcloud iam workload-identity-pools create "$POOL" --location global
+# ٢. المجمّع
+gcloud iam workload-identity-pools describe "$POOL" --location global \
+  --project="$PROJECT" >/dev/null 2>&1 \
+  || gcloud iam workload-identity-pools create "$POOL" --location global --project="$PROJECT"
 
 # ٣. المزوّد — مقيَّد بهذا المستودع وحده
-gcloud iam workload-identity-pools providers describe "$NAME" \
-  --location global --workload-identity-pool "$POOL" >/dev/null 2>&1 \
+gcloud iam workload-identity-pools providers describe "$NAME" --location global \
+  --workload-identity-pool "$POOL" --project="$PROJECT" >/dev/null 2>&1 \
   || gcloud iam workload-identity-pools providers create-oidc "$NAME" \
-       --location global --workload-identity-pool "$POOL" \
+       --location global --workload-identity-pool "$POOL" --project="$PROJECT" \
        --issuer-uri "https://token.actions.githubusercontent.com" \
        --attribute-mapping "google.subject=assertion.sub,attribute.repository=assertion.repository" \
        --attribute-condition "assertion.repository=='$REPO'"
 
 # ٤. حقّ المستودع في انتحال حساب النشر
 gcloud iam service-accounts add-iam-policy-binding \
-  "$SA@$PROJECT.iam.gserviceaccount.com" \
+  "$SA@$PROJECT.iam.gserviceaccount.com" --project="$PROJECT" \
   --role roles/iam.workloadIdentityUser \
   --member "principalSet://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$POOL/attribute.repository/$REPO" >/dev/null
 
-# ٥. التحقق قبل الطباعة — لا تُعطى قيمةٌ لا يقابلها مزوّدٌ فعّال.
-#    هذا ما كان ناقصًا: طُبعت القيمتان مرةً بينما المزوّد لم يُنشأ، فاجتاز
-#    الورك-فلو فحصَ الإعداد ثم سقط عند المصادقة بـ`invalid_target`.
-STATE="$(gcloud iam workload-identity-pools providers describe "$NAME" \
-           --location global --workload-identity-pool "$POOL" --format='value(state)')"
+# ٥. التحقق قبل الطباعة
+STATE="$(gcloud iam workload-identity-pools providers describe "$NAME" --location global \
+           --workload-identity-pool "$POOL" --project="$PROJECT" --format='value(state)')"
 if [ "$STATE" != "ACTIVE" ]; then
   echo "المزوّد غير فعّال (state=$STATE) — لا تضع المتغيّرات بعد." >&2
   exit 1
@@ -80,6 +79,16 @@ echo "GCP_DEPLOY_SERVICE_ACCOUNT     = $SA@$PROJECT.iam.gserviceaccount.com"
 > ومستودع، ولكل مستودعٍ شرطُه (`attribute-condition`). مزوّدٌ واحد مشترك كان
 > سيجبرنا على توسيع الشرط ليشمل مستودعات أخرى — والتوسيع هنا يعني منح مستودعٍ
 > صلاحية النشر على خدمة غيره.
+
+## لماذا `--project` على كل أمر
+
+`gcloud config set project` لا يكفي: أوامر `workload-identity-pools` تعمل على
+المشروع النشط، وطرفية Cloud Shell قد تفتح على مشروعٍ آخر (كانت على
+`academicos-3991f`). فإن لم يُطبَّق الضبط — أو فُتحت طرفيةٌ جديدة — أُنشئ المزوّد
+في المشروع الخطأ، والورك-فلو يبحث عنه في الصحيح فلا يجده:
+`invalid_target: the pool or provider ... doesn't exist`.
+
+فالمشروع يُذكر في كل أمر، ولا يُترك لحالةٍ قد تتغيّر تحت السكربت.
 
 ## ثم في GitHub
 
