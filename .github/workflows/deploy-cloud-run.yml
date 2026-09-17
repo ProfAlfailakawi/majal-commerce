@@ -111,8 +111,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # `--clear-base-image` ليس زينة: الخدمة القائمة نُشرت سابقًا بصورة
+          # أساس تُحدّثها Cloud Run تلقائيًا، وهذا لا يجتمع مع بناءٍ من
+          # `Dockerfile` في المستودع. فيرفض gcloud النشر صراحةً:
+          #
+          #   Missing required argument [--clear-base-image]: Base image is not
+          #   supported for services built from Dockerfile.
+          #
+          # والمستودع يحمل `Dockerfile`، وهو ما يُبنى منه فعلًا. فتُمسح صورة
+          # الأساس المخزَّنة مرةً، ويبقى البناء على ملف المستودع وحده — وهو
+          # المصدر الذي تمرّ عليه الفحوص قبل النشر.
           gcloud run deploy "$CLOUD_RUN_SERVICE" \
             --source . \
+            --clear-base-image \
             --project "$GCP_PROJECT_ID" \
             --region "$GCP_REGION" \
             --platform managed \
