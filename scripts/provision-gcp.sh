@@ -25,6 +25,7 @@ set -euo pipefail
 PROJECT_ID="${PROJECT_ID:-}"                 # معرّف مشروعك في Google Cloud
 REGION="${REGION:-europe-west1}"             # نفس منطقة Cloud Run
 SQL_INSTANCE="${SQL_INSTANCE:-majal-db}"
+SQL_TIER="${SQL_TIER:-db-g1-small}"      # الأرخص. للإنتاج الجاد: db-custom-2-7680
 SERVICE_NAME="${SERVICE_NAME:-majal}"
 # ────────────────────────────────────────────────────────────────────────────
 
@@ -51,12 +52,16 @@ step() { echo; echo "── $* ────────────────�
 exists() { eval "$1" >/dev/null 2>&1; }
 
 step "١/٦  تفعيل الخدمات المطلوبة"
+# cloudbuild و artifactregistry يحتاجهما `gcloud run deploy --source`: بدونهما
+# يفشل النشر بـ PERMISSION_DENIED بعد أن يكون التجهيز قد نجح، وهو خطأ مربك.
 gcloud services enable \
   sqladmin.googleapis.com \
   cloudkms.googleapis.com \
   storage.googleapis.com \
   secretmanager.googleapis.com \
   run.googleapis.com \
+  cloudbuild.googleapis.com \
+  artifactregistry.googleapis.com \
   --quiet
 echo "✓ مفعّلة"
 
@@ -65,9 +70,12 @@ if exists "gcloud sql instances describe '$SQL_INSTANCE'"; then
   echo "✓ النسخة $SQL_INSTANCE موجودة — تُركت كما هي"
 else
   echo "إنشاء $SQL_INSTANCE … (قد يستغرق ~10 دقائق)"
+  # --edition صريحة: مشاريع كثيرة صارت افتراضياً ENTERPRISE_PLUS، وهي لا تقبل
+  # الفئات المشتركة مثل db-g1-small وترفض الإنشاء. ENTERPRISE تقبلها وهي الأرخص.
   gcloud sql instances create "$SQL_INSTANCE" \
     --database-version=POSTGRES_16 \
-    --tier=db-g1-small \
+    --edition=ENTERPRISE \
+    --tier="$SQL_TIER" \
     --region="$REGION" \
     --storage-auto-increase \
     --backup \
