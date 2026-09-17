@@ -52,7 +52,7 @@ import {
 
 import { canAccessSurface, hasPermission } from './permissions';
 import { DEMO_STORAGE_KEY, IS_DEMO_MODE } from './runtime';
-import { domainClient, DomainApiError } from './domainClient';
+import { domainClient, moderationClient, DomainApiError } from './domainClient';
 
 const ANONYMOUS_USER: User = {
   id: 'anonymous',
@@ -668,10 +668,18 @@ export class Store {
     this.notify();
   }
 
-  public changeUserRole(userId: string, role: User['role']) {
-    // الدور صلاحية، لا حالة عرض: تغييره محلياً يوهم الأدمن بنجاحٍ يختفي عند أول تحديث
-    // ولا يُلزم الخادم بشيء. يُقفل حتى يوجد مسار خادمي مع تدقيق.
-    if (!IS_DEMO_MODE) return this.fail('تغيير أدوار المستخدمين مقفول حتى يتوفّر مسار خادمي موثّق مع Audit.');
+  public changeUserRole(userId: string, role: User['role'], reason = 'تغيير دور إداري من لوحة السوبر أدمن.') {
+    // الدور صلاحية لا حالة عرض. المسار الإنتاجي خادمي: يتحقق من الصلاحية، يكتب السبب في
+    // سجل التدقيق، ويبطل جلسات الحساب فوراً حتى لا يسري الدور القديم حتى انتهاء الجلسة.
+    if (!IS_DEMO_MODE) {
+      return this.serverMutation(async () => {
+        const result = await moderationClient.changeUserRole(userId, role, reason);
+        const target = this.users.find(u => u.id === userId);
+        if (target && result.changed) target.role = result.user.role as User['role'];
+        this.notify();
+        return result;
+      });
+    }
     const target = this.users.find(u => u.id === userId);
     if (!target) return false;
     const oldRole = target.role;
@@ -681,9 +689,17 @@ export class Store {
     return true;
   }
 
-  public setUserStatus(userId: string, status: 'ACTIVE' | 'SUSPENDED' | 'INVITED') {
-    // إيقاف حساب إجراء أمني: تنفيذه على العميل فقط يترك الحساب نشطاً فعلياً على الخادم.
-    if (!IS_DEMO_MODE) return this.fail('تعليق الحسابات أو تفعيلها مقفول حتى يتوفّر مسار خادمي موثّق مع Audit.');
+  public setUserStatus(userId: string, status: 'ACTIVE' | 'SUSPENDED' | 'INVITED', reason = 'تغيير حالة حساب من لوحة الإدارة.') {
+    // إيقاف حساب إجراء أمني: الخادم هو من يعلّقه ويطرد جلساته القائمة.
+    if (!IS_DEMO_MODE) {
+      return this.serverMutation(async () => {
+        const result = await moderationClient.setUserStatus(userId, status, reason);
+        const target = this.users.find(u => u.id === userId);
+        if (target && result.changed) target.status = result.user.status as User['status'];
+        this.notify();
+        return result;
+      });
+    }
     const target = this.users.find(u => u.id === userId);
     if (!target) return false;
     target.status = status;
@@ -693,8 +709,19 @@ export class Store {
   }
 
   public pauseProduct(productId: string, reason: string) {
-    // إيقاف منتج حيّ يجب أن يوقف البيع فعلاً على الخادم، لا في تبويب الأدمن وحده.
-    if (!IS_DEMO_MODE) return this.fail('إيقاف المنتجات مقفول حتى يتوفّر مسار خادمي يوقف البيع فعلياً.');
+    // إيقاف منتج حيّ يجب أن يوقف البيع فعلاً: الخادم يوقف إطلاقاته الحيّة معه.
+    if (!IS_DEMO_MODE) {
+      const trimmed = reason.trim();
+      if (trimmed.length < 3) return this.fail('سبب الإيقاف مطلوب ويجب أن يكون واضحًا.');
+      return this.serverMutation(async () => {
+        const result = await moderationClient.pauseProduct(productId, trimmed);
+        const product = this.products.find(p => p.id === productId);
+        if (product) product.status = 'PAUSED';
+        this.launches.filter(l => l.productId === productId && l.status === 'LIVE').forEach(l => { l.status = 'PAUSED'; });
+        this.notify();
+        return result;
+      });
+    }
     const cleanReason = reason.trim();
     if (cleanReason.length < 2) return this.fail('سبب الإيقاف مطلوب ويجب أن يكون واضحًا.');
     const product = this.products.find(p => p.id === productId);
@@ -706,8 +733,17 @@ export class Store {
     return true;
   }
 
-  public resumeProduct(productId: string) {
-    if (!IS_DEMO_MODE) return this.fail('إعادة تشغيل المنتجات مقفولة حتى يتوفّر مسار خادمي يعيد الإتاحة فعلياً.');
+  public resumeProduct(productId: string, reason = 'إعادة تشغيل بعد مراجعة إدارية.') {
+    // الخادم لا يعيد الإطلاق إلى LIVE تلقائياً: بوابة الإطلاق قد تكون سقطت أثناء الإيقاف.
+    if (!IS_DEMO_MODE) {
+      return this.serverMutation(async () => {
+        const result = await moderationClient.resumeProduct(productId, reason);
+        const product = this.products.find(p => p.id === productId);
+        if (product) product.status = 'AVAILABLE_FOR_MATCHING';
+        this.notify();
+        return result;
+      });
+    }
     const product = this.products.find(p => p.id === productId);
     if (!product) return this.fail('المنتج غير موجود.');
     const launch = this.launches.find(l => l.productId === productId && l.status === 'PAUSED');
@@ -1299,7 +1335,20 @@ export class Store {
   }
 
   public placeOrder(launchId: string, unitsCount: number, customerName: string, customerPhone: string, acquisitionSource: Order['acquisitionSource'] = 'MAJAL', branchId?: string) {
-    if (!IS_DEMO_MODE) return this.fail('الطلبات مقفلة حتى ربط الدفع والتحقق الخادمي من المخزون.');
+    /*
+     * الطلب الإنتاجي يُنشأ على الخادم: السعر يُشتق من العرض المعتمد، وسقف الكمية يُتحقق
+     * منه داخل معاملة، والنتيجة رابط دفع لدى المزوّد. هوية المشتري تأتي من الجلسة، فلا
+     * حاجة لاسم أو هاتف يرسلهما العميل — وهما كانا قابلين للانتحال أصلاً.
+     */
+    if (!IS_DEMO_MODE) {
+      void customerName; void customerPhone; void acquisitionSource; void branchId;
+      return this.serverMutation(async () => {
+        const result = await domainClient.placeOrder(launchId, unitsCount);
+        // الدفع يتم لدى المزوّد؛ حالة الطلب تتحدث عبر webhook لا من هنا.
+        if (result.checkoutUrl) window.location.assign(result.checkoutUrl);
+        return result;
+      });
+    }
     const launch = this.launches.find(l => l.id === launchId);
     if (!launch) return this.fail('الإطلاق غير موجود.');
     if (launch.status !== 'LIVE' && launch.status !== 'PERMANENT') return this.fail('هذا الإطلاق غير متاح للطلب حاليًا.');
@@ -1343,8 +1392,20 @@ export class Store {
     return order;
   }
 
-  public submitReview(launchId: string, tasteRating: number, valueRating: number, portionRating: number, comment: string, keepItVote: boolean, customerName: string) {
-    if (!IS_DEMO_MODE) return this.fail('التقييم الإنتاجي يحتاج ربطه بطلب المستخدم الموثق على الخادم.');
+  public submitReview(launchId: string, tasteRating: number, valueRating: number, portionRating: number, comment: string, keepItVote: boolean, customerName: string, orderId?: string) {
+    /*
+     * «موثّق الشراء» صار خاصية بنيوية: التقييم يُرسل على معرّف طلب مدفوع يملكه صاحب
+     * الجلسة، والخادم يرفض أي شيء عدا ذلك. اسم العميل الحر لم يعد دليلاً على شيء.
+     */
+    if (!IS_DEMO_MODE) {
+      void customerName;
+      if (!orderId) return this.fail('التقييم متاح من صفحة طلب مدفوع يخصّك.');
+      return this.serverMutation(async () => {
+        const result = await domainClient.submitReview(orderId, { tasteRating, valueRating, portionRating, comment, keepItVote });
+        this.notify();
+        return result;
+      });
+    }
     const launch = this.launches.find(l => l.id === launchId);
     if (!launch) return this.fail('الإطلاق غير موجود.');
     const ratings = [tasteRating, valueRating, portionRating];

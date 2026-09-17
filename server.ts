@@ -13,6 +13,8 @@ import { createPaymentRegistry, createPaymentRouter, createPaymentWebhookHandler
 import { createDomainRouter } from './server/domain';
 import { createEcosystemRouter } from './server/ecosystem';
 import { createAdvancedRouter } from './server/advanced';
+import { createOrdersRouter, createPublicReviewsRouter } from './server/orders';
+import { createModerationRouter } from './server/moderation';
 import { deliveryReadiness, startNotificationDeliveryWorker } from './server/delivery';
 import { installProcessSafetyHandlers, requestTelemetry, resolveTrustProxyHops, structuredLog } from './server/observability';
 import { secureStorageReadiness } from './server/secure-storage';
@@ -125,6 +127,10 @@ async function initializeApplication(app: express.Express) {
   app.use('/api/v1/domain', createDomainRouter(db, authConfig));
   app.use('/api/v1/ecosystem', createEcosystemRouter(db, authConfig));
   app.use('/api/v1/advanced', createAdvancedRouter(db, authConfig));
+  app.use('/api/v1/orders', createOrdersRouter(db, authConfig, paymentRegistry));
+  app.use('/api/v1/moderation', createModerationRouter(db, authConfig));
+  // تقييمات الإطلاق عامة القراءة (كتالوج عام)، فلا تمرّ بحارس المصادقة.
+  app.use('/api/v1/public', createPublicReviewsRouter(db));
 
   const authenticated = requireAuth(db, authConfig);
   const csrfProtected = requireCsrf(authConfig);

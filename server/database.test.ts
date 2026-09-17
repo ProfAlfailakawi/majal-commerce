@@ -5,7 +5,7 @@ import { databaseHealth, openMajalDatabase } from './database';
 test('database migrations create the auth, payment, PACI and notification boundaries', async () => {
   const db = await openMajalDatabase({ filename: ':memory:' });
   try {
-    assert.deepEqual(await databaseHealth(db), { ready: true, schemaVersion: 18, dialect: 'sqlite' });
+    assert.deepEqual(await databaseHealth(db), { ready: true, schemaVersion: 19, dialect: 'sqlite' });
     const tables = (await db.prepare(`SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name`).all()).map(row => String(row.name));
     for (const required of [
       'users',
@@ -30,8 +30,21 @@ test('database migrations create the auth, payment, PACI and notification bounda
       'supplier_profiles',
       'supplier_offerings',
       'job_posts',
-      'job_applications'
+      'job_applications',
+      'product_reviews',
+      'moderation_actions'
     ]) assert.ok(tables.includes(required), `missing table ${required}`);
+
+    // A review is only ever reachable through the order that paid for it: the UNIQUE
+    // order_id is what makes "verified purchase" structural instead of self-declared.
+    const reviewColumns = (await db.prepare('PRAGMA table_info(product_reviews)').all()).map(row => String(row.name));
+    for (const column of ['order_id', 'reviewer_user_id', 'taste_rating', 'keep_it_vote']) {
+      assert.ok(reviewColumns.includes(column), `missing product_reviews.${column}`);
+    }
+    const reviewIndexes = await db.prepare("SELECT sql FROM sqlite_master WHERE type='index' AND tbl_name='product_reviews'").all();
+    assert.ok(reviewIndexes.some(row => String(row.sql ?? '').includes('order_id')) ||
+      (await db.prepare('PRAGMA index_list(product_reviews)').all()).some(row => Number(row.unique) === 1),
+      'product_reviews.order_id must be unique so one order yields at most one review');
     const userColumns = (await db.prepare('PRAGMA table_info(users)').all()).map(row => String(row.name));
     assert.ok(userColumns.includes('account_type'), 'missing users.account_type');
     assert.ok(userColumns.includes('supplier_id'), 'missing users.supplier_id');
