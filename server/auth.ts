@@ -10,6 +10,7 @@ import {
 } from 'node:crypto';
 import { NextFunction, Request, Response, Router } from 'express';
 import { MajalDatabase, withTransaction } from './database';
+import { emailChannelConfigured, sendResendEmail } from './delivery';
 
 export type AuthRole =
   | 'CREATOR'
@@ -784,12 +785,29 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
       `).run(email, token_hash, expiresAt, now.toISOString());
 
       // SECURITY: the reset code is a credential. It is NEVER returned in the HTTP response
-      // and NEVER logged in production. Until an email/SMS provider is wired, non-production
-      // builds print it to the server console only so local testing can proceed.
-      if (process.env.NODE_ENV !== 'production') {
+      // and NEVER logged in production. It leaves the process only through the out-of-band
+      // email channel below; non-production builds may print it so local testing can proceed.
+      if (process.env.NODE_ENV !== 'production' && !emailChannelConfigured()) {
         console.log(`\n\n[DEV] Password Reset Code for ${email}: ${code}\n\n`);
+      } else {
+        // التسليم خارج القناة: لو فشل الإرسال نُبطل الرمز المخزَّن بدل ترك المستخدم
+        // ينتظر بريداً لن يصل، مع الحفاظ على ردّ موحّد لا يكشف وجود الحساب.
+        try {
+          await sendResendEmail(
+            email,
+            'رمز استعادة كلمة المرور — MAJAL',
+            `رمز استعادة كلمة المرور الخاص بك:\n\n${code}\n\nصالح لمدة ${RESET_TOKEN_TTL_MINUTES} دقيقة، ولمرة واحدة فقط.\nإذا لم تطلب استعادة كلمة المرور فتجاهل هذه الرسالة؛ لم يطرأ أي تغيير على حسابك.`,
+            `majal-password-reset-${token_hash.slice(0, 32)}`
+          );
+        } catch (deliveryError) {
+          await db.prepare('DELETE FROM password_reset_tokens WHERE email = ?').run(email);
+          console.error(JSON.stringify({
+            severity: 'ERROR',
+            event: 'password_reset_delivery_failed',
+            errorCode: deliveryError instanceof Error ? deliveryError.message.slice(0, 100) : 'DELIVERY_FAILED'
+          }));
+        }
       }
-      // TODO(prod): deliver `code` out-of-band via the email/SMS provider before launch.
 
       return res.json(uniform);
     } catch (error) {

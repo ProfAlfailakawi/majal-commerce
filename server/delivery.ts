@@ -16,7 +16,11 @@ export function deliveryReadiness(): DeliveryReadiness {
   };
 }
 
-async function sendResendEmail(to: string, title: string, body: string, outboxId: number) {
+/*
+ * الناقل الوحيد للبريد الصادر. `idempotencyKey` يمنع الإرسال المزدوج عند إعادة المحاولة،
+ * ويستخدمه صندوق الإشعارات (معرّف السطر) والرسائل المعاملاتية (مفتاح عشوائي) على حد سواء.
+ */
+export async function sendResendEmail(to: string, title: string, body: string, idempotencyKey: string) {
   const apiKey = process.env.RESEND_API_KEY?.trim();
   const from = process.env.RESEND_FROM?.trim();
   if (!apiKey || !from) throw new Error('RESEND_NOT_CONFIGURED');
@@ -25,12 +29,17 @@ async function sendResendEmail(to: string, title: string, body: string, outboxId
     headers: {
       authorization: `Bearer ${apiKey}`,
       'content-type': 'application/json',
-      'idempotency-key': `majal-notification-${outboxId}`
+      'idempotency-key': idempotencyKey
     },
     body: JSON.stringify({ from, to: [to], subject: title, text: body }),
     signal: AbortSignal.timeout(12_000)
   });
   if (!response.ok) throw new Error(`RESEND_${response.status}`);
+}
+
+/* هل قناة البريد جاهزة للإرسال المعاملاتي (استعادة كلمة المرور)؟ */
+export function emailChannelConfigured() {
+  return deliveryReadiness().email.configured;
 }
 
 async function sendFcm(token: string, title: string, body: string, data: Record<string, string>) {
@@ -75,7 +84,7 @@ async function deliverOne(db: MajalDatabase, ownerId: string, row: OutboxRow) {
   if (!(await claimOutbox(db, ownerId, row))) return;
   try {
     if (row.channel === 'EMAIL') {
-      await sendResendEmail(row.email, row.title, row.body, Number(row.id));
+      await sendResendEmail(row.email, row.title, row.body, `majal-notification-${Number(row.id)}`);
     } else {
       const subscriptions = await db.prepare("SELECT id, token_object_key FROM push_subscriptions WHERE user_id = ? AND active = 1 ORDER BY updated_at DESC LIMIT 5")
         .all<{ id: string; token_object_key: string }>(row.user_id);
