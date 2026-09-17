@@ -1,0 +1,109 @@
+# ينشر مجال إلى Cloud Run عند كل دفع إلى main.
+#
+# لماذا هذا الملف موجود:
+#   المستودع يحمل سكربت نشر (`scripts/deploy-cloud-run.sh`) لكنه كان يُشغَّل
+#   باليد فقط. فكل ما يُدمج في main يبقى في GitHub ولا يصل إلى الخدمة — ومنه
+#   البيئة التجريبية: تُدمج، ولا تظهر على الموقع الحيّ أبدًا.
+#
+# الوجهة مأخوذة من رابط الخدمة الحيّ نفسه:
+#   majal-app-522016905178.europe-west2.run.app
+# أي الخدمة `majal-app` في المشروع رقم 522016905178 (tebyan-clean-2026-5f13b)
+# بمنطقة europe-west2 — لا مشروع majal-b6309، فذاك مشروع Firebase لا موضع
+# الخدمة، ونشرٌ عليه لا يغيّر شيئًا في الموقع الذي يفتحه الناس.
+
+name: نشر مجال إلى Cloud Run
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: majal-deploy
+  cancel-in-progress: false
+
+env:
+  GCP_PROJECT_ID: tebyan-clean-2026-5f13b
+  CLOUD_RUN_SERVICE: majal-app
+  GCP_REGION: europe-west2
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: تثبيت الحزم
+        run: npm ci
+
+      # لا نشر فوق فحصٍ أحمر.
+      - name: فحص الأنواع
+        run: npm run lint
+
+      - name: الاختبارات
+        run: npm test
+
+      - name: التحقق من إعداد هوية النشر
+        shell: bash
+        env:
+          WIF_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          DEPLOY_SERVICE_ACCOUNT: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$WIF_PROVIDER" || -z "$DEPLOY_SERVICE_ACCOUNT" ]]; then
+            echo "هوية النشر غير مُعدّة بعد، فلا يمكن النشر." >&2
+            echo "تُضبط مرة واحدة فقط — الخطوات في docs/deploy-majal.md" >&2
+            echo "ثم يُضاف في GitHub → Settings → Secrets and variables → Actions → Variables:" >&2
+            echo "  GCP_WORKLOAD_IDENTITY_PROVIDER" >&2
+            echo "  GCP_DEPLOY_SERVICE_ACCOUNT" >&2
+            exit 1
+          fi
+
+      - name: مصادقة Google Cloud بلا مفتاح دائم
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      # لا يُمرَّر `--set-env-vars` ولا `--set-secrets` عمدًا: تمريرهما يستبدل ما
+      # هو مضبوط على الخدمة اليوم، والنشر لا يجوز أن يمحو إعدادًا لم يطلب أحد
+      # تغييره. نحدّث الشيفرة وحدها.
+      - name: نشر الخدمة
+        shell: bash
+        run: |
+          set -euo pipefail
+          gcloud run deploy "$CLOUD_RUN_SERVICE" \
+            --source . \
+            --project "$GCP_PROJECT_ID" \
+            --region "$GCP_REGION" \
+            --platform managed \
+            --allow-unauthenticated \
+            --quiet
+
+      - name: التحقق أن الخدمة تردّ بعد النشر
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE" \
+                  --project "$GCP_PROJECT_ID" --region "$GCP_REGION" \
+                  --format='value(status.url)')"
+          echo "URL: $URL"
+          CODE="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL/")"
+          echo "HTTP $CODE"
+          # نشرٌ ينتهي بخدمةٍ لا تردّ ليس نشرًا ناجحًا، وإن قال gcloud إنه تمّ.
+          [[ "$CODE" =~ ^(200|30[0-9])$ ]] || { echo "الخدمة لا تردّ بعد النشر." >&2; exit 1; }
