@@ -20,6 +20,19 @@ interface OpportunityRadarProps {
   onOpenProduct?: (productId: string) => void;
 }
 
+// SECURITY: citation URIs originate from the AI grounding layer (Google Search metadata),
+// which is only semi-trusted. Rendering an arbitrary string straight into an <a href> would
+// let a `javascript:`/`data:` URI execute on click. Only http(s) links become clickable.
+function safeHttpUrl(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.href : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId, onOpenProduct }) => {
   // Real-time ranking: subscribe to the store so the radar re-ranks the instant its
   // inputs change — a host clearing verification, a product entering matching, or a
@@ -148,11 +161,18 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId, o
               <div>{signal.summary}</div>
               {signal.citations.length > 0 && (
                 <div className="flex flex-wrap gap-2 pt-1 border-t border-white/5">
-                  {signal.citations.map((cite, ci) => (
-                    <a key={ci} href={cite.uri} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-emerald-300/90 hover:text-emerald-200 text-[10px]">
-                      <ExternalLink className="w-3 h-3" /> {cite.title.slice(0, 48)}
-                    </a>
-                  ))}
+                  {signal.citations.map((cite, ci) => {
+                    const href = safeHttpUrl(cite.uri);
+                    return href ? (
+                      <a key={ci} href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-emerald-300/90 hover:text-emerald-200 text-[10px]">
+                        <ExternalLink className="w-3 h-3" /> {cite.title.slice(0, 48)}
+                      </a>
+                    ) : (
+                      <span key={ci} className="inline-flex items-center gap-1 text-slate-400 text-[10px]">
+                        <ExternalLink className="w-3 h-3" /> {cite.title.slice(0, 48)}
+                      </span>
+                    );
+                  })}
                 </div>
               )}
             </div>
