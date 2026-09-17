@@ -669,6 +669,9 @@ export class Store {
   }
 
   public changeUserRole(userId: string, role: User['role']) {
+    // الدور صلاحية، لا حالة عرض: تغييره محلياً يوهم الأدمن بنجاحٍ يختفي عند أول تحديث
+    // ولا يُلزم الخادم بشيء. يُقفل حتى يوجد مسار خادمي مع تدقيق.
+    if (!IS_DEMO_MODE) return this.fail('تغيير أدوار المستخدمين مقفول حتى يتوفّر مسار خادمي موثّق مع Audit.');
     const target = this.users.find(u => u.id === userId);
     if (!target) return false;
     const oldRole = target.role;
@@ -679,6 +682,8 @@ export class Store {
   }
 
   public setUserStatus(userId: string, status: 'ACTIVE' | 'SUSPENDED' | 'INVITED') {
+    // إيقاف حساب إجراء أمني: تنفيذه على العميل فقط يترك الحساب نشطاً فعلياً على الخادم.
+    if (!IS_DEMO_MODE) return this.fail('تعليق الحسابات أو تفعيلها مقفول حتى يتوفّر مسار خادمي موثّق مع Audit.');
     const target = this.users.find(u => u.id === userId);
     if (!target) return false;
     target.status = status;
@@ -688,6 +693,8 @@ export class Store {
   }
 
   public pauseProduct(productId: string, reason: string) {
+    // إيقاف منتج حيّ يجب أن يوقف البيع فعلاً على الخادم، لا في تبويب الأدمن وحده.
+    if (!IS_DEMO_MODE) return this.fail('إيقاف المنتجات مقفول حتى يتوفّر مسار خادمي يوقف البيع فعلياً.');
     const cleanReason = reason.trim();
     if (cleanReason.length < 2) return this.fail('سبب الإيقاف مطلوب ويجب أن يكون واضحًا.');
     const product = this.products.find(p => p.id === productId);
@@ -700,6 +707,7 @@ export class Store {
   }
 
   public resumeProduct(productId: string) {
+    if (!IS_DEMO_MODE) return this.fail('إعادة تشغيل المنتجات مقفولة حتى يتوفّر مسار خادمي يعيد الإتاحة فعلياً.');
     const product = this.products.find(p => p.id === productId);
     if (!product) return this.fail('المنتج غير موجود.');
     const launch = this.launches.find(l => l.productId === productId && l.status === 'PAUSED');
