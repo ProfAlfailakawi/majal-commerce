@@ -17,7 +17,9 @@
     "simulate:scale": "node --import tsx scripts/simulate-scale.ts",
     "audit:production": "npm audit --omit=dev",
     "deploy:cloudrun": "bash scripts/deploy-cloud-run.sh",
-    "verify:pwa": "node scripts/verify-pwa.mjs"
+    "verify:pwa": "node scripts/verify-pwa.mjs",
+    "verify:env": "node scripts/verify-env.mjs",
+    "secrets:generate": "node scripts/generate-secrets.mjs"
   },
   "engines": {
     "node": "22.x"
