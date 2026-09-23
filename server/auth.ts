@@ -54,6 +54,7 @@ interface UserRow {
   password_salt: string;
   mfa_secret_encrypted: string | null;
   mfa_enabled: number;
+  mfa_last_step?: number | string | null;
   failed_login_count: number;
   locked_until: string | null;
   last_login_at: string | null;
@@ -196,9 +197,17 @@ export function generateTotp(secret: string, timestamp = Date.now()) {
   return String(code).padStart(6, '0');
 }
 
+/** Returns the 30-second time step the code belongs to (±1 step of drift), or null. */
+export function matchTotpStep(secret: string, code: unknown, timestamp = Date.now()): number | null {
+  if (typeof code !== 'string' || !/^\d{6}$/.test(code)) return null;
+  for (const offset of [-30_000, 0, 30_000]) {
+    if (safeTextEqual(generateTotp(secret, timestamp + offset), code)) return Math.floor((timestamp + offset) / 30_000);
+  }
+  return null;
+}
+
 export function verifyTotp(secret: string, code: unknown, timestamp = Date.now()) {
-  if (typeof code !== 'string' || !/^\d{6}$/.test(code)) return false;
-  return [-30_000, 0, 30_000].some(offset => safeTextEqual(generateTotp(secret, timestamp + offset), code));
+  return matchTotpStep(secret, code, timestamp) !== null;
 }
 
 function deriveEncryptionKey(rawKey: string) {
@@ -917,8 +926,14 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
       if (!config.encryptionKey || !user.mfa_secret_encrypted) return jsonError(res, 503, 'إعداد MFA غير مكتمل على الخادم.', 'MFA_CONFIGURATION_ERROR');
       const secret = decryptSecret(user.mfa_secret_encrypted, config.encryptionKey);
       if (!req.body?.mfaCode) return jsonError(res, 401, 'رمز التحقق مطلوب.', 'MFA_REQUIRED');
-      if (!verifyTotp(secret, req.body.mfaCode)) {
-        // Wrong MFA codes count toward the same lockout as wrong passwords.
+      const step = matchTotpStep(secret, req.body.mfaCode);
+      // A code is single-use: claiming its time step atomically rejects replays of an
+      // observed code (shoulder-surfing, phishing relay) within its validity window.
+      const claimed = step !== null && (await db.prepare(
+        'UPDATE users SET mfa_last_step = ? WHERE id = ? AND (mfa_last_step IS NULL OR mfa_last_step < ?)'
+      ).run(step, user.id, step)).changes === 1;
+      if (!claimed) {
+        // Wrong or reused MFA codes count toward the same lockout as wrong passwords.
         const failures = user.failed_login_count + 1;
         const lockUntil = failures >= MAX_FAILED_LOGINS ? new Date(Date.now() + LOCK_MINUTES * 60_000).toISOString() : null;
         await db.prepare('UPDATE users SET failed_login_count = ?, locked_until = ?, updated_at = ? WHERE id = ?')
@@ -979,8 +994,10 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
     const row = await db.prepare('SELECT * FROM users WHERE id = ?').get<UserRow>(req.auth.user.id);
     if (!row?.mfa_secret_encrypted) return jsonError(res, 409, 'ابدأ إعداد MFA أولاً.', 'MFA_ENROLLMENT_REQUIRED');
     const secret = decryptSecret(row.mfa_secret_encrypted, config.encryptionKey);
-    if (!verifyTotp(secret, req.body?.code)) return jsonError(res, 400, 'رمز التحقق غير صحيح.', 'INVALID_MFA_CODE');
-    await db.prepare('UPDATE users SET mfa_enabled = 1, updated_at = ? WHERE id = ?').run(new Date().toISOString(), row.id);
+    const step = matchTotpStep(secret, req.body?.code);
+    if (step === null) return jsonError(res, 400, 'رمز التحقق غير صحيح.', 'INVALID_MFA_CODE');
+    // The enrollment code is consumed too, so it cannot be replayed at the next login.
+    await db.prepare('UPDATE users SET mfa_enabled = 1, mfa_last_step = ?, updated_at = ? WHERE id = ?').run(step, new Date().toISOString(), row.id);
     await logAuthEvent(db, config, { userId: row.id, email: row.email, eventType: 'MFA_ENABLED', requestId: randomUUID(), ip: req.ip });
     return res.json({ enabled: true });
   });

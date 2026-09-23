@@ -80,6 +80,11 @@ async function initializeApplication(app: express.Express) {
   const paymentReady = paymentRegistry.readiness;
   const paciReady = paciRegistry.readiness;
 
+  // App-wide ceiling registered before every route, so each handler (API, static files,
+  // SPA shell) is rate-limited — including routes added later. Tighter per-route limits
+  // below still apply. Skipped in development, where Vite serves hundreds of modules.
+  app.use(expressRateLimit({ ...limitOptions(1200, 60_000, 'all'), skip: () => !isProduction }));
+
   app.post('/api/v1/payments/webhooks/:provider', expressRateLimit(limitOptions(300, 60_000, 'payment-webhook')), express.raw({ type: 'application/json', limit: '256kb' }), createPaymentWebhookHandler(db, paymentRegistry));
   app.post('/api/v1/paci/internal/callback', expressRateLimit(limitOptions(120, 60_000, 'paci-callback')), express.raw({ type: 'application/json', limit: '64kb' }), createPaciCallbackHandler(db));
 
