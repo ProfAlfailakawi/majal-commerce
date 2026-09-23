@@ -476,10 +476,10 @@ html {
   font-variant-numeric: lining-nums tabular-nums;
 }
 
-/* IBM Plex Sans Arabic carries the whole Arabic UI; the stack below keeps the page
+/* Tajawal carries the whole Arabic UI; the stack below keeps the page
    legible on every platform if the webfont is blocked or still loading. */
 html, body, #root {
-  font-family: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, 'Noto Sans Arabic', system-ui, -apple-system, sans-serif;
+  font-family: 'Tajawal', 'Segoe UI', Tahoma, 'Noto Sans Arabic', system-ui, -apple-system, sans-serif;
 }
 
 body {

@@ -28,7 +28,7 @@
          and redirect before the first paint, and the installed app keeps its
          typography offline. Regenerate public/fonts with the same css2 URLs if a
          family or weight changes. -->
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/284d2adce0.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/6c9081fd00.woff2" crossorigin />
     <link rel="stylesheet" href="/fonts/fonts.css" />
 
     <!-- Link previews (WhatsApp, X, LinkedIn) render from these, not from the page body. -->
@@ -53,7 +53,7 @@
          rectangle for as long as the bundle took. This markup and its CSS ship in
          the HTML document itself, so the brand is on screen at first paint with no
          stylesheet, font, or script dependency — the SVG is geometry, and the layout
-         does not shift when IBM Plex finally arrives.
+         does not shift when Tajawal finally arrives.
 
          It is removed by src/main.tsx once React commits, with a failsafe timer
          below so a bundle that never executes can never leave a visitor staring at
@@ -133,7 +133,7 @@
       #majal-splash svg [data-draw='ground'] { animation-delay: 0.95s; }
 
       #majal-splash .splash-word {
-        font-family: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, 'Noto Sans Arabic', system-ui, sans-serif;
+        font-family: 'Tajawal', 'Segoe UI', Tahoma, 'Noto Sans Arabic', system-ui, sans-serif;
         font-size: 38px;
         font-weight: 700;
         line-height: 1;
@@ -146,7 +146,7 @@
 
       #majal-splash .splash-latin {
         margin-top: 10px;
-        font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+        font-family: 'Tajawal', system-ui, sans-serif;
         font-size: 10px;
         font-weight: 600;
         letter-spacing: 0.52em;
@@ -156,7 +156,7 @@
       }
 
       #majal-splash .splash-tagline {
-        font-family: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, sans-serif;
+        font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
         font-size: 13px;
         color: #64748b;
         animation: majal-splash-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) 1.02s both;
@@ -270,7 +270,7 @@
 
     <!-- Revealed only when the bundle never executed. Plain markup and inline styles on
          purpose: whatever broke may well have been the stylesheet or the network. -->
-    <div id="majal-boot-failed" hidden style="position:fixed;inset:0;z-index:9998;display:grid;place-items:center;padding:2rem;text-align:center;font-family:'IBM Plex Sans Arabic',system-ui,Tahoma,sans-serif;color:#f8fafc;background:linear-gradient(180deg,#0a101b,#070d18)">
+    <div id="majal-boot-failed" hidden style="position:fixed;inset:0;z-index:9998;display:grid;place-items:center;padding:2rem;text-align:center;font-family:'Tajawal',system-ui,Tahoma,sans-serif;color:#f8fafc;background:linear-gradient(180deg,#0a101b,#070d18)">
       <div style="max-width:26rem">
         <svg viewBox="0 0 64 64" width="64" height="64" fill="none" aria-hidden="true" style="margin:0 auto 1.25rem">
           <path d="M11 53 V33 A21 21 0 0 1 53 33 V53" stroke="#c7a55b" stroke-width="6.5" stroke-linecap="round"/>
