@@ -49,7 +49,9 @@ export default function App() {
   // "who are you" screen for a moment before their own portal appears.
   const [showOnboarding, setShowOnboarding] = useState(false);
   useEffect(() => {
-    if (authStatus === 'LOADING') return;
+    // Visitors land on the offer itself; the tour opens for signed-in users on first
+    // run and stays one click away in the footer for everyone else.
+    if (authStatus !== 'AUTHENTICATED') return;
     if (hasSeenOnboarding()) return;
     setShowOnboarding(true);
   }, [authStatus]);

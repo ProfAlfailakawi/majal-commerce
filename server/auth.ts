@@ -653,22 +653,20 @@ export const SUPER_ADMIN_EMAILS = new Set(
 );
 
 /**
- * Promotes already-registered accounts named in SUPER_ADMIN_EMAILS.
+ * Re-activates existing SUPER_ADMIN accounts named in SUPER_ADMIN_EMAILS.
  *
- * It no longer CREATES the account. The previous version inserted a super admin with a
- * hardcoded password on every boot, so any deployment that had ever started shipped with
- * a known set of credentials for its most privileged role. Account creation
- * belongs to `npm run auth:bootstrap`, which takes the password from the environment and
- * refuses to overwrite an existing account.
+ * SECURITY: it never PROMOTES an account. Email ownership is not verified at registration,
+ * so promoting whoever registered a listed address first would hand the most privileged role
+ * to an attacker. Super admins are created only through `npm run auth:bootstrap`.
  */
 export async function ensureSuperAdminUser(db: MajalDatabase) {
   for (const email of SUPER_ADMIN_EMAILS) {
     try {
       const existing = await db.prepare('SELECT * FROM users WHERE email = ? LIMIT 1').get<UserRow>(email);
-      if (!existing) continue;
-      if (existing.role !== 'SUPER_ADMIN' || existing.status !== 'ACTIVE') {
-        await db.prepare('UPDATE users SET role = ?, status = ?, updated_at = ? WHERE id = ?')
-          .run('SUPER_ADMIN', 'ACTIVE', new Date().toISOString(), existing.id);
+      if (!existing || existing.role !== 'SUPER_ADMIN') continue;
+      if (existing.status !== 'ACTIVE') {
+        await db.prepare('UPDATE users SET status = ?, updated_at = ? WHERE id = ?')
+          .run('ACTIVE', new Date().toISOString(), existing.id);
       }
     } catch {
       // Ignore conflict if another thread or migration initialized it
@@ -690,12 +688,13 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
     try {
       if (!email) return jsonError(res, 400, 'البريد الإلكتروني غير صالح.');
       
-      // Only addresses in the configured allowlist may hold SUPER_ADMIN. Public
-      // registration is limited to business roles.
-      let assignedRole: AuthRole = 'CONSUMER';
+      // SECURITY: public registration never grants SUPER_ADMIN, even for allowlisted
+      // addresses — nothing here proves the caller owns the email. Use auth:bootstrap.
       if (SUPER_ADMIN_EMAILS.has(email)) {
-        assignedRole = 'SUPER_ADMIN';
-      } else {
+        return jsonError(res, 403, 'هذا الحساب يُنشأ من الإدارة فقط.', 'RESERVED_ACCOUNT');
+      }
+      let assignedRole: AuthRole = 'CONSUMER';
+      {
         // HOST_OWNER is safe for public self-registration only because the same transaction
         // creates a brand-new UNVERIFIED organization owned by that user.  Registration can
         // never bind the caller to an existing tenant supplied by the client.
@@ -752,7 +751,10 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
         // exclusively through the reset-password flow with an out-of-band code.
         return jsonError(res, 409, 'هذا البريد الإلكتروني مسجّل مسبقاً. يرجى التبديل إلى تسجيل الدخول مباشرة.', 'ACCOUNT_EXISTS');
       }
-      return jsonError(res, 400, error instanceof Error ? error.message : 'تعذّر إنشاء الحساب.');
+      // Validation errors are thrown as plain Error with Arabic user-facing text; anything
+      // else (driver/DB errors) must not leak its message to the client.
+      const message = error instanceof Error && /[\u0600-\u06FF]/.test(error.message) ? error.message : 'تعذّر إنشاء الحساب.';
+      return jsonError(res, 400, message);
     }
   });
 
@@ -916,7 +918,12 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
       const secret = decryptSecret(user.mfa_secret_encrypted, config.encryptionKey);
       if (!req.body?.mfaCode) return jsonError(res, 401, 'رمز التحقق مطلوب.', 'MFA_REQUIRED');
       if (!verifyTotp(secret, req.body.mfaCode)) {
-        await logAuthEvent(db, config, { userId: user.id, email: user.email, eventType: 'LOGIN_FAILED', requestId, ip: req.ip });
+        // Wrong MFA codes count toward the same lockout as wrong passwords.
+        const failures = user.failed_login_count + 1;
+        const lockUntil = failures >= MAX_FAILED_LOGINS ? new Date(Date.now() + LOCK_MINUTES * 60_000).toISOString() : null;
+        await db.prepare('UPDATE users SET failed_login_count = ?, locked_until = ?, updated_at = ? WHERE id = ?')
+          .run(failures >= MAX_FAILED_LOGINS ? 0 : failures, lockUntil, new Date().toISOString(), user.id);
+        await logAuthEvent(db, config, { userId: user.id, email: user.email, eventType: lockUntil ? 'ACCOUNT_LOCKED' : 'LOGIN_FAILED', requestId, ip: req.ip });
         return jsonError(res, 401, 'رمز التحقق غير صحيح.', 'INVALID_MFA_CODE');
       }
     }

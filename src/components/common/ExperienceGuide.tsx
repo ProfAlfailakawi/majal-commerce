@@ -158,7 +158,7 @@ export const ExperienceGuide: React.FC<ExperienceGuideProps> = ({ activeSurface,
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button onClick={cycleMode} className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white" aria-label={`تغيير مستوى التفاصيل، الحالي ${mode}`} title="مبسّط / موجّه / خبير"><Gauge className="w-4 h-4" /></button>
-            <button onClick={() => setPaletteOpen(true)} className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white text-[10px] font-bold flex items-center gap-2"><Command className="w-4 h-4" /><span>⌘K</span></button>
+            <button onClick={() => setPaletteOpen(true)} className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white text-[10px] font-bold flex items-center gap-2"><Command className="w-4 h-4" /><span>بحث</span><span className="hidden md:inline text-slate-500" dir="ltr">⌘K</span></button>
             <button onClick={() => onSurfaceChange(nextMove.surface)} className="px-4 py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center gap-2 hover:bg-gold-400"><span>{nextMove.action}</span><ArrowLeft className="w-4 h-4" /></button>
           </div>
         </div>

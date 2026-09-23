@@ -262,12 +262,15 @@ async function initializeApplication(app: express.Express) {
         }
       },
     }));
+    app.all('/api/*', (_req, res) => jsonError(res, 404, 'المسار غير موجود.', 'NOT_FOUND'));
     app.get('*', (req, res) => path.extname(req.path) ? jsonError(res, 404, 'الملف غير موجود.') : res.sendFile(indexPath));
   }
 
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     structuredLog('WARNING', 'request_rejected', { errorType: err instanceof Error ? err.name : 'UnknownError' });
-    if (!res.headersSent) jsonError(res, 400, 'الطلب غير صالح.');
+    const status = typeof err === 'object' && err !== null ? Number((err as { status?: unknown; statusCode?: unknown }).status ?? (err as { statusCode?: unknown }).statusCode) : NaN;
+    const code = Number.isInteger(status) && status >= 400 && status < 600 ? status : 500;
+    if (!res.headersSent) jsonError(res, code, code >= 500 ? 'حدث خطأ غير متوقع.' : 'الطلب غير صالح.');
   });
 
   const stopDeliveryWorker = startNotificationDeliveryWorker(db);
@@ -324,6 +327,9 @@ async function startServer() {
     structuredLog('CRITICAL', 'startup_failed_after_bind', { failureCode: boot.failureCode });
     // Fail closed while keeping the Cloud Run port open so startup diagnostics are truthful.
     app.use((_req, res) => jsonError(res, 503, 'الخدمة غير جاهزة بسبب إعداد إنتاج مفقود أو فشل تهيئة.', boot.failureCode));
+    // In production a broken revision must not keep receiving traffic behind a TCP probe:
+    // exit so the platform marks the instance unhealthy and keeps the previous revision.
+    if (isProduction && process.env.KEEP_ALIVE_ON_BOOT_FAILURE !== 'true') setTimeout(() => process.exit(1), 2_000).unref();
   }
 
   let shuttingDown = false;

@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Sparkles,
   Building2,
-  Crown,
   Store,
   ChevronLeft,
   Lock,
@@ -147,7 +146,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
           <h1 className="text-3xl sm:text-5xl font-black text-slate-100 leading-tight">
             حوّل الموهبة إلى <span className="majal-wordmark">منتج تجاري حقيقي</span>{' '}
             <br className="hidden sm:block" />
-            داخل منظومة احترافية واضحة الصلاحيات
+            مع حماية لفكرتك وشفافية في حقك
           </h1>
 
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-3xl">
@@ -171,21 +170,6 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
               <span>استعرض تجربة المنشأة</span>
             </button>
 
-            <button
-              onClick={() => openDemoRole('ADMIN', 'ADMIN')}
-              className="px-6 py-3.5 rounded-2xl glass-card hover:bg-slate-800/80 text-slate-200 border border-slate-700/60 font-semibold text-sm transition-all flex items-center gap-2"
-            >
-              <ShieldCheck className="w-4 h-4 text-emerald-300" />
-              <span>استكشف طبقة الأدمن</span>
-            </button>
-
-            <button
-              onClick={() => openDemoRole('SUPER_ADMIN', 'SUPER_ADMIN')}
-              className="px-6 py-3.5 rounded-2xl glass-card hover:bg-slate-800/80 text-gold-300 border border-gold-300/20 font-semibold text-sm transition-all flex items-center gap-2"
-            >
-              <Crown className="w-4 h-4" />
-              <span>استكشف السوبر أدمن</span>
-            </button>
           </div> : <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-4">
             <button onClick={() => onSurfaceChange('CONSUMER')} className="px-6 py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 hover:brightness-110 text-slate-950 font-black text-sm shadow-[0_14px_40px_rgba(199,165,91,0.24)] transition-all flex items-center gap-2">
               <Store className="w-4 h-4" /> استكشف السوق
