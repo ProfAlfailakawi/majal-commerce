@@ -269,7 +269,7 @@ async function initializeApplication(app: express.Express) {
         }
       },
     }));
-    app.get('/{*rest}', (req, res) => path.extname(req.path) ? jsonError(res, 404, 'الملف غير موجود.') : res.sendFile(indexPath));
+    app.get('/{*rest}', expressRateLimit(limitOptions(600, 60_000, 'spa-shell')), (req, res) => path.extname(req.path) ? jsonError(res, 404, 'الملف غير موجود.') : res.sendFile(indexPath));
   }
 
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
