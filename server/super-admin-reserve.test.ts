@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { randomBytes } from 'node:crypto';
 import express from 'express';
 import { AddressInfo } from 'node:net';
 import { openMajalDatabase } from './database';
@@ -17,7 +18,8 @@ const config = {
   csrfCookieName: 'majal_csrf'
 };
 
-const password = ['Majal', 'Reserve', '2026!'].join('-');
+// Generated per run so no credential-shaped literal lives in the repository.
+const password = `${randomBytes(12).toString('base64url')}-Aa1!`;
 
 test('public registration cannot claim a SUPER_ADMIN_EMAILS address', async () => {
   const db = await openMajalDatabase({ filename: ':memory:' });
