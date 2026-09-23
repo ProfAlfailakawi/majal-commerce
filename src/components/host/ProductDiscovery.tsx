@@ -132,7 +132,7 @@ export const ProductDiscovery: React.FC = () => {
 
                   {/* Match Score Badge */}
                   <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 text-center shrink-0">
-                    <span className="text-[10px] text-slate-400 block">نسبة المطابقة</span>
+                    <span className="text-[11px] text-slate-400 block">نسبة المطابقة</span>
                     <span className="text-lg font-black font-mono">{matchCalc.overallScore}٪</span>
                   </div>
                 </div>
@@ -150,17 +150,17 @@ export const ProductDiscovery: React.FC = () => {
                     {matchCalc.explanationAr}
                   </p>
 
-                  <div className="grid grid-cols-3 gap-2 text-center text-[10px] pt-1">
+                  <div className="grid grid-cols-3 gap-2 text-center text-[11px] pt-1">
                     <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
-                      <span className="text-slate-500 block">توافق المعدات</span>
+                      <span className="text-slate-400 block">توافق المعدات</span>
                       <span className="font-bold text-slate-200">{matchCalc.equipmentFit}٪</span>
                     </div>
                     <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
-                      <span className="text-slate-500 block">ملاءمة الهامش</span>
+                      <span className="text-slate-400 block">ملاءمة الهامش</span>
                       <span className="font-bold text-amber-400">{matchCalc.marginFit}٪</span>
                     </div>
                     <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
-                      <span className="text-slate-500 block">مطابقة الجمهور</span>
+                      <span className="text-slate-400 block">مطابقة الجمهور</span>
                       <span className="font-bold text-slate-200">{matchCalc.brandFit}٪</span>
                     </div>
                   </div>

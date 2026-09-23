@@ -35,7 +35,7 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
 
   const stage = launches.length >= 2 ? 'Brand Ready' : launches.length >= 1 ? 'Proven Creator' : products.length ? 'Market Ready' : 'Discovered';
 
-  if (!profile) return <section className="glass-panel rounded-3xl p-6 text-center text-slate-500">ملف المبدع غير متاح لهذا المعرّف.</section>;
+  if (!profile) return <section className="glass-panel rounded-3xl p-6 text-center text-slate-400">ملف المبدع غير متاح لهذا المعرّف.</section>;
 
   return (
     <section className="glass-panel rounded-3xl border border-white/10 p-5 md:p-6 space-y-5">
@@ -97,7 +97,7 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
           ].map((step, idx) => (
             <div key={idx} className={`flex items-center justify-between p-3 rounded-xl border ${step.done ? 'bg-emerald-500/8 border-emerald-400/15' : 'bg-white/[0.02] border-white/10'}`}>
               <div className="flex items-center gap-2 text-xs font-bold text-slate-200">{step.icon}{step.label}</div>
-              <span className={`text-[10px] font-black ${step.done ? 'text-emerald-300' : 'text-slate-500'}`}>{step.done ? 'مكتمل' : 'قادم'}</span>
+              <span className={`text-[11px] font-black ${step.done ? 'text-emerald-300' : 'text-slate-400'}`}>{step.done ? 'مكتمل' : 'قادم'}</span>
             </div>
           ))}
         </div>

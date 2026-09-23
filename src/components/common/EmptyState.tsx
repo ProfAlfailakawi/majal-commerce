@@ -38,7 +38,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   >
     <span
       aria-hidden="true"
-      className="w-14 h-14 mx-auto rounded-2xl bg-white/[0.04] border border-white/10 grid place-items-center text-slate-500"
+      className="w-14 h-14 mx-auto rounded-2xl bg-white/[0.04] border border-white/10 grid place-items-center text-slate-400"
     >
       {icon}
     </span>

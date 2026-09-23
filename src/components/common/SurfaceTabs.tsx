@@ -79,7 +79,7 @@ export function SurfaceTabs<T extends string>({ tabs, active, onChange, tone = '
             <span>{tab.label}</span>
             {typeof tab.count === 'number' && (
               <span
-                className={`min-w-5 px-1.5 h-5 grid place-items-center rounded-full border text-[10px] font-black tabular-nums ${
+                className={`min-w-5 px-1.5 h-5 grid place-items-center rounded-full border text-[11px] font-black tabular-nums ${
                   isActive ? 'bg-slate-950/15 text-slate-950 border-slate-950/15' : countTone[tone]
                 }`}
               >

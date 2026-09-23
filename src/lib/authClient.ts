@@ -48,7 +48,19 @@ function rememberSession(session: AuthSession) {
   return session;
 }
 
+// The CSRF cookie is readable by script and is issued and cleared together with the
+// HttpOnly session cookie. With neither present there is no session to restore, so a
+// first-time visitor skips the probe instead of logging a 401 on every page load.
+function hasSessionHint() {
+  if (typeof document === 'undefined') return true;
+  return /(?:^|;\s*)(?:__Host-)?majal_csrf=/.test(document.cookie);
+}
+
 export async function restoreAuthSession() {
+  if (!hasSessionHint()) {
+    csrfToken = null;
+    return null;
+  }
   try {
     return rememberSession(await request<AuthSession>('/api/v1/auth/me'));
   } catch (error) {

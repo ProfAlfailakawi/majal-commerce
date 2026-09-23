@@ -234,7 +234,7 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-2">
-          <span className="text-[10px] font-black tracking-[0.2em] text-gold-300 uppercase">MAJAL LEGAL</span>
+          <span className="text-[11px] font-black tracking-[0.2em] text-gold-300 uppercase">MAJAL LEGAL</span>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-100">المركز القانوني والامتثال</h1>
         </div>
         <button onClick={onBack} className="px-4 py-2.5 rounded-xl glass-card border border-white/10 text-xs font-bold text-slate-200 hover:bg-white/5 flex items-center gap-2">

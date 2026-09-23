@@ -112,9 +112,9 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
 
         <div className="flex items-center gap-3">
           <div className="glass-card px-4 py-3 rounded-2xl border border-white/10 min-w-[130px] text-center">
-            <span className="text-[10px] text-slate-500 block">الجاهزية</span>
+            <span className="text-[11px] text-slate-400 block">الجاهزية</span>
             <span className="text-base font-black text-gold-300">{completedItems} / {itemsConfig.length}</span>
-            <span className="text-[10px] text-slate-400 block mt-1">{readinessLabel}</span>
+            <span className="text-[11px] text-slate-400 block mt-1">{readinessLabel}</span>
           </div>
           {!hasLaunch && canOperate && (
             <button onClick={handlePrepare} className="px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-black hover:bg-white/10 flex items-center gap-2">
@@ -154,7 +154,7 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
                 <div className="space-y-1 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="block font-bold text-xs text-slate-100">{item.label}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black border ${manual ? 'bg-gold-500/10 border-gold-300/20 text-gold-300' : 'bg-sky-500/10 border-sky-400/20 text-sky-300'}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-black border ${manual ? 'bg-gold-500/10 border-gold-300/20 text-gold-300' : 'bg-sky-500/10 border-sky-400/20 text-sky-300'}`}>
                       {manual ? 'قرار تشغيلي' : 'مشتق آليًا'}
                     </span>
                   </div>

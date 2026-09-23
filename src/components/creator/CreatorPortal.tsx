@@ -94,8 +94,8 @@ export const CreatorPortal: React.FC = () => {
             <Avatar name={profile.displayName} src={profile.avatarUrl} size={80} shape="squircle" className="shadow-xl" />
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-400/20 text-[10px] font-black">CREATOR SPACE</span>
-                <span className="text-xs text-slate-500">{profile.specialty}</span>
+                <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-400/20 text-[11px] font-black">CREATOR SPACE</span>
+                <span className="text-xs text-slate-400">{profile.specialty}</span>
               </div>
               <h1 className="text-2xl md:text-3xl font-black mt-2">أهلًا {profile.displayName}، هذا مجال نموّك</h1>
               <p className="text-sm text-slate-400 mt-2 max-w-2xl leading-7">كل ما تحتاجه من اكتشاف فرصة، حماية وصفة، تفاوض، عقد، إطلاق ومستحقات موجود في مسار واحد.</p>
@@ -131,16 +131,16 @@ export const CreatorPortal: React.FC = () => {
                 <div className="p-5 space-y-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className="text-[11px] text-slate-500">{product.category}</div>
+                      <div className="text-[11px] text-slate-400">{product.category}</div>
                       <h3 className="text-lg font-black text-slate-100 mt-1">{product.publicName}</h3>
                     </div>
                     <StatusPill status={product.status} />
                   </div>
                   <p className="text-xs text-slate-400 leading-6">{product.shortDescription}</p>
                   <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-[10px] text-slate-500">التكلفة</div><div className="text-xs font-black mt-1">{product.estimatedUnitCostKwd.toFixed(3)}</div></div>
-                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-[10px] text-slate-500">السعر</div><div className="text-xs font-black mt-1">{product.targetSellingPriceKwd.toFixed(3)}</div></div>
-                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-[10px] text-slate-500">الوصفة</div><div className="text-xs font-black mt-1 text-gold-300">{product.currentRecipeVersion}</div></div>
+                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-[11px] text-slate-400">التكلفة</div><div className="text-xs font-black mt-1">{product.estimatedUnitCostKwd.toFixed(3)}</div></div>
+                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-[11px] text-slate-400">السعر</div><div className="text-xs font-black mt-1">{product.targetSellingPriceKwd.toFixed(3)}</div></div>
+                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-[11px] text-slate-400">الوصفة</div><div className="text-xs font-black mt-1 text-gold-300">{product.currentRecipeVersion}</div></div>
                   </div>
                   <button onClick={() => setSelectedProductForVault(product)} className="w-full py-3 rounded-xl bg-slate-950/50 border border-white/10 text-xs font-black text-gold-300 flex items-center justify-center gap-2"><Lock className="w-4 h-4" /> فتح خزنة الوصفة</button>
                 </div>
@@ -170,7 +170,7 @@ export const CreatorPortal: React.FC = () => {
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-2 text-gold-300 font-bold"><FileSignature className="w-4 h-4" /> العرض التجاري الحالي</div>
-                      <div className="mt-2 text-2xl font-black">{col.currentOffer.creatorRoyaltyRatePercent}% <span className="text-sm text-slate-500">حصة المبدع</span></div>
+                      <div className="mt-2 text-2xl font-black">{col.currentOffer.creatorRoyaltyRatePercent}% <span className="text-sm text-slate-400">حصة المبدع</span></div>
                     </div>
                     <div className="text-xs text-slate-400">سعر البيع: <strong className="text-slate-100">{col.currentOffer.sellingPriceKwd.toFixed(3)} د.ك</strong> — مدة الاتفاق: <strong className="text-slate-100">{col.currentOffer.termMonths} أشهر</strong></div>
                   </div>

@@ -93,7 +93,7 @@ export const ContractModal: React.FC<ContractModalProps> = ({
                 <h3 id="contract-modal-title" className="font-black text-lg text-slate-100">
                   مسودة شراكة تجريبية — غير ملزمة
                 </h3>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
                   contract.status === 'FULLY_SIGNED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                 }`}>
                   {contract.status === 'FULLY_SIGNED' ? 'اكتملت المحاكاة' : 'محاكاة موافقات'}
@@ -119,11 +119,11 @@ export const ContractModal: React.FC<ContractModalProps> = ({
             <h4 className="font-bold text-amber-400 text-sm">أطراف الاتفاقية التجارية:</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
               <div>
-                <span className="text-slate-500 block">الطرف الأول (المبدع وصاحب الحق):</span>
+                <span className="text-slate-400 block">الطرف الأول (المبدع وصاحب الحق):</span>
                 <span className="font-bold text-slate-100 block">{contract.creatorLegalName}</span>
               </div>
               <div>
-                <span className="text-slate-500 block">الطرف الثاني (المنشأة الحاضنة المرخّصة):</span>
+                <span className="text-slate-400 block">الطرف الثاني (المنشأة الحاضنة المرخّصة):</span>
                 <span className="font-bold text-slate-100 block">{contract.hostCommercialName}</span>
               </div>
             </div>
@@ -135,27 +135,27 @@ export const ContractModal: React.FC<ContractModalProps> = ({
             
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div className="p-2.5 bg-slate-900 rounded-lg border border-slate-800">
-                <span className="text-slate-500 text-[10px] block">سعر البيع المعتمد</span>
+                <span className="text-slate-400 text-[11px] block">سعر البيع المعتمد</span>
                 <span className="font-bold text-amber-400 text-sm">{contract.terms.sellingPriceKwd.toFixed(3)} د.ك</span>
               </div>
               <div className="p-2.5 bg-slate-900 rounded-lg border border-slate-800">
-                <span className="text-slate-500 text-[10px] block">نسبة حقوق المبدع</span>
+                <span className="text-slate-400 text-[11px] block">نسبة حقوق المبدع</span>
                 <span className="font-bold text-amber-400 text-sm">{contract.terms.creatorRoyaltyRatePercent}٪ من المبيعات</span>
               </div>
               <div className="p-2.5 bg-slate-900 rounded-lg border border-slate-800">
-                <span className="text-slate-500 text-[10px] block">عمولة تشغيل المنصة</span>
+                <span className="text-slate-400 text-[11px] block">عمولة تشغيل المنصة</span>
                 <span className="font-bold text-slate-300 text-sm">{contract.terms.platformFeePercent}٪</span>
               </div>
               <div className="p-2.5 bg-slate-900 rounded-lg border border-slate-800">
-                <span className="text-slate-500 text-[10px] block">مدة العقد الحصري</span>
+                <span className="text-slate-400 text-[11px] block">مدة العقد الحصري</span>
                 <span className="font-bold text-slate-200 text-sm">{contract.terms.termMonths} شهراً</span>
               </div>
               <div className="p-2.5 bg-slate-900 rounded-lg border border-slate-800">
-                <span className="text-slate-500 text-[10px] block">نطاق الحصرية</span>
+                <span className="text-slate-400 text-[11px] block">نطاق الحصرية</span>
                 <span className="font-bold text-slate-200 text-sm">{contract.terms.exclusivityType === 'EXCLUSIVE' ? 'حصري لدولة الكويت' : 'غير حصري'}</span>
               </div>
               <div className="p-2.5 bg-slate-900 rounded-lg border border-slate-800">
-                <span className="text-slate-500 text-[10px] block">الحد الأدنى للإنتاج</span>
+                <span className="text-slate-400 text-[11px] block">الحد الأدنى للإنتاج</span>
                 <span className="font-bold text-slate-200 text-sm">{contract.terms.minimumCommitmentUnits} قطعة</span>
               </div>
             </div>
@@ -180,8 +180,8 @@ export const ContractModal: React.FC<ContractModalProps> = ({
               {contract.creatorSignedAt ? (
                 <div className="text-[11px]">
                   <p className="font-bold text-slate-100">{contract.creatorLegalName}</p>
-                  <p className="text-slate-400 text-[10px]">تاريخ التوقيع: {new Date(contract.creatorSignedAt).toLocaleString('ar-KW')}</p>
-                  <p className="text-slate-500 text-[9px] font-mono">Session Audit Ref: {contract.creatorSignerIp}</p>
+                  <p className="text-slate-400 text-[11px]">تاريخ التوقيع: {new Date(contract.creatorSignedAt).toLocaleString('ar-KW')}</p>
+                  <p className="text-slate-400 text-[11px] font-mono">Session Audit Ref: {contract.creatorSignerIp}</p>
                 </div>
               ) : (
                 <span className="text-amber-400 font-semibold text-[11px]">في انتظار التوقيع...</span>
@@ -197,8 +197,8 @@ export const ContractModal: React.FC<ContractModalProps> = ({
               {contract.hostSignedAt ? (
                 <div className="text-[11px]">
                   <p className="font-bold text-slate-100">{contract.hostCommercialName}</p>
-                  <p className="text-slate-400 text-[10px]">تاريخ التوقيع: {new Date(contract.hostSignedAt).toLocaleString('ar-KW')}</p>
-                  <p className="text-slate-500 text-[9px] font-mono">Session Audit Ref: {contract.hostSignerIp}</p>
+                  <p className="text-slate-400 text-[11px]">تاريخ التوقيع: {new Date(contract.hostSignedAt).toLocaleString('ar-KW')}</p>
+                  <p className="text-slate-400 text-[11px] font-mono">Session Audit Ref: {contract.hostSignerIp}</p>
                 </div>
               ) : (
                 <span className="text-amber-400 font-semibold text-[11px]">في انتظار التوقيع...</span>
@@ -237,7 +237,7 @@ export const ContractModal: React.FC<ContractModalProps> = ({
                     aria-label="الرقم المدني لطلب هويتي"
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-100 font-mono"
                   />
-                  {paciRequestId && <p className="text-[10px] text-slate-400">طلب PACI: <span className="font-mono text-blue-300">{paciRequestId}</span> — {paciStatus || 'PENDING'}</p>}
+                  {paciRequestId && <p className="text-[11px] text-slate-400">طلب PACI: <span className="font-mono text-blue-300">{paciRequestId}</span> — {paciStatus || 'PENDING'}</p>}
                   {paciDeepLink && <a href={paciDeepLink} rel="noreferrer" className="inline-flex text-[11px] font-bold text-blue-300 underline">فتح الطلب في تطبيق هويتي</a>}
                   {signError && <p role="alert" className="text-xs text-rose-300">{signError}</p>}
                 </div>

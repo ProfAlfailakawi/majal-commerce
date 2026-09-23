@@ -290,7 +290,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           {step === 'INTENT' && (
             <div className="space-y-8">
               <div className="text-center space-y-3">
-                <span style={rise(0)} className="block text-[10px] font-black tracking-[0.3em] text-gold-300">
+                <span style={rise(0)} className="block text-[11px] font-black tracking-[0.3em] text-gold-300">
                   سؤال واحد فقط
                 </span>
                 <h2
@@ -348,7 +348,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           {step === 'JOURNEY' && (
             <div className="space-y-8">
               <div className="text-center space-y-3">
-                <span style={rise(0)} className="block text-[10px] font-black tracking-[0.3em] text-gold-300">
+                <span style={rise(0)} className="block text-[11px] font-black tracking-[0.3em] text-gold-300">
                   MAJAL JOURNEY
                 </span>
                 <h2
@@ -393,7 +393,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                             {stage.index}.
                           </span>
                           <span className="text-sm font-black text-slate-100">{stage.title}</span>
-                          <span className="text-[10px] text-slate-500 font-bold">— {stage.actor}</span>
+                          <span className="text-[11px] text-slate-400 font-bold">— {stage.actor}</span>
                         </span>
                         <span className="block mt-1 text-[11px] text-slate-400 leading-6">{stage.brief}</span>
                       </span>
@@ -407,7 +407,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           {step === 'PROTECTION' && (
             <div className="space-y-8">
               <div className="text-center space-y-3">
-                <span style={rise(0)} className="block text-[10px] font-black tracking-[0.3em] text-gold-300">
+                <span style={rise(0)} className="block text-[11px] font-black tracking-[0.3em] text-gold-300">
                   خزنة الوصفات
                 </span>
                 <h2
@@ -437,7 +437,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                       <span className={`w-11 h-11 rounded-2xl grid place-items-center border ${item.accent.ring} ${item.accent.fill} ${item.accent.text}`}>
                         {item.icon}
                       </span>
-                      <span className="text-[9px] font-black tracking-wider text-slate-500">{item.level}</span>
+                      <span className="text-[11px] font-black tracking-wider text-slate-400">{item.level}</span>
                     </div>
                     <h3 className="text-sm font-black text-slate-100">{item.title}</h3>
                     <p className="text-[11px] text-slate-400 leading-6">{item.body}</p>
@@ -489,7 +489,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                   <span>
                     <span className="block text-xs font-black text-slate-100">لوحة الأوامر</span>
                     <span className="block mt-1 text-[11px] text-slate-400 leading-6">
-                      اضغط <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] font-bold">⌘K</kbd> في أي
+                      اضغط <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-[11px] font-bold">⌘K</kbd> في أي
                       وقت للتنقل بين المساحات بالبحث.
                     </span>
                   </span>
@@ -526,7 +526,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           </div>
 
           <div className="flex items-center justify-between gap-3">
-            <span className="text-[11px] text-slate-500 font-bold tabular-nums">
+            <span className="text-[11px] text-slate-400 font-bold tabular-nums">
               {stepIndex + 1} / {STEPS.length}
             </span>
 

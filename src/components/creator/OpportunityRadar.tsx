@@ -110,12 +110,12 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId, o
             <div key={key} className="rounded-2xl p-5 bg-white/5 border border-white/10 hover:border-gold-300/25 transition-colors space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-[11px] text-slate-500">{product.publicName}</div>
+                  <div className="text-[11px] text-slate-400">{product.publicName}</div>
                   <h4 className="font-black text-slate-100 mt-1">{host?.commercialName || 'منشأة مرخّصة'}</h4>
                 </div>
                 <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 flex flex-col items-center justify-center">
                   <span className="text-xl font-black text-emerald-300">{matchScore.overallScore}</span>
-                  <span className="text-[9px] text-emerald-400">تطابق</span>
+                  <span className="text-[11px] text-emerald-400">تطابق</span>
                 </div>
               </div>
 
@@ -164,11 +164,11 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId, o
                   {signal.citations.map((cite, ci) => {
                     const href = safeHttpUrl(cite.uri);
                     return href ? (
-                      <a key={ci} href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-emerald-300/90 hover:text-emerald-200 text-[10px]">
+                      <a key={ci} href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-emerald-300/90 hover:text-emerald-200 text-[11px]">
                         <ExternalLink className="w-3 h-3" /> {cite.title.slice(0, 48)}
                       </a>
                     ) : (
-                      <span key={ci} className="inline-flex items-center gap-1 text-slate-400 text-[10px]">
+                      <span key={ci} className="inline-flex items-center gap-1 text-slate-400 text-[11px]">
                         <ExternalLink className="w-3 h-3" /> {cite.title.slice(0, 48)}
                       </span>
                     );

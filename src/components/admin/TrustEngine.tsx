@@ -64,7 +64,7 @@ export const TrustEngine: React.FC = () => {
                 <strong className={card.risk === 'LOW' ? 'text-emerald-300' : card.risk === 'MEDIUM' ? 'text-amber-300' : 'text-rose-300'}>{card.score}/100</strong>
               </div>
               <div className="mt-2 h-2 rounded-full bg-white/5 overflow-hidden"><div className="h-full rounded-full bg-gradient-to-l from-emerald-400 to-gold-500" style={{ width: `${card.score}%` }} /></div>
-              <div className="mt-2 text-[10px] text-slate-500">نزاعات: {card.disputes} • مستندات مشكلة: {card.docs} • وصولات نشطة: {card.grants} • تعاونات: {card.collaborations}</div>
+              <div className="mt-2 text-[11px] text-slate-400">نزاعات: {card.disputes} • مستندات مشكلة: {card.docs} • وصولات نشطة: {card.grants} • تعاونات: {card.collaborations}</div>
             </div>
           ))}
         </div>

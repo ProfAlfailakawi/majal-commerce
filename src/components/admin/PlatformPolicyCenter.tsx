@@ -57,7 +57,7 @@ export const PlatformPolicyCenter: React.FC = () => {
             <p className="text-xs text-slate-400 mt-1">سياسات تشغيل عالمية لا يمكن تعديلها إلا من السوبر أدمن.</p>
           </div>
         </div>
-        <div className="text-[11px] text-slate-500 leading-5">
+        <div className="text-[11px] text-slate-400 leading-5">
           آخر تحديث: {new Date(store.policy.updatedAt).toLocaleString('ar-KW')}<br />
           بواسطة: {store.policy.updatedBy}
         </div>
@@ -78,9 +78,9 @@ export const PlatformPolicyCenter: React.FC = () => {
                 onChange={e => update(field.key, Number(e.target.value))}
                 className="glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none font-mono"
               />
-              <span className="text-xs text-slate-500 whitespace-nowrap">{field.suffix}</span>
+              <span className="text-xs text-slate-400 whitespace-nowrap">{field.suffix}</span>
             </div>
-            <p className="text-[11px] text-slate-500 leading-5">{field.help}</p>
+            <p className="text-[11px] text-slate-400 leading-5">{field.help}</p>
           </label>
         ))}
       </div>
@@ -88,7 +88,7 @@ export const PlatformPolicyCenter: React.FC = () => {
       {changes.length > 0 && <div className="rounded-2xl p-4 bg-sky-500/5 border border-sky-400/20 space-y-3" aria-live="polite">
         <div className="flex items-center gap-2 text-sky-200 font-black text-sm"><ScanSearch className="w-4 h-4" /><span>معاينة أثر القرار قبل اعتماده</span></div>
         <div className="flex flex-wrap gap-2">
-          {changes.map(item => <span key={item.key} className="px-2.5 py-1 rounded-lg bg-slate-950/40 border border-white/10 text-[10px] text-slate-300">{item.label}: {store.policy[item.key]} ← {draft[item.key]}</span>)}
+          {changes.map(item => <span key={item.key} className="px-2.5 py-1 rounded-lg bg-slate-950/40 border border-white/10 text-[11px] text-slate-300">{item.label}: {store.policy[item.key]} ← {draft[item.key]}</span>)}
         </div>
         <ul className="space-y-1.5 text-[11px] text-slate-400 leading-5">
           {impactSignals.map(signal => <li key={signal} className="flex gap-2"><span className="text-sky-300">•</span><span>{signal}</span></li>)}

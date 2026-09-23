@@ -66,14 +66,14 @@ export const CreatorEarnings: React.FC = () => {
       </div>
 
       <section className="glass-panel rounded-3xl border border-white/10 p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-white/10 pb-3"><h3 className="font-black">تفاصيل الحقوق حسب الطلب</h3><span className="text-xs text-slate-500">{creatorAccruals.length} سجلات</span></div>
+        <div className="flex items-center justify-between border-b border-white/10 pb-3"><h3 className="font-black">تفاصيل الحقوق حسب الطلب</h3><span className="text-xs text-slate-400">{creatorAccruals.length} سجلات</span></div>
         <div className="overflow-x-auto text-xs">
           <table className="w-full text-right min-w-[760px]">
-            <thead><tr className="border-b border-white/10 text-slate-500"><th className="py-3 px-3">الطلب</th><th className="py-3 px-3">التاريخ</th><th className="py-3 px-3">المبيعات</th><th className="py-3 px-3">النسبة</th><th className="py-3 px-3">حق المبدع</th><th className="py-3 px-3">الحالة</th></tr></thead>
+            <thead><tr className="border-b border-white/10 text-slate-400"><th className="py-3 px-3">الطلب</th><th className="py-3 px-3">التاريخ</th><th className="py-3 px-3">المبيعات</th><th className="py-3 px-3">النسبة</th><th className="py-3 px-3">حق المبدع</th><th className="py-3 px-3">الحالة</th></tr></thead>
             <tbody className="divide-y divide-white/5">
               {creatorAccruals.map(a => {
                 const [label, cls] = statusLabel(a.settlementStatus);
-                return <tr key={a.id} className="hover:bg-white/3"><td className="py-3 px-3 font-mono text-slate-200">{a.orderId}</td><td className="py-3 px-3 text-slate-400">{new Date(a.createdAt).toLocaleString('ar-KW')}</td><td className="py-3 px-3 font-bold">{a.grossSaleKwd.toFixed(3)} د.ك</td><td className="py-3 px-3 text-gold-300 font-bold">{a.royaltyRatePercent}%</td><td className="py-3 px-3 text-gold-300 font-black font-mono">{a.accruedAmountKwd.toFixed(3)} د.ك</td><td className="py-3 px-3"><span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${cls}`}>{label}</span></td></tr>;
+                return <tr key={a.id} className="hover:bg-white/3"><td className="py-3 px-3 font-mono text-slate-200">{a.orderId}</td><td className="py-3 px-3 text-slate-400">{new Date(a.createdAt).toLocaleString('ar-KW')}</td><td className="py-3 px-3 font-bold">{a.grossSaleKwd.toFixed(3)} د.ك</td><td className="py-3 px-3 text-gold-300 font-bold">{a.royaltyRatePercent}%</td><td className="py-3 px-3 text-gold-300 font-black font-mono">{a.accruedAmountKwd.toFixed(3)} د.ك</td><td className="py-3 px-3"><span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${cls}`}>{label}</span></td></tr>;
               })}
             </tbody>
           </table>
@@ -90,8 +90,8 @@ export const CreatorEarnings: React.FC = () => {
             body="المستحقات تتجمّع مع كل عملية بيع، وتنتقل هنا عند إقفال أول دورة تسوية."
           /> : creatorSettlements.map(batch => (
             <div key={batch.id} className="p-4 rounded-2xl bg-slate-950/35 border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-3"><div className={`p-2 rounded-xl border ${batch.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'}`}><ShieldCheck className="w-5 h-5" /></div><div><span className="font-bold text-slate-100 block text-sm">دفعة #{batch.id}</span><span className="text-slate-500 text-[11px]">{new Date(batch.periodStart).toLocaleDateString('ar-KW')} — {new Date(batch.periodEnd).toLocaleDateString('ar-KW')}</span></div></div>
-              <div className="sm:text-left"><span className="block font-black text-gold-300 text-lg font-mono">{batch.totalAmountKwd.toFixed(3)} د.ك</span><span className="text-[10px] text-slate-500">{batch.status === 'PAID' && batch.paidAt ? `تأكيد الدفع: ${new Date(batch.paidAt).toLocaleDateString('ar-KW')}` : 'معتمدة — بانتظار تأكيد الدفع الخارجي'}</span></div>
+              <div className="flex items-center gap-3"><div className={`p-2 rounded-xl border ${batch.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'}`}><ShieldCheck className="w-5 h-5" /></div><div><span className="font-bold text-slate-100 block text-sm">دفعة #{batch.id}</span><span className="text-slate-400 text-[11px]">{new Date(batch.periodStart).toLocaleDateString('ar-KW')} — {new Date(batch.periodEnd).toLocaleDateString('ar-KW')}</span></div></div>
+              <div className="sm:text-left"><span className="block font-black text-gold-300 text-lg font-mono">{batch.totalAmountKwd.toFixed(3)} د.ك</span><span className="text-[11px] text-slate-400">{batch.status === 'PAID' && batch.paidAt ? `تأكيد الدفع: ${new Date(batch.paidAt).toLocaleDateString('ar-KW')}` : 'معتمدة — بانتظار تأكيد الدفع الخارجي'}</span></div>
             </div>
           ))}
         </div>
