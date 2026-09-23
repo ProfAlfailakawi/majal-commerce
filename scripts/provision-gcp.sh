@@ -81,7 +81,11 @@ else
     --tier="$SQL_TIER" \
     --region="$REGION" \
     --storage-auto-increase \
-    --backup \
+    --backup-start-time=23:00 \
+    --retained-backups-count=14 \
+    --enable-point-in-time-recovery \
+    --retained-transaction-log-days=7 \
+    --deletion-protection \
     --quiet
 fi
 
@@ -197,6 +201,11 @@ cat <<SUMMARY
   يبقى عليك ما لا يُنشأ من هنا (حسابات لدى أطراف أخرى): مفاتيح مزوّد الدفع
   والبريد. احفظها في Secret Manager وأعد تشغيل سكربت النشر — سيلتقطها.
   التفاصيل في CONNECT.md.
+
+  بعد أول نشر (مرة واحدة):
+    bash scripts/setup-backups.sh      النسخ الاحتياطي اليومي والتصدير
+    ALERT_EMAIL=you@example.com bash scripts/setup-monitoring.sh
+    bash scripts/setup-redis.sh        اختياري: حين تتجاوز الخدمة نسخة واحدة
 
 ════════════════════════════════════════════════════════════════
 SUMMARY

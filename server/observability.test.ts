@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { resolveTrustProxyHops } from './observability';
+import { reportError, resolveTrustProxyHops } from './observability';
 
 // resolveTrustProxyHops emits structured warnings for invalid/insecure settings; silence them
 // so the test output stays readable.
@@ -37,4 +37,22 @@ test('SECURITY regression: trust proxy hops default to 1 in production so req.ip
     assert.equal(resolveTrustProxyHops('abc', true), 1);
     assert.equal(resolveTrustProxyHops('abc', false), 0);
   });
+});
+
+test('reportError emits a Cloud Error Reporting entry with the stack, never secrets', () => {
+  const lines: string[] = [];
+  const original = console.log;
+  console.log = (line: string) => { lines.push(line); };
+  try {
+    reportError('request_failed', new TypeError('boom'), { path: '/api/x', sessionToken: 'must-not-appear' });
+  } finally {
+    console.log = original;
+  }
+  const entry = JSON.parse(lines[0]);
+  assert.equal(entry.severity, 'ERROR');
+  assert.equal(entry['@type'], 'type.googleapis.com/google.devtools.clouderrorreporting.v1beta1.ReportedErrorEvent');
+  assert.match(entry.message, /^TypeError: boom\n\s+at /);
+  assert.equal(entry.serviceContext.service, 'majal');
+  assert.equal(entry.path, '/api/x');
+  assert.equal('sessionToken' in entry, false);
 });

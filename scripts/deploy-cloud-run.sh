@@ -83,12 +83,22 @@ for NAME in DATABASE_URL AUTH_SESSION_SECRET AUTH_ENCRYPTION_KEY \
             PACI_ADAPTER_SHARED_SECRET PACI_DATA_PEPPER PACI_INTERNAL_CALLBACK_SECRET \
             MYFATOORAH_API_TOKEN MYFATOORAH_WEBHOOK_SECRET \
             LEMONSQUEEZY_API_KEY LEMONSQUEEZY_WEBHOOK_SECRET \
-            RESEND_API_KEY; do
+            RESEND_API_KEY REDIS_URL; do
   if gcloud secrets describe "$NAME" >/dev/null 2>&1; then
     SECRETS="${SECRETS:+$SECRETS,}$NAME=$NAME:latest"
     echo "  ✓ سرّ: $NAME"
   fi
 done
+
+# Redis (scripts/setup-redis.sh) يعيش داخل شبكة VPC؛ الخدمة تصل إليه عبر
+# Direct VPC egress، ويبقى خروجها للإنترنت (مزوّد الدفع، البريد) كما هو.
+VPC_NETWORK="${VPC_NETWORK:-default}"
+VPC_SUBNET="${VPC_SUBNET:-default}"
+USE_VPC=""
+if [[ "$SECRETS" == *REDIS_URL=* ]]; then
+  USE_VPC="yes"
+  echo "  ✓ Redis: عبر شبكة $VPC_NETWORK/$VPC_SUBNET"
+fi
 
 step "٢/٥  صلاحية حساب البناء"
 # `gcloud run deploy --source` يبني عبر Cloud Build منتحلاً حساب الحوسبة
@@ -114,6 +124,7 @@ DEPLOY=(gcloud run deploy "$SERVICE_NAME"
   --allow-unauthenticated --update-env-vars "$ENV_VARS" --quiet)
 [[ -n "$CONNECTION_NAME" ]] && DEPLOY+=(--add-cloudsql-instances "$CONNECTION_NAME")
 [[ -n "$SECRETS" ]] && DEPLOY+=(--update-secrets "$SECRETS")
+[[ -n "$USE_VPC" ]] && DEPLOY+=(--network "$VPC_NETWORK" --subnet "$VPC_SUBNET" --vpc-egress private-ranges-only)
 "${DEPLOY[@]}"
 
 step "٤/٥  تثبيت APP_URL"

@@ -17,8 +17,9 @@ import { createAdvancedRouter } from './server/advanced';
 import { createOrdersRouter, createPublicReviewsRouter } from './server/orders';
 import { createModerationRouter } from './server/moderation';
 import { deliveryReadiness, startNotificationDeliveryWorker } from './server/delivery';
-import { installProcessSafetyHandlers, requestTelemetry, resolveTrustProxyHops, structuredLog } from './server/observability';
+import { installProcessSafetyHandlers, reportError, requestTelemetry, resolveTrustProxyHops, structuredLog } from './server/observability';
 import { secureStorageReadiness } from './server/secure-storage';
+import { closeRateLimitStore, initRateLimitStore, rateLimitBackend, rateLimitStore } from './server/rate-limit-store';
 
 dotenv.config({ quiet: true });
 installProcessSafetyHandlers();
@@ -33,8 +34,9 @@ const aiEnabled = process.env.ENABLE_AI_API === 'true';
 const port = Number(process.env.PORT) > 0 ? Number(process.env.PORT) : 3000;
 const bindHost = '0.0.0.0';
 
-// Per-instance limiter options for express-rate-limit. The library is called inline at
-// each route so code scanning can see the limiter guarding the handler.
+// Limiter options for express-rate-limit. The library is called inline at each route so
+// code scanning can see the limiter guarding the handler. Counters live in Redis when
+// REDIS_URL is set (shared by every instance) and in memory otherwise.
 // Shared/distributed limits across instances still need a Redis store (see AGENTS.md).
 const limitOptions = (limit: number, windowMs: number, scope = 'global'): Parameters<typeof expressRateLimit>[0] => ({
   windowMs,
@@ -44,7 +46,10 @@ const limitOptions = (limit: number, windowMs: number, scope = 'global'): Parame
   keyGenerator: req => `${req.ip}:${scope}`,
   // trust proxy is configured explicitly via TRUST_PROXY_HOPS; skip the library's heuristics.
   validate: { trustProxy: false, xForwardedForHeader: false },
-  handler: (_req, res) => { res.status(429).json({ error: 'تم تجاوز الحد المؤقت للطلبات. حاول لاحقًا.' }); }
+  handler: (_req, res) => { res.status(429).json({ error: 'تم تجاوز الحد المؤقت للطلبات. حاول لاحقًا.' }); },
+  store: rateLimitStore(scope),
+  // The store already falls back to memory on Redis errors; never fail a request over it.
+  passOnStoreError: true
 });
 const textValue = (value: unknown, min: number, max: number) => {
   if (typeof value !== 'string') return undefined;
@@ -74,6 +79,8 @@ function safeStartupCode(error: unknown) {
 
 async function initializeApplication(app: express.Express) {
   const authConfig = createAuthConfig(isProduction);
+  // Must resolve before any limiter is created: each one binds its store at registration.
+  await initRateLimitStore();
   const db = await openMajalDatabase();
   const paymentRegistry = createPaymentRegistry();
   const paciRegistry = createPaciRegistry();
@@ -126,7 +133,8 @@ async function initializeApplication(app: express.Express) {
         payments: paymentReady.configured ? 'READY' : 'NOT_CONFIGURED',
         paci: paciReady.configured ? 'READY' : 'NOT_CONFIGURED',
         secureStorage: secureStorageReadiness(),
-        notifications: deliveryReadiness()
+        notifications: deliveryReadiness(),
+        rateLimit: rateLimitBackend()
       }
     });
   });
@@ -277,10 +285,13 @@ async function initializeApplication(app: express.Express) {
     app.get('/{*rest}', expressRateLimit(limitOptions(600, 60_000, 'spa-shell')), (req, res) => path.extname(req.path) ? jsonError(res, 404, 'الملف غير موجود.') : res.sendFile(indexPath));
   }
 
-  app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
-    structuredLog('WARNING', 'request_rejected', { errorType: err instanceof Error ? err.name : 'UnknownError' });
+  app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
     const status = typeof err === 'object' && err !== null ? Number((err as { status?: unknown; statusCode?: unknown }).status ?? (err as { statusCode?: unknown }).statusCode) : NaN;
     const code = Number.isInteger(status) && status >= 400 && status < 600 ? status : 500;
+    const context = { requestId: (req as Request & { requestId?: string }).requestId, method: req.method, path: req.path, status: code };
+    // Server faults go to Error Reporting with their stack; client mistakes stay a warning.
+    if (code >= 500) reportError('request_failed', err, context);
+    else structuredLog('WARNING', 'request_rejected', { ...context, errorType: err instanceof Error ? err.name : 'UnknownError' });
     if (!res.headersSent) jsonError(res, code, code >= 500 ? 'حدث خطأ غير متوقع.' : 'الطلب غير صالح.');
   });
 
@@ -290,7 +301,7 @@ async function initializeApplication(app: express.Express) {
   return {
     db,
     shutdown: async () => {
-      stopDeliveryWorker(); clearInterval(cleanupTimer); await db.close();
+      stopDeliveryWorker(); clearInterval(cleanupTimer); await closeRateLimitStore(); await db.close();
     }
   };
 }

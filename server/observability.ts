@@ -14,6 +14,25 @@ export function structuredLog(severity: 'DEBUG'|'INFO'|'WARNING'|'ERROR'|'CRITIC
   console.log(JSON.stringify({ severity, event, service: 'majal', ts: new Date().toISOString(), ...safe }));
 }
 
+const ERROR_REPORTING_TYPE = 'type.googleapis.com/google.devtools.clouderrorreporting.v1beta1.ReportedErrorEvent';
+
+/**
+ * Logs an error in the shape Google Cloud Error Reporting ingests from Cloud Logging:
+ * the stack trace in `message`, an explicit `@type`, and a `serviceContext`. Errors are
+ * then grouped, counted and alerted on in Error Reporting with no SDK or extra network
+ * call from the app. The stack stays server-side; clients only ever see a generic message.
+ */
+export function reportError(event: string, error: unknown, fields: Record<string, unknown> = {}, severity: 'ERROR' | 'CRITICAL' = 'ERROR') {
+  const err = error instanceof Error ? error : new Error(String(error));
+  structuredLog(severity, event, {
+    ...fields,
+    '@type': ERROR_REPORTING_TYPE,
+    errorName: err.name,
+    message: err.stack || `${err.name}: ${err.message}`,
+    serviceContext: { service: 'majal', version: process.env.K_REVISION || 'local' }
+  });
+}
+
 /**
  * Number of reverse-proxy hops Express should trust when deriving `req.ip`.
  *
@@ -74,9 +93,9 @@ export function requestTelemetry() {
 
 export function installProcessSafetyHandlers() {
   process.on('unhandledRejection', reason => {
-    structuredLog('CRITICAL', 'unhandled_rejection', { reason: reason instanceof Error ? reason.message : String(reason) });
+    reportError('unhandled_rejection', reason, {}, 'CRITICAL');
   });
   process.on('uncaughtExceptionMonitor', error => {
-    structuredLog('CRITICAL', 'uncaught_exception', { error: error.message, name: error.name });
+    reportError('uncaught_exception', error, {}, 'CRITICAL');
   });
 }
