@@ -5,8 +5,8 @@ This repository operates on a phased architecture for its production environment
 ## Architecture States
 
 ### Implemented Now
-- **Primary Datastore:** The application currently uses `node:sqlite` as the local source of truth for authentication, sessions, notifications, and payment boundaries/limits.
-- **API & Server Layer:** Express/Node.js based modular monolith routing under `/api/**`.
+- **Primary Datastore:** `node:sqlite` is the local/development source of truth for authentication, sessions, notifications, and payment boundaries/limits. In production (`NODE_ENV=production`) the server refuses to start without `DATABASE_URL` (PostgreSQL).
+- **API & Server Layer:** Express 5/Node.js based modular monolith routing under `/api/**`.
 - **Security Boundaries:** Zero implicit trust. Authentication relies on server-side HttpOnly/SameSite cookies, CSRF protections, MFA via TOTP (AES-256-GCM encrypted), and strict RBAC.
 - **Frontend / Web App:** React (Vite-based) PWA serving as a pure presentation layer.
 - **AI Integration:** Gemini AI endpoints isolated entirely within the server layer (`src/lib/gemini.ts` and `server/ai-intelligence.ts`). No API keys or configurations exposed to clients.

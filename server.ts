@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
 import dotenv from 'dotenv';
+import { rateLimit as expressRateLimit } from 'express-rate-limit';
 import { generateProductCopyPolish, explainHostMatch } from './src/lib/gemini';
 import { dealRoomCopilot, enrichSemanticMatch, groundOpportunityRadar, launchMarketReadout, defaultAiDeps, type AiAuditEvent } from './server/ai-intelligence';
 import { AuthenticatedRequest, createAuthConfig, createAuthRouter, purgeExpiredSessions, requireAuth, requireCsrf } from './server/auth';
@@ -32,22 +33,19 @@ const aiEnabled = process.env.ENABLE_AI_API === 'true';
 const port = Number(process.env.PORT) > 0 ? Number(process.env.PORT) : 3000;
 const bindHost = '0.0.0.0';
 
-type RateEntry = { count: number; resetAt: number };
-const rateBuckets = new Map<string, RateEntry>();
-const rateLimit = (limit: number, windowMs: number, scope = 'global') => (req: Request, res: Response, next: NextFunction) => {
-  const currentTime = Date.now();
-  if (rateBuckets.size > 10_000) for (const [key, bucket] of rateBuckets) if (bucket.resetAt <= currentTime) rateBuckets.delete(key);
-  const key = `${req.ip}:${scope}`;
-  const previous = rateBuckets.get(key);
-  const entry = !previous || previous.resetAt <= currentTime ? { count: 0, resetAt: currentTime + windowMs } : previous;
-  entry.count += 1;
-  rateBuckets.set(key, entry);
-  res.setHeader('RateLimit-Limit', String(limit));
-  res.setHeader('RateLimit-Remaining', String(Math.max(0, limit - entry.count)));
-  res.setHeader('RateLimit-Reset', String(Math.ceil(entry.resetAt / 1000)));
-  if (entry.count > limit) return res.status(429).json({ error: 'تم تجاوز الحد المؤقت للطلبات. حاول لاحقًا.' });
-  next();
-};
+// Per-instance limiter options for express-rate-limit. The library is called inline at
+// each route so code scanning can see the limiter guarding the handler.
+// Shared/distributed limits across instances still need a Redis store (see AGENTS.md).
+const limitOptions = (limit: number, windowMs: number, scope = 'global'): Parameters<typeof expressRateLimit>[0] => ({
+  windowMs,
+  limit,
+  standardHeaders: 'draft-6',
+  legacyHeaders: false,
+  keyGenerator: req => `${req.ip}:${scope}`,
+  // trust proxy is configured explicitly via TRUST_PROXY_HOPS; skip the library's heuristics.
+  validate: { trustProxy: false, xForwardedForHeader: false },
+  handler: (_req, res) => { res.status(429).json({ error: 'تم تجاوز الحد المؤقت للطلبات. حاول لاحقًا.' }); }
+});
 const textValue = (value: unknown, min: number, max: number) => {
   if (typeof value !== 'string') return undefined;
   const clean = value.trim();
@@ -82,13 +80,13 @@ async function initializeApplication(app: express.Express) {
   const paymentReady = paymentRegistry.readiness;
   const paciReady = paciRegistry.readiness;
 
-  app.post('/api/v1/payments/webhooks/:provider', rateLimit(300, 60_000, 'payment-webhook'), express.raw({ type: 'application/json', limit: '256kb' }), createPaymentWebhookHandler(db, paymentRegistry));
-  app.post('/api/v1/paci/internal/callback', rateLimit(120, 60_000, 'paci-callback'), express.raw({ type: 'application/json', limit: '64kb' }), createPaciCallbackHandler(db));
+  app.post('/api/v1/payments/webhooks/:provider', expressRateLimit(limitOptions(300, 60_000, 'payment-webhook')), express.raw({ type: 'application/json', limit: '256kb' }), createPaymentWebhookHandler(db, paymentRegistry));
+  app.post('/api/v1/paci/internal/callback', expressRateLimit(limitOptions(120, 60_000, 'paci-callback')), express.raw({ type: 'application/json', limit: '64kb' }), createPaciCallbackHandler(db));
 
   // Only the document extraction endpoint receives a larger JSON envelope.
   app.use('/api/v1/domain/innovations/zero-form/extract', express.json({ limit: '2200kb', strict: true }));
   app.use(express.json({ limit: '64kb', strict: true }));
-  app.use('/api', rateLimit(240, 15 * 60_000, 'api'));
+  app.use('/api', expressRateLimit(limitOptions(240, 15 * 60_000, 'api')));
 
   /*
    * نقطة خفيفة تعرض بصمة البناء الحالية على الخادم: هي الحقيقة الوحيدة التي يقارنها
@@ -110,8 +108,14 @@ async function initializeApplication(app: express.Express) {
 
   app.get('/api/health', async (_req, res) => {
     const database = await databaseHealth(db);
+    const status = database.ready ? 'ok' : 'degraded';
+    // Production keeps the public probe minimal: which integrations are configured and
+    // which env vars are missing is reconnaissance data, not something anonymous callers need.
+    if (isProduction && process.env.EXPOSE_HEALTH_DETAILS !== 'true') {
+      return res.status(database.ready ? 200 : 503).json({ status, service: 'MAJAL Commerce Platform' });
+    }
     res.json({
-      status: database.ready ? 'ok' : 'degraded', service: 'MAJAL Commerce Platform', version: '5.1.0',
+      status, service: 'MAJAL Commerce Platform', version: '5.1.0',
       mode: isProduction ? 'production' : 'development', database,
       integrations: {
         payments: paymentReady.configured ? 'READY' : 'NOT_CONFIGURED',
@@ -122,7 +126,7 @@ async function initializeApplication(app: express.Express) {
     });
   });
 
-  app.use('/api/v1/auth', rateLimit(30, 15 * 60_000, 'auth'), createAuthRouter(db, authConfig));
+  app.use('/api/v1/auth', expressRateLimit(limitOptions(30, 15 * 60_000, 'auth')), createAuthRouter(db, authConfig));
   app.use('/api/v1/catalog', createCatalogRouter(db, authConfig));
   app.use('/api/v1/notifications', createNotificationRouter(db, authConfig));
   app.use('/api/v1/payments', createPaymentRouter(db, authConfig, paymentRegistry));
@@ -143,14 +147,14 @@ async function initializeApplication(app: express.Express) {
     next();
   };
 
-  app.post('/api/ai/polish-description', rateLimit(10, 60_000, 'ai-polish'), authenticated, csrfProtected, requireAiAccess, async (req, res) => {
+  app.post('/api/ai/polish-description', expressRateLimit(limitOptions(10, 60_000, 'ai-polish')), authenticated, csrfProtected, requireAiAccess, async (req, res) => {
     const description = textValue(req.body?.description, 10, 1_500), category = textValue(req.body?.category, 2, 80), story = textValue(req.body?.story, 2, 800);
     if (!description || !category || !story) return jsonError(res, 400, 'بيانات الوصف أو الفئة أو القصة غير صالحة.');
     try { res.json({ polishedText: await generateProductCopyPolish(description, category, story) }); }
     catch { jsonError(res, 502, 'تعذّر الوصول إلى خدمة الذكاء الاصطناعي.'); }
   });
 
-  app.post('/api/ai/match-explainer', rateLimit(10, 60_000, 'ai-match'), authenticated, csrfProtected, requireAiAccess, async (req, res) => {
+  app.post('/api/ai/match-explainer', expressRateLimit(limitOptions(10, 60_000, 'ai-match')), authenticated, csrfProtected, requireAiAccess, async (req, res) => {
     const productName = textValue(req.body?.productName, 2, 120), category = textValue(req.body?.category, 2, 80), hostName = textValue(req.body?.hostName, 2, 120);
     const equipment = Array.isArray(req.body?.equipment) ? req.body.equipment.map((item: unknown) => textValue(item, 1, 80)).filter(Boolean).slice(0, 30) as string[] : [];
     const marginScore = Number(req.body?.marginScore);
@@ -173,7 +177,7 @@ async function initializeApplication(app: express.Express) {
   };
   const aiGuard = [authenticated, csrfProtected, requireAiAccess] as const;
 
-  app.post('/api/ai/semantic-match', rateLimit(10, 60_000, 'ai-semantic'), ...aiGuard, async (req, res) => {
+  app.post('/api/ai/semantic-match', expressRateLimit(limitOptions(10, 60_000, 'ai-semantic')), ...aiGuard, async (req, res) => {
     const productName = textValue(req.body?.productName, 2, 120), category = textValue(req.body?.category, 2, 80), hostName = textValue(req.body?.hostName, 2, 120);
     const deterministicReasons = stringList(req.body?.deterministicReasons, 8, 400);
     const evidenceText = textValue(req.body?.evidenceText, 2, 2_000) || '';
@@ -184,7 +188,7 @@ async function initializeApplication(app: express.Express) {
     } catch { jsonError(res, 502, 'تعذّر الوصول إلى خدمة الذكاء الاصطناعي.'); }
   });
 
-  app.post('/api/ai/opportunity-radar', rateLimit(10, 60_000, 'ai-radar'), ...aiGuard, async (req, res) => {
+  app.post('/api/ai/opportunity-radar', expressRateLimit(limitOptions(10, 60_000, 'ai-radar')), ...aiGuard, async (req, res) => {
     const query = textValue(req.body?.query, 4, 300);
     if (!query) return jsonError(res, 400, 'استعلام السوق غير صالح.');
     try {
@@ -193,7 +197,7 @@ async function initializeApplication(app: express.Express) {
     } catch { jsonError(res, 502, 'تعذّر جلب إشارات السوق.'); }
   });
 
-  app.post('/api/ai/deal-room', rateLimit(10, 60_000, 'ai-deal'), ...aiGuard, async (req, res) => {
+  app.post('/api/ai/deal-room', expressRateLimit(limitOptions(10, 60_000, 'ai-deal')), ...aiGuard, async (req, res) => {
     const stage = textValue(req.body?.stage, 2, 60), contractStatus = textValue(req.body?.contractStatus, 2, 60);
     const optionSummaries = stringList(req.body?.optionSummaries, 5, 300);
     const gatePassed = req.body?.gatePassed === true;
@@ -204,7 +208,7 @@ async function initializeApplication(app: express.Express) {
     } catch { jsonError(res, 502, 'تعذّر تلخيص الصفقة.'); }
   });
 
-  app.post('/api/ai/launch-readout', rateLimit(10, 60_000, 'ai-launch'), ...aiGuard, async (req, res) => {
+  app.post('/api/ai/launch-readout', expressRateLimit(limitOptions(10, 60_000, 'ai-launch')), ...aiGuard, async (req, res) => {
     const query = textValue(req.body?.query, 4, 300);
     if (!query) return jsonError(res, 400, 'استعلام الإطلاق غير صالح.');
     try {
@@ -232,13 +236,16 @@ async function initializeApplication(app: express.Express) {
     });
     app.post('/api/v1/pos/webhook/:hostBusinessId', (_req, res) => res.json({ received: true, simulated: true, processed: false, royaltyAccrued: false, legalEffect: 'NONE' }));
   } else {
-    app.all('/api/v1/pos/*', (_req, res) => jsonError(res, 503, 'تكامل POS غير مربوط، والمحاكي مقفول في هذه البيئة.', 'POS_NOT_CONFIGURED'));
+    app.all('/api/v1/pos/{*rest}', (_req, res) => jsonError(res, 503, 'تكامل POS غير مربوط، والمحاكي مقفول في هذه البيئة.', 'POS_NOT_CONFIGURED'));
   }
 
   const presentationPath = path.join(process.cwd(), 'presentation');
   if (fs.existsSync(presentationPath)) {
     app.use('/presentation', express.static(presentationPath));
   }
+
+  // Unknown API paths answer JSON 404 in every mode instead of falling through to the SPA shell.
+  app.all('/api/{*rest}', (_req, res) => jsonError(res, 404, 'المسار غير موجود.', 'NOT_FOUND'));
 
   if (!isProduction) {
     const { createServer: createViteServer } = await import('vite');
@@ -262,8 +269,7 @@ async function initializeApplication(app: express.Express) {
         }
       },
     }));
-    app.all('/api/*', (_req, res) => jsonError(res, 404, 'المسار غير موجود.', 'NOT_FOUND'));
-    app.get('*', (req, res) => path.extname(req.path) ? jsonError(res, 404, 'الملف غير موجود.') : res.sendFile(indexPath));
+    app.get('/{*rest}', (req, res) => path.extname(req.path) ? jsonError(res, 404, 'الملف غير موجود.') : res.sendFile(indexPath));
   }
 
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {

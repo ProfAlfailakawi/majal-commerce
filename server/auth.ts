@@ -73,7 +73,7 @@ export interface AuthContext {
   expiresAt: string;
 }
 
-export interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request<Record<string, string>> {
   auth?: AuthContext;
 }
 
