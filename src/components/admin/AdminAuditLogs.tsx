@@ -55,13 +55,13 @@ export const AdminAuditLogs: React.FC = () => {
               <tr key={log.id} className="hover:bg-slate-800/40 transition-colors">
                 <td className="py-2.5 px-3 text-slate-400">{new Date(log.timestamp).toLocaleString('ar-KW')}</td>
                 <td className="py-2.5 px-3">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                     {log.action}
                   </span>
                 </td>
                 <td className="py-2.5 px-3 text-slate-300 font-bold">{log.entityType}</td>
                 <td className="py-2.5 px-3 text-slate-200 font-sans">{log.details}</td>
-                <td className="py-2.5 px-3 text-slate-500 text-[10px]">{log.ipAddress}</td>
+                <td className="py-2.5 px-3 text-slate-400 text-[11px]">{log.ipAddress}</td>
               </tr>
             ))}
           </tbody>

@@ -88,7 +88,7 @@ export const HostPortal: React.FC = () => {
     if (store.activeUser.role === 'HOST_OWNER') {
       return (
         <div className="max-w-3xl mx-auto p-8 text-center text-slate-400 space-y-4">
-          <Building2 className="w-12 h-12 mx-auto text-slate-500 opacity-50" />
+          <Building2 className="w-12 h-12 mx-auto text-slate-400 opacity-50" />
           <h2 className="text-xl font-bold text-slate-200">لا توجد منشأة مرتبطة بحسابك</h2>
           <p>للبدء في استخدام منصة المنشآت، يرجى إنشاء ملف منشأتك.</p>
           {!IS_DEMO_MODE && (
@@ -159,8 +159,8 @@ export const HostPortal: React.FC = () => {
             <Avatar name={host.commercialName} src={host.logoUrl} size={80} shape="squircle" className="ring-2 ring-sky-400/25 shadow-xl" />
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className={`px-2.5 py-1 rounded-full border text-[10px] font-black ${host.verificationStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'}`}>{host.verificationStatus === 'VERIFIED' ? 'LICENSED HOST' : 'بانتظار التحقق من المنشأة'}</span>
-                <span className="px-2.5 py-1 rounded-full bg-gold-500/10 text-gold-300 border border-gold-300/20 text-[10px] font-black">{roleLabel(store.activeUser.role)}</span>
+                <span className={`px-2.5 py-1 rounded-full border text-[11px] font-black ${host.verificationStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'}`}>{host.verificationStatus === 'VERIFIED' ? 'LICENSED HOST' : 'بانتظار التحقق من المنشأة'}</span>
+                <span className="px-2.5 py-1 rounded-full bg-gold-500/10 text-gold-300 border border-gold-300/20 text-[11px] font-black">{roleLabel(store.activeUser.role)}</span>
               </div>
               <h1 className="text-2xl md:text-3xl font-black mt-2">{host.commercialName}</h1>
               <p className="text-sm text-slate-400 mt-2 max-w-2xl leading-7">Innovation OS للمنشأة: اكتشاف مواهب، اختبار منتج، تفاوض، إطلاق، تشغيل وقياس — بصلاحيات مختلفة لكل عضو فريق.</p>
@@ -213,7 +213,7 @@ export const HostPortal: React.FC = () => {
           <div className="grid md:grid-cols-2 gap-4">
             {store.challenges.filter(c => c.hostBusinessId === currentHostId).map(ch => (
               <article key={ch.id} className="glass-card rounded-2xl p-5 border border-white/10 space-y-3">
-                <div className="flex items-center justify-between"><StatusPill status={ch.status} /><span className="text-[10px] text-slate-500">{ch.estimatedVolumeUnits} وحدة متوقعة</span></div>
+                <div className="flex items-center justify-between"><StatusPill status={ch.status} /><span className="text-[11px] text-slate-400">{ch.estimatedVolumeUnits} وحدة متوقعة</span></div>
                 <h4 className="font-black text-slate-100">{ch.title}</h4>
                 <p className="text-xs text-slate-400 leading-6">{ch.brief}</p>
                 <div className="grid grid-cols-2 gap-2 text-xs"><div className="rounded-xl p-3 bg-white/5 border border-white/10">سعر مستهدف <strong className="block mt-1">{ch.targetPriceKwd.toFixed(3)} د.ك</strong></div><div className="rounded-xl p-3 bg-white/5 border border-white/10">سقف التكلفة <strong className="block mt-1">{ch.costCeilingKwd.toFixed(3)} د.ك</strong></div></div>

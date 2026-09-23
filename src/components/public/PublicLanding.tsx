@@ -129,7 +129,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
                     <span className={`w-11 h-11 rounded-2xl border grid place-items-center backdrop-blur-sm ${phase.tone}`}>
                       {phase.icon}
                     </span>
-                    <span className="text-[10px] font-black text-slate-300">{phase.label}</span>
+                    <span className="text-[11px] font-black text-slate-300">{phase.label}</span>
                   </span>
                 </span>
               );
@@ -140,13 +140,12 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
         <div className="relative z-10 max-w-4xl xl:mr-auto xl:ml-[21rem] space-y-6 majal-hero-copy">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card border border-gold-300/20 text-gold-300 text-xs font-semibold">
             <LayoutPanelTop className="w-4 h-4" />
-            <span>مجال — منظومة تربط المبدع والمنشأة والمورد والسوق بصلاحيات مستقلة</span>
+            <span>للمبدعين والمطاعم والمخابز والمصانع الغذائية في الكويت</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black text-slate-100 leading-tight">
             حوّل الموهبة إلى <span className="majal-wordmark">منتج تجاري حقيقي</span>{' '}
-            <br className="hidden sm:block" />
-            مع حماية لفكرتك وشفافية في حقك
+            <span className="block mt-3 text-lg sm:text-2xl font-bold text-slate-300">فكرتك محمية، وحقك واضح في كل بيعة</span>
           </h1>
 
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-3xl">
@@ -175,7 +174,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
               <Store className="w-4 h-4" /> استكشف السوق
             </button>
             <span className="px-4 py-3 rounded-2xl bg-emerald-500/5 border border-emerald-400/15 text-emerald-200 text-xs flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4" /> بوابات التشغيل لا تظهر إلا بعد مصادقة الحساب
+              <ShieldCheck className="w-4 h-4" /> كل حساب يرى ما يخصه فقط — وبياناتك محمية
             </span>
           </div>}
         </div>

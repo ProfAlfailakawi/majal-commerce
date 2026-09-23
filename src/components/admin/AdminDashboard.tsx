@@ -229,7 +229,7 @@ export const AdminDashboard: React.FC = () => {
                 </div>
                 <div className="text-left">
                   <div className="text-sm font-black text-gold-300">L{grant.disclosureLevel}</div>
-                  <div className="text-[11px] text-slate-500 flex items-center justify-end gap-2 mt-1"><span>{new Date(grant.grantedAt || grant.requestedAt).toLocaleDateString('ar-KW')}</span><StatusPill status={grant.status} /></div>
+                  <div className="text-[11px] text-slate-400 flex items-center justify-end gap-2 mt-1"><span>{new Date(grant.grantedAt || grant.requestedAt).toLocaleDateString('ar-KW')}</span><StatusPill status={grant.status} /></div>
                 </div>
               </div>
             ))}
@@ -246,7 +246,7 @@ export const AdminDashboard: React.FC = () => {
                   <div className="font-bold text-sm text-slate-100">{contract.id} — {contract.versionNumber}</div>
                   <div className="mt-1.5"><StatusPill status={contract.status} prefix="الحالة" /></div>
                 </div>
-                <div className="text-xs text-slate-500">{new Date(contract.createdAt).toLocaleDateString('ar-KW')}</div>
+                <div className="text-xs text-slate-400">{new Date(contract.createdAt).toLocaleDateString('ar-KW')}</div>
               </div>
             ))}
           </div>
@@ -261,7 +261,7 @@ export const AdminDashboard: React.FC = () => {
               <div className="flex items-center gap-2"><Wallet className="w-5 h-5 text-gold-300" /><h2 className="text-lg font-black">دورة المستحقات</h2></div>
               <p className="text-xs text-slate-400 mt-2 leading-6">الاعتماد الداخلي لا يعني أن التحويل تم. التأكيد مقفول حتى وصول مرجع دفع موثّق إلى الخادم.</p>
             </div>
-            <div className="text-xs text-slate-500">{store.settlements.length} دفعات مسجلة</div>
+            <div className="text-xs text-slate-400">{store.settlements.length} دفعات مسجلة</div>
           </div>
           <div className="space-y-3">
             {store.settlements.length === 0 ? (
@@ -275,11 +275,11 @@ export const AdminDashboard: React.FC = () => {
               <div key={batch.id} className="rounded-2xl p-4 bg-white/5 border border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div>
                   <div className="font-black text-slate-100">{batch.creatorName}</div>
-                  <div className="text-[11px] text-slate-500 mt-1">{batch.id} — {new Date(batch.periodStart).toLocaleDateString('ar-KW')} إلى {new Date(batch.periodEnd).toLocaleDateString('ar-KW')}</div>
+                  <div className="text-[11px] text-slate-400 mt-1">{batch.id} — {new Date(batch.periodStart).toLocaleDateString('ar-KW')} إلى {new Date(batch.periodEnd).toLocaleDateString('ar-KW')}</div>
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="text-lg font-black text-gold-300 font-mono">{batch.totalAmountKwd.toFixed(3)} د.ك</div>
-                  <span className={`px-3 py-1.5 rounded-full text-[10px] font-black border ${batch.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'}`}>{batch.status === 'PAID' ? 'مدفوع ومؤكد' : 'معتمد — بانتظار الدفع'}</span>
+                  <span className={`px-3 py-1.5 rounded-full text-[11px] font-black border ${batch.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'}`}>{batch.status === 'PAID' ? 'مدفوع ومؤكد' : 'معتمد — بانتظار الدفع'}</span>
                   {batch.status === 'APPROVED' && <button disabled title="يُفعّل بعد ربط مزود الدفع" className="px-3 py-2 rounded-xl bg-slate-700 text-slate-400 text-xs font-black cursor-not-allowed">بانتظار ربط الدفع</button>}
                 </div>
               </div>

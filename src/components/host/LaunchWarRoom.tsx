@@ -40,7 +40,7 @@ export const LaunchWarRoom: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) 
       <section className="glass-panel rounded-3xl border border-white/10 p-8 text-center">
         <Rocket className="w-8 h-8 text-slate-600 mx-auto" />
         <h3 className="font-black mt-3">ما فيه إطلاق حيّ لهذه المنشأة الآن</h3>
-        <p className="text-xs text-slate-500 mt-2">تظهر غرفة القيادة فقط عند وجود إطلاق فعلي تابع لنفس المنشأة.</p>
+        <p className="text-xs text-slate-400 mt-2">تظهر غرفة القيادة فقط عند وجود إطلاق فعلي تابع لنفس المنشأة.</p>
       </section>
     );
   }
@@ -94,9 +94,9 @@ export const LaunchWarRoom: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) 
           {branchRows.length ? branchRows.map(branch => (
             <div key={branch.id} className="rounded-xl p-3 bg-slate-950/45 border border-white/10 flex items-center justify-between gap-3">
               <span className="text-xs text-slate-300 font-bold">{branch.name}</span>
-              <span className={`text-[11px] ${branch.hasTrackedData ? 'text-sky-300 font-mono' : 'text-slate-500'}`}>{branch.hasTrackedData ? `${branch.units} وحدة متتبعة` : 'لا يوجد Branch Attribution في الطلبات بعد'}</span>
+              <span className={`text-[11px] ${branch.hasTrackedData ? 'text-sky-300 font-mono' : 'text-slate-400'}`}>{branch.hasTrackedData ? `${branch.units} وحدة متتبعة` : 'لا يوجد Branch Attribution في الطلبات بعد'}</span>
             </div>
-          )) : <div className="text-xs text-slate-500">لم تحدد فروع لهذا الإطلاق.</div>}
+          )) : <div className="text-xs text-slate-400">لم تحدد فروع لهذا الإطلاق.</div>}
         </div>
 
         <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3">
@@ -107,12 +107,12 @@ export const LaunchWarRoom: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) 
 
       <div className="rounded-2xl p-4 bg-gradient-to-l from-gold-500/8 via-white/[0.03] to-fuchsia-500/8 border border-white/10 space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div><div className="font-black">إسناد النمو</div><div className="text-xs text-slate-500 mt-1">النسب تظهر فقط من الطلبات التي تحمل acquisitionSource فعلية؛ لا توجد نسب مختلقة.</div></div>
+          <div><div className="font-black">إسناد النمو</div><div className="text-xs text-slate-400 mt-1">النسب تظهر فقط من الطلبات التي تحمل acquisitionSource فعلية؛ لا توجد نسب مختلقة.</div></div>
           <button onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/drop/${launch.id}`)} className="px-3 py-2 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center gap-2"><Link2 className="w-4 h-4" /> نسخ رابط الإطلاق</button>
         </div>
         <div className="grid md:grid-cols-4 gap-3 text-xs">
           {[['Creator-driven', sourceUnits.CREATOR, pct(sourceUnits.CREATOR), 'text-emerald-300'], ['Host-driven', sourceUnits.HOST, pct(sourceUnits.HOST), 'text-sky-300'], ['Majal-driven', sourceUnits.MAJAL, pct(sourceUnits.MAJAL), 'text-gold-300'], ['غير منسوب', sourceUnits.UNKNOWN, null, 'text-slate-400']].map(([label, units, percentage, tone]) => (
-            <div key={label as string} className="rounded-xl p-3 bg-slate-950/45 border border-white/10"><div className="text-slate-500">{label}</div><div className={`text-xl font-black mt-1 ${tone}`}>{percentage === null ? `${units} وحدة` : `${percentage}%`}</div><div className="text-[10px] text-slate-500 mt-1">{percentage === null ? 'يحتاج Tracking source' : `${units} وحدة متتبعة`}</div></div>
+            <div key={label as string} className="rounded-xl p-3 bg-slate-950/45 border border-white/10"><div className="text-slate-400">{label}</div><div className={`text-xl font-black mt-1 ${tone}`}>{percentage === null ? `${units} وحدة` : `${percentage}%`}</div><div className="text-[11px] text-slate-400 mt-1">{percentage === null ? 'يحتاج Tracking source' : `${units} وحدة متتبعة`}</div></div>
           ))}
         </div>
       </div>

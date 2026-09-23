@@ -41,7 +41,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
               <MajalMark size={34} />
               <span className="min-w-0">
                 <span className="block text-lg font-black majal-wordmark leading-none">مجال</span>
-                <span className="block text-[9px] font-semibold tracking-[0.42em] text-gold-500/60 leading-none mt-1.5" dir="ltr">MAJAL</span>
+                <span className="block text-[11px] font-semibold tracking-[0.42em] text-gold-500/60 leading-none mt-1.5" dir="ltr">MAJAL</span>
               </span>
             </div>
             <p className="text-slate-400 text-xs leading-relaxed">
@@ -93,10 +93,10 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
           <div className="space-y-2">
             <h4 className="font-bold text-slate-200 text-sm mb-3 border-b border-slate-800 pb-1">الأمان والامتثال</h4>
             <ul className="space-y-2 text-slate-400">
-              <li className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-slate-500" /><span>خزنة الوصفات مقفلة حتى المصادقة</span></li>
-              <li className="flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-slate-500" /><span>التوقيع يُفعّل بعد ربط الهوية</span></li>
-              <li className="flex items-center gap-1.5"><Scale className="w-3.5 h-3.5 text-slate-500" /><span>فصل واضح للصلاحيات والتسويات</span></li>
-              <li className="flex items-center gap-1.5"><Crown className="w-3.5 h-3.5 text-slate-500" /><span>مراجعة وتوثيق لكل اتفاق</span></li>
+              <li className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-slate-400" /><span>خزنة الوصفات مقفلة حتى المصادقة</span></li>
+              <li className="flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-slate-400" /><span>التوقيع يُفعّل بعد ربط الهوية</span></li>
+              <li className="flex items-center gap-1.5"><Scale className="w-3.5 h-3.5 text-slate-400" /><span>فصل واضح للصلاحيات والتسويات</span></li>
+              <li className="flex items-center gap-1.5"><Crown className="w-3.5 h-3.5 text-slate-400" /><span>مراجعة وتوثيق لكل اتفاق</span></li>
             </ul>
           </div>
 
@@ -111,7 +111,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
           </div>
         </div>
 
-        <div className="pt-6 border-t border-slate-800/80 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
+        <div className="pt-6 border-t border-slate-800/80 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] text-slate-400">
           <div className="text-center md:text-right">© {new Date().getFullYear()} منصة مجال — جميع الحقوق محفوظة.</div>
           <nav aria-label="روابط قانونية" className="flex gap-x-5 gap-y-2 flex-wrap justify-center">
             {legalLinks.map(link => (

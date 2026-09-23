@@ -171,7 +171,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
                     }`}
                   >
                     <div className="text-xs font-black text-slate-100 flex items-center gap-1.5">{item.icon}<span>{item.label}</span></div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">{item.desc}</div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">{item.desc}</div>
                   </button>
                 ))}
               </div>
@@ -214,7 +214,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
                 </select>
               </label>
               <label className="block space-y-1.5">
-                <span className="text-xs font-bold text-slate-200">رقم السجل التجاري <span className="text-slate-500">(اختياري الآن)</span></span>
+                <span className="text-xs font-bold text-slate-200">رقم السجل التجاري <span className="text-slate-400">(اختياري الآن)</span></span>
                 <input
                   value={commercialRegistrationNo}
                   onChange={event => setCommercialRegistrationNo(event.target.value)}
@@ -225,7 +225,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
                   className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-sky-300/50 text-left"
                 />
               </label>
-              <p className="sm:col-span-2 text-[10px] leading-5 text-slate-400">
+              <p className="sm:col-span-2 text-[11px] leading-5 text-slate-400">
                 تُنشأ المنشأة لك وحدك فورًا، وتبقى «غير موثقة» إلى أن يكتمل التحقق من السجل والتصاريح. لا يتم ربط حسابك بأي منشأة موجودة مسبقًا.
               </p>
             </div>
@@ -242,14 +242,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
                 <input value={supplierCategory} onChange={event => setSupplierCategory(event.target.value)} required minLength={2} maxLength={120} placeholder="مواد خام، تغليف، معدات…" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-emerald-300/50" />
               </label>
               <label className="block space-y-1.5">
-                <span className="text-xs font-bold text-slate-200">رقم السجل التجاري <span className="text-slate-500">(اختياري الآن)</span></span>
+                <span className="text-xs font-bold text-slate-200">رقم السجل التجاري <span className="text-slate-400">(اختياري الآن)</span></span>
                 <input value={supplierRegistrationNo} onChange={event => setSupplierRegistrationNo(event.target.value)} minLength={3} maxLength={80} dir="ltr" placeholder="CR / license no." className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-emerald-300/50 text-left" />
               </label>
               <label className="block space-y-1.5 sm:col-span-2">
-                <span className="text-xs font-bold text-slate-200">نبذة قصيرة <span className="text-slate-500">(اختياري)</span></span>
+                <span className="text-xs font-bold text-slate-200">نبذة قصيرة <span className="text-slate-400">(اختياري)</span></span>
                 <textarea value={supplierDescription} onChange={event => setSupplierDescription(event.target.value)} maxLength={1200} rows={2} placeholder="ما الذي تورّده ولأي نوع من المنشآت؟" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-emerald-300/50 resize-none" />
               </label>
-              <p className="sm:col-span-2 text-[10px] leading-5 text-slate-400">يُنشأ ملف المورد مستقلًا ولا يظهر للعامة قبل تحقق الإدارة واعتماد المورد.</p>
+              <p className="sm:col-span-2 text-[11px] leading-5 text-slate-400">يُنشأ ملف المورد مستقلًا ولا يظهر للعامة قبل تحقق الإدارة واعتماد المورد.</p>
             </div>
           )}
 
@@ -281,7 +281,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-200">{mode === 'RESET_VERIFY' ? 'كلمة المرور الجديدة' : 'كلمة المرور'}</span>
                 {(mode === 'REGISTER' || mode === 'RESET_VERIFY') && (
-                  <span className="text-[10px] text-slate-400">12 محرفًا على الأقل</span>
+                  <span className="text-[11px] text-slate-400">12 محرفًا على الأقل</span>
                 )}
               </div>
               <div className="relative">

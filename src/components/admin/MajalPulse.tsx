@@ -60,7 +60,7 @@ export const MajalPulse: React.FC = () => {
               <div className={`${card.tone}`}>{card.icon}</div>
               <div className={`mt-3 text-xl md:text-2xl font-black ${card.tone} font-mono`}>{card.value}</div>
               <div className="text-xs font-bold text-slate-200 mt-1">{card.label}</div>
-              <div className="text-[10px] text-slate-500 mt-1">{card.detail}</div>
+              <div className="text-[11px] text-slate-400 mt-1">{card.detail}</div>
             </div>
           ))}
         </div>

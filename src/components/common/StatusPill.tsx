@@ -19,7 +19,7 @@ interface StatusPillProps {
 export const StatusPill: React.FC<StatusPillProps> = ({ status, prefix, size = 'sm', className = '' }) => (
   <span
     className={`inline-flex items-center gap-1.5 rounded-full border font-black whitespace-nowrap ${
-      size === 'sm' ? 'px-2.5 py-1 text-[10px]' : 'px-3 py-1.5 text-[11px]'
+      size === 'sm' ? 'px-2.5 py-1 text-[11px]' : 'px-3 py-1.5 text-[11px]'
     } ${toneClasses[statusTone(status)]} ${className}`}
   >
     {prefix && <span className="opacity-60 font-bold">{prefix}</span>}

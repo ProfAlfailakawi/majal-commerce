@@ -154,7 +154,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
                   </span>
                   <button
                     onClick={() => { try { navigator.clipboard?.writeText(aiOutput); } catch { /* clipboard unavailable in insecure contexts */ } }}
-                    className="text-[10px] text-amber-300 underline"
+                    className="text-[11px] text-amber-300 underline"
                   >
                     نسخ النص
                   </button>
@@ -167,7 +167,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
           </div>
 
           {/* Footer note */}
-          <div className="p-4 bg-slate-950 border-t border-slate-800 text-[10px] text-slate-500 text-center">
+          <div className="p-4 bg-slate-950 border-t border-slate-800 text-[11px] text-slate-400 text-center">
             لا تدخل وصفة سرية أو بيانات شخصية. الإرسال الخارجي لا يُفعّل إلا بعد إعداد الخدمة وسياسة الخصوصية.
           </div>
 

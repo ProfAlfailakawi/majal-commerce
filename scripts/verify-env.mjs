@@ -121,6 +121,7 @@ feature('المساعد الذكي',
 feature('إشعارات الدفع (FCM)', ['FCM_PROJECT_ID'], 'إشعارات المتصفح لا تُرسَل');
 feature('استخراج المستندات', ['DOCUMENT_AI_PROCESSOR_NAME'], 'zero-form/extract يردّ غير مهيأ');
 feature('ختم زمني خارجي', ['TSA_URL'], 'يُستعمل ختم محلي أضعف إثباتاً');
+feature('حدود طلبات مشتركة (Redis)', ['REDIS_URL'], 'كل نسخة تعدّ وحدها — يكفي لنسخة واحدة؛ scripts/setup-redis.sh');
 
 console.log(`\n${C.bold}  أسرار العمليات الحسّاسة${C.off}`);
 for (const [name, label, consequence] of [

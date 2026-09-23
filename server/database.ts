@@ -1410,6 +1410,13 @@ const migrations = [
       CREATE INDEX IF NOT EXISTS idx_moderation_actions_target ON moderation_actions(target_type, target_id, created_at DESC, id);
       CREATE INDEX IF NOT EXISTS idx_moderation_actions_actor ON moderation_actions(actor_user_id, created_at DESC, id);
     `
+  },
+  {
+    // Last consumed TOTP time step per user: makes each MFA code single-use.
+    version: 20,
+    sql: `
+      ALTER TABLE users ADD COLUMN mfa_last_step INTEGER;
+    `
   }
 ] as const;
 

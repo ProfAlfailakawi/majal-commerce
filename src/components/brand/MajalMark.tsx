@@ -113,7 +113,7 @@ interface MajalLockupProps {
 }
 
 const lockupScale = {
-  sm: { mark: 32, word: 'text-lg', tagline: 'text-[10px]', gap: 'gap-2.5' },
+  sm: { mark: 32, word: 'text-lg', tagline: 'text-[11px]', gap: 'gap-2.5' },
   md: { mark: 42, word: 'text-2xl', tagline: 'text-[11px]', gap: 'gap-3' },
   lg: { mark: 64, word: 'text-4xl', tagline: 'text-xs', gap: 'gap-4' }
 } as const;
@@ -137,7 +137,7 @@ export const MajalLockup: React.FC<MajalLockupProps> = ({
       <span className="min-w-0 text-right">
         <span className={`block ${scale.word} font-black leading-tight majal-wordmark truncate`}>مجال</span>
         {showLatin && (
-          <span className="block text-[9px] font-semibold tracking-[0.42em] text-gold-500/70 leading-none mt-1" dir="ltr">
+          <span className="block text-[11px] font-semibold tracking-[0.42em] text-gold-500/70 leading-none mt-1" dir="ltr">
             MAJAL
           </span>
         )}

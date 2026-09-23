@@ -1,0 +1,9 @@
+# GitGuardian configuration (PR check and ggshield).
+# Test files create throwaway credentials for in-memory databases only; they are
+# never real secrets. Application code outside tests is still fully scanned.
+# New tests should still generate credentials at runtime rather than hardcode them.
+version: 2
+secret:
+  ignored_paths:
+    - "**/*.test.ts"
+    - "**/*.test.tsx"

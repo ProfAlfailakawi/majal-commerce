@@ -116,9 +116,9 @@ export const OfferBuilder: React.FC<OfferBuilderProps> = ({ collaboration }) => 
       {notice && <div className={`rounded-xl px-4 py-3 text-xs font-bold border ${notice.startsWith('تم') ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-rose-500/10 text-rose-300 border-rose-400/20'}`}>{notice}</div>}
 
       <div className="grid grid-cols-3 gap-3 text-center text-xs">
-        <div className="rounded-xl p-3 bg-white/5 border border-white/10"><span className="block text-slate-500">المبدع</span><strong className="text-gold-300">{royaltyRatePercent.toFixed(1)}%</strong></div>
-        <div className="rounded-xl p-3 bg-white/5 border border-white/10"><span className="block text-slate-500">مجال</span><strong className="text-sky-300">{platformFeePercent.toFixed(1)}%</strong></div>
-        <div className="rounded-xl p-3 bg-white/5 border border-white/10"><span className="block text-slate-500">المنشأة قبل تكاليفها</span><strong className={hostSharePercent > 0 ? 'text-emerald-300' : 'text-rose-300'}>{hostSharePercent.toFixed(1)}%</strong></div>
+        <div className="rounded-xl p-3 bg-white/5 border border-white/10"><span className="block text-slate-400">المبدع</span><strong className="text-gold-300">{royaltyRatePercent.toFixed(1)}%</strong></div>
+        <div className="rounded-xl p-3 bg-white/5 border border-white/10"><span className="block text-slate-400">مجال</span><strong className="text-sky-300">{platformFeePercent.toFixed(1)}%</strong></div>
+        <div className="rounded-xl p-3 bg-white/5 border border-white/10"><span className="block text-slate-400">المنشأة قبل تكاليفها</span><strong className={hostSharePercent > 0 ? 'text-emerald-300' : 'text-rose-300'}>{hostSharePercent.toFixed(1)}%</strong></div>
       </div>
 
       <div className="flex items-center justify-between pt-2">

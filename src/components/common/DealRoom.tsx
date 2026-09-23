@@ -118,10 +118,10 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-bold text-slate-200">{task.title}</div>
-                  <div className="text-[11px] text-slate-500 mt-1">المسؤول: {task.owner} — {task.detail}</div>
+                  <div className="text-[11px] text-slate-400 mt-1">المسؤول: {task.owner} — {task.detail}</div>
                 </div>
               </div>
-              <span className={`text-[10px] font-bold shrink-0 ${task.done ? 'text-emerald-300' : 'text-amber-300'}`}>{task.done ? 'مكتمل' : 'قيد التنفيذ'}</span>
+              <span className={`text-[11px] font-bold shrink-0 ${task.done ? 'text-emerald-300' : 'text-amber-300'}`}>{task.done ? 'مكتمل' : 'قيد التنفيذ'}</span>
             </div>
           ))}
         </div>
@@ -129,7 +129,7 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div className="font-bold text-sm text-slate-100 flex items-center gap-2"><MessageSquareText className="w-4 h-4 text-fuchsia-300" /> سجل القرارات</div>
-            <span className="text-[10px] text-slate-500">{decisions.length} سجلات بشرية محفوظة</span>
+            <span className="text-[11px] text-slate-400">{decisions.length} سجلات بشرية محفوظة</span>
           </div>
 
           <div className="rounded-2xl bg-slate-950/50 border border-white/10 p-4 space-y-3 max-h-72 overflow-auto">
@@ -146,10 +146,10 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
                 <div key={decision.id} className="rounded-xl p-3 bg-white/5 border border-white/10 text-xs leading-6 text-slate-300">
                   <div className="flex items-center justify-between gap-3 mb-2">
                     <div className={`flex items-center gap-2 font-black ${meta.cls}`}>{meta.icon}{meta.label}</div>
-                    <span className="text-[9px] text-slate-600">{new Date(decision.createdAt).toLocaleString('ar-KW')}</span>
+                    <span className="text-[11px] text-slate-600">{new Date(decision.createdAt).toLocaleString('ar-KW')}</span>
                   </div>
                   <div>{decision.text}</div>
-                  <div className="mt-2 text-[10px] text-slate-500">{decision.authorName} — {roleLabel(decision.authorRole)}</div>
+                  <div className="mt-2 text-[11px] text-slate-400">{decision.authorName} — {roleLabel(decision.authorRole)}</div>
                 </div>
               );
             })}
@@ -190,7 +190,7 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
         </div>
         <div className="flex flex-wrap gap-2 pt-2 border-t border-white/5">
           {copilot.blockedActions.map((guard, idx) => (
-            <span key={idx} className="inline-flex items-center gap-1 text-[10px] px-2.5 py-1 rounded-full bg-slate-950/50 border border-white/10 text-slate-400">
+            <span key={idx} className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full bg-slate-950/50 border border-white/10 text-slate-400">
               <ShieldCheck className="w-3 h-3 text-emerald-300" /> {guard.label}
             </span>
           ))}

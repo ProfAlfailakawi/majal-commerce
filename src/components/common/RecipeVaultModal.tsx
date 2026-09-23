@@ -125,7 +125,7 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
                 <h3 id="recipe-vault-title" className="font-black text-lg text-slate-100">
                   خزنة الوصفة السرية Recipe Vault
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
                   مستوى الإفصاح الفعلي: {effectiveDisclosureLevel}
                 </span>
               </div>
@@ -248,11 +248,11 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
                           <td className="py-2 px-3 text-amber-400 font-mono">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? 'محجوب' : `${ing.estimatedCostKwd.toFixed(3)} د.ك`}</td>
                           <td className="py-2 px-3">
                             {ing.isSecretPart ? (
-                              <span className="px-2 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                              <span className="px-2 py-0.5 rounded text-[11px] bg-amber-500/20 text-amber-300 border border-amber-500/30">
                                 عنصر سري
                               </span>
                             ) : (
-                              <span className="text-slate-500 text-[10px]">قياسي</span>
+                              <span className="text-slate-400 text-[11px]">قياسي</span>
                             )}
                           </td>
                         </tr>

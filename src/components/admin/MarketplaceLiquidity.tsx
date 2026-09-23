@@ -52,7 +52,7 @@ export const MarketplaceLiquidity: React.FC = () => {
             body="نحتاج منتجات معروضة وطلب مقابل في نفس الفئة قبل ما نعطيك مؤشرًا يُعتمد عليه."
           /> : categories.map((row, idx) => (
           <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div><div className="font-black text-slate-100">{row.category}</div><div className="text-xs text-slate-500 mt-1">مقارنة مباشرة بين العرض القابل للمطابقة والطلب المفتوح</div></div>
+            <div><div className="font-black text-slate-100">{row.category}</div><div className="text-xs text-slate-400 mt-1">مقارنة مباشرة بين العرض القابل للمطابقة والطلب المفتوح</div></div>
             <div className="flex items-center gap-3 text-xs flex-wrap"><div className="px-3 py-2 rounded-xl bg-emerald-500/7 border border-emerald-400/15 flex items-center gap-2"><ArrowUpFromLine className="w-4 h-4 text-emerald-300" /> عرض: <strong>{row.supply}</strong></div><div className="px-3 py-2 rounded-xl bg-sky-500/7 border border-sky-400/15 flex items-center gap-2"><ArrowDownToLine className="w-4 h-4 text-sky-300" /> طلب: <strong>{row.demand}</strong></div><div className={`px-3 py-2 rounded-xl border font-black ${row.balance === 'BALANCED' ? 'bg-emerald-500/7 border-emerald-400/15 text-emerald-300' : 'bg-amber-500/7 border-amber-400/15 text-amber-300'}`}>{row.balance === 'BALANCED' ? 'متوازن عدديًا' : row.balance === 'NEED_SUPPLY' ? 'فجوة عرض' : 'فجوة طلب'}</div></div>
           </div>
         ))}
