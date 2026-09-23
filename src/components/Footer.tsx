@@ -49,7 +49,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
             </p>
             <div className="flex items-center gap-2 text-[11px] text-gold-300 font-medium pt-1">
               <Shield className="w-4 h-4" />
-              <span>بيئة كويتية — تشغيل آمن افتراضيًا</span>
+              <span>منصة كويتية — فكرتك وبياناتك محمية</span>
             </div>
 
             <div className="flex flex-wrap gap-2 pt-1">
@@ -96,7 +96,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
               <li className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-slate-500" /><span>خزنة الوصفات مقفلة حتى المصادقة</span></li>
               <li className="flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-slate-500" /><span>التوقيع يُفعّل بعد ربط الهوية</span></li>
               <li className="flex items-center gap-1.5"><Scale className="w-3.5 h-3.5 text-slate-500" /><span>فصل واضح للصلاحيات والتسويات</span></li>
-              <li className="flex items-center gap-1.5"><Crown className="w-3.5 h-3.5 text-slate-500" /><span>طبقة حوكمة عليا للسوبر أدمن</span></li>
+              <li className="flex items-center gap-1.5"><Crown className="w-3.5 h-3.5 text-slate-500" /><span>مراجعة وتوثيق لكل اتفاق</span></li>
             </ul>
           </div>
 
@@ -112,7 +112,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
         </div>
 
         <div className="pt-6 border-t border-slate-800/80 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
-          <div className="text-center md:text-right">© {new Date().getFullYear()} منصة مجال (MAJAL Platform) — جميع الحقوق محفوظة.</div>
+          <div className="text-center md:text-right">© {new Date().getFullYear()} منصة مجال — جميع الحقوق محفوظة.</div>
           <nav aria-label="روابط قانونية" className="flex gap-x-5 gap-y-2 flex-wrap justify-center">
             {legalLinks.map(link => (
               <button

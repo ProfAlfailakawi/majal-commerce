@@ -16,7 +16,7 @@ import { journeyStages } from '../../data/journey';
 export const JourneyInfographic: React.FC = () => (
   <section aria-labelledby="journey-heading" className="space-y-10">
     <div className="text-center space-y-3">
-      <span className="inline-block text-[10px] font-black tracking-[0.25em] text-gold-300 uppercase">MAJAL JOURNEY</span>
+      <span className="inline-block text-[10px] font-black tracking-[0.25em] text-gold-300 uppercase">رحلة مجال</span>
       <h2 id="journey-heading" className="text-2xl sm:text-3xl font-black text-slate-100">كيف تعمل رحلة «مجال»؟</h2>
       <p className="text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto leading-7">
         ست محطات مرتبطة بالترتيب. لا تُفتح محطة قبل اكتمال ما قبلها، ولذلك لا يوجد «إطلاق سريع» يتجاوز الحماية أو العقد.
