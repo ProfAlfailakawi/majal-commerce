@@ -1,6 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { Response, Router } from 'express';
-import { catchAsyncErrors } from './async-router';
 import { AuthConfig, AuthenticatedRequest, requireAuth, requireCsrf } from './auth';
 import { MajalDatabase, withTransaction } from './database';
 
@@ -201,7 +200,7 @@ async function employerContext(db: MajalDatabase, req: AuthenticatedRequest) {
 }
 
 export function createEcosystemRouter(db: MajalDatabase, authConfig: AuthConfig) {
-  const router = catchAsyncErrors(Router());
+  const router = Router();
 
   // Public discovery exposes only approved/verified records. No tenant owner ids, contacts,
   // registry numbers, applications, or admin notes are sent to anonymous callers.
