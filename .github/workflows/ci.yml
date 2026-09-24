@@ -9,6 +9,20 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: majal
+          POSTGRES_DB: majal_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U majal -d majal_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v5
 
@@ -30,6 +44,9 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends redis-server
 
       - name: Test
+        env:
+          TEST_DATABASE_URL: postgresql://majal@127.0.0.1:5432/majal_test
+          PGSSLMODE: disable
         run: npm test
 
       - name: Build
