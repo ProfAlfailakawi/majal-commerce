@@ -335,6 +335,24 @@ async function startServer() {
   app.get('/api/live', (_req, res) => res.json({ status: 'live', boot: boot.phase, startedAt: boot.startedAt }));
   app.get('/api/ready', (_req, res) => res.status(boot.phase === 'READY' ? 200 : 503).json({ ready: boot.phase === 'READY', phase: boot.phase, failureCode: boot.failureCode ?? null }));
 
+  // The port opens before the routes exist (Cloud Run needs the listener early), so a
+  // request that lands during initialisation used to fall through to Express's default
+  // 404 — every cold start showed visitors "not found". Hold such requests until boot
+  // settles, then serve them normally; a failed or overlong boot answers 503 instead.
+  let settleBoot: () => void = () => undefined;
+  const bootSettled = new Promise<void>(resolve => { settleBoot = resolve; });
+  const BOOT_WAIT_MS = 20_000;
+  app.use(async (_req: Request, res: Response, next: NextFunction) => {
+    if (boot.phase === 'BOOTING') {
+      let timer: NodeJS.Timeout | undefined;
+      await Promise.race([bootSettled, new Promise<void>(resolve => { timer = setTimeout(resolve, BOOT_WAIT_MS); })]);
+      clearTimeout(timer);
+    }
+    if (boot.phase === 'READY') return next();
+    res.setHeader('Retry-After', '5');
+    return jsonError(res, 503, 'الخدمة قيد التشغيل أو غير جاهزة. أعد المحاولة بعد لحظات.', boot.phase === 'FAILED' ? boot.failureCode : 'STARTING');
+  });
+
   let resources: { db: MajalDatabase; shutdown: () => Promise<void> } | undefined;
   const server = app.listen(port, bindHost, () => {
     structuredLog('INFO', 'server_listening', { mode: isProduction ? 'production' : 'development', host: bindHost, port });
@@ -344,11 +362,13 @@ async function startServer() {
     resources = await initializeApplication(app);
     boot.phase = 'READY'; boot.readyAt = new Date().toISOString();
     structuredLog('INFO', 'server_ready', { readyAt: boot.readyAt, port });
+    settleBoot();
   } catch (error) {
     boot.phase = 'FAILED'; boot.failureCode = safeStartupCode(error);
     structuredLog('CRITICAL', 'startup_failed_after_bind', { failureCode: boot.failureCode });
-    // Fail closed while keeping the Cloud Run port open so startup diagnostics are truthful.
-    app.use((_req, res) => jsonError(res, 503, 'الخدمة غير جاهزة بسبب إعداد إنتاج مفقود أو فشل تهيئة.', boot.failureCode));
+    // Fail closed while keeping the port open so startup diagnostics are truthful: the boot
+    // gate above now answers every request (except /api/live and /api/ready) with 503.
+    settleBoot();
     // In production a broken revision must not keep receiving traffic behind a TCP probe:
     // exit so the platform marks the instance unhealthy and keeps the previous revision.
     if (isProduction && process.env.KEEP_ALIVE_ON_BOOT_FAILURE !== 'true') setTimeout(() => process.exit(1), 2_000).unref();
