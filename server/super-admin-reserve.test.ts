@@ -32,7 +32,7 @@ test('public registration cannot claim a SUPER_ADMIN_EMAILS address', async () =
   try {
     const response = await fetch(`${baseUrl}/api/v1/auth/register`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name: 'Attacker', email: 'Owner@Example.test', phone: '+96550000009', password })
+      body: JSON.stringify({ name: 'Attacker', email: 'Owner@Example.test', phone: '+96550000009', password, termsAccepted: true, privacyAccepted: true })
     });
     assert.equal(response.status, 403);
     assert.equal((await response.json()).code, 'RESERVED_ACCOUNT');

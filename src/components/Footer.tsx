@@ -5,6 +5,7 @@ import { SurfaceType } from '../types/majal';
 import { store } from '../lib/store';
 import { canAccessSurface } from '../lib/permissions';
 import type { LegalDocumentId } from './legal/LegalCenter';
+import { legalPath } from '../lib/legalRoutes';
 
 interface FooterProps {
   onSurfaceChange: (surface: SurfaceType) => void;
@@ -115,13 +116,14 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
           <div className="text-center md:text-right">© {new Date().getFullYear()} منصة مجال — جميع الحقوق محفوظة.</div>
           <nav aria-label="روابط قانونية" className="flex gap-x-5 gap-y-2 flex-wrap justify-center">
             {legalLinks.map(link => (
-              <button
+              <a
                 key={link.id}
-                onClick={() => onOpenLegal(link.id)}
+                href={legalPath(link.id)}
+                onClick={(event) => { event.preventDefault(); onOpenLegal(link.id); }}
                 className="py-1.5 -my-1.5 inline-flex items-center hover:text-gold-300 transition-colors"
               >
                 {link.label}
-              </button>
+              </a>
             ))}
             <a href={`mailto:${SUPPORT_EMAIL}`} className="py-1.5 -my-1.5 inline-flex items-center gap-1.5 hover:text-gold-300 transition-colors">
               <Mail className="w-3.5 h-3.5" />

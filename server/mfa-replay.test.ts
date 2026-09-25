@@ -32,7 +32,7 @@ test('SECURITY: an MFA code is single-use, including the enrollment code', async
   const login = (mfaCode: string) => post('/login', { email, password, mfaCode });
 
   try {
-    const registered = await post('/register', { name: 'MFA User', email, phone: '+96550000011', password });
+    const registered = await post('/register', { name: 'MFA User', email, phone: '+96550000011', password, termsAccepted: true, privacyAccepted: true });
     assert.equal(registered.status, 201);
     const { csrfToken } = await registered.json() as { csrfToken: string };
     const cookie = registered.headers.getSetCookie().map(value => value.split(';')[0]).join('; ');

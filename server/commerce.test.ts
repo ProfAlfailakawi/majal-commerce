@@ -86,7 +86,7 @@ async function register(baseUrl: string, email: string, tag: string): Promise<Se
   const response = await fetch(`${baseUrl}/api/v1/auth/register`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ name: 'Test Person', email, phone: '+96550000000', password: fixturePassword(tag) })
+    body: JSON.stringify({ name: 'Test Person', email, phone: '+96550000000', password: fixturePassword(tag), termsAccepted: true, privacyAccepted: true })
   });
   assert.equal(response.status, 201);
   const body = await response.json() as { csrfToken: string; user: { id: string } };

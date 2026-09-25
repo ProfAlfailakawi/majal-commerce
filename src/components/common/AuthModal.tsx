@@ -35,6 +35,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
   const [supplierCategory, setSupplierCategory] = useState('');
   const [supplierRegistrationNo, setSupplierRegistrationNo] = useState('');
   const [supplierDescription, setSupplierDescription] = useState('');
+  const [legalAccepted, setLegalAccepted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
   const [resetCode, setResetCode] = useState('');
@@ -80,6 +81,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
           email,
           phone,
           password,
+          termsAccepted: true,
+          privacyAccepted: true,
           role,
           accountType,
           ...(role === 'HOST_OWNER' ? {
@@ -326,7 +329,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
           {error && <div role="alert" aria-live="assertive" className="rounded-xl bg-rose-500/10 border border-rose-400/20 px-4 py-2.5 text-xs text-rose-200 leading-5">{error}</div>}
           {successMsg && <div role="alert" aria-live="polite" className="rounded-xl bg-emerald-500/10 border border-emerald-400/20 px-4 py-2.5 text-xs text-emerald-200 leading-5">{successMsg}</div>}
 
-          <button disabled={submitting || (needsMfa && mfaCode.length !== 6) || (mode === 'RESET_VERIFY' && resetCode.length < RESET_TOKEN_MIN_LENGTH)} aria-busy={submitting} className="w-full py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 font-black text-sm disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:brightness-105 transition">
+          {mode === 'REGISTER' && !needsMfa && (
+            <label className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] p-3 text-[11px] leading-5 text-slate-300">
+              <input
+                type="checkbox"
+                checked={legalAccepted}
+                onChange={event => setLegalAccepted(event.target.checked)}
+                required
+                className="mt-1 accent-amber-400"
+              />
+              <span>
+                أوافق على <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-gold-300 underline">الشروط والأحكام</a>
+                {' '}و<a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-gold-300 underline">سياسة الخصوصية</a>، وأفهم أن بيانات الحساب تُستخدم لتشغيل المنصة وحمايتها.
+              </span>
+            </label>
+          )}
+
+          <button disabled={submitting || (mode === 'REGISTER' && !legalAccepted) || (needsMfa && mfaCode.length !== 6) || (mode === 'RESET_VERIFY' && resetCode.length < RESET_TOKEN_MIN_LENGTH)} aria-busy={submitting} className="w-full py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 font-black text-sm disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:brightness-105 transition">
             {submitting ? <MajalLoader size={16} label="جارٍ معالجة الطلب…" /> : mode === 'LOGIN' ? <LogIn className="w-4 h-4" /> : (mode === 'RESET_REQUEST' || mode === 'RESET_VERIFY') ? <RefreshCcw className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
             {submitting ? 'جارٍ المعالجة…' : needsMfa ? 'تحقق وادخل' : mode === 'LOGIN' ? 'دخول فوري' : mode === 'RESET_REQUEST' ? 'إرسال رمز التوثيق للبريد' : mode === 'RESET_VERIFY' ? 'توثيق الرمز وتعيين كلمة المرور' : `إنشاء حساب (${accountType === 'SUPPLIER' ? 'مورد' : role === 'SUPER_ADMIN' ? 'سوبر أدمن' : role === 'ADMIN' ? 'أدمن' : role === 'CREATOR' ? 'مبدع' : role === 'HOST_OWNER' ? 'منشأة' : 'عميل'})`}
           </button>

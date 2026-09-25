@@ -29,7 +29,8 @@ test('PostgreSQL smoke: register, restore data and read the first catalog page',
   const server = app.listen(0, '127.0.0.1');
   await new Promise<void>(resolve => server.once('listening', resolve));
   const baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
-  const email = `postgres-smoke-${Date.now()}@example.test`;
+  const suffix = Date.now();
+  const email = `postgres-smoke-${suffix}@example.test`;
   const password = ['Majal', 'Postgres', 'Smoke', '2026!'].join('-');
 
   try {
@@ -41,11 +42,74 @@ test('PostgreSQL smoke: register, restore data and read the first catalog page',
         email,
         phone: '+96550008888',
         password,
-        role: 'CONSUMER'
+        role: 'CONSUMER',
+        termsAccepted: true,
+        privacyAccepted: true
       })
     });
     assert.equal(registered.status, 201, registered.status === 201 ? undefined : await registered.text());
     const cookies = registered.headers.getSetCookie().map(value => value.split(';')[0]).join('; ');
+
+    // Production already contains live rows. Seed the same shape here so the smoke test
+    // exercises projections and aggregations instead of proving only the empty-table path.
+    const creatorEmail = `postgres-creator-${suffix}@example.test`;
+    const creatorRegistration = await fetch(`${baseUrl}/api/v1/auth/register`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        name: 'PostgreSQL Smoke Creator',
+        email: creatorEmail,
+        phone: '+96550008887',
+        password,
+        role: 'CREATOR',
+        termsAccepted: true,
+        privacyAccepted: true
+      })
+    });
+    assert.equal(creatorRegistration.status, 201, creatorRegistration.status === 201 ? undefined : await creatorRegistration.text());
+
+    const hostEmail = `postgres-host-${suffix}@example.test`;
+    const hostRegistration = await fetch(`${baseUrl}/api/v1/auth/register`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        name: 'PostgreSQL Smoke Host',
+        email: hostEmail,
+        phone: '+96550008886',
+        password,
+        role: 'HOST_OWNER',
+        organization: { commercialName: 'PostgreSQL Smoke Kitchen', businessType: 'RESTAURANT' },
+        termsAccepted: true,
+        privacyAccepted: true
+      })
+    });
+    assert.equal(hostRegistration.status, 201, hostRegistration.status === 201 ? undefined : await hostRegistration.text());
+
+    const creator = await db.prepare('SELECT id, creator_id FROM users WHERE email=?').get<{id:string;creator_id:string}>(creatorEmail);
+    const host = await db.prepare('SELECT host_business_id FROM users WHERE email=?').get<{host_business_id:string}>(hostEmail);
+    assert.ok(creator?.creator_id);
+    assert.ok(host?.host_business_id);
+    const createdAt = new Date().toISOString();
+    const productId = `prd_pg_smoke_${suffix}`;
+    const collaborationId = `col_pg_smoke_${suffix}`;
+    const launchId = `lch_pg_smoke_${suffix}`;
+    await db.prepare(`INSERT INTO products(
+      id,creator_id,public_name,category,short_description,status,
+      estimated_unit_cost_fils,target_price_fils,is_secret_recipe,created_at,updated_at
+    ) VALUES(?,?,?,?,?,'LIVE_DROP',?,?,1,?,?)`).run(
+      productId, creator.creator_id, 'منتج اختبار PostgreSQL', 'FOOD', 'منتج حي لاختبار إسقاط السوق.',
+      1000, 2500, createdAt, createdAt
+    );
+    await db.prepare(`INSERT INTO collaborations(
+      id,product_id,creator_id,organization_id,stage,version,created_at,updated_at
+    ) VALUES(?,?,?,?, 'LIVE_TRIAL',1,?,?)`).run(
+      collaborationId, productId, creator.creator_id, host.host_business_id, createdAt, createdAt
+    );
+    await db.prepare(`INSERT INTO launches(
+      id,collaboration_id,product_id,organization_id,status,quantity_cap,starts_at,created_at,updated_at
+    ) VALUES(?,?,?,?, 'LIVE',100,?,?,?)`).run(
+      launchId, collaborationId, productId, host.host_business_id, createdAt, createdAt, createdAt
+    );
 
     // A safe authenticated read must not require a CSRF header, and the complete snapshot
     // query must execute on the same PostgreSQL dialect used in production.
@@ -56,6 +120,7 @@ test('PostgreSQL smoke: register, restore data and read the first catalog page',
     const snapshotBody = await snapshot.json() as Record<string, unknown>;
     assert.ok(Array.isArray(snapshotBody.products));
     assert.ok(Array.isArray(snapshotBody.marketLaunches));
+    assert.equal((snapshotBody.marketLaunches as unknown[]).length, 1);
 
     const catalog = await fetch(`${baseUrl}/api/v1/catalog`);
     assert.equal(catalog.status, 200, catalog.status === 200 ? undefined : await catalog.text());
