@@ -1,6 +1,12 @@
 User-agent: *
 Allow: /$
 Allow: /index.html
+Allow: /terms
+Allow: /privacy
+Allow: /refund
+Allow: /compliance
 
 # Operational surfaces are permission-gated and carry no public value in an index.
 Disallow: /api/
+
+Sitemap: https://majal-app-522016905178.europe-west2.run.app/sitemap.xml

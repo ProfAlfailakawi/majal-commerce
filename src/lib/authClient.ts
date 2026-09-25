@@ -98,6 +98,8 @@ export async function register(input: {
   email: string;
   phone: string;
   password: string;
+  termsAccepted: true;
+  privacyAccepted: true;
   role?: string;
   accountType?: 'STANDARD' | 'SUPPLIER';
   organization?: {

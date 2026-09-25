@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { FileText, Scale, ShieldCheck, RotateCcw, Mail, ChevronLeft } from 'lucide-react';
+import type { LegalDocumentId } from '../../lib/legalRoutes';
 
-export type LegalDocumentId = 'TERMS' | 'PRIVACY' | 'REFUND' | 'COMPLIANCE';
+export type { LegalDocumentId } from '../../lib/legalRoutes';
 
 interface LegalSection {
   heading: string;

@@ -390,7 +390,14 @@ export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser)
 
   const marketLaunches = liveRows.map(row => {
     let branches: any[] = [];
-    try { branches = row.branches_json ? JSON.parse(String(row.branches_json)) : []; } catch { branches = []; }
+    try {
+      const parsed = row.branches_json && typeof row.branches_json === 'object'
+        ? row.branches_json
+        : row.branches_json ? JSON.parse(String(row.branches_json)) : [];
+      // Historical records may contain `{}` or another JSON shape. Public hydration must
+      // fail closed to no branches instead of crashing registration/session restoration.
+      branches = Array.isArray(parsed) ? parsed : [];
+    } catch { branches = []; }
     return {
       id: String(row.id),
       collaborationId: String(row.collaboration_id),

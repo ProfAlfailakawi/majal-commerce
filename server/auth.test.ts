@@ -19,6 +19,7 @@ import { openMajalDatabase } from './database';
 // fixtures as leaked credentials. Each still satisfies the registration
 // complexity rules and resolves to the same literal it replaced.
 const fixturePassword = (tag: string) => ['Majal', tag, '2026!'].join('-');
+const legalConsent = { termsAccepted: true, privacyAccepted: true } as const;
 
 const config: AuthConfig = {
   production: false,
@@ -56,6 +57,19 @@ test('auth API creates an HttpOnly session, enforces CSRF and destroys the sessi
   const baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 
   try {
+    const rejectedWithoutConsent = await fetch(`${baseUrl}/api/v1/auth/register`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        name: 'No Consent Consumer',
+        email: 'no-consent@example.test',
+        phone: '+96550000009',
+        password: fixturePassword('No-Consent')
+      })
+    });
+    assert.equal(rejectedWithoutConsent.status, 400);
+    assert.equal((await rejectedWithoutConsent.json() as { code?: string }).code, 'LEGAL_CONSENT_REQUIRED');
+
     const registerResponse = await fetch(`${baseUrl}/api/v1/auth/register`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -63,12 +77,23 @@ test('auth API creates an HttpOnly session, enforces CSRF and destroys the sessi
         name: 'Scale Test Consumer',
         email: 'consumer@example.test',
         phone: '+96550000000',
-        password: 'Majal-Consumer-2026!'
+        password: fixturePassword('Consumer'),
+        ...legalConsent
       })
     });
     assert.equal(registerResponse.status, 201);
     const registered = await registerResponse.json() as { csrfToken: string; user: { role: string } };
     assert.equal(registered.user.role, 'CONSUMER');
+    const consentEvents = await db.prepare(`
+      SELECT consent_type, version, action
+      FROM consent_events
+      WHERE user_id = (SELECT id FROM users WHERE email = ?)
+      ORDER BY consent_type
+    `).all<{ consent_type: string; version: string; action: string }>('consumer@example.test');
+    assert.deepEqual(consentEvents.map(event => ({ ...event })), [
+      { consent_type: 'PRIVACY', version: '2026-09-25', action: 'GRANTED' },
+      { consent_type: 'TERMS', version: '2026-09-25', action: 'GRANTED' }
+    ]);
     const setCookies = registerResponse.headers.getSetCookie();
     assert.ok(setCookies.some(cookie => cookie.includes('HttpOnly')));
     assert.ok(setCookies.every(cookie => cookie.includes('SameSite=Strict')));
@@ -106,14 +131,14 @@ test('SECURITY regression: re-registering an existing email never overwrites cre
   try {
     const first = await fetch(`${baseUrl}/api/v1/auth/register`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name: 'Victim', email, phone: '+96550000001', password: original })
+      body: JSON.stringify({ name: 'Victim', email, phone: '+96550000001', password: original, ...legalConsent })
     });
     assert.equal(first.status, 201);
 
     // Attacker re-registers the same email with a new password.
     const attack = await fetch(`${baseUrl}/api/v1/auth/register`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name: 'Attacker', email, phone: '+96550000002', password: 'Attacker-Chosen-2026!' })
+      body: JSON.stringify({ name: 'Attacker', email, phone: '+96550000002', password: 'Attacker-Chosen-2026!', ...legalConsent })
     });
     assert.equal(attack.status, 409);
     assert.equal(attack.headers.getSetCookie().length, 0, 'no session cookie may be issued on duplicate register');
@@ -147,7 +172,7 @@ test('SECURITY regression: reset never leaks the code and 123456 is not a bypass
   try {
     await fetch(`${baseUrl}/api/v1/auth/register`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name: 'User', email, phone: '+96550000003', password: 'Majal-Reset-2026!' })
+      body: JSON.stringify({ name: 'User', email, phone: '+96550000003', password: fixturePassword('Reset'), ...legalConsent })
     });
     const reqRes = await fetch(`${baseUrl}/api/v1/auth/reset-password-request`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
@@ -222,7 +247,7 @@ test('SECURITY regression: reset tokens are CSPRNG-generated, high entropy and s
   try {
     await fetch(`${baseUrl}/api/v1/auth/register`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name: 'Entropy User', email, phone: '+96550000009', password: fixturePassword('Entropy') })
+      body: JSON.stringify({ name: 'Entropy User', email, phone: '+96550000009', password: fixturePassword('Entropy'), ...legalConsent })
     });
 
     const first = await issueToken();
@@ -287,7 +312,7 @@ test('IDENTITY regression: new creator, host and consumer are provisioned into i
   try {
     const creatorRes = await fetch(`${baseUrl}/api/v1/auth/register`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name: 'عمر', email: 'omar-creator@example.test', phone: '+96550000112', password: fixturePassword('Omar-Creator'), role: 'CREATOR' })
+      body: JSON.stringify({ name: 'عمر', email: 'omar-creator@example.test', phone: '+96550000112', password: fixturePassword('Omar-Creator'), role: 'CREATOR', ...legalConsent })
     });
     assert.equal(creatorRes.status, 201);
     const creatorBody = await creatorRes.json() as { user: { id:string; role:string; creatorId?:string; hostBusinessId?:string } };
@@ -303,7 +328,8 @@ test('IDENTITY regression: new creator, host and consumer are provisioned into i
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         name: 'مالك المطعم', email: 'host-owner@example.test', phone: '+96550000113', password: fixturePassword('Host-Owner'), role: 'HOST_OWNER',
-        organization: { commercialName: 'مطعم عمر', businessType: 'RESTAURANT', commercialRegistrationNo: 'CR-OMAR-001' }
+        organization: { commercialName: 'مطعم عمر', businessType: 'RESTAURANT', commercialRegistrationNo: 'CR-OMAR-001' },
+        ...legalConsent
       })
     });
     assert.equal(hostRes.status, 201);
@@ -326,7 +352,8 @@ test('IDENTITY regression: new creator, host and consumer are provisioned into i
       body: JSON.stringify({
         name: 'مورد جديد', email: 'supplier-new@example.test', phone: '+96550000115', password: fixturePassword('Supplier-New'),
         role: 'CONSUMER', accountType: 'SUPPLIER',
-        supplier: { commercialName: 'توريدات الكويت', category: 'مواد غذائية', commercialRegistrationNo: 'SUP-001', description: 'توريد مكونات للمطاعم' }
+        supplier: { commercialName: 'توريدات الكويت', category: 'مواد غذائية', commercialRegistrationNo: 'SUP-001', description: 'توريد مكونات للمطاعم' },
+        ...legalConsent
       })
     });
     assert.equal(supplierRes.status, 201);
@@ -343,7 +370,7 @@ test('IDENTITY regression: new creator, host and consumer are provisioned into i
 
     const consumerRes = await fetch(`${baseUrl}/api/v1/auth/register`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name: 'عميل جديد', email: 'consumer-new@example.test', phone: '+96550000114', password: fixturePassword('Consumer-New'), role: 'CONSUMER' })
+      body: JSON.stringify({ name: 'عميل جديد', email: 'consumer-new@example.test', phone: '+96550000114', password: fixturePassword('Consumer-New'), role: 'CONSUMER', ...legalConsent })
     });
     assert.equal(consumerRes.status, 201);
     const consumerBody = await consumerRes.json() as { user: { role:string; creatorId?:string; hostBusinessId?:string } };

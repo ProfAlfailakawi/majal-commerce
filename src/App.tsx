@@ -27,6 +27,7 @@ const AccountSecurityModal = lazy(() => import('./components/common/AccountSecur
 
 import { SurfaceFallback } from './components/common/SurfaceFallback';
 import type { LegalDocumentId } from './components/legal/LegalCenter';
+import { legalDocumentFromPath, legalPath } from './lib/legalRoutes';
 
 const LegalCenter = lazy(() => import('./components/legal/LegalCenter').then(module => ({ default: module.LegalCenter })));
 
@@ -42,7 +43,21 @@ export default function App() {
   const [authStatus, setAuthStatus] = useState<'LOADING' | 'AUTHENTICATED' | 'ANONYMOUS'>(IS_DEMO_MODE ? 'AUTHENTICATED' : 'LOADING');
   // The legal surface sits outside the role/permission surfaces on purpose: it is public,
   // has no permission model, and must stay reachable from every state of the app.
-  const [legalDocument, setLegalDocument] = useState<LegalDocumentId | null>(null);
+  const [legalDocument, setLegalDocument] = useState<LegalDocumentId | null>(() => legalDocumentFromPath(window.location.pathname));
+
+  useEffect(() => {
+    const onPopState = () => setLegalDocument(legalDocumentFromPath(window.location.pathname));
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  useEffect(() => {
+    const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (canonical) canonical.href = `${window.location.origin}${legalDocument ? legalPath(legalDocument) : '/'}`;
+    document.title = legalDocument
+      ? `${legalDocument === 'TERMS' ? 'الشروط والأحكام' : legalDocument === 'PRIVACY' ? 'سياسة الخصوصية' : legalDocument === 'REFUND' ? 'سياسة الاسترجاع' : 'الامتثال والتتبع'} | مجال`
+      : 'مجال | من الفكرة إلى منتج تجاري';
+  }, [legalDocument]);
 
   // The first-run introduction. It is held back until the session question is settled:
   // opening it over a still-resolving auth state would show a returning operator the
@@ -113,11 +128,18 @@ export default function App() {
   };
 
   const handleOpenLegal = (document: LegalDocumentId) => {
+    window.history.pushState({ legalDocument: document }, '', legalPath(document));
     setLegalDocument(document);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const closeLegal = () => {
+    window.history.pushState({}, '', '/');
+    setLegalDocument(null);
+  };
+
   const handleSurfaceChange = (surface: SurfaceType) => {
+    if (legalDocument) window.history.pushState({}, '', '/');
     setLegalDocument(null);
     if (!canAccessSurface(store.activeUser, surface)) {
       setActiveSurface('PUBLIC');
@@ -158,7 +180,7 @@ export default function App() {
 
         <main id="main-content" tabIndex={-1} className="animate-in fade-in duration-300 flex-1 pb-10 outline-none">
           <Suspense fallback={<SurfaceFallback />}>
-            {legalDocument ? <LegalCenter initialDocument={legalDocument} onBack={() => setLegalDocument(null)} /> : <>
+            {legalDocument ? <LegalCenter initialDocument={legalDocument} onBack={closeLegal} /> : <>
               {activeSurface === 'PUBLIC' && <PublicLanding onSurfaceChange={handleSurfaceChange} />}
               {activeSurface === 'CONSUMER' && <ConsumerDashboard onSurfaceChange={handleSurfaceChange} />}
               {activeSurface === 'CREATOR' && <CreatorPortal />}

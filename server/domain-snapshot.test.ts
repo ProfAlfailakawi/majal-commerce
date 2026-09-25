@@ -130,6 +130,9 @@ test('consumer snapshot contains live marketplace only and no private collaborat
     const privateCreator = await createUser(db, { name: 'Private', email: 'private@example.test', password: 'Majal-Private-2026!', role: 'CREATOR' });
     await db.prepare("INSERT INTO creator_profiles(id,user_id,display_name,specialty,completion_score,matching_enabled,created_at,updated_at) VALUES('cr_private',?,'Private','خاص',1,0,?,?)").run(privateCreator.id, now, now);
     await db.prepare("INSERT INTO products(id,creator_id,public_name,category,short_description,status,estimated_unit_cost_fils,target_price_fils,is_secret_recipe,created_at,updated_at) VALUES('prod_private','cr_private','مسودة سرية','DESSERT','ليست في السوق','DRAFT',900,2000,1,?,?)").run(now, now);
+    // A historical production row used an object instead of an array. The public read model
+    // must treat malformed/non-array JSON as empty rather than failing the whole session.
+    await db.prepare("UPDATE organizations SET branches_json='{}' WHERE id='org_s'").run();
 
     const snap = await buildDomainSnapshot(db, { role: 'CONSUMER' });
     assert.deepEqual(snap.products.map((p: any) => p.id), ['prod_s']);
@@ -138,6 +141,7 @@ test('consumer snapshot contains live marketplace only and no private collaborat
     assert.equal(snap.collaborations.length, 0);
     assert.equal(snap.marketLaunches.length, 1);
     assert.equal((snap.marketLaunches[0] as any).productId, 'prod_s');
+    assert.deepEqual((snap.marketLaunches[0] as any).branches, []);
     assert.deepEqual(snap.creators.map((c: any) => c.id), ['cr_s']);
     assert.equal((snap.creators[0] as any).userId, undefined);
     assert.deepEqual(snap.organizations.map((o: any) => o.id), ['org_s']);

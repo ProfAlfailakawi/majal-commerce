@@ -105,6 +105,7 @@ const RESET_TOKEN_TTL_MINUTES = 15;
 // base64url of 32 bytes is always 43 chars; bound the accepted input so an oversized body is
 // rejected before any hashing work is done.
 const RESET_TOKEN_MAX_LENGTH = 64;
+export const LEGAL_CONSENT_VERSION = '2026-09-25';
 
 const jsonError = (res: Response, status: number, message: string, code?: string) =>
   res.status(status).json({ error: message, ...(code ? { code } : {}) });
@@ -373,6 +374,7 @@ interface PublicRegistrationProvisioning {
   supplierCategory?: string;
   supplierCommercialRegistrationNo?: string;
   supplierDescription?: string;
+  legalConsent?: { version: string; requestId: string };
 }
 
 /**
@@ -487,6 +489,24 @@ export async function createPublicRegistration(
       `).run(supplierId,user.id,commercialName,category,registrationNo || '',description,user.phone,user.email,createdAt,createdAt);
       await tx.prepare("UPDATE users SET account_type='SUPPLIER', supplier_id=?, updated_at=? WHERE id=?")
         .run(supplierId,createdAt,user.id);
+    }
+
+    if (provisioning.legalConsent) {
+      const purposes = JSON.stringify(['ACCOUNT_REGISTRATION', 'PLATFORM_OPERATION']);
+      for (const consentType of ['TERMS', 'PRIVACY']) {
+        await tx.prepare(`
+          INSERT INTO consent_events(id,user_id,consent_type,version,action,purposes_json,request_id,created_at)
+          VALUES(?,?,?,?, 'GRANTED', ?, ?, ?)
+        `).run(
+          `con_${randomUUID()}`,
+          user.id,
+          consentType,
+          provisioning.legalConsent.version,
+          purposes,
+          provisioning.legalConsent.requestId,
+          createdAt
+        );
+      }
     }
 
     return await tx.prepare('SELECT * FROM users WHERE id = ?').get<UserRow>(user.id) as UserRow;
@@ -701,6 +721,9 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
     const email = normalizeEmail(req.body?.email);
     try {
       if (!email) return jsonError(res, 400, 'البريد الإلكتروني غير صالح.');
+      if (req.body?.termsAccepted !== true || req.body?.privacyAccepted !== true) {
+        return jsonError(res, 400, 'يلزم قبول الشروط وسياسة الخصوصية لإنشاء الحساب.', 'LEGAL_CONSENT_REQUIRED');
+      }
       
       // SECURITY: public registration never grants SUPER_ADMIN, even for allowlisted
       // addresses — nothing here proves the caller owns the email. Use auth:bootstrap.
@@ -743,7 +766,8 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
           supplierCommercialName: req.body?.supplier?.commercialName,
           supplierCategory: req.body?.supplier?.category,
           supplierCommercialRegistrationNo: req.body?.supplier?.commercialRegistrationNo,
-          supplierDescription: req.body?.supplier?.description
+          supplierDescription: req.body?.supplier?.description,
+          legalConsent: { version: LEGAL_CONSENT_VERSION, requestId }
         });
       const session = await createSession(db, config, req, user);
       setSessionCookies(res, config, session.token, session.csrfToken, session.expiresAt);
