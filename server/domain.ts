@@ -383,8 +383,11 @@ export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser)
   // Public live-market projection. It is intentionally separate from private collaboration
   // state and contains no contract/recipe/contact/registration data.
   snapshotPhase = 'LIVE_MARKET_QUERY';
+  const branchesProjection = db.dialect === 'postgres'
+    ? "to_jsonb(o)->>'branches_json'"
+    : 'o.branches_json';
   const liveRows = await db.prepare(`SELECT l.*, c.creator_id, p.public_name, p.target_price_fils,
-      o.branches_json,
+      ${branchesProjection} AS branches_json,
       COALESCE((SELECT ov.selling_price_fils FROM offer_versions ov WHERE ov.collaboration_id=c.id AND ov.status='ACCEPTED' ORDER BY ov.version_number DESC LIMIT 1), p.target_price_fils) AS selling_price_fils,
       COALESCE((SELECT SUM(ord.units) FROM orders ord WHERE ord.launch_id=l.id AND ord.status IN ('PAID','FULFILLED')), 0) AS units_sold
     FROM launches l
