@@ -1460,6 +1460,14 @@ async function installPostgresRecipeImmutability(db: MajalDatabase) {
   `);
 }
 
+async function repairPostgresCompatibilitySchema(db: MajalDatabase) {
+  if (db.dialect !== 'postgres') return;
+  // An early production database recorded migration 15 without retaining this optional
+  // projection column. Keep this repair idempotent and under the migration advisory lock:
+  // new databases already have it, while the drifted database is repaired before traffic.
+  await db.exec(`ALTER TABLE organizations ADD COLUMN IF NOT EXISTS branches_json TEXT;`);
+}
+
 export async function openMajalDatabase(options: OpenDatabaseOptions = {}): Promise<MajalDatabase> {
   const isMemory = options.filename === ':memory:';
   const databaseUrl = options.databaseUrl || (isMemory ? undefined : process.env.DATABASE_URL);
@@ -1490,6 +1498,7 @@ export async function openMajalDatabase(options: OpenDatabaseOptions = {}): Prom
       await migrationConnection.query(`SELECT pg_advisory_lock(${MIGRATION_ADVISORY_LOCK_ID})`);
       const migrator = new PostgresMajalDatabase(migrationConnection);
       await migrateDatabase(migrator);
+      await repairPostgresCompatibilitySchema(migrator);
       await installPostgresRecipeImmutability(migrator);
     } finally {
       try { await migrationConnection.query(`SELECT pg_advisory_unlock(${MIGRATION_ADVISORY_LOCK_ID})`); }
