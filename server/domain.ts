@@ -5,6 +5,7 @@ import { MajalDatabase, withTransaction } from './database';
 import { deleteEncryptedObject, getEncryptedJson, googleAccessToken, putEncryptedJson } from './secure-storage';
 import { appendLedgerEntry } from './ledger';
 import { assertKillSwitchClear } from './kill-switch';
+import { reportError } from './observability';
 
 const now = () => new Date().toISOString();
 const sha256 = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
@@ -252,6 +253,9 @@ export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser)
   const isCreatorUser = role === 'CREATOR' && !!user.creatorId;
   const isHostUser = role.startsWith('HOST_') && !!user.hostBusinessId;
   const isConsumerUser = role === 'CONSUMER';
+  let snapshotPhase = 'PRODUCTS';
+
+  try {
 
   // Products are selected for the signed-in identity, never by a generic "first row"
   // fallback. Host discovery can see only market-matchable products (plus products already
@@ -272,6 +276,7 @@ export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser)
       ORDER BY p.created_at DESC LIMIT 500`).all<Record<string, unknown>>();
   }
 
+  snapshotPhase = 'COLLABORATIONS';
   const collabs = (isAdminUser
     ? await db.prepare('SELECT * FROM collaborations ORDER BY updated_at DESC LIMIT 500').all()
     : isCreatorUser
@@ -377,6 +382,7 @@ export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser)
 
   // Public live-market projection. It is intentionally separate from private collaboration
   // state and contains no contract/recipe/contact/registration data.
+  snapshotPhase = 'LIVE_MARKET';
   const liveRows = await db.prepare(`SELECT l.*, c.creator_id, p.public_name, p.target_price_fils,
       o.branches_json,
       COALESCE((SELECT ov.selling_price_fils FROM offer_versions ov WHERE ov.collaboration_id=c.id AND ov.status='ACCEPTED' ORDER BY ov.version_number DESC LIMIT 1), p.target_price_fils) AS selling_price_fils,
@@ -419,6 +425,7 @@ export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser)
 
   // Identity projections are role-scoped. This closes the old cross-tenant leak where every
   // signed-in account downloaded every creator and every organization.
+  snapshotPhase = 'IDENTITIES';
   let creators: Record<string, unknown>[] = [];
   let organizations: Record<string, unknown>[] = [];
   if (isAdminUser) {
@@ -461,6 +468,13 @@ export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser)
     organizations,
     marketLaunches
   };
+  } catch (cause) {
+    throw Object.assign(new Error(`SNAPSHOT_${snapshotPhase}_FAILED`), {
+      code: `SNAPSHOT_${snapshotPhase}_FAILED`,
+      status: 500,
+      cause
+    });
+  }
 }
 
 async function launchGate(db: MajalDatabase, collab: CollabRow) {
@@ -537,8 +551,13 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
   router.use(csrf);
 
   router.get('/snapshot', async (req: AuthenticatedRequest, res) => {
-    const snap = await buildDomainSnapshot(db, req.auth!.user);
-    res.json(snap);
+    try {
+      const snap = await buildDomainSnapshot(db, req.auth!.user);
+      res.json(snap);
+    } catch (error) {
+      reportError('domain_snapshot_failed', error, { role: req.auth!.user.role, requestId: requestId(req) });
+      handleDomainError(res, error);
+    }
   });
 
   router.get('/profiles', async (req: AuthenticatedRequest, res) => {
