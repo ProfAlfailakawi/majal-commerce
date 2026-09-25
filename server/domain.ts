@@ -382,7 +382,7 @@ export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser)
 
   // Public live-market projection. It is intentionally separate from private collaboration
   // state and contains no contract/recipe/contact/registration data.
-  snapshotPhase = 'LIVE_MARKET';
+  snapshotPhase = 'LIVE_MARKET_QUERY';
   const liveRows = await db.prepare(`SELECT l.*, c.creator_id, p.public_name, p.target_price_fils,
       o.branches_json,
       COALESCE((SELECT ov.selling_price_fils FROM offer_versions ov WHERE ov.collaboration_id=c.id AND ov.status='ACCEPTED' ORDER BY ov.version_number DESC LIMIT 1), p.target_price_fils) AS selling_price_fils,
@@ -394,6 +394,7 @@ export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser)
     WHERE l.status IN ('LIVE','PERMANENT')
     ORDER BY COALESCE(l.starts_at,l.created_at) DESC LIMIT 500`).all<Record<string, unknown>>();
 
+  snapshotPhase = 'LIVE_MARKET_PROJECTION';
   const marketLaunches = liveRows.map(row => {
     let branches: any[] = [];
     try {
@@ -469,8 +470,13 @@ export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser)
     marketLaunches
   };
   } catch (cause) {
-    throw Object.assign(new Error(`SNAPSHOT_${snapshotPhase}_FAILED`), {
-      code: `SNAPSHOT_${snapshotPhase}_FAILED`,
+    const databaseCode = typeof cause === 'object' && cause !== null && 'code' in cause
+      && /^[A-Z0-9]{5}$/.test(String((cause as {code?: unknown}).code))
+      ? String((cause as {code?: unknown}).code)
+      : '';
+    const code = `SNAPSHOT_${snapshotPhase}_FAILED${databaseCode ? `_${databaseCode}` : ''}`;
+    throw Object.assign(new Error(code), {
+      code,
       status: 500,
       cause
     });
