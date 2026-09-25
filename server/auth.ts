@@ -625,6 +625,11 @@ export function requireAuth(db: MajalDatabase, config: AuthConfig) {
 export function requireCsrf(config: AuthConfig) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.auth) return jsonError(res, 401, 'يلزم تسجيل الدخول.', 'AUTH_REQUIRED');
+    // CSRF protects state-changing requests. Requiring the token on safe reads made every
+    // authenticated GET mounted behind router.use(requireCsrf(...)) fail in production because
+    // browsers intentionally attach the header only to mutations. Keep reads authenticated,
+    // but do not reject them for lacking a CSRF token.
+    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method.toUpperCase())) return next();
     const cookies = parseCookies(req.header('cookie'));
     const cookieToken = cookies.get(config.csrfCookieName);
     const headerToken = req.header('x-csrf-token');

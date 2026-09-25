@@ -51,36 +51,40 @@ export function createCatalogRouter(db: MajalDatabase, authConfig: AuthConfig) {
     const cursor = req.query.cursor ? decodeCatalogCursor(req.query.cursor, authConfig.sessionSecret) : undefined;
     if (req.query.cursor && !cursor) return jsonError(res, 400, 'مؤشر الصفحة غير صالح.', 'INVALID_CURSOR');
 
+    const where = ["status = 'LIVE'"];
+    const params: unknown[] = [];
+    if (category) {
+      where.push('category = ?');
+      params.push(category);
+    }
+    if (cursor) {
+      where.push('(created_at < ? OR (created_at = ? AND id < ?))');
+      params.push(cursor.createdAt, cursor.createdAt, cursor.id);
+    }
+    params.push(limit + 1);
+
+    // Build only the predicates that are present. PostgreSQL cannot infer the type of an
+    // untyped NULL used as `$n IS NULL`, which made the first catalog page return HTTP 500.
     const rows = await db.prepare(`
       SELECT id, public_id, category, price_fils, inventory_units, created_at
       FROM catalog_records
-      WHERE status = 'LIVE'
-        AND (? IS NULL OR category = ?)
-        AND (? IS NULL OR created_at < ? OR (created_at = ? AND id < ?))
+      WHERE ${where.join(' AND ')}
       ORDER BY created_at DESC, id DESC
       LIMIT ?
-    `).all(
-      category ?? null,
-      category ?? null,
-      cursor?.createdAt ?? null,
-      cursor?.createdAt ?? null,
-      cursor?.createdAt ?? null,
-      cursor?.id ?? null,
-      limit + 1
-    ) as Array<{ id: number; public_id: string; category: string; price_fils: number; inventory_units: number; created_at: string }>;
+    `).all(...params) as Array<{ id: number | string; public_id: string; category: string; price_fils: number | string; inventory_units: number | string; created_at: string }>;
     const hasMore = rows.length > limit;
     const items = rows.slice(0, limit).map(row => ({
       publicId: row.public_id,
       category: row.category,
-      priceKwd: (row.price_fils / 1000).toFixed(3),
-      inventoryUnits: row.inventory_units,
+      priceKwd: (Number(row.price_fils) / 1000).toFixed(3),
+      inventoryUnits: Number(row.inventory_units),
       createdAt: row.created_at
     }));
     const last = rows[Math.min(rows.length, limit) - 1];
     return res.json({
       items,
       pageSize: items.length,
-      nextCursor: hasMore && last ? encodeCatalogCursor({ createdAt: last.created_at, id: last.id }, authConfig.sessionSecret) : null
+      nextCursor: hasMore && last ? encodeCatalogCursor({ createdAt: last.created_at, id: Number(last.id) }, authConfig.sessionSecret) : null
     });
   });
 
