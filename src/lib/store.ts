@@ -1349,9 +1349,9 @@ export class Store {
      * حاجة لاسم أو هاتف يرسلهما العميل — وهما كانا قابلين للانتحال أصلاً.
      */
     if (!IS_DEMO_MODE) {
-      void customerName; void customerPhone; void acquisitionSource; void branchId;
+      void customerName; void acquisitionSource;
       return this.serverMutation(async () => {
-        const result = await domainClient.placeOrder(launchId, unitsCount);
+        const result = await domainClient.placeOrder(launchId, unitsCount, { contactPhone: customerPhone, branchId });
         // الدفع يتم لدى المزوّد؛ حالة الطلب تتحدث عبر webhook لا من هنا.
         if (result.checkoutUrl) window.location.assign(result.checkoutUrl);
         return result;

@@ -44,7 +44,7 @@ export const domainClient = {
   approveSettlement: (creatorId: string) => request<any>(`/api/v1/domain/settlements/${encodeURIComponent(creatorId)}/approve`, { method:'POST', body:'{}' }, 'settlement'),
 
   // دورة الشراء والتقييم. السعر يُحسب على الخادم من العرض المعتمد، فلا يُرسل من هنا إطلاقاً.
-  placeOrder: (launchId: string, units: number) => request<{ order: { id: string; units: number; unitPriceFils: number; totalFils: number; status: string }; checkoutUrl: string | null; paymentStatus: string | null; replayed?: boolean }>('/api/v1/orders', { method: 'POST', body: JSON.stringify({ launchId, units }) }, 'order'),
+  placeOrder: (launchId: string, units: number, extra: { contactPhone?: string; branchId?: string } = {}) => request<{ order: { id: string; units: number; unitPriceFils: number; totalFils: number; status: string }; checkoutUrl: string | null; paymentStatus: string | null; replayed?: boolean }>('/api/v1/orders', { method: 'POST', body: JSON.stringify({ launchId, units, ...extra }) }, 'order'),
   myOrders: () => request<{ orders: any[] }>('/api/v1/orders'),
   submitReview: (orderId: string, body: unknown) => request<{ review: any }>(`/api/v1/orders/${encodeURIComponent(orderId)}/review`, { method: 'POST', body: JSON.stringify(body) }),
   launchReviews: (launchId: string) => request<{ summary: { count: number; taste: number; value: number; portion: number; keepItPercent: number }; reviews: any[] }>(`/api/v1/public/launches/${encodeURIComponent(launchId)}/reviews`),
