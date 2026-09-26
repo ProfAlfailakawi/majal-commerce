@@ -16,6 +16,8 @@ import { createEcosystemRouter } from './server/ecosystem';
 import { createAdvancedRouter } from './server/advanced';
 import { createOrdersRouter, createPublicReviewsRouter } from './server/orders';
 import { createModerationRouter } from './server/moderation';
+import { createCommercePublicRouter, createCommerceRouter } from './server/commerce-ops';
+import { expireStaleHolds } from './server/checkout';
 import { deliveryReadiness, startNotificationDeliveryWorker } from './server/delivery';
 import { installProcessSafetyHandlers, reportError, requestTelemetry, resolveTrustProxyHops, structuredLog } from './server/observability';
 import { secureStorageReadiness } from './server/secure-storage';
@@ -151,6 +153,8 @@ async function initializeApplication(app: express.Express) {
   app.use('/api/v1/moderation', createModerationRouter(db, authConfig));
   // تقييمات الإطلاق عامة القراءة (كتالوج عام)، فلا تمرّ بحارس المصادقة.
   app.use('/api/v1/public', createPublicReviewsRouter(db));
+  app.use('/api/v1/public', createCommercePublicRouter(db));
+  app.use('/api/v1/commerce', createCommerceRouter(db, authConfig));
 
   const authenticated = requireAuth(db, authConfig);
   const csrfProtected = requireCsrf(authConfig);
@@ -295,10 +299,13 @@ async function initializeApplication(app: express.Express) {
   const stopDeliveryWorker = startNotificationDeliveryWorker(db);
   const cleanupTimer = setInterval(() => void purgeExpiredSessions(db), 30 * 60_000);
   cleanupTimer.unref();
+  // Pending-payment holds release their reserved stock once the payment window elapses.
+  const holdTimer = setInterval(() => { expireStaleHolds(db).catch(error => reportError('hold_sweeper_failed', error, {})); }, 60_000);
+  holdTimer.unref();
   return {
     db,
     shutdown: async () => {
-      stopDeliveryWorker(); clearInterval(cleanupTimer); await closeRateLimitStore(); await db.close();
+      stopDeliveryWorker(); clearInterval(cleanupTimer); clearInterval(holdTimer); await closeRateLimitStore(); await db.close();
     }
   };
 }
