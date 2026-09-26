@@ -4,12 +4,12 @@ export class DomainApiError extends Error {
   constructor(message: string, public readonly code?: string, public readonly status?: number) { super(message); }
 }
 
-function idempotencyKey(scope: string) {
+export function idempotencyKey(scope: string) {
   const random = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   return `majal-${scope}-${random}`;
 }
 
-async function request<T>(url: string, init: RequestInit = {}, idempotencyScope?: string): Promise<T> {
+export async function request<T>(url: string, init: RequestInit = {}, idempotencyScope?: string, explicitKey?: string): Promise<T> {
   const method = (init.method || 'GET').toUpperCase();
   const response = await fetch(url, {
     ...init,
@@ -17,7 +17,7 @@ async function request<T>(url: string, init: RequestInit = {}, idempotencyScope?
     headers: {
       ...(init.body ? { 'Content-Type': 'application/json' } : {}),
       ...(!['GET', 'HEAD'].includes(method) ? { 'X-CSRF-Token': authCsrfToken() } : {}),
-      ...(idempotencyScope ? { 'Idempotency-Key': idempotencyKey(idempotencyScope) } : {}),
+      ...(explicitKey ? { 'Idempotency-Key': explicitKey } : idempotencyScope ? { 'Idempotency-Key': idempotencyKey(idempotencyScope) } : {}),
       ...init.headers
     }
   });
