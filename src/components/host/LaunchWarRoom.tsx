@@ -15,10 +15,18 @@ import {
 import { store } from '../../lib/store';
 import { hasPermission } from '../../lib/permissions';
 import { StatusPill } from '../common/StatusPill';
+import { WarRoomOps } from './WarRoomOps';
 
 interface LaunchWarRoomProps { hostBusinessId: string; }
 
-export const LaunchWarRoom: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => {
+export const LaunchWarRoom: React.FC<LaunchWarRoomProps> = props => (
+  <div className="space-y-6">
+    <WarRoomOps />
+    <LaunchWarRoomBody {...props} />
+  </div>
+);
+
+const LaunchWarRoomBody: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => {
   const canSeeFinance = store.activeUser.hostBusinessId === hostBusinessId && hasPermission(store.activeUser, 'VIEW_HOST_FINANCE');
   const launch = store.launches.find(l => l.hostBusinessId === hostBusinessId && (l.status === 'LIVE' || l.status === 'PERMANENT'));
   const product = store.products.find(p => p.id === launch?.productId);
