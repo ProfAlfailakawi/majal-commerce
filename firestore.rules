@@ -1,11 +1,15 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper functions
+    // Firestore is a SERVER-WRITTEN MIRROR (server/firebase-mirror.ts, Admin SDK, which
+    // bypasses these rules). The client never writes Firestore — every mutation routes
+    // through the Express API — so every client write is denied. Previously creators could
+    // rewrite any field of their own product/creator document (status, price, launch gate),
+    // and users could rewrite their own user document (role).
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
@@ -14,70 +18,55 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.token.role in ['ADMIN', 'SUPER_ADMIN'];
     }
 
-    // Users Collection
-    // SECURITY: `allow read: if isAuthenticated()` let ANY signed-in account enumerate every
-    // user document — name, email, phone, role and tenant links — which is a full directory
-    // leak from a single throwaway registration. A user document is only ever needed by its
-    // own owner or by an administrator; nothing in the client reads this collection at all
-    // (the app is server-authoritative over the Express API and Firestore is a server-written
-    // mirror), so narrowing the read breaks no caller.
+    // Users: owner or admin read only.
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
-      allow write: if isOwner(userId);
+      allow write: if false; // Deny direct client writes; must route through server
     }
 
-    // Creators Collection
+    // Public catalogue collections. The mirror writes only an allow-listed PUBLIC
+    // projection here (no vault, cost, margin or payout fields) — see publicProjection().
     match /creators/{creatorId} {
       allow read: if true;
-      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
-      allow update: if isAuthenticated() &&
-                    request.auth.uid == resource.data.userId &&
-                    request.auth.uid == request.resource.data.userId;
-      allow delete: if false; // Delete operations route through server
+      allow write: if false; // Deny direct client writes; must route through server
     }
 
-    // Hosts Collection
     match /hosts/{hostId} {
       allow read: if true;
-      allow write: if isAuthenticated() && request.auth.token.role in ['ADMIN', 'SUPER_ADMIN'];
+      allow write: if false; // Deny direct client writes; must route through server
     }
 
-    // Products Collection
     match /products/{productId} {
       allow read: if true;
-      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.creatorId;
-      allow update: if isAuthenticated() &&
-                    request.auth.uid == resource.data.creatorId &&
-                    request.auth.uid == request.resource.data.creatorId;
-      allow delete: if false; // Delete operations route through server
+      allow write: if false; // Deny direct client writes; must route through server
     }
 
-    // Orders Collection
     match /orders/{orderId} {
-      // Consumers see their own orders; Hosts/Admins can see orders for their tenants.
       allow read: if isAuthenticated() && (
         request.auth.uid == resource.data.consumerId ||
         request.auth.uid == resource.data.hostId ||
-        request.auth.token.role in ['ADMIN', 'SUPER_ADMIN']
+        isAdmin()
       );
       allow write: if false; // Deny direct client writes; must route through server
     }
 
-    // Contracts Collection
     match /contracts/{contractId} {
-      // Only the creator, the host, or admins can view the contract.
       allow read: if isAuthenticated() && (
         request.auth.uid == resource.data.creatorId ||
         request.auth.uid == resource.data.hostId ||
-        request.auth.token.role in ['ADMIN', 'SUPER_ADMIN']
+        isAdmin()
       );
       allow write: if false; // Deny direct client writes; must route through server
     }
 
-    // Audit logs (append-only by authenticated users, no deletion or modification)
     match /audit_logs/{logId} {
-      allow read: if isAuthenticated() && request.auth.token.role in ['ADMIN', 'SUPER_ADMIN'];
+      allow read: if isAdmin();
       allow write: if false; // Server layer handles audit logging
+    }
+
+    // Anything not matched above is denied.
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

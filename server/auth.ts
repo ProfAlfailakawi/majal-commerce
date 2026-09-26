@@ -11,6 +11,7 @@ import {
 import { NextFunction, Request, Response, Router } from 'express';
 import { MajalDatabase, withTransaction } from './database';
 import { emailChannelConfigured, sendResendEmail } from './delivery';
+import { syncRoleClaim } from './firebase-mirror';
 
 export type AuthRole =
   | 'CREATOR'
@@ -606,6 +607,7 @@ export function requireAuth(db: MajalDatabase, config: AuthConfig) {
             row.role = memberships[0].role;
             await db.prepare('UPDATE users SET host_business_id = ?, role = ?, updated_at = ? WHERE id = ?')
               .run(row.host_business_id, row.role, new Date().toISOString(), row.id);
+            void syncRoleClaim(row.id, row.role);
           } else {
             row.host_business_id = null;
           }
