@@ -280,7 +280,7 @@
         <p style="font-size:.875rem;line-height:1.9;color:#94a3b8;margin:0 0 1.5rem">
           ما قدرنا نجيب ملفات المنصة. تأكد من اتصالك بالإنترنت وأعد المحاولة، وإذا تكرر الأمر تواصل مع الدعم.
         </p>
-        <button onclick="location.reload()" style="cursor:pointer;padding:.75rem 1.5rem;border-radius:.875rem;border:0;background:#c7a55b;color:#020617;font-weight:800;font-size:.8125rem;font-family:inherit">
+        <button id="majal-boot-retry" type="button" style="cursor:pointer;padding:.75rem 1.5rem;border-radius:.875rem;border:0;background:#c7a55b;color:#020617;font-weight:800;font-size:.8125rem;font-family:inherit">
           أعد المحاولة
         </button>
       </div>
@@ -292,29 +292,8 @@
       </div>
     </noscript>
 
-    <script>
-      // The boot timestamp lets main.tsx hold the splash for a minimum beat, so a warm
-      // cache does not flash the brand for 80ms — a blink reads as a glitch, not a brand.
-      window.__majalBootAt = Date.now();
-
-      // Failsafe. If the bundle 404s, throws before mounting, or is blocked by an
-      // extension or a dead connection, nothing else would ever clear this layer and the
-      // visitor would be stuck on an animation forever.
-      //
-      // Lifting the splash is only half the job: the app's error boundary lives inside the
-      // very bundle that failed, so clearing the splash on its own just reveals a blank
-      // page. Verified by pointing the module script at a missing file — the splash lifted
-      // correctly and left nothing behind. So if React has not mounted by then, say so in
-      // plain HTML and offer the one action that helps.
-      window.setTimeout(function () {
-        document.documentElement.classList.add('majal-ready');
-        var root = document.getElementById('root');
-        if (root && root.childElementCount === 0) {
-          var fallback = document.getElementById('majal-boot-failed');
-          if (fallback) fallback.hidden = false;
-        }
-      }, 8000);
-    </script>
+    <!-- Boot guard (timestamp + 8s failsafe) is external so CSP script-src 'self' allows it. -->
+    <script src="/boot.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
