@@ -55,7 +55,7 @@ export const AdminDashboard: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
       <section className="glass-panel rounded-[28px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
-        <div className="absolute inset-y-0 right-0 w-64 bg-gradient-to-l from-gold-500/10 to-transparent pointer-events-none" />
+        <div className="absolute inset-y-0 start-0 w-64 bg-gradient-to-l from-gold-500/10 to-transparent pointer-events-none" />
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-3 max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold-500/10 border border-gold-300/20 text-gold-300 text-xs font-bold">
@@ -170,7 +170,7 @@ export const AdminDashboard: React.FC = () => {
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-bold text-slate-100">{host.commercialName}</span>
-                    <span className="px-2.5 py-1 rounded-full text-[11px] bg-emerald-500/10 border border-emerald-400/20 text-emerald-300">
+                    <span className="px-2.5 py-1 rounded-full text-xs bg-emerald-500/10 border border-emerald-400/20 text-emerald-300">
                       {host.verificationStatus === 'VERIFIED' ? 'مرخّص ومتحقق' : host.verificationStatus}
                     </span>
                   </div>
@@ -227,9 +227,9 @@ export const AdminDashboard: React.FC = () => {
                   <div className="font-bold text-sm text-slate-100">{grant.id}</div>
                   <div className="text-xs text-slate-400 mt-1">{grant.purpose}</div>
                 </div>
-                <div className="text-left">
+                <div className="text-end">
                   <div className="text-sm font-black text-gold-300">L{grant.disclosureLevel}</div>
-                  <div className="text-[11px] text-slate-400 flex items-center justify-end gap-2 mt-1"><span>{new Date(grant.grantedAt || grant.requestedAt).toLocaleDateString('ar-KW')}</span><StatusPill status={grant.status} /></div>
+                  <div className="text-xs text-slate-400 flex items-center justify-end gap-2 mt-1"><span>{new Date(grant.grantedAt || grant.requestedAt).toLocaleDateString('ar-KW')}</span><StatusPill status={grant.status} /></div>
                 </div>
               </div>
             ))}
@@ -275,11 +275,11 @@ export const AdminDashboard: React.FC = () => {
               <div key={batch.id} className="rounded-2xl p-4 bg-white/5 border border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div>
                   <div className="font-black text-slate-100">{batch.creatorName}</div>
-                  <div className="text-[11px] text-slate-400 mt-1">{batch.id} — {new Date(batch.periodStart).toLocaleDateString('ar-KW')} إلى {new Date(batch.periodEnd).toLocaleDateString('ar-KW')}</div>
+                  <div className="text-xs text-slate-400 mt-1">{batch.id} — {new Date(batch.periodStart).toLocaleDateString('ar-KW')} إلى {new Date(batch.periodEnd).toLocaleDateString('ar-KW')}</div>
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="text-lg font-black text-gold-300 font-mono">{batch.totalAmountKwd.toFixed(3)} د.ك</div>
-                  <span className={`px-3 py-1.5 rounded-full text-[11px] font-black border ${batch.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'}`}>{batch.status === 'PAID' ? 'مدفوع ومؤكد' : 'معتمد — بانتظار الدفع'}</span>
+                  <span className={`px-3 py-1.5 rounded-full text-xs font-black border ${batch.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'}`}>{batch.status === 'PAID' ? 'مدفوع ومؤكد' : 'معتمد — بانتظار الدفع'}</span>
                   {batch.status === 'APPROVED' && <button disabled title="يُفعّل بعد ربط مزود الدفع" className="px-3 py-2 rounded-xl bg-slate-700 text-slate-400 text-xs font-black cursor-not-allowed">بانتظار ربط الدفع</button>}
                 </div>
               </div>

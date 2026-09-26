@@ -93,7 +93,7 @@ export const ContractModal: React.FC<ContractModalProps> = ({
                 <h3 id="contract-modal-title" className="font-black text-lg text-slate-100">
                   مسودة شراكة تجريبية — غير ملزمة
                 </h3>
-                <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                   contract.status === 'FULLY_SIGNED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                 }`}>
                   {contract.status === 'FULLY_SIGNED' ? 'اكتملت المحاكاة' : 'محاكاة موافقات'}
@@ -135,34 +135,34 @@ export const ContractModal: React.FC<ContractModalProps> = ({
             
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div className="p-2.5 bg-slate-900 rounded-lg border border-slate-800">
-                <span className="text-slate-400 text-[11px] block">سعر البيع المعتمد</span>
+                <span className="text-slate-400 text-xs block">سعر البيع المعتمد</span>
                 <span className="font-bold text-amber-400 text-sm">{contract.terms.sellingPriceKwd.toFixed(3)} د.ك</span>
               </div>
               <div className="p-2.5 bg-slate-900 rounded-lg border border-slate-800">
-                <span className="text-slate-400 text-[11px] block">نسبة حقوق المبدع</span>
+                <span className="text-slate-400 text-xs block">نسبة حقوق المبدع</span>
                 <span className="font-bold text-amber-400 text-sm">{contract.terms.creatorRoyaltyRatePercent}٪ من المبيعات</span>
               </div>
               <div className="p-2.5 bg-slate-900 rounded-lg border border-slate-800">
-                <span className="text-slate-400 text-[11px] block">عمولة تشغيل المنصة</span>
+                <span className="text-slate-400 text-xs block">عمولة تشغيل المنصة</span>
                 <span className="font-bold text-slate-300 text-sm">{contract.terms.platformFeePercent}٪</span>
               </div>
               <div className="p-2.5 bg-slate-900 rounded-lg border border-slate-800">
-                <span className="text-slate-400 text-[11px] block">مدة العقد الحصري</span>
+                <span className="text-slate-400 text-xs block">مدة العقد الحصري</span>
                 <span className="font-bold text-slate-200 text-sm">{contract.terms.termMonths} شهراً</span>
               </div>
               <div className="p-2.5 bg-slate-900 rounded-lg border border-slate-800">
-                <span className="text-slate-400 text-[11px] block">نطاق الحصرية</span>
+                <span className="text-slate-400 text-xs block">نطاق الحصرية</span>
                 <span className="font-bold text-slate-200 text-sm">{contract.terms.exclusivityType === 'EXCLUSIVE' ? 'حصري لدولة الكويت' : 'غير حصري'}</span>
               </div>
               <div className="p-2.5 bg-slate-900 rounded-lg border border-slate-800">
-                <span className="text-slate-400 text-[11px] block">الحد الأدنى للإنتاج</span>
+                <span className="text-slate-400 text-xs block">الحد الأدنى للإنتاج</span>
                 <span className="font-bold text-slate-200 text-sm">{contract.terms.minimumCommitmentUnits} قطعة</span>
               </div>
             </div>
           </div>
 
           {/* Legal Clauses */}
-          <div className="space-y-3 p-4 bg-slate-950/60 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-2">
+          <div className="space-y-3 p-4 bg-slate-950/60 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-2">
             <p><strong>بند السرية والملكية الفكرية:</strong> تظل جميع الحقوق السرية الخاصة بالوصفة والخلطة مملوكة حصرياً للطرف الأول. يلتزم الطرف الثاني بعدم تسريب الوصفة أو استخدامها بعد انتهاء مدة العقد.</p>
             <p><strong>بند الجودة والرقابة:</strong> يلتزم الطرف الثاني بالنسخة التشغيلية المتفق عليها وبالمتطلبات النظامية التي تنطبق على نشاطه وقت التنفيذ؛ يجب اعتماد الصياغة النهائية من المستشار القانوني قبل الاستخدام التجاري.</p>
             <p><strong>بند المستحقات:</strong> تحتسب مجال الاستحقاقات وفق شروط العرض المسجلة، بينما يظل تنفيذ الدفع وتأكيده خطوة منفصلة عبر قناة الدفع أو التسوية المعتمدة خارجيًا.</p>
@@ -178,13 +178,13 @@ export const ContractModal: React.FC<ContractModalProps> = ({
                 {contract.creatorSignedAt && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
               </div>
               {contract.creatorSignedAt ? (
-                <div className="text-[11px]">
+                <div className="text-xs">
                   <p className="font-bold text-slate-100">{contract.creatorLegalName}</p>
-                  <p className="text-slate-400 text-[11px]">تاريخ التوقيع: {new Date(contract.creatorSignedAt).toLocaleString('ar-KW')}</p>
-                  <p className="text-slate-400 text-[11px] font-mono">Session Audit Ref: {contract.creatorSignerIp}</p>
+                  <p className="text-slate-400 text-xs">تاريخ التوقيع: {new Date(contract.creatorSignedAt).toLocaleString('ar-KW')}</p>
+                  <p className="text-slate-400 text-xs font-mono">Session Audit Ref: {contract.creatorSignerIp}</p>
                 </div>
               ) : (
-                <span className="text-amber-400 font-semibold text-[11px]">في انتظار التوقيع...</span>
+                <span className="text-amber-400 font-semibold text-xs">في انتظار التوقيع...</span>
               )}
             </div>
 
@@ -195,13 +195,13 @@ export const ContractModal: React.FC<ContractModalProps> = ({
                 {contract.hostSignedAt && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
               </div>
               {contract.hostSignedAt ? (
-                <div className="text-[11px]">
+                <div className="text-xs">
                   <p className="font-bold text-slate-100">{contract.hostCommercialName}</p>
-                  <p className="text-slate-400 text-[11px]">تاريخ التوقيع: {new Date(contract.hostSignedAt).toLocaleString('ar-KW')}</p>
-                  <p className="text-slate-400 text-[11px] font-mono">Session Audit Ref: {contract.hostSignerIp}</p>
+                  <p className="text-slate-400 text-xs">تاريخ التوقيع: {new Date(contract.hostSignedAt).toLocaleString('ar-KW')}</p>
+                  <p className="text-slate-400 text-xs font-mono">Session Audit Ref: {contract.hostSignerIp}</p>
                 </div>
               ) : (
-                <span className="text-amber-400 font-semibold text-[11px]">في انتظار التوقيع...</span>
+                <span className="text-amber-400 font-semibold text-xs">في انتظار التوقيع...</span>
               )}
             </div>
 
@@ -221,7 +221,7 @@ export const ContractModal: React.FC<ContractModalProps> = ({
                   type="text"
                   value={signatureName}
                   onChange={(e) => setSignatureName(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 font-bold focus:outline-none focus:border-amber-500"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 font-bold focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
                 />
               </div>
 
@@ -237,8 +237,8 @@ export const ContractModal: React.FC<ContractModalProps> = ({
                     aria-label="الرقم المدني لطلب هويتي"
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-100 font-mono"
                   />
-                  {paciRequestId && <p className="text-[11px] text-slate-400">طلب PACI: <span className="font-mono text-blue-300">{paciRequestId}</span> — {paciStatus || 'PENDING'}</p>}
-                  {paciDeepLink && <a href={paciDeepLink} rel="noreferrer" className="inline-flex text-[11px] font-bold text-blue-300 underline">فتح الطلب في تطبيق هويتي</a>}
+                  {paciRequestId && <p className="text-xs text-slate-400">طلب PACI: <span className="font-mono text-blue-300">{paciRequestId}</span> — {paciStatus || 'PENDING'}</p>}
+                  {paciDeepLink && <a href={paciDeepLink} rel="noreferrer" className="inline-flex text-xs font-bold text-blue-300 underline">فتح الطلب في تطبيق هويتي</a>}
                   {signError && <p role="alert" className="text-xs text-rose-300">{signError}</p>}
                 </div>
               )}

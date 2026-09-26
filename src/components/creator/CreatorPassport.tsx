@@ -45,7 +45,7 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-xl font-black text-slate-100">جواز المبدع</h3>
-              <span className="px-2.5 py-1 rounded-full bg-gold-500/10 text-gold-300 border border-gold-300/20 text-[11px] font-black">{stage}</span>
+              <span className="px-2.5 py-1 rounded-full bg-gold-500/10 text-gold-300 border border-gold-300/20 text-xs font-black">{stage}</span>
             </div>
             <p className="text-xs text-slate-400 mt-1">جواز تجاري حي يلخص ما أثبته المبدع فعليًا داخل «مجال».</p>
           </div>
@@ -64,7 +64,7 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
           { label: 'نسبة التكرار', value: `${stats.keepRate}%`, icon: <Repeat2 className="w-4 h-4 text-gold-300" /> }
         ].map((item, idx) => (
           <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10">
-            <div className="flex items-center gap-2 text-[11px] text-slate-400">{item.icon}{item.label}</div>
+            <div className="flex items-center gap-2 text-xs text-slate-400">{item.icon}{item.label}</div>
             <div className="mt-2 text-xl font-black text-slate-100 font-mono">{item.value}</div>
           </div>
         ))}
@@ -97,7 +97,7 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
           ].map((step, idx) => (
             <div key={idx} className={`flex items-center justify-between p-3 rounded-xl border ${step.done ? 'bg-emerald-500/8 border-emerald-400/15' : 'bg-white/[0.02] border-white/10'}`}>
               <div className="flex items-center gap-2 text-xs font-bold text-slate-200">{step.icon}{step.label}</div>
-              <span className={`text-[11px] font-black ${step.done ? 'text-emerald-300' : 'text-slate-400'}`}>{step.done ? 'مكتمل' : 'قادم'}</span>
+              <span className={`text-xs font-black ${step.done ? 'text-emerald-300' : 'text-slate-400'}`}>{step.done ? 'مكتمل' : 'قادم'}</span>
             </div>
           ))}
         </div>

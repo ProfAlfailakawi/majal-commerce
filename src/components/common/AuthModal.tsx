@@ -134,7 +134,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
               <h2 id="auth-dialog-title" className="font-black text-slate-100 text-base">
                 {needsMfa ? 'التحقق بخطوتين' : mode === 'LOGIN' ? 'دخول إلى منصة مجال' : (mode === 'RESET_REQUEST' || mode === 'RESET_VERIFY') ? 'إعادة تعيين كلمة المرور' : 'إنشاء حساب جديد في مجال'}
               </h2>
-              <p className="text-[11px] text-slate-400 mt-0.5">جلسة خادمية مشفّرة — بيانات وتحليلات فورية</p>
+              <p className="text-xs text-slate-400 mt-0.5">جلسة خادمية مشفّرة — بيانات وتحليلات فورية</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 cursor-pointer" aria-label="إغلاق نافذة الدخول"><X className="w-5 h-5" /></button>
@@ -167,14 +167,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
                       if (item.id === 'SUPPLIER') { setRole('CONSUMER'); setAccountType('SUPPLIER'); }
                       else { setRole(item.id as UserRole); setAccountType('STANDARD'); }
                     }}
-                    className={`p-3 rounded-xl border text-right transition cursor-pointer ${
+                    className={`p-3 rounded-xl border text-start transition cursor-pointer ${
                       (item.id === 'SUPPLIER' ? accountType === 'SUPPLIER' : accountType === 'STANDARD' && role === item.id)
                         ? 'bg-gold-500/15 border-gold-300 text-slate-100 shadow-sm'
                         : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
                     }`}
                   >
                     <div className="text-xs font-black text-slate-100 flex items-center gap-1.5">{item.icon}<span>{item.label}</span></div>
-                    <div className="text-[11px] text-slate-400 mt-0.5">{item.desc}</div>
+                    <div className="text-xs text-slate-400 mt-0.5">{item.desc}</div>
                   </button>
                 ))}
               </div>
@@ -184,7 +184,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
           {mode === 'REGISTER' && !needsMfa && (
             <label className="block space-y-1.5">
               <span className="text-xs font-bold text-slate-200">الاسم الكامل</span>
-              <input value={name} onChange={event => setName(event.target.value)} autoComplete="name" required minLength={2} maxLength={120} placeholder="مثال: محمد عبدالله" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-gold-300/50" />
+              <input value={name} onChange={event => setName(event.target.value)} autoComplete="name" required minLength={2} maxLength={120} placeholder="مثال: محمد عبدالله" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-gold-300/50 focus-visible:ring-2 focus-visible:ring-gold-300" />
             </label>
           )}
 
@@ -199,7 +199,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
                   minLength={2}
                   maxLength={160}
                   placeholder="مثال: مطبخ الديرة المركزي"
-                  className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-sky-300/50"
+                  className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-sky-300/50 focus-visible:ring-2 focus-visible:ring-gold-300"
                 />
               </label>
               <label className="block space-y-1.5">
@@ -207,7 +207,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
                 <select
                   value={businessType}
                   onChange={event => setBusinessType(event.target.value as typeof businessType)}
-                  className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-sky-300/50"
+                  className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-sky-300/50 focus-visible:ring-2 focus-visible:ring-gold-300"
                 >
                   <option value="RESTAURANT">مطعم</option>
                   <option value="CAFE">مقهى</option>
@@ -225,10 +225,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
                   maxLength={80}
                   dir="ltr"
                   placeholder="CR / license no."
-                  className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-sky-300/50 text-left"
+                  className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-sky-300/50 text-end focus-visible:ring-2 focus-visible:ring-gold-300"
                 />
               </label>
-              <p className="sm:col-span-2 text-[11px] leading-5 text-slate-400">
+              <p className="sm:col-span-2 text-xs leading-5 text-slate-400">
                 تُنشأ المنشأة لك وحدك فورًا، وتبقى «غير موثقة» إلى أن يكتمل التحقق من السجل والتصاريح. لا يتم ربط حسابك بأي منشأة موجودة مسبقًا.
               </p>
             </div>
@@ -238,35 +238,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
             <div className="grid sm:grid-cols-2 gap-3 rounded-2xl bg-emerald-500/5 border border-emerald-400/15 p-4">
               <label className="block space-y-1.5 sm:col-span-2">
                 <span className="text-xs font-bold text-slate-200">الاسم التجاري للمورد</span>
-                <input value={supplierCommercialName} onChange={event => setSupplierCommercialName(event.target.value)} required minLength={2} maxLength={160} placeholder="مثال: شركة التوريد الكويتية" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-emerald-300/50" />
+                <input value={supplierCommercialName} onChange={event => setSupplierCommercialName(event.target.value)} required minLength={2} maxLength={160} placeholder="مثال: شركة التوريد الكويتية" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-emerald-300/50 focus-visible:ring-2 focus-visible:ring-gold-300" />
               </label>
               <label className="block space-y-1.5">
                 <span className="text-xs font-bold text-slate-200">فئة التوريد</span>
-                <input value={supplierCategory} onChange={event => setSupplierCategory(event.target.value)} required minLength={2} maxLength={120} placeholder="مواد خام، تغليف، معدات…" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-emerald-300/50" />
+                <input value={supplierCategory} onChange={event => setSupplierCategory(event.target.value)} required minLength={2} maxLength={120} placeholder="مواد خام، تغليف، معدات…" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-emerald-300/50 focus-visible:ring-2 focus-visible:ring-gold-300" />
               </label>
               <label className="block space-y-1.5">
                 <span className="text-xs font-bold text-slate-200">رقم السجل التجاري <span className="text-slate-400">(اختياري الآن)</span></span>
-                <input value={supplierRegistrationNo} onChange={event => setSupplierRegistrationNo(event.target.value)} minLength={3} maxLength={80} dir="ltr" placeholder="CR / license no." className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-emerald-300/50 text-left" />
+                <input value={supplierRegistrationNo} onChange={event => setSupplierRegistrationNo(event.target.value)} minLength={3} maxLength={80} dir="ltr" placeholder="CR / license no." className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-emerald-300/50 text-end focus-visible:ring-2 focus-visible:ring-gold-300" />
               </label>
               <label className="block space-y-1.5 sm:col-span-2">
                 <span className="text-xs font-bold text-slate-200">نبذة قصيرة <span className="text-slate-400">(اختياري)</span></span>
-                <textarea value={supplierDescription} onChange={event => setSupplierDescription(event.target.value)} maxLength={1200} rows={2} placeholder="ما الذي تورّده ولأي نوع من المنشآت؟" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-emerald-300/50 resize-none" />
+                <textarea value={supplierDescription} onChange={event => setSupplierDescription(event.target.value)} maxLength={1200} rows={2} placeholder="ما الذي تورّده ولأي نوع من المنشآت؟" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-emerald-300/50 resize-none focus-visible:ring-2 focus-visible:ring-gold-300" />
               </label>
-              <p className="sm:col-span-2 text-[11px] leading-5 text-slate-400">يُنشأ ملف المورد مستقلًا ولا يظهر للعامة قبل تحقق الإدارة واعتماد المورد.</p>
+              <p className="sm:col-span-2 text-xs leading-5 text-slate-400">يُنشأ ملف المورد مستقلًا ولا يظهر للعامة قبل تحقق الإدارة واعتماد المورد.</p>
             </div>
           )}
 
           {!needsMfa && mode !== 'RESET_VERIFY' && (
             <label className="block space-y-1.5">
               <span className="text-xs font-bold text-slate-200">البريد الإلكتروني</span>
-              <input type="email" value={email} onChange={event => setEmail(event.target.value)} autoComplete="email" required maxLength={254} dir="ltr" placeholder="name@domain.com" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-gold-300/50 text-left" />
+              <input type="email" value={email} onChange={event => setEmail(event.target.value)} autoComplete="email" required maxLength={254} dir="ltr" placeholder="name@domain.com" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-gold-300/50 text-end focus-visible:ring-2 focus-visible:ring-gold-300" />
             </label>
           )}
 
           {mode === 'REGISTER' && !needsMfa && (
             <label className="block space-y-1.5">
               <span className="text-xs font-bold text-slate-200">رقم الهاتف</span>
-              <input type="tel" value={phone} onChange={event => setPhone(event.target.value)} autoComplete="tel" required minLength={7} maxLength={24} dir="ltr" placeholder="+965 99999999" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-gold-300/50 text-left" />
+              <input type="tel" value={phone} onChange={event => setPhone(event.target.value)} autoComplete="tel" required minLength={7} maxLength={24} dir="ltr" placeholder="+965 99999999" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 text-sm text-slate-100 outline-none focus:border-gold-300/50 text-end focus-visible:ring-2 focus-visible:ring-gold-300" />
             </label>
           )}
 
@@ -275,7 +275,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
               <span className="text-xs font-bold text-slate-200">رمز التوثيق (المرسل للبريد)</span>
               {/* The reset token is a 43-char base64url credential (256 bits of entropy), not a
                   6-digit OTP: accept it verbatim without stripping characters. */}
-              <input type="text" value={resetCode} onChange={event => setResetCode(event.target.value.trim().slice(0, RESET_TOKEN_MAX_LENGTH))} required minLength={RESET_TOKEN_MIN_LENGTH} maxLength={RESET_TOKEN_MAX_LENGTH} autoComplete="one-time-code" spellCheck={false} dir="ltr" placeholder="الصق الرمز المرسل إليك" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-3 text-sm font-mono text-center text-slate-100 outline-none focus:border-gold-300/50" />
+              <input type="text" value={resetCode} onChange={event => setResetCode(event.target.value.trim().slice(0, RESET_TOKEN_MAX_LENGTH))} required minLength={RESET_TOKEN_MIN_LENGTH} maxLength={RESET_TOKEN_MAX_LENGTH} autoComplete="one-time-code" spellCheck={false} dir="ltr" placeholder="الصق الرمز المرسل إليك" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-3 text-sm font-mono text-center text-slate-100 outline-none focus:border-gold-300/50 focus-visible:ring-2 focus-visible:ring-gold-300" />
             </label>
           )}
 
@@ -284,7 +284,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-200">{mode === 'RESET_VERIFY' ? 'كلمة المرور الجديدة' : 'كلمة المرور'}</span>
                 {(mode === 'REGISTER' || mode === 'RESET_VERIFY') && (
-                  <span className="text-[11px] text-slate-400">12 محرفًا على الأقل</span>
+                  <span className="text-xs text-slate-400">12 محرفًا على الأقل</span>
                 )}
               </div>
               <div className="relative">
@@ -297,13 +297,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
                   minLength={mode === 'LOGIN' ? 1 : 12}
                   maxLength={128}
                   placeholder="••••••••"
-                  className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 pl-11 text-sm text-slate-100 outline-none focus:border-gold-300/50 text-left"
+                  className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-2.5 pe-11 text-sm text-slate-100 outline-none focus:border-gold-300/50 text-end focus-visible:ring-2 focus-visible:ring-gold-300"
                   dir="ltr"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-1 cursor-pointer"
+                  className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-1 cursor-pointer"
                   title={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
                   aria-label={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
                   aria-pressed={showPassword}
@@ -313,7 +313,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
               </div>
               {mode === 'LOGIN' && (
                 <div className="flex justify-end pt-1">
-                  <button type="button" onClick={() => resetMode('RESET_REQUEST')} className="text-[11px] text-gold-300 hover:underline cursor-pointer">
+                  <button type="button" onClick={() => resetMode('RESET_REQUEST')} className="text-xs text-gold-300 hover:underline cursor-pointer">
                     نسيت كلمة المرور؟
                   </button>
                 </div>
@@ -322,7 +322,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
           ) : needsMfa ? (
             <label className="block space-y-1.5">
               <span className="text-xs font-bold text-slate-200">رمز المصادقة (MFA)</span>
-              <input inputMode="numeric" pattern="[0-9]{6}" value={mfaCode} onChange={event => setMfaCode(event.target.value.replace(/\D/g, '').slice(0, 6))} autoComplete="one-time-code" required maxLength={6} dir="ltr" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-3 text-xl tracking-[0.4em] text-center text-slate-100 outline-none focus:border-gold-300/50" />
+              <input inputMode="numeric" pattern="[0-9]{6}" value={mfaCode} onChange={event => setMfaCode(event.target.value.replace(/\D/g, '').slice(0, 6))} autoComplete="one-time-code" required maxLength={6} dir="ltr" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-3 text-xl tracking-[0.4em] text-center text-slate-100 outline-none focus:border-gold-300/50 focus-visible:ring-2 focus-visible:ring-gold-300" />
             </label>
           ) : null}
 
@@ -330,7 +330,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
           {successMsg && <div role="alert" aria-live="polite" className="rounded-xl bg-emerald-500/10 border border-emerald-400/20 px-4 py-2.5 text-xs text-emerald-200 leading-5">{successMsg}</div>}
 
           {mode === 'REGISTER' && !needsMfa && (
-            <label className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] p-3 text-[11px] leading-5 text-slate-300">
+            <label className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] p-3 text-xs leading-5 text-slate-300">
               <input
                 type="checkbox"
                 checked={legalAccepted}

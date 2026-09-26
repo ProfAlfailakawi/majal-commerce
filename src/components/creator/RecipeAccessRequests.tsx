@@ -30,12 +30,12 @@ export const RecipeAccessRequests: React.FC<RecipeAccessRequestsProps> = ({ crea
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-black text-slate-100">{product?.publicName}</span>
-                  <span className={`px-2.5 py-1 rounded-full text-[11px] font-black ${grant.status === 'REQUESTED' ? 'bg-amber-500/10 text-amber-300 border border-amber-400/20' : 'bg-emerald-500/10 text-emerald-300 border border-emerald-400/20'}`}>
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-black ${grant.status === 'REQUESTED' ? 'bg-amber-500/10 text-amber-300 border border-amber-400/20' : 'bg-emerald-500/10 text-emerald-300 border border-emerald-400/20'}`}>
                     {grant.status === 'REQUESTED' ? 'طلب جديد' : 'إذن فعّال'}
                   </span>
                 </div>
                 <div className="text-xs text-slate-400 mt-2 leading-6">{host?.commercialName} — مستوى الإفصاح المطلوب/المعتمد: <strong className="text-slate-200">L{grant.disclosureLevel}</strong></div>
-                <div className="text-[11px] text-slate-400 mt-1">السبب: {grant.purpose}</div>
+                <div className="text-xs text-slate-400 mt-1">السبب: {grant.purpose}</div>
               </div>
 
               {grant.status === 'REQUESTED' ? (

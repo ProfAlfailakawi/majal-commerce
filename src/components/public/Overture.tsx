@@ -158,7 +158,7 @@ export const Overture: React.FC<OvertureProps> = ({ onReveal, onDone }) => {
               <span className="w-12 h-12 rounded-2xl border border-[#a8843c]/30 bg-white/70 text-[#a8843c] grid place-items-center shadow-[0_10px_30px_rgba(31,26,14,0.08)]">
                 {inst.icon}
               </span>
-              <span className="text-[11px] font-black text-[#4a3d22]">{inst.label}</span>
+              <span className="text-xs font-black text-[#4a3d22]">{inst.label}</span>
             </div>
           ))}
 

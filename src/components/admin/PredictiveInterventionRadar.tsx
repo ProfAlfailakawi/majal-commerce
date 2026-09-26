@@ -81,7 +81,7 @@ export const PredictiveInterventionRadar: React.FC<{ onNavigate: (target: RadarT
 
   return (
     <section className="glass-panel rounded-[30px] p-5 md:p-6 border border-white/10 relative overflow-hidden">
-      <div className="majal-glow -top-[18rem] -right-16 w-[42rem] h-[42rem]" style={{ '--glow': 'rgba(56,189,248,0.08)' } as React.CSSProperties} />
+      <div className="majal-glow -top-[18rem] -start-16 w-[42rem] h-[42rem]" style={{ '--glow': 'rgba(56,189,248,0.08)' } as React.CSSProperties} />
       <div className="relative z-10 space-y-5">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
           <div>
@@ -89,7 +89,7 @@ export const PredictiveInterventionRadar: React.FC<{ onNavigate: (target: RadarT
             <h2 className="text-xl md:text-2xl font-black mt-2">رادار ما قبل الاختناق</h2>
             <p className="text-xs text-slate-400 mt-2 leading-6">لا ينتظر التنبيه بعد وقوع المشكلة؛ يجمع الإشارات التي قد توقف صفقة أو إطلاقًا أو تسوية، ويشرح سببها والخطوة التالية.</p>
           </div>
-          <div className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-[11px] text-slate-400">قواعد قابلة للتفسير — بلا ادعاء تنبؤ غامض</div>
+          <div className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-400">قواعد قابلة للتفسير — بلا ادعاء تنبؤ غامض</div>
         </div>
 
         {signals.length ? (
@@ -102,7 +102,7 @@ export const PredictiveInterventionRadar: React.FC<{ onNavigate: (target: RadarT
                     <div className="w-10 h-10 rounded-xl bg-slate-950/35 flex items-center justify-center shrink-0">{signal.icon}</div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[11px] font-black px-2.5 py-1 rounded-lg bg-slate-950/35">{meta.label}</span>
+                        <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-slate-950/35">{meta.label}</span>
                         <h3 className="font-black text-sm">{signal.title}</h3>
                       </div>
                       <p className="text-xs opacity-75 leading-6 mt-2">{signal.evidence}</p>

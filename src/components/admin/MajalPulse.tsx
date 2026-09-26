@@ -41,7 +41,7 @@ export const MajalPulse: React.FC = () => {
 
   return (
     <section className="glass-panel rounded-[30px] p-5 md:p-6 border border-white/10 relative overflow-hidden">
-      <div className="majal-glow -top-[17rem] -left-16 w-[40rem] h-[40rem]" style={{ '--glow': 'rgba(52,211,153,0.08)' } as React.CSSProperties} />
+      <div className="majal-glow -top-[17rem] -end-16 w-[40rem] h-[40rem]" style={{ '--glow': 'rgba(52,211,153,0.08)' } as React.CSSProperties} />
       <div className="relative z-10 space-y-5">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
           <div>
@@ -49,7 +49,7 @@ export const MajalPulse: React.FC = () => {
             <h2 className="text-xl md:text-2xl font-black mt-2">نبض مجال — السوق كله في شاشة واحدة</h2>
             <p className="text-xs text-slate-400 mt-2 leading-6">من العرض والطلب إلى المختبر والعقود والإطلاق والقيمة الاقتصادية، مع إبراز أي نقطة تحتاج تدخل الإدارة.</p>
           </div>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-400/20 text-[11px] text-emerald-300 font-bold">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-400/20 text-xs text-emerald-300 font-bold">
             <ArrowUpLeft className="w-4 h-4" /> لقطة تشغيلية حية من بيانات المنصة
           </div>
         </div>
@@ -60,7 +60,7 @@ export const MajalPulse: React.FC = () => {
               <div className={`${card.tone}`}>{card.icon}</div>
               <div className={`mt-3 text-xl md:text-2xl font-black ${card.tone} font-mono`}>{card.value}</div>
               <div className="text-xs font-bold text-slate-200 mt-1">{card.label}</div>
-              <div className="text-[11px] text-slate-400 mt-1">{card.detail}</div>
+              <div className="text-xs text-slate-400 mt-1">{card.detail}</div>
             </div>
           ))}
         </div>

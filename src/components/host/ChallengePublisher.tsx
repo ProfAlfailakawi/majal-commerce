@@ -82,7 +82,7 @@ export const ChallengePublisher: React.FC<ChallengePublisherProps> = ({ isOpen, 
 
           <div className="grid sm:grid-cols-2 gap-4">
             <label className="block"><span className="block text-slate-300 font-bold mb-1.5">الفئة</span><select value={category} onChange={e => setCategory(e.target.value)} className="w-full glass-input rounded-xl p-3 text-slate-100 outline-none"><option value="حلويات">حلويات وكيك</option><option value="صلصات">صلصات ومخللات</option><option value="مخبوزات">مخبوزات وفطائر</option><option value="وجبات">وجبات</option></select></label>
-            <label className="block"><span className="block text-slate-300 font-bold mb-1.5">الموعد النهائي</span><div className="relative"><CalendarDays className="w-4 h-4 absolute right-3 top-3.5 text-slate-400" /><input type="date" min={toLocalDate(new Date())} value={deadline} onChange={e => setDeadline(e.target.value)} className="w-full glass-input rounded-xl py-3 pr-10 pl-3 text-slate-100 outline-none" /></div></label>
+            <label className="block"><span className="block text-slate-300 font-bold mb-1.5">الموعد النهائي</span><div className="relative"><CalendarDays className="w-4 h-4 absolute start-3 top-3.5 text-slate-400" /><input type="date" min={toLocalDate(new Date())} value={deadline} onChange={e => setDeadline(e.target.value)} className="w-full glass-input rounded-xl py-3 ps-10 pe-3 text-slate-100 outline-none" /></div></label>
           </div>
 
           <label className="block"><span className="block text-slate-300 font-bold mb-1.5">موجز الحاجة التجارية</span><textarea rows={4} value={brief} onChange={e => setBrief(e.target.value)} placeholder="ما نوع المنتج المطلوب؟ ما القيود التشغيلية؟ وما الذي سيجعل المقترح مناسبًا للمنشأة؟" className="w-full glass-input rounded-xl p-3 text-slate-100 outline-none resize-none" /></label>
@@ -93,7 +93,7 @@ export const ChallengePublisher: React.FC<ChallengePublisherProps> = ({ isOpen, 
             <label><span className="block text-slate-400 font-bold mb-1.5">الحجم المتوقع</span><input type="number" min="1" step="50" value={estimatedVolumeUnits} onChange={e => setEstimatedVolumeUnits(Number(e.target.value))} className="w-full glass-input rounded-xl p-2.5 outline-none" /></label>
           </div>
 
-          <div className="rounded-2xl p-4 bg-white/5 border border-white/10 text-[11px] text-slate-400 leading-6">
+          <div className="rounded-2xl p-4 bg-white/5 border border-white/10 text-xs text-slate-400 leading-6">
             المعدات ستُشتق من ملف المنشأة الحالي بدل إدخال قائمة ثابتة داخل التحدي. بعد النشر سيظهر التحدي فقط ضمن سياق هذه المنشأة، وسيُسجل من قام بالنشر في سجل التدقيق.
           </div>
         </div>

@@ -46,7 +46,7 @@ const LaunchWarRoomBody: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => 
   if (!launch) {
     return (
       <section className="glass-panel rounded-3xl border border-white/10 p-8 text-center">
-        <Rocket className="w-8 h-8 text-slate-600 mx-auto" />
+        <Rocket className="w-8 h-8 text-slate-400 mx-auto" />
         <h3 className="font-black mt-3">ما فيه إطلاق حيّ لهذه المنشأة الآن</h3>
         <p className="text-xs text-slate-400 mt-2">تظهر غرفة القيادة فقط عند وجود إطلاق فعلي تابع لنفس المنشأة.</p>
       </section>
@@ -77,7 +77,7 @@ const LaunchWarRoomBody: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => 
 
   return (
     <section className="glass-panel rounded-3xl border border-white/10 p-5 md:p-6 space-y-5 relative overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-rose-400/60 to-transparent" />
+      <div className="absolute top-0 end-0 start-0 h-px bg-gradient-to-r from-transparent via-rose-400/60 to-transparent" />
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-400/20 flex items-center justify-center text-rose-300"><Rocket className="w-6 h-6" /></div>
@@ -93,7 +93,7 @@ const LaunchWarRoomBody: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => 
           { label: 'Sell-through', value: `${metrics.sellThrough}%`, icon: <Gauge className="w-4 h-4 text-gold-300" /> },
           { label: 'نية إعادة الشراء', value: reviews.length ? `${metrics.repeatIntent}%` : '—', icon: <Users className="w-4 h-4 text-fuchsia-300" /> },
           { label: 'الفروع المتاحة', value: `${launch.branches.length}`, icon: <Building2 className="w-4 h-4 text-amber-300" /> }
-        ].map((item, idx) => <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="flex items-center gap-2 text-[11px] text-slate-400">{item.icon}{item.label}</div><div className="mt-2 text-lg font-black font-mono">{item.value}</div></div>)}
+        ].map((item, idx) => <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="flex items-center gap-2 text-xs text-slate-400">{item.icon}{item.label}</div><div className="mt-2 text-lg font-black font-mono">{item.value}</div></div>)}
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
@@ -102,14 +102,14 @@ const LaunchWarRoomBody: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => 
           {branchRows.length ? branchRows.map(branch => (
             <div key={branch.id} className="rounded-xl p-3 bg-slate-950/45 border border-white/10 flex items-center justify-between gap-3">
               <span className="text-xs text-slate-300 font-bold">{branch.name}</span>
-              <span className={`text-[11px] ${branch.hasTrackedData ? 'text-sky-300 font-mono' : 'text-slate-400'}`}>{branch.hasTrackedData ? `${branch.units} وحدة متتبعة` : 'لا يوجد Branch Attribution في الطلبات بعد'}</span>
+              <span className={`text-xs ${branch.hasTrackedData ? 'text-sky-300 font-mono' : 'text-slate-400'}`}>{branch.hasTrackedData ? `${branch.units} وحدة متتبعة` : 'لا يوجد Branch Attribution في الطلبات بعد'}</span>
             </div>
           )) : <div className="text-xs text-slate-400">لم تحدد فروع لهذا الإطلاق.</div>}
         </div>
 
         <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3">
           <div className="font-bold flex items-center gap-2"><Zap className="w-4 h-4 text-gold-300" /> إشارات التشغيل</div>
-          {signals.map((signal, idx) => <div key={idx} className={`rounded-xl p-3 border ${signal.level === 'GOOD' ? 'bg-emerald-500/6 border-emerald-400/15' : 'bg-amber-500/6 border-amber-400/15'}`}><div className="flex items-center gap-2 text-xs font-black">{signal.level === 'GOOD' ? <Activity className="w-4 h-4 text-emerald-300" /> : <AlertTriangle className="w-4 h-4 text-amber-300" />}{signal.title}</div><div className="mt-1 text-[11px] text-slate-400 leading-6">{signal.text}</div></div>)}
+          {signals.map((signal, idx) => <div key={idx} className={`rounded-xl p-3 border ${signal.level === 'GOOD' ? 'bg-emerald-500/6 border-emerald-400/15' : 'bg-amber-500/6 border-amber-400/15'}`}><div className="flex items-center gap-2 text-xs font-black">{signal.level === 'GOOD' ? <Activity className="w-4 h-4 text-emerald-300" /> : <AlertTriangle className="w-4 h-4 text-amber-300" />}{signal.title}</div><div className="mt-1 text-xs text-slate-400 leading-6">{signal.text}</div></div>)}
         </div>
       </div>
 
@@ -120,7 +120,7 @@ const LaunchWarRoomBody: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => 
         </div>
         <div className="grid md:grid-cols-4 gap-3 text-xs">
           {[['Creator-driven', sourceUnits.CREATOR, pct(sourceUnits.CREATOR), 'text-emerald-300'], ['Host-driven', sourceUnits.HOST, pct(sourceUnits.HOST), 'text-sky-300'], ['Majal-driven', sourceUnits.MAJAL, pct(sourceUnits.MAJAL), 'text-gold-300'], ['غير منسوب', sourceUnits.UNKNOWN, null, 'text-slate-400']].map(([label, units, percentage, tone]) => (
-            <div key={label as string} className="rounded-xl p-3 bg-slate-950/45 border border-white/10"><div className="text-slate-400">{label}</div><div className={`text-xl font-black mt-1 ${tone}`}>{percentage === null ? `${units} وحدة` : `${percentage}%`}</div><div className="text-[11px] text-slate-400 mt-1">{percentage === null ? 'يحتاج Tracking source' : `${units} وحدة متتبعة`}</div></div>
+            <div key={label as string} className="rounded-xl p-3 bg-slate-950/45 border border-white/10"><div className="text-slate-400">{label}</div><div className={`text-xl font-black mt-1 ${tone}`}>{percentage === null ? `${units} وحدة` : `${percentage}%`}</div><div className="text-xs text-slate-400 mt-1">{percentage === null ? 'يحتاج Tracking source' : `${units} وحدة متتبعة`}</div></div>
           ))}
         </div>
       </div>

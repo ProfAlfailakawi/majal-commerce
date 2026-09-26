@@ -42,13 +42,13 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
               <MajalMark size={34} />
               <span className="min-w-0">
                 <span className="block text-lg font-black majal-wordmark leading-none">مجال</span>
-                <span className="block text-[11px] font-semibold tracking-[0.42em] text-gold-500/60 leading-none mt-1.5" dir="ltr">MAJAL</span>
+                <span className="block text-xs font-semibold tracking-[0.42em] text-gold-500/60 leading-none mt-1.5" dir="ltr">MAJAL</span>
               </span>
             </div>
             <p className="text-slate-400 text-xs leading-relaxed">
               من الابتكار إلى منتج قابل للإطلاق، عبر رحلة مرئية وصلاحيات واضحة لكل طرف.
             </p>
-            <div className="flex items-center gap-2 text-[11px] text-gold-300 font-medium pt-1">
+            <div className="flex items-center gap-2 text-xs text-gold-300 font-medium pt-1">
               <Shield className="w-4 h-4" />
               <span>منصة كويتية — فكرتك وبياناتك محمية</span>
             </div>
@@ -56,7 +56,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
             <div className="flex flex-wrap gap-2 pt-1">
               <button
                 onClick={onReplayOnboarding}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl glass-card border border-white/10 text-[11px] font-bold text-slate-300 hover:text-gold-300 hover:border-gold-300/25 transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl glass-card border border-white/10 text-xs font-bold text-slate-300 hover:text-gold-300 hover:border-gold-300/25 transition-colors"
               >
                 <PlayCircle className="w-3.5 h-3.5" />
                 <span>أعد جولة التعريف</span>
@@ -65,7 +65,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
                 href="/presentation/majal-deck.html"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl glass-card border border-gold-400/20 text-[11px] font-bold text-gold-300 hover:text-gold-200 hover:border-gold-300/40 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl glass-card border border-gold-400/20 text-xs font-bold text-gold-300 hover:text-gold-200 hover:border-gold-300/40 transition-colors"
               >
                 <FileText className="w-3.5 h-3.5 text-gold-400" />
                 <span>العرض التفاعلي</span>
@@ -74,7 +74,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
                 href="/presentation/majal-deck.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl glass-card border border-white/10 text-[11px] font-bold text-slate-300 hover:text-gold-300 hover:border-gold-300/25 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl glass-card border border-white/10 text-xs font-bold text-slate-300 hover:text-gold-300 hover:border-gold-300/25 transition-colors"
               >
                 <FileText className="w-3.5 h-3.5" />
                 <span>عرض PDF</span>
@@ -106,14 +106,14 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
               <Globe className="w-4 h-4" />
               <span>نطاق العمل — دولة الكويت</span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-normal">
+            <p className="text-xs text-slate-400 leading-normal">
               البيع التجاري والإنتاج يتمان عبر المنشآت المرخّصة، بينما تدير مجال دورة الاكتشاف، المطابقة، الحوكمة، العقود، والتسويات ضمن تجربة موحدة.
             </p>
           </div>
         </div>
 
-        <div className="pt-6 border-t border-slate-800/80 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] text-slate-400">
-          <div className="text-center md:text-right">© {new Date().getFullYear()} منصة مجال — جميع الحقوق محفوظة.</div>
+        <div className="pt-6 border-t border-slate-800/80 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+          <div className="text-center md:text-start">© {new Date().getFullYear()} منصة مجال — جميع الحقوق محفوظة.</div>
           <nav aria-label="روابط قانونية" className="flex gap-x-5 gap-y-2 flex-wrap justify-center">
             {legalLinks.map(link => (
               <a

@@ -92,7 +92,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
       <section className="glass-panel rounded-[34px] p-6 md:p-10 border border-white/10 relative overflow-hidden">
-        <div className="majal-glow -top-80 -left-48 w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
+        <div className="majal-glow -top-80 -end-48 w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
         <div className="relative z-10 grid lg:grid-cols-[1.05fr_.95fr] gap-8 items-center">
           <div className="space-y-5">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-400/20 text-rose-300 text-xs font-black"><Flame className="w-4 h-4" /> MAJAL DROPS — إطلاقات تستحق التجربة</div>
@@ -102,12 +102,12 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
             {featuredCreator && (
               <div className="flex items-center gap-3 rounded-2xl p-3 bg-white/5 border border-white/10 w-fit">
                 <Avatar name={featuredCreator.displayName} src={featuredCreator.avatarUrl} size={44} shape="squircle" />
-                <div><div className="text-xs font-black text-slate-100">{featuredCreator.displayName}</div><div className="text-[11px] text-slate-400 mt-1">{featuredCreator.specialty}</div></div>
+                <div><div className="text-xs font-black text-slate-100">{featuredCreator.displayName}</div><div className="text-xs text-slate-400 mt-1">{featuredCreator.specialty}</div></div>
                 <button
                   type="button"
                   aria-pressed={followedCreators.includes(featuredCreator.id)}
                   onClick={() => void toggleFollow(featuredCreator.id)}
-                  className={`ms-3 px-3 py-2 rounded-xl text-[11px] font-black flex items-center gap-1.5 ${followedCreators.includes(featuredCreator.id) ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-400/20' : 'bg-gold-500 text-slate-950'}`}
+                  className={`ms-3 px-3 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 ${followedCreators.includes(featuredCreator.id) ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-400/20' : 'bg-gold-500 text-slate-950'}`}
                 >
                   <Heart className="w-3.5 h-3.5" /> {followedCreators.includes(featuredCreator.id) ? 'تتابعه' : 'تابع المبدع'}
                 </button>
@@ -121,18 +121,18 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
               <div className="relative h-72">
                 <img src={featuredProduct.mediaUrls[0]} alt={featuredProduct.publicName} decoding="async" fetchPriority="high" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
-                <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-slate-950/75 backdrop-blur text-gold-300 border border-gold-300/20 text-xs font-black">{formatKwd(featured.sellingPriceKwd)}</div>
-                <div className="absolute bottom-5 right-5 left-5">
-                  <div className="text-[11px] text-emerald-300 font-black mb-1">{featuredHost?.commercialName}</div>
+                <div className="absolute top-4 start-4 px-3 py-1.5 rounded-full bg-slate-950/75 backdrop-blur text-gold-300 border border-gold-300/20 text-xs font-black">{formatKwd(featured.sellingPriceKwd)}</div>
+                <div className="absolute bottom-5 start-5 end-5">
+                  <div className="text-xs text-emerald-300 font-black mb-1">{featuredHost?.commercialName}</div>
                   <h2 className="text-xl md:text-2xl font-black text-white">{featuredProduct.publicName}</h2>
                 </div>
               </div>
               <div className="p-5 space-y-4">
                 <div className="grid grid-cols-4 gap-2 text-center">
-                  <div className="rounded-xl p-3 bg-white/5"><Star className="w-4 h-4 text-gold-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.rating.toFixed(1)}</div><div className="text-[11px] text-slate-400">الطعم</div></div>
-                  <div className="rounded-xl p-3 bg-white/5"><Repeat2 className="w-4 h-4 text-emerald-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.repeat}%</div><div className="text-[11px] text-slate-400">يكرر</div></div>
-                  <div className="rounded-xl p-3 bg-white/5"><Users className="w-4 h-4 text-sky-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.keep}%</div><div className="text-[11px] text-slate-400">نسبة التكرار</div></div>
-                  <div className="rounded-xl p-3 bg-white/5"><PackageOpen className="w-4 h-4 text-rose-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.remaining ?? '∞'}</div><div className="text-[11px] text-slate-400">{metrics.remaining === null ? 'بلا سقف' : 'متبقي'}</div></div>
+                  <div className="rounded-xl p-3 bg-white/5"><Star className="w-4 h-4 text-gold-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.rating.toFixed(1)}</div><div className="text-xs text-slate-400">الطعم</div></div>
+                  <div className="rounded-xl p-3 bg-white/5"><Repeat2 className="w-4 h-4 text-emerald-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.repeat}%</div><div className="text-xs text-slate-400">يكرر</div></div>
+                  <div className="rounded-xl p-3 bg-white/5"><Users className="w-4 h-4 text-sky-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.keep}%</div><div className="text-xs text-slate-400">نسبة التكرار</div></div>
+                  <div className="rounded-xl p-3 bg-white/5"><PackageOpen className="w-4 h-4 text-rose-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.remaining ?? '∞'}</div><div className="text-xs text-slate-400">{metrics.remaining === null ? 'بلا سقف' : 'متبقي'}</div></div>
                 </div>
                 <div className="flex gap-2">
                   <button type="button" onClick={() => setSelectedLaunch(featured)} className="flex-1 py-3 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center justify-center gap-2"><ShoppingBag className="w-4 h-4" /> اطلب التجربة</button>
@@ -164,13 +164,13 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
                 <div className="relative h-52">
                   <img src={product?.mediaUrls[0]} alt={launch.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
-                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-slate-950/75 border border-white/10 text-[11px] text-gold-300 font-black">{launch.launchType}</div>
-                  <div className="absolute bottom-4 right-4 left-4"><div className="text-[11px] text-emerald-300 font-black">{creator?.displayName} × {host?.commercialName}</div><h3 className="font-black text-white mt-1">{product?.publicName || launch.title}</h3></div>
+                  <div className="absolute top-3 start-3 px-2.5 py-1 rounded-full bg-slate-950/75 border border-white/10 text-xs text-gold-300 font-black">{launch.launchType}</div>
+                  <div className="absolute bottom-4 start-4 end-4"><div className="text-xs text-emerald-300 font-black">{creator?.displayName} × {host?.commercialName}</div><h3 className="font-black text-white mt-1">{product?.publicName || launch.title}</h3></div>
                 </div>
                 <div className="p-5 space-y-4">
                   <p className="text-xs text-slate-400 leading-6 line-clamp-2">{product?.shortDescription}</p>
-                  <div><div className="flex justify-between text-[11px] text-slate-400 mb-1"><span>{launch.unitsSold} مبيعة</span><span>{capped ? `${progress}%` : 'مستمر'}</span></div><div className="h-2 bg-white/5 rounded-full overflow-hidden">{capped ? <div className="h-full bg-gradient-to-l from-gold-500 to-emerald-400 rounded-full" style={{ width: `${progress}%` }} /> : <div className="h-full w-full bg-gradient-to-l from-emerald-500/30 to-emerald-400/30 rounded-full" />}</div></div>
-                  <div className="flex items-center justify-between"><div><div className="text-[11px] text-slate-400">السعر</div><div className="font-black text-gold-300">{formatKwd(launch.sellingPriceKwd)}</div></div><button type="button" onClick={() => setSelectedLaunch(launch)} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black text-slate-100">شاهد واطلب</button></div>
+                  <div><div className="flex justify-between text-xs text-slate-400 mb-1"><span>{launch.unitsSold} مبيعة</span><span>{capped ? `${progress}%` : 'مستمر'}</span></div><div className="h-2 bg-white/5 rounded-full overflow-hidden">{capped ? <div className="h-full bg-gradient-to-l from-gold-500 to-emerald-400 rounded-full" style={{ width: `${progress}%` }} /> : <div className="h-full w-full bg-gradient-to-l from-emerald-500/30 to-emerald-400/30 rounded-full" />}</div></div>
+                  <div className="flex items-center justify-between"><div><div className="text-xs text-slate-400">السعر</div><div className="font-black text-gold-300">{formatKwd(launch.sellingPriceKwd)}</div></div><button type="button" onClick={() => setSelectedLaunch(launch)} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black text-slate-100">شاهد واطلب</button></div>
                 </div>
               </article>
             );
@@ -193,7 +193,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
           <div ref={orderDialogRef} role="dialog" aria-modal="true" aria-labelledby="consumer-order-title" className="glass-panel w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[28px] p-6 border border-white/15 shadow-2xl space-y-5 relative">
             <button type="button" aria-label="إغلاق نافذة الطلب" onClick={closeOrderModal} className="absolute top-4 end-4 p-2 rounded-full bg-white/5 text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
-            <div><span className="text-[11px] text-gold-300 font-black">MAJAL DROP</span><h3 id="consumer-order-title" className="text-xl font-black mt-1">{selectedLaunch.title}</h3></div>
+            <div><span className="text-xs text-gold-300 font-black">MAJAL DROP</span><h3 id="consumer-order-title" className="text-xl font-black mt-1">{selectedLaunch.title}</h3></div>
 
             <DropCheckout launch={selectedLaunch} acquisitionSource={acquisitionSource} />
           </div>

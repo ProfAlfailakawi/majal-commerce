@@ -330,7 +330,7 @@ export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => voi
                       <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
                       <div>
                         <p className="font-bold">تم تسجيل تحقق PACI على الخادم؛ تثبيت التوقيع على العقد يتم من شاشة العقد نفسها.</p>
-                        <p className="text-[11px] text-emerald-400/80 font-mono mt-0.5">PACI_STATUS: VERIFIED</p>
+                        <p className="text-xs text-emerald-400/80 font-mono mt-0.5">PACI_STATUS: VERIFIED</p>
                       </div>
                     </div>
                   )}

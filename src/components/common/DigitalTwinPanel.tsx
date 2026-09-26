@@ -83,7 +83,7 @@ export const DigitalTwinPanel: React.FC<DigitalTwinPanelProps> = ({ product, hos
     <section className="glass-panel rounded-3xl border border-white/10 overflow-hidden">
       <button
         onClick={() => setExpanded(v => !v)}
-        className="w-full flex items-center justify-between p-5 md:p-6 text-right hover:bg-white/[0.03] transition-colors"
+        className="w-full flex items-center justify-between p-5 md:p-6 text-start hover:bg-white/[0.03] transition-colors"
       >
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-gold-500/10 border border-gold-300/20 flex items-center justify-center text-gold-300">
@@ -110,7 +110,7 @@ export const DigitalTwinPanel: React.FC<DigitalTwinPanelProps> = ({ product, hos
               { label: 'مستحقات المبدع', value: canSeeFinancials ? `${twin.creatorRoyalty.toFixed(3)} د.ك` : 'محجوب حسب الدور', icon: <Wallet className="w-4 h-4" /> }
             ].map((item, idx) => (
               <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10">
-                <div className="flex items-center gap-2 text-gold-300">{item.icon}<span className="text-[11px] text-slate-400">{item.label}</span></div>
+                <div className="flex items-center gap-2 text-gold-300">{item.icon}<span className="text-xs text-slate-400">{item.label}</span></div>
                 <div className="mt-2 font-black text-slate-100 text-sm font-mono">{item.value}</div>
               </div>
             ))}
