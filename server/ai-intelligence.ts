@@ -21,8 +21,9 @@ import {
   GroundedResult,
   INTELLIGENCE_SYSTEM_INSTRUCTION,
   generateStructured,
-  groundedSearch
-} from '../src/lib/gemini';
+  groundedSearch,
+  geminiModel,
+} from './gemini';
 
 export interface AiAuditEvent {
   action: 'SEMANTIC_MATCH' | 'OPPORTUNITY_RADAR' | 'DEAL_ROOM' | 'LAUNCH_READOUT';
@@ -86,7 +87,7 @@ export function filterGroundedLines(lines: string[], allowedText: string): { kep
   return { kept, blocked };
 }
 
-const activeModel = () => process.env.GEMINI_MODEL || 'gemini-3.6-flash';
+const activeModel = geminiModel;
 
 export const defaultAiDeps: AiIntelligenceDeps = {
   generateStructured,

@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import dotenv from 'dotenv';
 import { rateLimit as expressRateLimit } from 'express-rate-limit';
-import { generateProductCopyPolish, explainHostMatch } from './src/lib/gemini';
+import { generateProductCopyPolish, explainHostMatch } from './server/gemini';
 import { dealRoomCopilot, enrichSemanticMatch, groundOpportunityRadar, launchMarketReadout, defaultAiDeps, type AiAuditEvent } from './server/ai-intelligence';
 import { AuthenticatedRequest, createAuthConfig, createAuthRouter, purgeExpiredSessions, requireAuth, requireCsrf } from './server/auth';
 import { createCatalogRouter } from './server/catalog';
@@ -252,10 +252,7 @@ async function initializeApplication(app: express.Express) {
     app.all('/api/v1/pos/{*rest}', (_req, res) => jsonError(res, 503, 'تكامل POS غير مربوط، والمحاكي مقفول في هذه البيئة.', 'POS_NOT_CONFIGURED'));
   }
 
-  const presentationPath = path.join(process.cwd(), 'presentation');
-  if (fs.existsSync(presentationPath)) {
-    app.use('/presentation', express.static(presentationPath));
-  }
+  // The deck lives in public/presentation and ships inside dist (served by Vite in dev).
 
   // Unknown API paths answer JSON 404 in every mode instead of falling through to the SPA shell.
   app.all('/api/{*rest}', (_req, res) => jsonError(res, 404, 'المسار غير موجود.', 'NOT_FOUND'));
