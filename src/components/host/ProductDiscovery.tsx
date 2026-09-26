@@ -61,13 +61,13 @@ export const ProductDiscovery: React.FC = () => {
         {/* Filters & Search */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute right-3 top-3" />
+            <Search className="w-4 h-4 text-slate-400 absolute start-3 top-3" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="البحث باسم المنتج، المكونات، أو المبدع..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl pr-9 pl-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl ps-9 pe-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
             />
           </div>
 
@@ -75,7 +75,7 @@ export const ProductDiscovery: React.FC = () => {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
             >
               <option value="ALL">جميع الفئات</option>
               {PRODUCT_CATEGORIES.map(item => (
@@ -132,7 +132,7 @@ export const ProductDiscovery: React.FC = () => {
 
                   {/* Match Score Badge */}
                   <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 text-center shrink-0">
-                    <span className="text-[11px] text-slate-400 block">نسبة المطابقة</span>
+                    <span className="text-xs text-slate-400 block">نسبة المطابقة</span>
                     <span className="text-lg font-black font-mono">{matchCalc.overallScore}٪</span>
                   </div>
                 </div>
@@ -143,14 +143,14 @@ export const ProductDiscovery: React.FC = () => {
                 <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 space-y-2 text-xs">
                   <div className="flex items-center justify-between text-slate-300 font-bold">
                     <span>تحليل التوافق التشغيلي المفسَّر:</span>
-                    <span className="text-amber-400 text-[11px]">معدات + هامش + شريحة</span>
+                    <span className="text-amber-400 text-xs">معدات + هامش + شريحة</span>
                   </div>
 
-                  <p className="text-slate-400 text-[11px] leading-relaxed">
+                  <p className="text-slate-400 text-xs leading-relaxed">
                     {matchCalc.explanationAr}
                   </p>
 
-                  <div className="grid grid-cols-3 gap-2 text-center text-[11px] pt-1">
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs pt-1">
                     <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
                       <span className="text-slate-400 block">توافق المعدات</span>
                       <span className="font-bold text-slate-200">{matchCalc.equipmentFit}٪</span>

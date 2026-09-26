@@ -110,7 +110,7 @@ test('an order is priced from the accepted offer, never from the client', async 
     const buyer = await register(h.baseUrl, 'buyer1@commerce.test', 'Buyer');
     // The client attempts to dictate a price of 1 fils per unit.
     const response = await post(h.baseUrl, '/api/v1/orders', buyer,
-      { launchId: 'lch_c', units: 2, unitPriceFils: 1, totalFils: 2 }, orderKey('a'));
+      { launchId: 'lch_c', contactPhone: '+96550000000', units: 2, unitPriceFils: 1, totalFils: 2 }, orderKey('a'));
     assert.equal(response.status, 201);
     const body = await response.json() as { order: { unitPriceFils: number; totalFils: number; status: string }; checkoutUrl: string };
     assert.equal(body.order.unitPriceFils, 10000);
@@ -127,7 +127,7 @@ test('with no payment provider wired the order is refused and nothing is written
   try {
     await seedCatalog(h.db);
     const buyer = await register(h.baseUrl, 'buyer2@commerce.test', 'Buyer');
-    const response = await post(h.baseUrl, '/api/v1/orders', buyer, { launchId: 'lch_c', units: 1 }, orderKey('b'));
+    const response = await post(h.baseUrl, '/api/v1/orders', buyer, { launchId: 'lch_c', contactPhone: '+96550000000', units: 1 }, orderKey('b'));
     assert.equal(response.status, 503);
     assert.equal((await response.json() as { code: string }).code, 'PAYMENT_NOT_CONFIGURED');
     const count = await h.db.prepare('SELECT COUNT(*) AS c FROM orders').get<{ c: number }>();
@@ -142,12 +142,12 @@ test('the launch quantity cap is enforced against rows actually written', async 
   try {
     await seedCatalog(h.db, 5);
     const buyer = await register(h.baseUrl, 'buyer3@commerce.test', 'Buyer');
-    assert.equal((await post(h.baseUrl, '/api/v1/orders', buyer, { launchId: 'lch_c', units: 4 }, orderKey('c1'))).status, 201);
-    const overflow = await post(h.baseUrl, '/api/v1/orders', buyer, { launchId: 'lch_c', units: 2 }, orderKey('c2'));
+    assert.equal((await post(h.baseUrl, '/api/v1/orders', buyer, { launchId: 'lch_c', contactPhone: '+96550000000', units: 4 }, orderKey('c1'))).status, 201);
+    const overflow = await post(h.baseUrl, '/api/v1/orders', buyer, { launchId: 'lch_c', contactPhone: '+96550000000', units: 2 }, orderKey('c2'));
     assert.equal(overflow.status, 409);
     assert.equal((await overflow.json() as { code: string }).code, 'QUANTITY_CAP_EXCEEDED');
     // The remaining single unit still sells.
-    assert.equal((await post(h.baseUrl, '/api/v1/orders', buyer, { launchId: 'lch_c', units: 1 }, orderKey('c3'))).status, 201);
+    assert.equal((await post(h.baseUrl, '/api/v1/orders', buyer, { launchId: 'lch_c', contactPhone: '+96550000000', units: 1 }, orderKey('c3'))).status, 201);
   } finally {
     await h.close();
   }
@@ -158,8 +158,8 @@ test('replaying an idempotency key returns the same order instead of charging tw
   try {
     await seedCatalog(h.db, null);
     const buyer = await register(h.baseUrl, 'buyer4@commerce.test', 'Buyer');
-    const first = await post(h.baseUrl, '/api/v1/orders', buyer, { launchId: 'lch_c', units: 2 }, orderKey('d'));
-    const second = await post(h.baseUrl, '/api/v1/orders', buyer, { launchId: 'lch_c', units: 2 }, orderKey('d'));
+    const first = await post(h.baseUrl, '/api/v1/orders', buyer, { launchId: 'lch_c', contactPhone: '+96550000000', units: 2 }, orderKey('d'));
+    const second = await post(h.baseUrl, '/api/v1/orders', buyer, { launchId: 'lch_c', contactPhone: '+96550000000', units: 2 }, orderKey('d'));
     assert.equal(first.status, 201);
     assert.equal(second.status, 200);
     const firstBody = await first.json() as { order: { id: string } };
@@ -179,7 +179,7 @@ test('a launch that is not live cannot be ordered', async () => {
     await seedCatalog(h.db);
     await h.db.prepare("UPDATE launches SET status='PAUSED' WHERE id='lch_c'").run();
     const buyer = await register(h.baseUrl, 'buyer5@commerce.test', 'Buyer');
-    const response = await post(h.baseUrl, '/api/v1/orders', buyer, { launchId: 'lch_c', units: 1 }, orderKey('e'));
+    const response = await post(h.baseUrl, '/api/v1/orders', buyer, { launchId: 'lch_c', contactPhone: '+96550000000', units: 1 }, orderKey('e'));
     assert.equal(response.status, 409);
     assert.equal((await response.json() as { code: string }).code, 'LAUNCH_NOT_ORDERABLE');
   } finally {
@@ -193,7 +193,7 @@ test('a review requires a paid order that belongs to the reviewer, and only one 
     await seedCatalog(h.db, null);
     const buyer = await register(h.baseUrl, 'buyer6@commerce.test', 'Buyer');
     const stranger = await register(h.baseUrl, 'stranger@commerce.test', 'Stranger');
-    const created = await post(h.baseUrl, '/api/v1/orders', buyer, { launchId: 'lch_c', units: 1 }, orderKey('f'));
+    const created = await post(h.baseUrl, '/api/v1/orders', buyer, { launchId: 'lch_c', contactPhone: '+96550000000', units: 1 }, orderKey('f'));
     const orderId = (await created.json() as { order: { id: string } }).order.id;
     const rating = { tasteRating: 5, valueRating: 4, portionRating: 4, keepItVote: true, comment: 'ممتاز' };
 
@@ -302,7 +302,7 @@ test('pausing a product actually stops its live launches from selling', async ()
     assert.equal((await response.json() as { pausedLaunches: number }).pausedLaunches, 1);
 
     // The real test: the storefront stops accepting money for it.
-    const blocked = await post(h.baseUrl, '/api/v1/orders', buyer, { launchId: 'lch_c', units: 1 }, orderKey('g'));
+    const blocked = await post(h.baseUrl, '/api/v1/orders', buyer, { launchId: 'lch_c', contactPhone: '+96550000000', units: 1 }, orderKey('g'));
     assert.equal(blocked.status, 409);
     assert.equal((await blocked.json() as { code: string }).code, 'LAUNCH_NOT_ORDERABLE');
 

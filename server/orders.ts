@@ -4,6 +4,7 @@ import { AuthConfig, AuthenticatedRequest, requireAuth, requireCsrf } from './au
 import { MajalDatabase, withTransaction } from './database';
 import { appendLedgerEntry } from './ledger';
 import { PaymentRegistry } from './payments';
+import { PAYMENT_HOLD_MINUTES, normalizeKuwaitPhone, organizationBranches, parseSlots, parseZones, releaseOrderReservation, reserveBranchStock } from './checkout';
 
 /*
  * دورة الشراء: طلب → نية دفع → (webhook) مدفوع → استحقاق المبدع → تسوية.
@@ -41,6 +42,8 @@ type OrderRow = {
   id: string; launch_id: string; consumer_user_id: string; payment_intent_id: string | null;
   units: number | string; unit_price_fils: number | string; total_fils: number | string;
   status: string; created_at: string; updated_at: string;
+  branch_id?: string | null; fulfillment_type?: string | null; delivery_zone_id?: string | null; pickup_slot_id?: string | null;
+  delivery_fee_fils?: number | string | null; hold_expires_at?: string | null;
 };
 
 async function audit(
@@ -72,6 +75,12 @@ function publicOrder(row: OrderRow) {
     totalFils: Number(row.total_fils),
     status: row.status,
     paymentIntentId: row.payment_intent_id,
+    branchId: row.branch_id ?? null,
+    fulfillmentType: row.fulfillment_type ?? 'PICKUP',
+    deliveryZoneId: row.delivery_zone_id ?? null,
+    pickupSlotId: row.pickup_slot_id ?? null,
+    deliveryFeeFils: Number(row.delivery_fee_fils ?? 0),
+    holdExpiresAt: row.hold_expires_at ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -98,6 +107,12 @@ export function createOrdersRouter(db: MajalDatabase, authConfig: AuthConfig, pa
     if (!launchId) return jsonError(res, 400, 'معرّف الإطلاق غير صالح.', 'INVALID_LAUNCH');
     if (!units) return jsonError(res, 400, `عدد الوحدات يجب أن يكون بين 1 و${MAX_ORDER_UNITS}.`, 'INVALID_UNITS');
     if (!idempotencyKey) return jsonError(res, 400, 'Idempotency-Key مطلوب لإنشاء الطلب.', 'IDEMPOTENCY_KEY_REQUIRED');
+    const contactPhone = normalizeKuwaitPhone(req.body?.contactPhone);
+    if (!contactPhone) return jsonError(res, 400, 'رقم الهاتف يجب أن يكون رقمًا كويتيًا من 8 أرقام (+965).', 'INVALID_PHONE');
+    const fulfillmentType = req.body?.fulfillmentType === 'DELIVERY' ? 'DELIVERY' : req.body?.fulfillmentType === undefined || req.body?.fulfillmentType === 'PICKUP' ? 'PICKUP' : undefined;
+    if (!fulfillmentType) return jsonError(res, 400, 'طريقة الاستلام غير صالحة.', 'INVALID_FULFILLMENT');
+    const requestedBranchId = req.body?.branchId === undefined || req.body?.branchId === null ? undefined : text(req.body.branchId, 1, 120);
+    if (req.body?.branchId !== undefined && req.body?.branchId !== null && !requestedBranchId) return jsonError(res, 400, 'الفرع غير صالح.', 'INVALID_BRANCH');
 
     // إعادة إرسال نفس المفتاح تُعيد نفس الطلب بدل إنشاء طلب ثانٍ وسحب المبلغ مرتين.
     const replay = await db.prepare(
@@ -107,7 +122,7 @@ export function createOrdersRouter(db: MajalDatabase, authConfig: AuthConfig, pa
       if (replay.consumer_user_id !== auth.user.id) return jsonError(res, 409, 'مفتاح منع التكرار مستخدم لطلب آخر.', 'IDEMPOTENCY_CONFLICT');
       const intent = await db.prepare('SELECT status, checkout_url FROM payment_intents WHERE id = ?')
         .get<{ status: string; checkout_url: string | null }>(replay.payment_intent_id!);
-      return res.json({ order: publicOrder(replay), paymentStatus: intent?.status ?? null, checkoutUrl: intent?.checkout_url ?? null, replayed: true });
+      return res.json({ order: publicOrder(replay), paymentStatus: intent?.status ?? null, checkoutUrl: intent?.checkout_url ?? null, holdExpiresAt: replay.hold_expires_at ?? null, replayed: true });
     }
 
     const launch = await db.prepare('SELECT * FROM launches WHERE id = ? LIMIT 1').get<LaunchRow>(launchId);
@@ -126,7 +141,32 @@ export function createOrdersRouter(db: MajalDatabase, authConfig: AuthConfig, pa
     if (!Number.isSafeInteger(unitPriceFils) || unitPriceFils <= 0) {
       return jsonError(res, 409, 'سعر البيع المعتمد غير صالح.', 'INVALID_PRICE');
     }
-    const totalFils = unitPriceFils * units;
+    /*
+     * Branch + fulfilment are validated against the host's own records. When the host has
+     * branches, one must be chosen and it must be active; delivery requires a configured
+     * zone (its fee is server-priced) and a pickup slot, when chosen, must exist.
+     */
+    const branches = (await organizationBranches(db, launch.organization_id)).filter(b => b.isActive !== false);
+    const branchId = requestedBranchId ?? (branches.length === 1 ? branches[0].id : undefined);
+    if (branches.length && (!branchId || !branches.some(b => b.id === branchId))) {
+      return jsonError(res, 400, 'اختر فرعًا فعّالًا من فروع المنشأة.', 'INVALID_BRANCH');
+    }
+    if (!branches.length && requestedBranchId) return jsonError(res, 400, 'هذه المنشأة لا تعرض فروعًا للطلب.', 'INVALID_BRANCH');
+    const logistics = branchId
+      ? await db.prepare('SELECT delivery_zones_json, pickup_slots_json FROM branch_logistics WHERE organization_id = ? AND branch_id = ?')
+        .get<{ delivery_zones_json: string; pickup_slots_json: string }>(launch.organization_id, branchId)
+      : undefined;
+    let deliveryFeeFils = 0, deliveryZoneId: string | null = null, pickupSlotId: string | null = null;
+    if (fulfillmentType === 'DELIVERY') {
+      const zone = parseZones(logistics?.delivery_zones_json).find(z => z.id === req.body?.deliveryZoneId);
+      if (!zone) return jsonError(res, 400, 'منطقة التوصيل غير متاحة لهذا الفرع.', 'INVALID_DELIVERY_ZONE');
+      deliveryFeeFils = zone.feeFils; deliveryZoneId = zone.id;
+    } else if (req.body?.pickupSlotId !== undefined && req.body?.pickupSlotId !== null) {
+      const slot = parseSlots(logistics?.pickup_slots_json).find(z => z.id === req.body?.pickupSlotId);
+      if (!slot) return jsonError(res, 400, 'موعد الاستلام غير متاح لهذا الفرع.', 'INVALID_PICKUP_SLOT');
+      pickupSlotId = slot.id;
+    }
+    const totalFils = unitPriceFils * units + deliveryFeeFils;
 
     // بوابة الدفع غير مربوطة: نرفض **قبل** كتابة أي صف، فلا تتراكم طلبات لا يمكن دفعها.
     if (!payments.active.configured) {
@@ -136,8 +176,22 @@ export function createOrdersRouter(db: MajalDatabase, authConfig: AuthConfig, pa
     const orderId = `ord_${randomUUID()}`;
     const intentId = `pay_${randomUUID()}`;
 
+    const holdExpiresAt = new Date(Date.parse(currentTime) + PAYMENT_HOLD_MINUTES * 60_000).toISOString();
     try {
       await withTransaction(db, async tx => {
+        // Per-branch stock reservation (DB-level, atomic). Auto cutoff: a full or manually
+        // cut-off branch refuses the order before any row is written.
+        if (branchId) {
+          const reserved = await reserveBranchStock(tx, launch.id, branchId, units, currentTime);
+          if (reserved === 'SOLD_OUT') throw Object.assign(new Error('BRANCH_SOLD_OUT'), { status: 409 });
+          if (reserved === 'CUTOFF') throw Object.assign(new Error('BRANCH_CUTOFF'), { status: 409 });
+        }
+        if (pickupSlotId) {
+          const slot = parseSlots(logistics?.pickup_slots_json).find(z => z.id === pickupSlotId)!;
+          const taken = await tx.prepare(`SELECT COUNT(*) AS c FROM orders WHERE launch_id = ? AND branch_id = ? AND pickup_slot_id = ? AND status IN ('PENDING_PAYMENT','PAID','FULFILLED')`)
+            .get<{ c: number | string }>(launch.id, branchId, pickupSlotId);
+          if (Number(taken?.c ?? 0) >= slot.capacityOrders) throw Object.assign(new Error('PICKUP_SLOT_FULL'), { status: 409 });
+        }
         /*
          * سقف الكمية يُتحقَّق منه داخل المعاملة وباستخدام الصفوف المكتوبة فعلًا، لا من عدّاد
          * محفوظ — عدّاد منفصل ينحرف عن الواقع عند أي إلغاء أو استرجاع.
@@ -160,22 +214,29 @@ export function createOrdersRouter(db: MajalDatabase, authConfig: AuthConfig, pa
         ).run(intentId, orderId, auth.user.id, payments.active.provider, totalFils, idempotencyKey, currentTime, currentTime);
 
         await tx.prepare(
-          `INSERT INTO orders(id, launch_id, consumer_user_id, payment_intent_id, units, unit_price_fils, total_fils, status, created_at, updated_at)
-           VALUES(?, ?, ?, ?, ?, ?, ?, 'PENDING_PAYMENT', ?, ?)`
-        ).run(orderId, launch.id, auth.user.id, intentId, units, unitPriceFils, totalFils, currentTime, currentTime);
+          `INSERT INTO orders(id, launch_id, consumer_user_id, payment_intent_id, units, unit_price_fils, total_fils, status, created_at, updated_at,
+             branch_id, fulfillment_type, delivery_zone_id, pickup_slot_id, delivery_fee_fils, contact_phone, hold_expires_at)
+           VALUES(?, ?, ?, ?, ?, ?, ?, 'PENDING_PAYMENT', ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ).run(orderId, launch.id, auth.user.id, intentId, units, unitPriceFils, totalFils, currentTime, currentTime,
+          branchId ?? null, fulfillmentType, deliveryZoneId, pickupSlotId, deliveryFeeFils, contactPhone, holdExpiresAt);
 
         await appendLedgerEntry(tx, {
           scope: 'ORDER', entryType: 'ORDER_CREATED', entityType: 'ORDER', entityId: orderId,
           amountFils: totalFils, currency: 'KWD',
-          meta: { launchId: launch.id, units, unitPriceFils, consumerUserId: auth.user.id }
+          meta: { launchId: launch.id, units, unitPriceFils, deliveryFeeFils, branchId: branchId ?? null, consumerUserId: auth.user.id }
         });
       });
     } catch (error) {
       const status = Number((error as { status?: number })?.status) || 409;
-      const code = (error as { message?: string })?.message === 'QUANTITY_CAP_EXCEEDED' ? 'QUANTITY_CAP_EXCEEDED' : 'ORDER_CREATE_FAILED';
-      const message = code === 'QUANTITY_CAP_EXCEEDED'
-        ? 'الكمية المطلوبة تتجاوز المتاح في هذا الإصدار.'
-        : 'تعذّر إنشاء الطلب.';
+      const messages: Record<string, string> = {
+        QUANTITY_CAP_EXCEEDED: 'الكمية المطلوبة تتجاوز المتاح في هذا الإصدار.',
+        BRANCH_SOLD_OUT: 'نفدت الكمية المتاحة في هذا الفرع — تم إيقاف الطلبات تلقائيًا عند بلوغ طاقة التحضير.',
+        BRANCH_CUTOFF: 'أوقف الفرع استقبال الطلبات لهذا الإطلاق مؤقتًا.',
+        PICKUP_SLOT_FULL: 'موعد الاستلام هذا ممتلئ. اختر موعدًا آخر.'
+      };
+      const raw = String((error as { message?: string })?.message || '');
+      const code = messages[raw] ? raw : 'ORDER_CREATE_FAILED';
+      const message = messages[code] || 'تعذّر إنشاء الطلب.';
       return jsonError(res, status, message, code);
     }
 
@@ -197,7 +258,8 @@ export function createOrdersRouter(db: MajalDatabase, authConfig: AuthConfig, pa
       return res.status(201).json({
         order: publicOrder(created!),
         paymentStatus: result.status,
-        checkoutUrl: result.checkoutUrl ?? null
+        checkoutUrl: result.checkoutUrl ?? null,
+        holdExpiresAt
       });
     } catch {
       /*
@@ -206,7 +268,7 @@ export function createOrdersRouter(db: MajalDatabase, authConfig: AuthConfig, pa
        */
       const failedAt = now();
       await db.prepare("UPDATE payment_intents SET status = 'FAILED', failure_code = 'PROVIDER_CREATE_FAILED', updated_at = ? WHERE id = ?").run(failedAt, intentId);
-      await db.prepare("UPDATE orders SET status = 'CANCELLED', updated_at = ? WHERE id = ? AND status = 'PENDING_PAYMENT'").run(failedAt, orderId);
+      await withTransaction(db, tx => releaseOrderReservation(tx, orderId, 'CANCELLED', ['PENDING_PAYMENT'], failedAt));
       return jsonError(res, 502, 'تعذّر بدء عملية الدفع لدى المزوّد.', 'PAYMENT_PROVIDER_ERROR');
     }
   });

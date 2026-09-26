@@ -110,12 +110,12 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId, o
             <div key={key} className="rounded-2xl p-5 bg-white/5 border border-white/10 hover:border-gold-300/25 transition-colors space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-[11px] text-slate-400">{product.publicName}</div>
+                  <div className="text-xs text-slate-400">{product.publicName}</div>
                   <h4 className="font-black text-slate-100 mt-1">{host?.commercialName || 'منشأة مرخّصة'}</h4>
                 </div>
                 <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 flex flex-col items-center justify-center">
                   <span className="text-xl font-black text-emerald-300">{matchScore.overallScore}</span>
-                  <span className="text-[11px] text-emerald-400">تطابق</span>
+                  <span className="text-xs text-emerald-400">تطابق</span>
                 </div>
               </div>
 
@@ -125,7 +125,7 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId, o
                 <div className="flex items-center justify-between"><span className="text-slate-400 flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /> توافق العلامة</span><strong className="text-slate-100">{matchScore.brandFit}%</strong></div>
               </div>
 
-              <div className="rounded-xl p-3 bg-slate-950/45 border border-white/10 text-[11px] leading-6 text-slate-400">
+              <div className="rounded-xl p-3 bg-slate-950/45 border border-white/10 text-xs leading-6 text-slate-400">
                 {matchScore.explanationAr}
               </div>
 
@@ -155,20 +155,20 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId, o
       {(signals.length > 0 || signalNote) && (
         <div className="rounded-2xl p-4 bg-emerald-500/5 border border-emerald-400/15 space-y-3">
           <div className="flex items-center gap-2 text-xs font-black text-emerald-300"><Globe className="w-4 h-4" /> إشارات سوق مرتبطة بمصدر (Google Search)</div>
-          {signalNote && <div className="text-[11px] text-slate-400 leading-6">{signalNote}</div>}
+          {signalNote && <div className="text-xs text-slate-400 leading-6">{signalNote}</div>}
           {signals.map((signal, idx) => (
-            <div key={idx} className="rounded-xl p-3 bg-slate-950/45 border border-white/10 text-[11px] leading-6 text-slate-300 space-y-2">
+            <div key={idx} className="rounded-xl p-3 bg-slate-950/45 border border-white/10 text-xs leading-6 text-slate-300 space-y-2">
               <div>{signal.summary}</div>
               {signal.citations.length > 0 && (
                 <div className="flex flex-wrap gap-2 pt-1 border-t border-white/5">
                   {signal.citations.map((cite, ci) => {
                     const href = safeHttpUrl(cite.uri);
                     return href ? (
-                      <a key={ci} href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-emerald-300/90 hover:text-emerald-200 text-[11px]">
+                      <a key={ci} href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-emerald-300/90 hover:text-emerald-200 text-xs">
                         <ExternalLink className="w-3 h-3" /> {cite.title.slice(0, 48)}
                       </a>
                     ) : (
-                      <span key={ci} className="inline-flex items-center gap-1 text-slate-400 text-[11px]">
+                      <span key={ci} className="inline-flex items-center gap-1 text-slate-400 text-xs">
                         <ExternalLink className="w-3 h-3" /> {cite.title.slice(0, 48)}
                       </span>
                     );

@@ -70,9 +70,9 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
   return (
     <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16 ${overture.hold ? 'majal-overture-hold' : ''}`}>
       {overture.mounted && <Overture onReveal={releaseHold} onDone={dismissOverture} />}
-      <div className="glass-panel majal-grain rounded-[32px] p-8 sm:p-12 relative overflow-hidden text-center sm:text-right border border-white/10 elev-3">
-        <div className="majal-glow -top-[18rem] -left-[18rem] w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
-        <div className="majal-glow -bottom-[18rem] -right-[18rem] w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(75,106,163,0.10)' } as React.CSSProperties} />
+      <div className="glass-panel majal-grain rounded-[32px] p-8 sm:p-12 relative overflow-hidden text-center sm:text-start border border-white/10 elev-3">
+        <div className="majal-glow -top-[18rem] -end-[18rem] w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
+        <div className="majal-glow -bottom-[18rem] -start-[18rem] w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(75,106,163,0.10)' } as React.CSSProperties} />
 
         {/*
           The brand monument. The previous version put four flat tiles here, which said
@@ -81,7 +81,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
           logo's own metaphor — a licensed gate holding a protected idea — is the first
           explanation of the model a visitor gets, before a single paragraph.
         */}
-        <aside aria-label="رحلة مجال المختصرة" className="hidden xl:block absolute left-12 top-1/2 -translate-y-1/2">
+        <aside aria-label="رحلة مجال المختصرة" className="hidden xl:block absolute end-12 top-1/2 -translate-y-1/2">
           <div className="relative w-[17rem] h-[17rem] grid place-items-center">
             <span aria-hidden="true" className="absolute inset-0 rounded-full border border-gold-500/12 majal-hero-ring" />
             <span aria-hidden="true" className="absolute inset-[13%] rounded-full border border-gold-500/[0.08] majal-hero-ring" />
@@ -129,7 +129,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
                     <span className={`w-11 h-11 rounded-2xl border grid place-items-center backdrop-blur-sm ${phase.tone}`}>
                       {phase.icon}
                     </span>
-                    <span className="text-[11px] font-black text-slate-300">{phase.label}</span>
+                    <span className="text-xs font-black text-slate-300">{phase.label}</span>
                   </span>
                 </span>
               );
@@ -137,7 +137,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
           </div>
         </aside>
 
-        <div className="relative z-10 max-w-4xl xl:mr-auto xl:ml-[21rem] space-y-6 majal-hero-copy">
+        <div className="relative z-10 max-w-4xl xl:ms-auto xl:me-[21rem] space-y-6 majal-hero-copy">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card border border-gold-300/20 text-gold-300 text-xs font-semibold">
             <LayoutPanelTop className="w-4 h-4" />
             <span>للمبدعين والمطاعم والمخابز والمصانع الغذائية في الكويت</span>

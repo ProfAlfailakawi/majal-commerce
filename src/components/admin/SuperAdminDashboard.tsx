@@ -55,7 +55,7 @@ export const SuperAdminDashboard: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
       <section className="glass-panel rounded-[32px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
-        <div className="majal-glow -top-[19rem] -left-[17rem] w-[44rem] h-[44rem]" style={{ '--glow': 'rgba(232,121,249,0.10)' } as React.CSSProperties} />
+        <div className="majal-glow -top-[19rem] -end-[17rem] w-[44rem] h-[44rem]" style={{ '--glow': 'rgba(232,121,249,0.10)' } as React.CSSProperties} />
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
           <div className="space-y-3 max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-fuchsia-500/10 border border-fuchsia-400/20 text-fuchsia-200 text-xs font-black"><Crown className="w-4 h-4" /> MAJAL SUPER ADMIN</div>
@@ -64,10 +64,10 @@ export const SuperAdminDashboard: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-3 w-full xl:w-auto xl:min-w-[320px]">
-            <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-[11px] text-slate-400">إجمالي المبيعات</div><div className="mt-2 text-2xl font-black text-gold-300 font-mono">{metrics.gmv.toFixed(3)}</div></div>
-            <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-[11px] text-slate-400">رسوم مجال</div><div className="mt-2 text-2xl font-black text-emerald-300 font-mono">{metrics.platform.toFixed(3)}</div></div>
-            <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-[11px] text-slate-400">إطلاقات حيّة</div><div className="mt-2 text-2xl font-black text-sky-300 font-mono">{metrics.live}</div></div>
-            <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-[11px] text-slate-400">عقود موقعة</div><div className="mt-2 text-2xl font-black text-fuchsia-300 font-mono">{metrics.signed}</div></div>
+            <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">إجمالي المبيعات</div><div className="mt-2 text-2xl font-black text-gold-300 font-mono">{metrics.gmv.toFixed(3)}</div></div>
+            <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">رسوم مجال</div><div className="mt-2 text-2xl font-black text-emerald-300 font-mono">{metrics.platform.toFixed(3)}</div></div>
+            <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">إطلاقات حيّة</div><div className="mt-2 text-2xl font-black text-sky-300 font-mono">{metrics.live}</div></div>
+            <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">عقود موقعة</div><div className="mt-2 text-2xl font-black text-fuchsia-300 font-mono">{metrics.signed}</div></div>
           </div>
         </div>
       </section>
@@ -134,9 +134,9 @@ export const SuperAdminDashboard: React.FC = () => {
             {roleRows.map(role => (
               <div key={role} className="rounded-2xl p-4 bg-white/5 border border-white/10">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-                  <div><div className="font-black text-slate-100">{roleLabel(role)}</div><div className="text-[11px] text-slate-400 mt-1">{role}</div></div>
+                  <div><div className="font-black text-slate-100">{roleLabel(role)}</div><div className="text-xs text-slate-400 mt-1">{role}</div></div>
                   <div className="flex flex-wrap gap-2 lg:justify-end">
-                    {getRolePermissions(role).map(permission => <span key={permission} className="px-2.5 py-1 rounded-lg bg-slate-950/50 border border-white/10 text-[11px] text-slate-400">{permission}</span>)}
+                    {getRolePermissions(role).map(permission => <span key={permission} className="px-2.5 py-1 rounded-lg bg-slate-950/50 border border-white/10 text-xs text-slate-400">{permission}</span>)}
                   </div>
                 </div>
               </div>
@@ -150,7 +150,7 @@ export const SuperAdminDashboard: React.FC = () => {
                 <div key={user.id} className="rounded-2xl p-4 bg-slate-950/40 border border-white/10 space-y-3">
                   <div className="flex items-center gap-3">
                     <Avatar name={user.name} src={user.avatar} size={40} shape="squircle" />
-                    <div className="min-w-0"><div className="font-bold text-slate-100 truncate">{user.name}</div><div className="text-[11px] text-slate-400">{user.email}</div></div>
+                    <div className="min-w-0"><div className="font-bold text-slate-100 truncate">{user.name}</div><div className="text-xs text-slate-400">{user.email}</div></div>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <select

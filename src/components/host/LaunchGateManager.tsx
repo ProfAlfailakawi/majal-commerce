@@ -112,9 +112,9 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
 
         <div className="flex items-center gap-3">
           <div className="glass-card px-4 py-3 rounded-2xl border border-white/10 min-w-[130px] text-center">
-            <span className="text-[11px] text-slate-400 block">الجاهزية</span>
+            <span className="text-xs text-slate-400 block">الجاهزية</span>
             <span className="text-base font-black text-gold-300">{completedItems} / {itemsConfig.length}</span>
-            <span className="text-[11px] text-slate-400 block mt-1">{readinessLabel}</span>
+            <span className="text-xs text-slate-400 block mt-1">{readinessLabel}</span>
           </div>
           {!hasLaunch && canOperate && (
             <button onClick={handlePrepare} className="px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-black hover:bg-white/10 flex items-center gap-2">
@@ -140,7 +140,7 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
                 key={item.key}
                 onClick={() => handleToggle(item.key)}
                 disabled={!interactive}
-                className={`p-4 rounded-2xl text-right transition-all flex items-start gap-3 border ${
+                className={`p-4 rounded-2xl text-start transition-all flex items-start gap-3 border ${
                   checked
                     ? 'bg-emerald-500/8 border-emerald-400/20 text-slate-100'
                     : 'bg-white/4 border-white/8 text-slate-400'
@@ -149,18 +149,18 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
                 }`}
               >
                 <div className="mt-0.5">
-                  {checked ? <CheckCircle2 className="w-5 h-5 text-emerald-300" /> : <Circle className="w-5 h-5 text-slate-600" />}
+                  {checked ? <CheckCircle2 className="w-5 h-5 text-emerald-300" /> : <Circle className="w-5 h-5 text-slate-400" />}
                 </div>
                 <div className="space-y-1 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="block font-bold text-xs text-slate-100">{item.label}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-black border ${manual ? 'bg-gold-500/10 border-gold-300/20 text-gold-300' : 'bg-sky-500/10 border-sky-400/20 text-sky-300'}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-black border ${manual ? 'bg-gold-500/10 border-gold-300/20 text-gold-300' : 'bg-sky-500/10 border-sky-400/20 text-sky-300'}`}>
                       {manual ? 'قرار تشغيلي' : 'مشتق آليًا'}
                     </span>
                   </div>
-                  <span className="block text-[11px] text-slate-400 leading-5">{item.desc}</span>
+                  <span className="block text-xs text-slate-400 leading-5">{item.desc}</span>
                 </div>
-                {!interactive && <LockKeyhole className="w-4 h-4 text-slate-600 shrink-0" />}
+                {!interactive && <LockKeyhole className="w-4 h-4 text-slate-400 shrink-0" />}
               </button>
             );
           })}
@@ -179,7 +179,7 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
                 <h4 className="font-black text-sm text-slate-100">{product?.publicName || liveLaunch.title}</h4>
                 {product && <StatusPill status={product.status} />}
               </div>
-              <p className="text-[11px] text-slate-400 leading-5">
+              <p className="text-xs text-slate-400 leading-5">
                 المنتج الآن {liveLaunch.status === 'PERMANENT' ? 'إطلاق دائم' : 'LIVE'} — سعر البيع {liveLaunch.sellingPriceKwd.toFixed(3)} د.ك
                 {liveLaunch.startDate ? ` — منذ ${new Date(liveLaunch.startDate).toLocaleDateString('ar-KW')}` : ''}
               </p>
@@ -207,7 +207,7 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
           className={`px-6 py-3.5 rounded-2xl font-black text-xs transition-all flex items-center gap-2 ${
             isAllReady && canOperate
               ? 'bg-gradient-to-r from-emerald-500 to-emerald-400 text-slate-950 hover:brightness-110 shadow-xl'
-              : 'bg-white/5 text-slate-600 cursor-not-allowed border border-white/10'
+              : 'bg-white/5 text-slate-400 cursor-not-allowed border border-white/10'
           }`}
         >
           {isLaunching ? <MajalLoader size={16} label="جاري تفعيل الإطلاق…" /> : isAllReady ? <BadgeCheck className="w-4 h-4" /> : <Play className="w-4 h-4" />}

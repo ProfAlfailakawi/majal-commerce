@@ -27,6 +27,7 @@ const SHELL_ASSETS = [
   '/index.html',
   '/site.webmanifest',
   '/favicon.svg',
+  '/boot.js',
   '/icon-192.png',
   '/icon-512.png',
   '/icon-512-maskable.png',

@@ -202,11 +202,11 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           competing with the type, and they are the only ambient motion in the flow. */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 overflow-hidden">
         <div
-          className="majal-glow -top-[30rem] right-[8%] w-[54rem] h-[54rem] majal-drift"
+          className="majal-glow -top-[30rem] start-[8%] w-[54rem] h-[54rem] majal-drift"
           style={{ '--glow': 'rgba(199,165,91,0.07)' } as React.CSSProperties}
         />
         <div
-          className="majal-glow -bottom-[34rem] left-[4%] w-[50rem] h-[50rem] majal-drift-slow"
+          className="majal-glow -bottom-[34rem] end-[4%] w-[50rem] h-[50rem] majal-drift-slow"
           style={{ '--glow': 'rgba(75,106,163,0.08)' } as React.CSSProperties}
         />
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff07_1px,transparent_1px)] [background-size:34px_34px]" />
@@ -227,7 +227,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
 
           <button
             onClick={() => onDismiss(intent, true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-bold text-slate-400 hover:text-slate-100 hover:bg-white/5 border border-white/10 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-slate-100 hover:bg-white/5 border border-white/10 transition-colors"
           >
             <span>تخطّي التعريف</span>
             <X className="w-3.5 h-3.5" />
@@ -261,7 +261,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                   tabIndex={-1}
                   data-focus-silent
                   style={rise(2)}
-                  className="text-3xl sm:text-5xl font-black text-slate-100 leading-tight outline-none"
+                  className="text-3xl sm:text-5xl font-black text-slate-100 leading-tight outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
                 >
                   الفكرة ما تحتاج مصنعًا.
                   <br />
@@ -273,7 +273,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                 </p>
               </div>
 
-              <ul style={rise(4)} className="flex flex-wrap items-center justify-center gap-2.5 text-[11px]">
+              <ul style={rise(4)} className="flex flex-wrap items-center justify-center gap-2.5 text-xs">
                 {['سرّك يفتح بإذنك فقط', 'إنتاج عبر منشأة مرخّصة', 'مستحقات تتابعها بنفسك'].map(item => (
                   <li
                     key={item}
@@ -290,7 +290,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           {step === 'INTENT' && (
             <div className="space-y-8">
               <div className="text-center space-y-3">
-                <span style={rise(0)} className="block text-[11px] font-black tracking-[0.3em] text-gold-300">
+                <span style={rise(0)} className="block text-xs font-black tracking-[0.3em] text-gold-300">
                   سؤال واحد فقط
                 </span>
                 <h2
@@ -299,7 +299,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                   tabIndex={-1}
                   data-focus-silent
                   style={rise(1)}
-                  className="text-2xl sm:text-4xl font-black text-slate-100 outline-none"
+                  className="text-2xl sm:text-4xl font-black text-slate-100 outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
                 >
                   ما الذي أتى بك إلى مجال؟
                 </h2>
@@ -318,7 +318,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                       aria-checked={selected}
                       onClick={() => setIntent(item.id)}
                       style={rise(3 + index)}
-                      className={`text-right p-5 rounded-3xl border transition-all duration-200 ${
+                      className={`text-start p-5 rounded-3xl border transition-all duration-200 ${
                         selected
                           ? `${item.accent.fill} ${item.accent.ring} shadow-[0_12px_36px_rgba(199,165,91,0.16)] -translate-y-0.5`
                           : 'glass-card border-white/10 hover:border-white/20 hover:-translate-y-0.5'
@@ -335,7 +335,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                             <span className="block text-sm font-black text-slate-100">{item.title}</span>
                             {selected && <Check className={`w-4 h-4 shrink-0 ${item.accent.text}`} />}
                           </span>
-                          <span className="block mt-2 text-[11px] text-slate-400 leading-6">{item.body}</span>
+                          <span className="block mt-2 text-xs text-slate-400 leading-6">{item.body}</span>
                         </span>
                       </span>
                     </button>
@@ -348,7 +348,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           {step === 'JOURNEY' && (
             <div className="space-y-8">
               <div className="text-center space-y-3">
-                <span style={rise(0)} className="block text-[11px] font-black tracking-[0.3em] text-gold-300">
+                <span style={rise(0)} className="block text-xs font-black tracking-[0.3em] text-gold-300">
                   MAJAL JOURNEY
                 </span>
                 <h2
@@ -357,7 +357,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                   tabIndex={-1}
                   data-focus-silent
                   style={rise(1)}
-                  className="text-2xl sm:text-4xl font-black text-slate-100 outline-none"
+                  className="text-2xl sm:text-4xl font-black text-slate-100 outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
                 >
                   ست محطات، بالترتيب
                 </h2>
@@ -366,18 +366,18 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                 </p>
               </div>
 
-              <ol className="relative space-y-3 pr-7 sm:pr-9 max-w-2xl mx-auto">
+              <ol className="relative space-y-3 ps-7 sm:ps-9 max-w-2xl mx-auto">
                 {/* The rail is the point of this screen — it is what makes the six items
                     read as one sequence instead of six features. Decorative, so hidden. */}
                 <span
                   aria-hidden="true"
-                  className="absolute top-3 bottom-3 right-[0.9rem] sm:right-[1.15rem] w-px bg-gradient-to-b from-gold-500/50 via-sky-400/30 to-emerald-400/40"
+                  className="absolute top-3 bottom-3 start-[0.9rem] sm:start-[1.15rem] w-px bg-gradient-to-b from-gold-500/50 via-sky-400/30 to-emerald-400/40"
                 />
                 {journeyStages.map((stage, index) => (
                   <li key={stage.index} style={rise(3 + index)} className="relative">
                     <span
                       aria-hidden="true"
-                      className={`absolute -right-7 sm:-right-9 top-4 w-[0.55rem] h-[0.55rem] rounded-full ring-4 ring-ink-800 ${stage.accent.dot}`}
+                      className={`absolute -start-7 sm:-start-9 top-4 w-[0.55rem] h-[0.55rem] rounded-full ring-4 ring-ink-800 ${stage.accent.dot}`}
                     />
                     <div
                       className={`glass-card rounded-2xl border ${stage.accent.ring} px-4 py-3.5 flex items-center gap-4`}
@@ -393,9 +393,9 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                             {stage.index}.
                           </span>
                           <span className="text-sm font-black text-slate-100">{stage.title}</span>
-                          <span className="text-[11px] text-slate-400 font-bold">— {stage.actor}</span>
+                          <span className="text-xs text-slate-400 font-bold">— {stage.actor}</span>
                         </span>
-                        <span className="block mt-1 text-[11px] text-slate-400 leading-6">{stage.brief}</span>
+                        <span className="block mt-1 text-xs text-slate-400 leading-6">{stage.brief}</span>
                       </span>
                     </div>
                   </li>
@@ -407,7 +407,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           {step === 'PROTECTION' && (
             <div className="space-y-8">
               <div className="text-center space-y-3">
-                <span style={rise(0)} className="block text-[11px] font-black tracking-[0.3em] text-gold-300">
+                <span style={rise(0)} className="block text-xs font-black tracking-[0.3em] text-gold-300">
                   خزنة الوصفات
                 </span>
                 <h2
@@ -416,7 +416,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                   tabIndex={-1}
                   data-focus-silent
                   style={rise(1)}
-                  className="text-2xl sm:text-4xl font-black text-slate-100 outline-none"
+                  className="text-2xl sm:text-4xl font-black text-slate-100 outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
                 >
                   سرّك ينفتح على درجات، لا مرّة وحدة
                 </h2>
@@ -437,17 +437,17 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                       <span className={`w-11 h-11 rounded-2xl grid place-items-center border ${item.accent.ring} ${item.accent.fill} ${item.accent.text}`}>
                         {item.icon}
                       </span>
-                      <span className="text-[11px] font-black tracking-wider text-slate-400">{item.level}</span>
+                      <span className="text-xs font-black tracking-wider text-slate-400">{item.level}</span>
                     </div>
                     <h3 className="text-sm font-black text-slate-100">{item.title}</h3>
-                    <p className="text-[11px] text-slate-400 leading-6">{item.body}</p>
+                    <p className="text-xs text-slate-400 leading-6">{item.body}</p>
                   </div>
                 ))}
               </div>
 
               <p
                 style={rise(6)}
-                className="flex items-center justify-center gap-2 text-[11px] text-emerald-200/80 text-center"
+                className="flex items-center justify-center gap-2 text-xs text-emerald-200/80 text-center"
               >
                 <ShieldCheck className="w-4 h-4 shrink-0" />
                 <span>المنح زمنية وتنتهي وحدها — الوصول ما يصير دائم بمجرد ما يُمنح مرة.</span>
@@ -468,7 +468,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                   tabIndex={-1}
                   data-focus-silent
                   style={rise(1)}
-                  className="text-2xl sm:text-4xl font-black text-slate-100 outline-none"
+                  className="text-2xl sm:text-4xl font-black text-slate-100 outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
                 >
                   {chosen ? 'جاهز نبدأ' : 'ابدأ من وين ما تحب'}
                 </h2>
@@ -481,15 +481,15 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                 </p>
               </div>
 
-              <div style={rise(3)} className="grid sm:grid-cols-2 gap-3 max-w-2xl mx-auto text-right">
+              <div style={rise(3)} className="grid sm:grid-cols-2 gap-3 max-w-2xl mx-auto text-start">
                 <div className="glass-card rounded-2xl border border-white/10 p-4 flex items-start gap-3">
                   <span className="w-10 h-10 shrink-0 rounded-xl bg-white/5 border border-white/10 grid place-items-center text-gold-300">
                     <Command className="w-4 h-4" />
                   </span>
                   <span>
                     <span className="block text-xs font-black text-slate-100">لوحة الأوامر</span>
-                    <span className="block mt-1 text-[11px] text-slate-400 leading-6">
-                      اضغط <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-[11px] font-bold">⌘K</kbd> في أي
+                    <span className="block mt-1 text-xs text-slate-400 leading-6">
+                      اضغط <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-xs font-bold">⌘K</kbd> في أي
                       وقت للتنقل بين المساحات بالبحث.
                     </span>
                   </span>
@@ -501,7 +501,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                   </span>
                   <span>
                     <span className="block text-xs font-black text-slate-100">شريط الخطوة التالية</span>
-                    <span className="block mt-1 text-[11px] text-slate-400 leading-6">
+                    <span className="block mt-1 text-xs text-slate-400 leading-6">
                       أعلى كل صفحة، يقترح عليك أهم إجراء الآن ويشرح سببه.
                     </span>
                   </span>
@@ -526,7 +526,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           </div>
 
           <div className="flex items-center justify-between gap-3">
-            <span className="text-[11px] text-slate-400 font-bold tabular-nums">
+            <span className="text-xs text-slate-400 font-bold tabular-nums">
               {stepIndex + 1} / {STEPS.length}
             </span>
 

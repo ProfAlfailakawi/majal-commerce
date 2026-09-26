@@ -2,6 +2,7 @@ import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto
 import { Request, Response, Router } from 'express';
 import { AuthConfig, AuthenticatedRequest, requireAuth, requireCsrf } from './auth';
 import { MajalDatabase, withTransaction } from './database';
+import { releaseOrderReservation } from './checkout';
 import { appendLedgerEntry } from './ledger';
 import { isKillSwitchEngaged } from './kill-switch';
 
@@ -446,9 +447,9 @@ export async function applyVerifiedPaymentEvent(db: MajalDatabase, event: Verifi
       // receipt is unique per (provider,eventId), this append happens exactly once per event.
       if (event.status === 'PAID') {
         await appendLedgerEntry(tx, { scope: 'PAYMENT', entryType: 'PAYMENT_CAPTURED', entityType: 'PAYMENT_INTENT', entityId: intent.id, amountFils: intent.amount_fils, currency: 'KWD', occurredAt: now, meta: { provider: event.provider, eventId: event.eventId } });
-        const order = await tx.prepare('SELECT id, launch_id, total_fils FROM orders WHERE payment_intent_id = ? LIMIT 1').get<{ id: string; launch_id: string; total_fils: number | string }>(intent.id);
+        const order = await tx.prepare('SELECT id, launch_id, total_fils, units, unit_price_fils FROM orders WHERE payment_intent_id = ? LIMIT 1').get<{ id: string; launch_id: string; total_fils: number | string; units: number | string; unit_price_fils: number | string }>(intent.id);
         if (order) {
-          await tx.prepare("UPDATE orders SET status = 'PAID', updated_at = ? WHERE id = ?").run(now, order.id);
+          await tx.prepare("UPDATE orders SET status = 'PAID', hold_expires_at = NULL, updated_at = ? WHERE id = ?").run(now, order.id);
           const existingAccrual = await tx.prepare('SELECT id FROM accruals WHERE order_id = ? LIMIT 1').get<{ id: string }>(order.id);
           if (!existingAccrual) {
             const launch = await tx.prepare('SELECT collaboration_id FROM launches WHERE id = ?').get<{ collaboration_id: string }>(order.launch_id);
@@ -457,7 +458,8 @@ export async function applyVerifiedPaymentEvent(db: MajalDatabase, event: Verifi
               const offer = await tx.prepare("SELECT creator_royalty_basis_points FROM offer_versions WHERE collaboration_id = ? AND status = 'ACCEPTED' ORDER BY version_number DESC LIMIT 1").get<{ creator_royalty_basis_points: number | string }>(launch.collaboration_id);
               if (collab && offer) {
                 const royaltyBp = Number(offer.creator_royalty_basis_points);
-                const orderTotal = Number(order.total_fils);
+                // Royalty base is the product sale only; the delivery fee is not creator revenue.
+                const orderTotal = Number(order.units) * Number(order.unit_price_fils);
                 const royaltyFils = Math.round((orderTotal * royaltyBp) / 10_000);
                 const accrualId = `acc_${randomUUID()}`;
                 await tx.prepare(`
@@ -476,9 +478,13 @@ export async function applyVerifiedPaymentEvent(db: MajalDatabase, event: Verifi
         // until the orders/accruals pipeline is populated.)
         const order = await tx.prepare('SELECT id FROM orders WHERE payment_intent_id = ? LIMIT 1').get(intent.id) as { id: string } | undefined;
         if (order) {
-          await tx.prepare("UPDATE orders SET status = 'REFUNDED', updated_at = ? WHERE id = ?").run(now, order.id);
+          await releaseOrderReservation(tx, order.id, 'REFUNDED', ['PAID', 'FULFILLED', 'PENDING_PAYMENT'], now);
           await tx.prepare("UPDATE accruals SET status = 'REVERSED', updated_at = ? WHERE order_id = ? AND status IN ('PENDING','ELIGIBLE','LOCKED')").run(now, order.id);
         }
+      } else if (event.status === 'FAILED' || event.status === 'CANCELLED') {
+        // A failed/cancelled payment ends the pending hold at once and returns the stock.
+        const order = await tx.prepare('SELECT id FROM orders WHERE payment_intent_id = ? LIMIT 1').get<{ id: string }>(intent.id);
+        if (order) await releaseOrderReservation(tx, order.id, 'CANCELLED', ['PENDING_PAYMENT'], now);
       }
     }
     await tx.prepare(`

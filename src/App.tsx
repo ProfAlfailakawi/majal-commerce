@@ -153,7 +153,7 @@ export default function App() {
   return (
     <AppErrorBoundary>
     <div dir="rtl" className="min-h-screen text-slate-100 font-sans selection:bg-gold-500 selection:text-slate-950 flex flex-col justify-between relative overflow-x-clip">
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:right-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-gold-500 focus:text-slate-950 focus:font-black">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-gold-500 focus:text-slate-950 focus:font-black">
         انتقل إلى المحتوى الرئيسي
       </a>
       {/* The ambient field is drawn entirely by .ambient-bg's own background gradients —
@@ -178,7 +178,7 @@ export default function App() {
 
         <ExperienceGuide activeSurface={activeSurface} onSurfaceChange={handleSurfaceChange} />
 
-        <main id="main-content" tabIndex={-1} className="animate-in fade-in duration-300 flex-1 pb-10 outline-none">
+        <main id="main-content" tabIndex={-1} className="animate-in fade-in duration-300 flex-1 pb-10 outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
           <Suspense fallback={<SurfaceFallback />}>
             {legalDocument ? <LegalCenter initialDocument={legalDocument} onBack={closeLegal} /> : <>
               {activeSurface === 'PUBLIC' && <PublicLanding onSurfaceChange={handleSurfaceChange} />}
@@ -193,7 +193,7 @@ export default function App() {
         </main>
       </div>
 
-      {AI_ASSISTANT_ENABLED && <div className="fixed bottom-6 left-6 z-40">
+      {AI_ASSISTANT_ENABLED && <div className="fixed bottom-6 end-6 z-40">
         <button
           onClick={() => setShowAiDrawer(true)}
           className="px-4 py-3 bg-gradient-to-l from-gold-500 to-gold-300 hover:from-gold-400 hover:to-gold-200 text-slate-950 font-black rounded-full shadow-2xl transition-[filter] hover:brightness-110 flex items-center gap-2 text-xs border border-gold-200/30"

@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { Response, Router } from 'express';
 import { AuthConfig, AuthRole, AuthenticatedRequest, requireAuth, requireCsrf, requireRoles } from './auth';
 import { MajalDatabase, withTransaction } from './database';
+import { syncRoleClaim } from './firebase-mirror';
 
 /*
  * إجراءات الإشراف الإدارية.
@@ -80,6 +81,7 @@ export function createModerationRouter(db: MajalDatabase, authConfig: AuthConfig
       await tx.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId);
     });
     await recordModeration(db, req, 'USER', userId, 'ROLE_CHANGED', target.role, role, reason);
+    void syncRoleClaim(userId, role, target.status);
     res.json({ user: { id: target.id, role, status: target.status }, changed: true, sessionsRevoked: true });
   });
 
@@ -105,6 +107,7 @@ export function createModerationRouter(db: MajalDatabase, authConfig: AuthConfig
       if (status !== 'ACTIVE') await tx.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId);
     });
     await recordModeration(db, req, 'USER', userId, 'USER_STATUS_CHANGED', target.status, status, reason);
+    void syncRoleClaim(userId, target.role, status);
     res.json({ user: { id: target.id, role: target.role, status }, changed: true, sessionsRevoked: status !== 'ACTIVE' });
   });
 

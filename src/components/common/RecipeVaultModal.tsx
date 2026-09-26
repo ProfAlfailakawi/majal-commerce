@@ -125,7 +125,7 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
                 <h3 id="recipe-vault-title" className="font-black text-lg text-slate-100">
                   خزنة الوصفة السرية Recipe Vault
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
                   مستوى الإفصاح الفعلي: {effectiveDisclosureLevel}
                 </span>
               </div>
@@ -197,7 +197,7 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
                 </p>
               </div>
 
-              <div className="p-4 bg-slate-900 rounded-xl text-right max-w-lg mx-auto space-y-2 border border-slate-800">
+              <div className="p-4 bg-slate-900 rounded-xl text-start max-w-lg mx-auto space-y-2 border border-slate-800">
                 <p className="font-bold text-amber-400">المكونات العامة الظاهرة:</p>
                 <div className="flex flex-wrap gap-1.5">
                   {product.generalIngredients.map((ing, i) => (
@@ -216,7 +216,7 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
               <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between text-amber-300">
                 <div>
                   <span className="font-bold text-sm block">نسخة الوصفة التشغيلية الحالية — {currentRecipe?.versionNumber}</span>
-                  <span className="text-[11px] text-amber-400/80">تاريخ الإنشاء: {new Date(currentRecipe?.createdAt || '').toLocaleDateString('ar-KW')} | الكمية المعيارية للدفعة: {currentRecipe?.batchSize}</span>
+                  <span className="text-xs text-amber-400/80">تاريخ الإنشاء: {new Date(currentRecipe?.createdAt || '').toLocaleDateString('ar-KW')} | الكمية المعيارية للدفعة: {currentRecipe?.batchSize}</span>
                 </div>
                 <Award className="w-8 h-8 text-amber-400 opacity-80" />
               </div>
@@ -229,7 +229,7 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
                 </h4>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full text-right">
+                  <table className="w-full text-start">
                     <thead>
                       <tr className="border-b border-slate-800 text-slate-400">
                         <th className="py-2 px-3 font-semibold">المكون</th>
@@ -248,11 +248,11 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
                           <td className="py-2 px-3 text-amber-400 font-mono">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? 'محجوب' : `${ing.estimatedCostKwd.toFixed(3)} د.ك`}</td>
                           <td className="py-2 px-3">
                             {ing.isSecretPart ? (
-                              <span className="px-2 py-0.5 rounded text-[11px] bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                              <span className="px-2 py-0.5 rounded text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30">
                                 عنصر سري
                               </span>
                             ) : (
-                              <span className="text-slate-400 text-[11px]">قياسي</span>
+                              <span className="text-slate-400 text-xs">قياسي</span>
                             )}
                           </td>
                         </tr>
@@ -269,7 +269,7 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
                     <AlertTriangle className="w-4 h-4 text-amber-400" />
                     <span>السر التجاري المعياري (الخاصية السحرية)</span>
                   </div>
-                  <p className="text-slate-200 text-xs leading-relaxed pl-2 font-medium">
+                  <p className="text-slate-200 text-xs leading-relaxed pe-2 font-medium">
                     {currentRecipe.criticalSecrets}
                   </p>
                 </div>

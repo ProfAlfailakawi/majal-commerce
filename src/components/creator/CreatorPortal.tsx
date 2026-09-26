@@ -88,13 +88,13 @@ export const CreatorPortal: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
       <section className="glass-panel rounded-[30px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
-        <div className="majal-glow -top-[19rem] -left-[17rem] w-[42rem] h-[42rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
+        <div className="majal-glow -top-[19rem] -end-[17rem] w-[42rem] h-[42rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <Avatar name={profile.displayName} src={profile.avatarUrl} size={80} shape="squircle" className="shadow-xl" />
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-400/20 text-[11px] font-black">CREATOR SPACE</span>
+                <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-400/20 text-xs font-black">CREATOR SPACE</span>
                 <span className="text-xs text-slate-400">{profile.specialty}</span>
               </div>
               <h1 className="text-2xl md:text-3xl font-black mt-2">أهلًا {profile.displayName}، هذا مجال نموّك</h1>
@@ -131,16 +131,16 @@ export const CreatorPortal: React.FC = () => {
                 <div className="p-5 space-y-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className="text-[11px] text-slate-400">{product.category}</div>
+                      <div className="text-xs text-slate-400">{product.category}</div>
                       <h3 className="text-lg font-black text-slate-100 mt-1">{product.publicName}</h3>
                     </div>
                     <StatusPill status={product.status} />
                   </div>
                   <p className="text-xs text-slate-400 leading-6">{product.shortDescription}</p>
                   <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-[11px] text-slate-400">التكلفة</div><div className="text-xs font-black mt-1">{product.estimatedUnitCostKwd.toFixed(3)}</div></div>
-                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-[11px] text-slate-400">السعر</div><div className="text-xs font-black mt-1">{product.targetSellingPriceKwd.toFixed(3)}</div></div>
-                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-[11px] text-slate-400">الوصفة</div><div className="text-xs font-black mt-1 text-gold-300">{product.currentRecipeVersion}</div></div>
+                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">التكلفة</div><div className="text-xs font-black mt-1">{product.estimatedUnitCostKwd.toFixed(3)}</div></div>
+                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">السعر</div><div className="text-xs font-black mt-1">{product.targetSellingPriceKwd.toFixed(3)}</div></div>
+                    <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">الوصفة</div><div className="text-xs font-black mt-1 text-gold-300">{product.currentRecipeVersion}</div></div>
                   </div>
                   <button onClick={() => setSelectedProductForVault(product)} className="w-full py-3 rounded-xl bg-slate-950/50 border border-white/10 text-xs font-black text-gold-300 flex items-center justify-center gap-2"><Lock className="w-4 h-4" /> فتح خزنة الوصفة</button>
                 </div>

@@ -34,13 +34,13 @@ export const AdminAuditLogs: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="بحث بالوصف أو المعرف..."
-            className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500"
+            className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
           />
         </div>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-right">
+        <table className="w-full text-start">
           <thead>
             <tr className="border-b border-slate-800 text-slate-400">
               <th className="py-2.5 px-3 font-semibold">التاريخ والوقت</th>
@@ -55,13 +55,13 @@ export const AdminAuditLogs: React.FC = () => {
               <tr key={log.id} className="hover:bg-slate-800/40 transition-colors">
                 <td className="py-2.5 px-3 text-slate-400">{new Date(log.timestamp).toLocaleString('ar-KW')}</td>
                 <td className="py-2.5 px-3">
-                  <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                     {log.action}
                   </span>
                 </td>
                 <td className="py-2.5 px-3 text-slate-300 font-bold">{log.entityType}</td>
                 <td className="py-2.5 px-3 text-slate-200 font-sans">{log.details}</td>
-                <td className="py-2.5 px-3 text-slate-400 text-[11px]">{log.ipAddress}</td>
+                <td className="py-2.5 px-3 text-slate-400 text-xs">{log.ipAddress}</td>
               </tr>
             ))}
           </tbody>

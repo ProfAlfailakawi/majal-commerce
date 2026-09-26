@@ -178,7 +178,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                     placeholder="مثال: قرص عقيلي فاخر بالزعفران"
                     maxLength={80}
                     required
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
                   />
                 </div>
 
@@ -188,7 +188,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                     aria-label="فئة المنتج"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
                   >
                     {PRODUCT_CATEGORIES.map(item => (
                       <option key={item.id} value={item.id}>{item.label}</option>
@@ -207,7 +207,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                   placeholder="وصف مشوق يوضح ما يجعل هذا المنتج استثنائياً..."
                   maxLength={240}
                   required
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 resize-none"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 resize-none focus-visible:ring-2 focus-visible:ring-gold-300"
                 />
               </div>
 
@@ -221,7 +221,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                   placeholder="كيف بدأت شغفك بهذه الوصفة وما سر تميزها التراثي أو العصري..."
                   maxLength={800}
                   required
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 resize-none"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 resize-none focus-visible:ring-2 focus-visible:ring-gold-300"
                 />
               </div>
             </div>
@@ -241,7 +241,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                   placeholder="مثال: دقيق، بيض، هيل طازج، زعفران، كريمة"
                   maxLength={400}
                   required
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
                 />
               </div>
 
@@ -255,7 +255,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                   placeholder="مثال: بيض، حليب، سمسم، جلوتين"
                   maxLength={300}
                   required
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
                 />
               </div>
 
@@ -309,7 +309,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                   placeholder="الخطوة ١: خفق الصفار مع الزعفران والنقع&#10;الخطوة ٢: الخبز بفرن حراري..."
                   maxLength={2000}
                   required
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 font-mono resize-none"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 font-mono resize-none focus-visible:ring-2 focus-visible:ring-gold-300"
                 />
               </div>
 
@@ -322,7 +322,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                   onChange={(e) => setCriticalSecrets(e.target.value)}
                   placeholder="إضافة زهرة معينة، توقيع حراري خاص..."
                   maxLength={1000}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-amber-300 focus:outline-none focus:border-amber-500 resize-none font-medium"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-amber-300 focus:outline-none focus:border-amber-500 resize-none font-medium focus-visible:ring-2 focus-visible:ring-gold-300"
                 />
               </div>
             </div>

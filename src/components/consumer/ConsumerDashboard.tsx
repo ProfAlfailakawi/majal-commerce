@@ -19,6 +19,10 @@ import { store } from '../../lib/store';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { Avatar } from '../common/Avatar';
 import { KuwaitiJobs } from '../jobs/KuwaitiJobs';
+import { DropCheckout } from './DropCheckout';
+import { formatKwd } from '../../lib/money';
+import { commerceClient } from '../../lib/commerceClient';
+import { IS_DEMO_MODE } from '../../lib/runtime';
 
 interface ConsumerDashboardProps {
   onSurfaceChange: (surface: SurfaceType) => void;
@@ -30,19 +34,30 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
 
   const launches = store.launches.filter(l => l.status === 'LIVE' || l.status === 'PERMANENT');
   const [selectedLaunch, setSelectedLaunch] = useState<Launch | null>(null);
-  const [unitsCount, setUnitsCount] = useState(1);
-  const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [orderSuccessMsg, setOrderSuccessMsg] = useState('');
-  const [orderErrorMsg, setOrderErrorMsg] = useState('');
   const [followedCreators, setFollowedCreators] = useState<string[]>([]);
+  const [followMessage, setFollowMessage] = useState('');
   const [voteMessage, setVoteMessage] = useState('');
-  const [selectedBranchId, setSelectedBranchId] = useState('');
-  const closeOrderModal = () => {
-    setSelectedLaunch(null);
-    setOrderSuccessMsg('');
-    setOrderErrorMsg('');
-    setSelectedBranchId('');
+  const closeOrderModal = () => setSelectedLaunch(null);
+
+  // Follows are stored server-side so launch alerts reach the follower's inbox.
+  useEffect(() => {
+    if (IS_DEMO_MODE) return;
+    commerceClient.follows().then(r => setFollowedCreators(r.follows.map(f => f.creatorId))).catch(() => undefined);
+  }, []);
+  const toggleFollow = async (creatorId: string) => {
+    const following = followedCreators.includes(creatorId);
+    if (IS_DEMO_MODE) {
+      setFollowedCreators(prev => following ? prev.filter(id => id !== creatorId) : [...prev, creatorId]);
+      return;
+    }
+    try {
+      if (following) await commerceClient.unfollow(creatorId); else await commerceClient.follow(creatorId);
+      setFollowedCreators(prev => following ? prev.filter(id => id !== creatorId) : [...prev, creatorId]);
+      setFollowMessage(following ? 'ألغيت متابعة المبدع.' : 'تابعت المبدع — بنبلغك أول ما ينزل إطلاق جديد.');
+    } catch {
+      setFollowMessage('سجّل دخولك لمتابعة المبدع واستلام تنبيهات الإطلاقات.');
+    }
+    window.setTimeout(() => setFollowMessage(''), 3200);
   };
   const orderDialogRef = useDialogBehavior<HTMLDivElement>(Boolean(selectedLaunch), closeOrderModal);
   const acquisitionSource = (() => {
@@ -67,23 +82,9 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
     return { keep, repeat, rating, remaining };
   }, [featured, store.reviews.length]);
 
-  const handleOrder = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedLaunch) return;
-    const branchId = selectedBranchId || selectedLaunch.branches[0];
-    const order = store.placeOrder(selectedLaunch.id, unitsCount, customerName, customerPhone, acquisitionSource, branchId);
-    if (!order) {
-      setOrderSuccessMsg('');
-      setOrderErrorMsg(store.lastGuardMessage || 'تعذر تسجيل الطلب. تحقق من حالة الإطلاق والكمية والبيانات ثم حاول مرة أخرى.');
-      return;
-    }
-    setOrderErrorMsg('');
-    setOrderSuccessMsg(`تم إنشاء حجز تجريبي معلّق للدفع — ${unitsCount} × ${selectedLaunch.title} — رقم ${order.id}`);
-  };
-
   const handleKeepVote = () => {
     if (!featured) return;
-    const review = store.submitReview(featured.id, 5, 4, 5, 'أبي هذا المنتج يستمر في المنيو.', true, customerName || 'عميل مجال');
+    const review = store.submitReview(featured.id, 5, 4, 5, 'أبي هذا المنتج يستمر في المنيو.', true, 'عميل مجال');
     setVoteMessage(review ? 'وصل صوتك. صار لك أثر مباشر في قرار استمرار المنتج.' : (store.lastGuardMessage || 'تم تسجيل صوت بهذا الاسم لهذا الإطلاق مسبقًا.'));
     setTimeout(() => setVoteMessage(''), 3200);
   };
@@ -91,7 +92,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
       <section className="glass-panel rounded-[34px] p-6 md:p-10 border border-white/10 relative overflow-hidden">
-        <div className="majal-glow -top-80 -left-48 w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
+        <div className="majal-glow -top-80 -end-48 w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
         <div className="relative z-10 grid lg:grid-cols-[1.05fr_.95fr] gap-8 items-center">
           <div className="space-y-5">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-400/20 text-rose-300 text-xs font-black"><Flame className="w-4 h-4" /> MAJAL DROPS — إطلاقات تستحق التجربة</div>
@@ -101,15 +102,18 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
             {featuredCreator && (
               <div className="flex items-center gap-3 rounded-2xl p-3 bg-white/5 border border-white/10 w-fit">
                 <Avatar name={featuredCreator.displayName} src={featuredCreator.avatarUrl} size={44} shape="squircle" />
-                <div><div className="text-xs font-black text-slate-100">{featuredCreator.displayName}</div><div className="text-[11px] text-slate-400 mt-1">{featuredCreator.specialty}</div></div>
+                <div><div className="text-xs font-black text-slate-100">{featuredCreator.displayName}</div><div className="text-xs text-slate-400 mt-1">{featuredCreator.specialty}</div></div>
                 <button
-                  onClick={() => setFollowedCreators(prev => prev.includes(featuredCreator.id) ? prev.filter(id => id !== featuredCreator.id) : [...prev, featuredCreator.id])}
-                  className={`mr-3 px-3 py-2 rounded-xl text-[11px] font-black flex items-center gap-1.5 ${followedCreators.includes(featuredCreator.id) ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-400/20' : 'bg-gold-500 text-slate-950'}`}
+                  type="button"
+                  aria-pressed={followedCreators.includes(featuredCreator.id)}
+                  onClick={() => void toggleFollow(featuredCreator.id)}
+                  className={`ms-3 px-3 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 ${followedCreators.includes(featuredCreator.id) ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-400/20' : 'bg-gold-500 text-slate-950'}`}
                 >
                   <Heart className="w-3.5 h-3.5" /> {followedCreators.includes(featuredCreator.id) ? 'تتابعه' : 'تابع المبدع'}
                 </button>
               </div>
             )}
+            {followMessage && <div role="status" className="text-xs text-emerald-300 font-bold">{followMessage}</div>}
           </div>
 
           {featured && featuredProduct && (
@@ -117,22 +121,22 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
               <div className="relative h-72">
                 <img src={featuredProduct.mediaUrls[0]} alt={featuredProduct.publicName} decoding="async" fetchPriority="high" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
-                <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-slate-950/75 backdrop-blur text-gold-300 border border-gold-300/20 text-xs font-black">{featured.sellingPriceKwd.toFixed(3)} د.ك</div>
-                <div className="absolute bottom-5 right-5 left-5">
-                  <div className="text-[11px] text-emerald-300 font-black mb-1">{featuredHost?.commercialName}</div>
+                <div className="absolute top-4 start-4 px-3 py-1.5 rounded-full bg-slate-950/75 backdrop-blur text-gold-300 border border-gold-300/20 text-xs font-black">{formatKwd(featured.sellingPriceKwd)}</div>
+                <div className="absolute bottom-5 start-5 end-5">
+                  <div className="text-xs text-emerald-300 font-black mb-1">{featuredHost?.commercialName}</div>
                   <h2 className="text-xl md:text-2xl font-black text-white">{featuredProduct.publicName}</h2>
                 </div>
               </div>
               <div className="p-5 space-y-4">
                 <div className="grid grid-cols-4 gap-2 text-center">
-                  <div className="rounded-xl p-3 bg-white/5"><Star className="w-4 h-4 text-gold-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.rating.toFixed(1)}</div><div className="text-[11px] text-slate-400">الطعم</div></div>
-                  <div className="rounded-xl p-3 bg-white/5"><Repeat2 className="w-4 h-4 text-emerald-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.repeat}%</div><div className="text-[11px] text-slate-400">يكرر</div></div>
-                  <div className="rounded-xl p-3 bg-white/5"><Users className="w-4 h-4 text-sky-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.keep}%</div><div className="text-[11px] text-slate-400">نسبة التكرار</div></div>
-                  <div className="rounded-xl p-3 bg-white/5"><PackageOpen className="w-4 h-4 text-rose-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.remaining ?? '∞'}</div><div className="text-[11px] text-slate-400">{metrics.remaining === null ? 'بلا سقف' : 'متبقي'}</div></div>
+                  <div className="rounded-xl p-3 bg-white/5"><Star className="w-4 h-4 text-gold-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.rating.toFixed(1)}</div><div className="text-xs text-slate-400">الطعم</div></div>
+                  <div className="rounded-xl p-3 bg-white/5"><Repeat2 className="w-4 h-4 text-emerald-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.repeat}%</div><div className="text-xs text-slate-400">يكرر</div></div>
+                  <div className="rounded-xl p-3 bg-white/5"><Users className="w-4 h-4 text-sky-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.keep}%</div><div className="text-xs text-slate-400">نسبة التكرار</div></div>
+                  <div className="rounded-xl p-3 bg-white/5"><PackageOpen className="w-4 h-4 text-rose-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.remaining ?? '∞'}</div><div className="text-xs text-slate-400">{metrics.remaining === null ? 'بلا سقف' : 'متبقي'}</div></div>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => { setSelectedLaunch(featured); setSelectedBranchId(featured.branches[0] || ''); }} className="flex-1 py-3 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center justify-center gap-2"><ShoppingBag className="w-4 h-4" /> اطلب التجربة</button>
-                  <button onClick={handleKeepVote} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black text-emerald-300 flex items-center gap-2"><Heart className="w-4 h-4" /> خلوه</button>
+                  <button type="button" onClick={() => setSelectedLaunch(featured)} className="flex-1 py-3 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center justify-center gap-2"><ShoppingBag className="w-4 h-4" /> اطلب التجربة</button>
+                  <button type="button" onClick={handleKeepVote} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black text-emerald-300 flex items-center gap-2"><Heart className="w-4 h-4" /> خلوه</button>
                 </div>
                 {voteMessage && <div className="rounded-xl p-3 bg-emerald-500/10 border border-emerald-400/20 text-xs text-emerald-300 font-bold">{voteMessage}</div>}
               </div>
@@ -160,13 +164,13 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
                 <div className="relative h-52">
                   <img src={product?.mediaUrls[0]} alt={launch.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
-                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-slate-950/75 border border-white/10 text-[11px] text-gold-300 font-black">{launch.launchType}</div>
-                  <div className="absolute bottom-4 right-4 left-4"><div className="text-[11px] text-emerald-300 font-black">{creator?.displayName} × {host?.commercialName}</div><h3 className="font-black text-white mt-1">{product?.publicName || launch.title}</h3></div>
+                  <div className="absolute top-3 start-3 px-2.5 py-1 rounded-full bg-slate-950/75 border border-white/10 text-xs text-gold-300 font-black">{launch.launchType}</div>
+                  <div className="absolute bottom-4 start-4 end-4"><div className="text-xs text-emerald-300 font-black">{creator?.displayName} × {host?.commercialName}</div><h3 className="font-black text-white mt-1">{product?.publicName || launch.title}</h3></div>
                 </div>
                 <div className="p-5 space-y-4">
                   <p className="text-xs text-slate-400 leading-6 line-clamp-2">{product?.shortDescription}</p>
-                  <div><div className="flex justify-between text-[11px] text-slate-400 mb-1"><span>{launch.unitsSold} مبيعة</span><span>{capped ? `${progress}%` : 'مستمر'}</span></div><div className="h-2 bg-white/5 rounded-full overflow-hidden">{capped ? <div className="h-full bg-gradient-to-l from-gold-500 to-emerald-400 rounded-full" style={{ width: `${progress}%` }} /> : <div className="h-full w-full bg-gradient-to-l from-emerald-500/30 to-emerald-400/30 rounded-full" />}</div></div>
-                  <div className="flex items-center justify-between"><div><div className="text-[11px] text-slate-400">السعر</div><div className="font-black text-gold-300">{launch.sellingPriceKwd.toFixed(3)} د.ك</div></div><button onClick={() => { setSelectedLaunch(launch); setSelectedBranchId(launch.branches[0] || ''); }} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black text-slate-100">شاهد واطلب</button></div>
+                  <div><div className="flex justify-between text-xs text-slate-400 mb-1"><span>{launch.unitsSold} مبيعة</span><span>{capped ? `${progress}%` : 'مستمر'}</span></div><div className="h-2 bg-white/5 rounded-full overflow-hidden">{capped ? <div className="h-full bg-gradient-to-l from-gold-500 to-emerald-400 rounded-full" style={{ width: `${progress}%` }} /> : <div className="h-full w-full bg-gradient-to-l from-emerald-500/30 to-emerald-400/30 rounded-full" />}</div></div>
+                  <div className="flex items-center justify-between"><div><div className="text-xs text-slate-400">السعر</div><div className="font-black text-gold-300">{formatKwd(launch.sellingPriceKwd)}</div></div><button type="button" onClick={() => setSelectedLaunch(launch)} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black text-slate-100">شاهد واطلب</button></div>
                 </div>
               </article>
             );
@@ -187,34 +191,11 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
 
       {selectedLaunch && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
-          <div ref={orderDialogRef} role="dialog" aria-modal="true" aria-labelledby="consumer-order-title" className="glass-panel w-full max-w-lg rounded-[28px] p-6 border border-white/15 shadow-2xl space-y-5 relative">
-            <button aria-label="إغلاق نافذة الطلب" onClick={closeOrderModal} className="absolute top-4 left-4 p-2 rounded-full bg-white/5 text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
-            <div><span className="text-[11px] text-gold-300 font-black">MAJAL DROP</span><h3 id="consumer-order-title" className="text-xl font-black mt-1">{selectedLaunch.title}</h3></div>
+          <div ref={orderDialogRef} role="dialog" aria-modal="true" aria-labelledby="consumer-order-title" className="glass-panel w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[28px] p-6 border border-white/15 shadow-2xl space-y-5 relative">
+            <button type="button" aria-label="إغلاق نافذة الطلب" onClick={closeOrderModal} className="absolute top-4 end-4 p-2 rounded-full bg-white/5 text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
+            <div><span className="text-xs text-gold-300 font-black">MAJAL DROP</span><h3 id="consumer-order-title" className="text-xl font-black mt-1">{selectedLaunch.title}</h3></div>
 
-            {orderSuccessMsg ? (
-              <div role="status" className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 text-center space-y-3"><CheckCircle2 className="w-10 h-10 text-emerald-300 mx-auto" /><div className="font-black text-emerald-300">{orderSuccessMsg}</div><p className="text-xs text-slate-400">لم تُخصم أي أموال، ولم تُحتسب مبيعات أو مستحقات.</p></div>
-            ) : (
-              <form onSubmit={handleOrder} className="space-y-4">
-                {orderErrorMsg && <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-400/20 text-xs text-rose-300 font-bold leading-6">{orderErrorMsg}</div>}
-                <label className="block"><span className="text-xs text-slate-400 block mb-1.5">الاسم</span><input value={customerName} onChange={e => setCustomerName(e.target.value)} maxLength={80} className="w-full glass-input rounded-xl px-4 py-3 text-xs outline-none" required /></label>
-                <label className="block"><span className="text-xs text-slate-400 block mb-1.5">رقم الهاتف</span><input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} inputMode="tel" maxLength={16} className="w-full glass-input rounded-xl px-4 py-3 text-xs outline-none" required /></label>
-                {selectedLaunch.branches.length > 0 && (
-                  <label className="block">
-                    <span className="text-xs text-slate-400 block mb-1.5">الفرع المرتبط بالطلب التجريبي</span>
-                    <select value={selectedBranchId} onChange={e => setSelectedBranchId(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-xs outline-none">
-                      {selectedLaunch.branches.map(branchId => {
-                        const host = store.hosts.find(h => h.id === selectedLaunch.hostBusinessId);
-                        const branch = host?.branches.find(b => b.id === branchId);
-                        return <option key={branchId} value={branchId}>{branch?.name || branchId}</option>;
-                      })}
-                    </select>
-                  </label>
-                )}
-                <div className="flex items-center justify-between rounded-xl p-3 bg-white/5 border border-white/10"><span className="text-xs text-slate-400">الكمية</span><div className="flex items-center gap-3"><button type="button" aria-label="تقليل الكمية" onClick={() => setUnitsCount(Math.max(1, unitsCount - 1))} className="w-8 h-8 rounded-lg bg-white/5">−</button><strong>{unitsCount}</strong><button type="button" aria-label="زيادة الكمية" onClick={() => setUnitsCount(Math.min(store.policy.maxOrderUnits, selectedLaunch.quantityCapUnits ? Math.max(1, selectedLaunch.quantityCapUnits - selectedLaunch.unitsSold) : store.policy.maxOrderUnits, unitsCount + 1))} className="w-8 h-8 rounded-lg bg-white/5">+</button></div></div>
-                <div className="rounded-xl p-4 bg-slate-950/40 border border-white/10 flex justify-between"><span className="text-xs text-slate-400">الإجمالي</span><strong className="text-gold-300">{(selectedLaunch.sellingPriceKwd * unitsCount).toFixed(3)} د.ك</strong></div>
-                <button type="submit" className="w-full py-3.5 rounded-xl bg-gold-500 text-slate-950 font-black text-sm flex items-center justify-center gap-2"><ShoppingBag className="w-4 h-4" /> إنشاء حجز معلّق للدفع</button>
-              </form>
-            )}
+            <DropCheckout launch={selectedLaunch} acquisitionSource={acquisitionSource} />
           </div>
         </div>
       )}

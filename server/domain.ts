@@ -1,3 +1,4 @@
+import { notifyCreatorFollowers } from './commerce-ops';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { Response, Router } from 'express';
 import { AuthConfig, AuthenticatedRequest, requireAuth, requireCsrf, requireRoles } from './auth';
@@ -781,7 +782,7 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
   });
 
   router.post('/collaborations/:id/launch/activate', async (req: AuthenticatedRequest,res)=>{
-    try{const col=await collaboration(db,req.params.id);if(!col||!isHost(req,col.organization_id))return jsonError(res,403,'لا تملك صلاحية التفعيل.','FORBIDDEN');const gate=await launchGate(db,col);if(!gate.allRequirementsPassed)return res.status(409).json({error:'بوابة الإطلاق غير مكتملة.',code:'LAUNCH_GATE_INCOMPLETE',gate});const start=now();const updated=await db.prepare("UPDATE launches SET status='LIVE',starts_at=?,updated_at=? WHERE collaboration_id=? AND status<>'LIVE'").run(start,start,col.id);if(!updated.changes)return jsonError(res,409,'الإطلاق غير مجهز أو مفعل مسبقًا.','LAUNCH_STATE_CONFLICT');await db.prepare("UPDATE collaborations SET stage='LIVE_TRIAL',version=version+1,updated_at=? WHERE id=?").run(start,col.id);await audit(db,req,'LAUNCH_ACTIVATED','COLLABORATION',col.id,undefined,{startsAt:start},col.organization_id);res.json({collaborationId:col.id,status:'LIVE',startsAt:start,gate});}catch(e){handleDomainError(res,e)}
+    try{const col=await collaboration(db,req.params.id);if(!col||!isHost(req,col.organization_id))return jsonError(res,403,'لا تملك صلاحية التفعيل.','FORBIDDEN');const gate=await launchGate(db,col);if(!gate.allRequirementsPassed)return res.status(409).json({error:'بوابة الإطلاق غير مكتملة.',code:'LAUNCH_GATE_INCOMPLETE',gate});const start=now();const updated=await db.prepare("UPDATE launches SET status='LIVE',starts_at=?,updated_at=? WHERE collaboration_id=? AND status<>'LIVE'").run(start,start,col.id);if(!updated.changes)return jsonError(res,409,'الإطلاق غير مجهز أو مفعل مسبقًا.','LAUNCH_STATE_CONFLICT');await db.prepare("UPDATE collaborations SET stage='LIVE_TRIAL',version=version+1,updated_at=? WHERE id=?").run(start,col.id);await audit(db,req,'LAUNCH_ACTIVATED','COLLABORATION',col.id,undefined,{startsAt:start},col.organization_id);const activated=await db.prepare('SELECT id FROM launches WHERE collaboration_id=?').get<{id:string}>(col.id);if(activated)void notifyCreatorFollowers(db,activated.id).catch(()=>undefined);res.json({collaborationId:col.id,status:'LIVE',startsAt:start,gate});}catch(e){handleDomainError(res,e)}
   });
 
   router.post('/settlements/:creatorId/approve', requireRoles('ADMIN','SUPER_ADMIN'), async (req: AuthenticatedRequest,res)=>{

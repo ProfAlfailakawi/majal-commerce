@@ -153,14 +153,14 @@ export const HostPortal: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
       <section className="glass-panel rounded-[30px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
-        <div className="majal-glow -top-[18rem] -right-[17rem] w-[42rem] h-[42rem]" style={{ '--glow': 'rgba(56,189,248,0.08)' } as React.CSSProperties} />
+        <div className="majal-glow -top-[18rem] -start-[17rem] w-[42rem] h-[42rem]" style={{ '--glow': 'rgba(56,189,248,0.08)' } as React.CSSProperties} />
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <Avatar name={host.commercialName} src={host.logoUrl} size={80} shape="squircle" className="ring-2 ring-sky-400/25 shadow-xl" />
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className={`px-2.5 py-1 rounded-full border text-[11px] font-black ${host.verificationStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'}`}>{host.verificationStatus === 'VERIFIED' ? 'LICENSED HOST' : 'بانتظار التحقق من المنشأة'}</span>
-                <span className="px-2.5 py-1 rounded-full bg-gold-500/10 text-gold-300 border border-gold-300/20 text-[11px] font-black">{roleLabel(store.activeUser.role)}</span>
+                <span className={`px-2.5 py-1 rounded-full border text-xs font-black ${host.verificationStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'}`}>{host.verificationStatus === 'VERIFIED' ? 'LICENSED HOST' : 'بانتظار التحقق من المنشأة'}</span>
+                <span className="px-2.5 py-1 rounded-full bg-gold-500/10 text-gold-300 border border-gold-300/20 text-xs font-black">{roleLabel(store.activeUser.role)}</span>
               </div>
               <h1 className="text-2xl md:text-3xl font-black mt-2">{host.commercialName}</h1>
               <p className="text-sm text-slate-400 mt-2 max-w-2xl leading-7">Innovation OS للمنشأة: اكتشاف مواهب، اختبار منتج، تفاوض، إطلاق، تشغيل وقياس — بصلاحيات مختلفة لكل عضو فريق.</p>
@@ -184,7 +184,7 @@ export const HostPortal: React.FC = () => {
               { label: canSeeFinance ? 'إجمالي المبيعات' : 'الإطلاقات', value: canSeeFinance ? `${finance.gmv.toFixed(3)} د.ك` : store.launches.filter(l => l.hostBusinessId === currentHostId && ['LIVE','PERMANENT'].includes(l.status)).length, icon: <Activity className="w-4 h-4 text-emerald-300" /> },
               { label: canSeeFinance ? 'صافي المنشأة' : 'المنتجات النشطة', value: canSeeFinance ? `${finance.hostNet.toFixed(3)} د.ك` : store.products.filter(p => myCollaborations.some(c => c.productId === p.id) && !['PAUSED','COMPLETED'].includes(p.status)).length, icon: <CircleDollarSign className="w-4 h-4 text-gold-300" /> }
             ].map((item, idx) => (
-              <div key={idx} className="glass-card rounded-2xl p-4 border border-white/10"><div className="flex items-center gap-2 text-[11px] text-slate-400">{item.icon}{item.label}</div><div className="mt-2 text-xl font-black text-slate-100 font-mono">{item.value}</div></div>
+              <div key={idx} className="glass-card rounded-2xl p-4 border border-white/10"><div className="flex items-center gap-2 text-xs text-slate-400">{item.icon}{item.label}</div><div className="mt-2 text-xl font-black text-slate-100 font-mono">{item.value}</div></div>
             ))}
           </div>
 
@@ -213,7 +213,7 @@ export const HostPortal: React.FC = () => {
           <div className="grid md:grid-cols-2 gap-4">
             {store.challenges.filter(c => c.hostBusinessId === currentHostId).map(ch => (
               <article key={ch.id} className="glass-card rounded-2xl p-5 border border-white/10 space-y-3">
-                <div className="flex items-center justify-between"><StatusPill status={ch.status} /><span className="text-[11px] text-slate-400">{ch.estimatedVolumeUnits} وحدة متوقعة</span></div>
+                <div className="flex items-center justify-between"><StatusPill status={ch.status} /><span className="text-xs text-slate-400">{ch.estimatedVolumeUnits} وحدة متوقعة</span></div>
                 <h4 className="font-black text-slate-100">{ch.title}</h4>
                 <p className="text-xs text-slate-400 leading-6">{ch.brief}</p>
                 <div className="grid grid-cols-2 gap-2 text-xs"><div className="rounded-xl p-3 bg-white/5 border border-white/10">سعر مستهدف <strong className="block mt-1">{ch.targetPriceKwd.toFixed(3)} د.ك</strong></div><div className="rounded-xl p-3 bg-white/5 border border-white/10">سقف التكلفة <strong className="block mt-1">{ch.costCeilingKwd.toFixed(3)} د.ك</strong></div></div>

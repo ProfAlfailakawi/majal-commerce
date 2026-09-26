@@ -235,7 +235,7 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-2">
-          <span className="text-[11px] font-black tracking-[0.2em] text-gold-300 uppercase">MAJAL LEGAL</span>
+          <span className="text-xs font-black tracking-[0.2em] text-gold-300 uppercase">MAJAL LEGAL</span>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-100">المركز القانوني والامتثال</h1>
         </div>
         <button onClick={onBack} className="px-4 py-2.5 rounded-xl glass-card border border-white/10 text-xs font-bold text-slate-200 hover:bg-white/5 flex items-center gap-2">
@@ -244,7 +244,7 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
         </button>
       </div>
 
-      <div className="rounded-2xl border border-gold-300/20 bg-gold-500/[0.06] p-4 text-[11px] leading-6 text-slate-300">
+      <div className="rounded-2xl border border-gold-300/20 bg-gold-500/[0.06] p-4 text-xs leading-6 text-slate-300">
         هذه المستندات إطار تشغيلي معلن وقابل للمراجعة. اكتمال الاعتماد القانوني والتنظيمي في دولة الكويت شرط مسبق لأي معاملة تجارية حقيقية، ولا تُغني هذه الصفحات عن اعتماد مستشار مختص.
       </div>
 
@@ -267,7 +267,7 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
 
       <article className="glass-panel rounded-[28px] border border-white/10 p-6 sm:p-9 space-y-7">
         <header className="space-y-3 pb-5 border-b border-white/10">
-          <h2 ref={headingRef} tabIndex={-1} className="text-xl sm:text-2xl font-black text-slate-100 outline-none">{doc.title}</h2>
+          <h2 ref={headingRef} tabIndex={-1} className="text-xl sm:text-2xl font-black text-slate-100 outline-none focus-visible:ring-2 focus-visible:ring-gold-300">{doc.title}</h2>
           <p className="text-xs sm:text-sm text-slate-400 leading-7">{doc.summary}</p>
         </header>
 
@@ -280,7 +280,7 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
           </section>
         ))}
 
-        <footer className="pt-5 border-t border-white/10 flex flex-wrap items-center gap-3 text-[11px] text-slate-400">
+        <footer className="pt-5 border-t border-white/10 flex flex-wrap items-center gap-3 text-xs text-slate-400">
           <Mail className="w-4 h-4 text-gold-300" />
           <span>للاستفسارات القانونية أو طلبات البيانات:</span>
           <a href={`mailto:${SUPPORT_EMAIL}`} dir="ltr" className="text-gold-300 font-bold hover:underline">{SUPPORT_EMAIL}</a>

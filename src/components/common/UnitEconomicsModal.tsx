@@ -72,7 +72,7 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
                 step="0.250"
                 value={sellingPrice}
                 onChange={(e) => setSellingPrice(parseFloat(e.target.value) || 0)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-amber-400 font-bold text-sm focus:outline-none focus:border-amber-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-amber-400 font-bold text-sm focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
               />
             </div>
 
@@ -85,7 +85,7 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
                 step="0.5"
                 value={royaltyRate}
                 onChange={(e) => setRoyaltyRate(parseFloat(e.target.value) || 0)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-amber-400 font-bold text-sm focus:outline-none focus:border-amber-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-amber-400 font-bold text-sm focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
               />
             </div>
 
@@ -98,7 +98,7 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
                 step="0.100"
                 value={ingredientCost}
                 onChange={(e) => setIngredientCost(parseFloat(e.target.value) || 0)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-amber-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
               />
             </div>
 
@@ -111,7 +111,7 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
                 step="0.050"
                 value={packagingCost}
                 onChange={(e) => setPackagingCost(parseFloat(e.target.value) || 0)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-amber-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
               />
             </div>
 
@@ -124,7 +124,7 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
                 step="0.050"
                 value={laborCost}
                 onChange={(e) => setLaborCost(parseFloat(e.target.value) || 0)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-amber-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
               />
             </div>
 
@@ -149,14 +149,14 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
             <div className="w-full h-5 rounded-full overflow-hidden flex bg-slate-900 border border-slate-700">
               <div
                 style={{ width: `${Math.max(5, (totalCOGS / sellingPrice) * 100)}%` }}
-                className="bg-slate-600 h-full flex items-center justify-center text-[11px] font-bold text-slate-100"
+                className="bg-slate-600 h-full flex items-center justify-center text-xs font-bold text-slate-100"
                 title="إجمالي التكلفة"
               >
                 COGS
               </div>
               <div
                 style={{ width: `${royaltyRate}%` }}
-                className="bg-amber-500 h-full flex items-center justify-center text-[11px] font-bold text-slate-950"
+                className="bg-amber-500 h-full flex items-center justify-center text-xs font-bold text-slate-950"
                 title="حقوق المبدع"
               >
                 {royaltyRate}%
@@ -168,7 +168,7 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
               />
               <div
                 style={{ width: `${Math.max(5, hostNetMarginPercent)}%` }}
-                className="bg-emerald-600 h-full flex items-center justify-center text-[11px] font-bold text-slate-100"
+                className="bg-emerald-600 h-full flex items-center justify-center text-xs font-bold text-slate-100"
                 title="صافي المنشأة"
               >
                 المنشأة
@@ -178,25 +178,25 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
             {/* Detailed KPI Table */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center pt-2">
               <div className="p-3 bg-slate-900/80 rounded-lg border border-slate-700/60">
-                <span className="block text-slate-400 text-[11px]">إجمالي التكلفة</span>
+                <span className="block text-slate-400 text-xs">إجمالي التكلفة</span>
                 <span className="block font-bold text-slate-200 text-sm">{totalCOGS.toFixed(3)} د.ك</span>
               </div>
               <div className="p-3 bg-amber-500/10 rounded-lg border border-amber-500/30">
-                <span className="block text-amber-400 text-[11px]">مستحق المبدع للقطعة</span>
+                <span className="block text-amber-400 text-xs">مستحق المبدع للقطعة</span>
                 <span className="block font-bold text-amber-300 text-sm">{creatorRoyaltyKwd.toFixed(3)} د.ك</span>
               </div>
               <div className="p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/30">
-                <span className="block text-emerald-400 text-[11px]">صافي المنشأة</span>
+                <span className="block text-emerald-400 text-xs">صافي المنشأة</span>
                 <span className="block font-bold text-emerald-300 text-sm">{hostNetContribution.toFixed(3)} د.ك</span>
               </div>
               <div className="p-3 bg-slate-900/80 rounded-lg border border-slate-700/60">
-                <span className="block text-slate-400 text-[11px]">نسبة هامش المنشأة</span>
+                <span className="block text-slate-400 text-xs">نسبة هامش المنشأة</span>
                 <span className="block font-bold text-slate-200 text-sm">{hostNetMarginPercent.toFixed(1)}٪</span>
               </div>
             </div>
           </div>
 
-          <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 flex items-start gap-2">
+          <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-start gap-2">
             <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
             <p>
               هذه الحسبة تقديرية محاكية لمرحلة التفاوض والتشغيل التجاري، وتستخدم لاحقاً كأساس محدد بدقة داخل عقد الشراكة النهائي.

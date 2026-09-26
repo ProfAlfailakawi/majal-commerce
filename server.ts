@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import dotenv from 'dotenv';
 import { rateLimit as expressRateLimit } from 'express-rate-limit';
-import { generateProductCopyPolish, explainHostMatch } from './src/lib/gemini';
+import { generateProductCopyPolish, explainHostMatch } from './server/gemini';
 import { dealRoomCopilot, enrichSemanticMatch, groundOpportunityRadar, launchMarketReadout, defaultAiDeps, type AiAuditEvent } from './server/ai-intelligence';
 import { AuthenticatedRequest, createAuthConfig, createAuthRouter, purgeExpiredSessions, requireAuth, requireCsrf } from './server/auth';
 import { createCatalogRouter } from './server/catalog';
@@ -16,6 +16,8 @@ import { createEcosystemRouter } from './server/ecosystem';
 import { createAdvancedRouter } from './server/advanced';
 import { createOrdersRouter, createPublicReviewsRouter } from './server/orders';
 import { createModerationRouter } from './server/moderation';
+import { createCommercePublicRouter, createCommerceRouter } from './server/commerce-ops';
+import { expireStaleHolds } from './server/checkout';
 import { deliveryReadiness, startNotificationDeliveryWorker } from './server/delivery';
 import { installProcessSafetyHandlers, reportError, requestTelemetry, resolveTrustProxyHops, structuredLog } from './server/observability';
 import { secureStorageReadiness } from './server/secure-storage';
@@ -151,6 +153,8 @@ async function initializeApplication(app: express.Express) {
   app.use('/api/v1/moderation', createModerationRouter(db, authConfig));
   // تقييمات الإطلاق عامة القراءة (كتالوج عام)، فلا تمرّ بحارس المصادقة.
   app.use('/api/v1/public', createPublicReviewsRouter(db));
+  app.use('/api/v1/public', createCommercePublicRouter(db));
+  app.use('/api/v1/commerce', createCommerceRouter(db, authConfig));
 
   const authenticated = requireAuth(db, authConfig);
   const csrfProtected = requireCsrf(authConfig);
@@ -252,10 +256,7 @@ async function initializeApplication(app: express.Express) {
     app.all('/api/v1/pos/{*rest}', (_req, res) => jsonError(res, 503, 'تكامل POS غير مربوط، والمحاكي مقفول في هذه البيئة.', 'POS_NOT_CONFIGURED'));
   }
 
-  const presentationPath = path.join(process.cwd(), 'presentation');
-  if (fs.existsSync(presentationPath)) {
-    app.use('/presentation', express.static(presentationPath));
-  }
+  // The deck lives in public/presentation and ships inside dist (served by Vite in dev).
 
   // Unknown API paths answer JSON 404 in every mode instead of falling through to the SPA shell.
   app.all('/api/{*rest}', (_req, res) => jsonError(res, 404, 'المسار غير موجود.', 'NOT_FOUND'));
@@ -298,10 +299,13 @@ async function initializeApplication(app: express.Express) {
   const stopDeliveryWorker = startNotificationDeliveryWorker(db);
   const cleanupTimer = setInterval(() => void purgeExpiredSessions(db), 30 * 60_000);
   cleanupTimer.unref();
+  // Pending-payment holds release their reserved stock once the payment window elapses.
+  const holdTimer = setInterval(() => { expireStaleHolds(db).catch(error => reportError('hold_sweeper_failed', error, {})); }, 60_000);
+  holdTimer.unref();
   return {
     db,
     shutdown: async () => {
-      stopDeliveryWorker(); clearInterval(cleanupTimer); await closeRateLimitStore(); await db.close();
+      stopDeliveryWorker(); clearInterval(cleanupTimer); clearInterval(holdTimer); await closeRateLimitStore(); await db.close();
     }
   };
 }

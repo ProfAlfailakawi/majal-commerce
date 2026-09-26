@@ -1,5 +1,6 @@
 import { createUser } from '../server/auth';
 import { DATABASE_ROLE_VALUES, openMajalDatabase } from '../server/database';
+import { syncRoleClaim } from '../server/firebase-mirror';
 
 const email = process.env.BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase();
 const password = process.env.BOOTSTRAP_ADMIN_PASSWORD;
@@ -22,6 +23,7 @@ try {
   const existing = await db.prepare('SELECT id FROM users WHERE email = ? LIMIT 1').get(email);
   if (existing) throw new Error('An account with this email already exists; bootstrap never overwrites credentials.');
   const user = await createUser(db, { name, email, phone, password, role, status: 'ACTIVE', creatorId, hostBusinessId });
+  await syncRoleClaim(user.id, user.role);
   process.stdout.write(`${JSON.stringify({ created: true, userId: user.id, role: user.role, email: user.email })}\n`);
 } finally {
   await db.close();

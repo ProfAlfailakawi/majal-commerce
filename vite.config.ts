@@ -15,7 +15,7 @@ import {buildStamp} from './scripts/build-stamp.mjs';
  * exactly the behaviour the file had before.
  */
 function publicOriginPlugin() {
-  const origin = (process.env.APP_URL || 'https://majal-app-522016905178.europe-west2.run.app')
+  const origin = (process.env.APP_URL || '')
     .trim()
     .replace(/\/+$/, '');
   return {
@@ -36,7 +36,7 @@ export default defineConfig(() => {
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
+      // Do not modify: file watching is disabled to prevent flickering during agent edits.
       // The HMR websocket port is pinned to a MAJAL-specific value (overridable via
       // VITE_HMR_PORT) so it never collides with a sibling Vite project — e.g. «مِراس»
       // on Vite's default 24678 — which would otherwise silently break live reload.

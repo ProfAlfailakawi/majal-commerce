@@ -1417,6 +1417,83 @@ const migrations = [
     sql: `
       ALTER TABLE users ADD COLUMN mfa_last_step INTEGER;
     `
+  },
+  {
+    /*
+     * Checkout v2 + Drop operations.
+     *  - orders carry the branch, fulfilment choice, delivery fee, contact phone and the
+     *    pending-payment hold deadline.
+     *  - launch_branch_stock is the DB-level reservation ledger per Drop/branch: the CHECK
+     *    makes over-reservation impossible and a conditional UPDATE reserves atomically.
+     *  - branch_logistics: delivery zones and pickup slots per branch.
+     *  - compliance_documents: licence / health permit / food-safety / halal evidence with
+     *    expiry, read by the public Launch Gate checklist.
+     *  - drop_waitlist + creator_follows: notify-me opt-ins and follow alerts.
+     */
+    version: 21,
+    sql: `
+      ALTER TABLE orders ADD COLUMN branch_id TEXT;
+      ALTER TABLE orders ADD COLUMN fulfillment_type TEXT NOT NULL DEFAULT 'PICKUP';
+      ALTER TABLE orders ADD COLUMN delivery_zone_id TEXT;
+      ALTER TABLE orders ADD COLUMN pickup_slot_id TEXT;
+      ALTER TABLE orders ADD COLUMN delivery_fee_fils INTEGER NOT NULL DEFAULT 0;
+      ALTER TABLE orders ADD COLUMN contact_phone TEXT;
+      ALTER TABLE orders ADD COLUMN hold_expires_at TEXT;
+      CREATE INDEX IF NOT EXISTS idx_orders_hold ON orders(status, hold_expires_at);
+
+      CREATE TABLE IF NOT EXISTS launch_branch_stock (
+        launch_id TEXT NOT NULL REFERENCES launches(id) ON DELETE CASCADE,
+        branch_id TEXT NOT NULL,
+        capacity_units INTEGER NOT NULL CHECK(capacity_units >= 0),
+        reserved_units INTEGER NOT NULL DEFAULT 0 CHECK(reserved_units >= 0 AND reserved_units <= capacity_units),
+        alert_threshold_pct INTEGER NOT NULL DEFAULT 80 CHECK(alert_threshold_pct BETWEEN 1 AND 100),
+        manual_cutoff INTEGER NOT NULL DEFAULT 0 CHECK(manual_cutoff IN (0, 1)),
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY(launch_id, branch_id)
+      );
+
+      CREATE TABLE IF NOT EXISTS branch_logistics (
+        organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        branch_id TEXT NOT NULL,
+        delivery_zones_json TEXT NOT NULL DEFAULT '[]',
+        pickup_slots_json TEXT NOT NULL DEFAULT '[]',
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY(organization_id, branch_id)
+      );
+
+      CREATE TABLE IF NOT EXISTS compliance_documents (
+        organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        doc_type TEXT NOT NULL CHECK(doc_type IN ('COMMERCIAL_LICENSE', 'HEALTH_PERMIT', 'FOOD_SAFETY_CERT', 'HALAL_CERT')),
+        reference TEXT NOT NULL,
+        expires_at TEXT,
+        verified INTEGER NOT NULL DEFAULT 0 CHECK(verified IN (0, 1)),
+        updated_by_user_id TEXT REFERENCES users(id) ON DELETE RESTRICT,
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY(organization_id, doc_type)
+      );
+
+      CREATE TABLE IF NOT EXISTS drop_waitlist (
+        id TEXT PRIMARY KEY,
+        launch_id TEXT NOT NULL REFERENCES launches(id) ON DELETE CASCADE,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        phone TEXT NOT NULL,
+        whatsapp_opt_in INTEGER NOT NULL CHECK(whatsapp_opt_in IN (0, 1)),
+        status TEXT NOT NULL DEFAULT 'WAITING' CHECK(status IN ('WAITING', 'NOTIFIED', 'REMOVED')),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE(launch_id, user_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_drop_waitlist_launch ON drop_waitlist(launch_id, status, created_at);
+
+      CREATE TABLE IF NOT EXISTS creator_follows (
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        creator_id TEXT NOT NULL REFERENCES creator_profiles(id) ON DELETE CASCADE,
+        alerts_opt_in INTEGER NOT NULL DEFAULT 1 CHECK(alerts_opt_in IN (0, 1)),
+        created_at TEXT NOT NULL,
+        PRIMARY KEY(user_id, creator_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_creator_follows_creator ON creator_follows(creator_id, alerts_opt_in);
+    `
   }
 ] as const;
 

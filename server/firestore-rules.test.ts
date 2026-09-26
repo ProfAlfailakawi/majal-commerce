@@ -21,16 +21,16 @@ test('firestore.rules enforces strict rules', () => {
     assert.ok(rules.includes('request.auth.uid == resource.data.creatorId'), 'contracts read restricted to creator');
     assert.ok(rules.includes('request.auth.uid == resource.data.hostId'), 'contracts read restricted to host');
 
-    // Check deny deletes
-    assert.ok(rules.includes('allow delete: if false; // Delete operations route through server'), 'creators/products must deny deletes');
-
-    // Check create rules
-    assert.ok(rules.includes('allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;'), 'creators create restricted');
-    assert.ok(rules.includes('allow create: if isAuthenticated() && request.auth.uid == request.resource.data.creatorId;'), 'products create restricted');
-
-    // Check update rules prevents transfer
-    assert.ok(rules.includes('request.auth.uid == resource.data.userId &&') && rules.includes('request.auth.uid == request.resource.data.userId;'), 'creators update prevents transfer');
-    assert.ok(rules.includes('request.auth.uid == resource.data.creatorId &&') && rules.includes('request.auth.uid == request.resource.data.creatorId;'), 'products update prevents transfer');
+    // Client never writes Firestore: every collection denies client writes.
+    for (const collection of ['users', 'creators', 'hosts', 'products', 'orders', 'contracts', 'audit_logs']) {
+        const block = rules.slice(rules.indexOf(`match /${collection}/`));
+        const body = block.slice(0, block.indexOf('\n    }'));
+        assert.match(body, /allow write: if false;/, `${collection} must deny client writes`);
+        assert.doesNotMatch(body, /allow (create|update|delete):/, `${collection} must not grant partial client writes`);
+    }
+    assert.match(rules, /match \/\{document=\*\*\} \{\s*allow read, write: if false;/, 'catch-all deny');
+    // Privileged fields can never be client-written (status/price/launch).
+    assert.doesNotMatch(rules, /request\.resource\.data/, 'no rule accepts client-supplied document data');
 });
 
 test('firebase-blueprint.json never carries weaker rules than firestore.rules', () => {
@@ -48,9 +48,10 @@ test('firebase-blueprint.json never carries weaker rules than firestore.rules', 
                 `${name}.${op} must not be a bare authenticated-only rule`);
         }
     }
+    for (const name of ['Creator', 'Host', 'Product']) assert.equal(entities[name].rules.write, 'false', `${name} denies client writes`);
     assert.equal(entities.Order.rules.write, 'false', 'orders deny direct client writes');
     assert.equal(entities.Contract.rules.write, 'false', 'contracts deny direct client writes');
     assert.ok(entities.Order.rules.read.includes('resource.data.consumerId'), 'orders read scoped to consumer');
     assert.ok(entities.Contract.rules.read.includes('resource.data.creatorId'), 'contracts read scoped to creator');
-    assert.ok(entities.User.rules.write.includes('request.auth.uid == resource.id'), 'user write owner-scoped');
+    assert.ok(entities.User.rules.write === 'false', 'user writes denied (server-only)');
 });

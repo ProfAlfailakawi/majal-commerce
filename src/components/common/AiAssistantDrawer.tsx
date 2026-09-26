@@ -62,8 +62,8 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
-      <div className="absolute inset-y-0 left-0 max-w-full flex pl-0 sm:pl-10">
-        <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="ai-drawer-title" className="w-full max-w-md max-h-dvh bg-slate-900 border-r border-slate-800 shadow-2xl flex flex-col text-slate-100">
+      <div className="absolute inset-y-0 end-0 max-w-full flex pe-0 sm:pe-10">
+        <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="ai-drawer-title" className="w-full max-w-md max-h-dvh bg-slate-900 border-s border-slate-800 shadow-2xl flex flex-col text-slate-100">
           
           {/* Header */}
           <div className="p-5 bg-slate-800/90 border-b border-slate-700 flex items-center justify-between">
@@ -75,7 +75,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
                 <h3 id="ai-drawer-title" className="font-bold text-sm text-slate-100">
                   مساعد مجال الذكي (Gemini AI)
                 </h3>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-xs text-slate-400">
                   تحسين وصف المنتجات، صياغة القصة، وتحليل ملاءمة المطابقة
                 </p>
               </div>
@@ -123,7 +123,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
                     ? 'مثال: كيكة قرص عقيلي فيها هيل وزعفران مع كريمة هشة خفيفة طعمها نفس مال الأول..'
                     : 'مثال: قرص عقيلي فاخر بكريمة الهيل والزعفران'
                 }
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500 resize-none"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500 resize-none focus-visible:ring-2 focus-visible:ring-gold-300"
               />
             </div>
 
@@ -154,7 +154,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
                   </span>
                   <button
                     onClick={() => { try { navigator.clipboard?.writeText(aiOutput); } catch { /* clipboard unavailable in insecure contexts */ } }}
-                    className="text-[11px] text-amber-300 underline"
+                    className="text-xs text-amber-300 underline"
                   >
                     نسخ النص
                   </button>
@@ -167,7 +167,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
           </div>
 
           {/* Footer note */}
-          <div className="p-4 bg-slate-950 border-t border-slate-800 text-[11px] text-slate-400 text-center">
+          <div className="p-4 bg-slate-950 border-t border-slate-800 text-xs text-slate-400 text-center">
             لا تدخل وصفة سرية أو بيانات شخصية. الإرسال الخارجي لا يُفعّل إلا بعد إعداد الخدمة وسياسة الخصوصية.
           </div>
 

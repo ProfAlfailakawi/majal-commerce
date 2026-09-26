@@ -25,6 +25,8 @@ type AdminFirestore = {
 
 let initialized = false;
 let firestore: AdminFirestore | null = null;
+type AdminAuth = { setCustomUserClaims: (uid: string, claims: Record<string, unknown> | null) => Promise<void> };
+let adminAuth: AdminAuth | null = null;
 let disabledReason: string | null = null;
 
 function structuredLog(event: string, extra: Record<string, unknown> = {}) {
@@ -66,12 +68,32 @@ async function ensureInitialized(): Promise<void> {
       : admin.credential.applicationDefault();
     const app = admin.apps?.length ? admin.app() : admin.initializeApp({ credential, projectId });
     firestore = admin.firestore(app) as unknown as AdminFirestore;
+    adminAuth = typeof admin.auth === 'function' ? admin.auth(app) as AdminAuth : null;
     structuredLog('firebase_mirror_enabled', { projectId });
   } catch (error) {
     disabledReason = 'FIREBASE_MIRROR_INIT_FAILED';
     firestore = null;
     structuredLog('firebase_mirror_init_failed', { message: error instanceof Error ? error.message : String(error) });
   }
+}
+
+/**
+ * Public collections are world-readable (firestore.rules `allow read: if true`), so the
+ * mirror writes ONLY an allow-listed projection there. Vault/recipe, cost, margin, payout,
+ * contact and any unknown field is dropped — adding a field requires adding it here.
+ */
+export const PUBLIC_PROJECTIONS: Record<string, readonly string[]> = {
+  creators: ['id', 'displayName', 'creatorType', 'specialty', 'region', 'completionScore', 'badges', 'createdAt'],
+  hosts: ['id', 'commercialName', 'businessType', 'verificationStatus', 'capabilities', 'createdAt'],
+  products: ['id', 'creatorId', 'title', 'category', 'status', 'priceKwd', 'imageUrl', 'createdAt']
+};
+
+export function publicProjection(collection: string, data: Record<string, unknown>): Record<string, unknown> {
+  const allowed = PUBLIC_PROJECTIONS[collection];
+  if (!allowed) return data;
+  const out: Record<string, unknown> = {};
+  for (const key of allowed) if (data[key] !== undefined) out[key] = data[key];
+  return out;
 }
 
 /**
@@ -82,9 +104,33 @@ export async function mirrorDoc(collection: string, id: string, data: Record<str
   try {
     await ensureInitialized();
     if (!firestore) return; // disabled → no-op
-    await firestore.collection(collection).doc(id).set({ ...data, _mirroredAt: new Date().toISOString() }, { merge: true });
+    await firestore.collection(collection).doc(id).set({ ...publicProjection(collection, data), _mirroredAt: new Date().toISOString() }, { merge: PUBLIC_PROJECTIONS[collection] ? false : true });
   } catch (error) {
     structuredLog('firebase_mirror_write_failed', { collection, id, message: error instanceof Error ? error.message : String(error) });
+  }
+}
+
+/**
+ * firestore.rules authorise admin reads through `request.auth.token.role`. That claim only
+ * exists if the server sets it, so every server-side role change (moderation, membership
+ * repair, bootstrap) calls this after commit. A suspended/non-active account gets its claim
+ * cleared. Fail-closed no-op when the mirror is unconfigured; never throws.
+ */
+export type ClaimSetter = (uid: string, claims: Record<string, unknown> | null) => Promise<void>;
+let claimSetterOverride: ClaimSetter | null = null;
+export function __setClaimSetterForTests(setter: ClaimSetter | null) { claimSetterOverride = setter; }
+
+export async function syncRoleClaim(userId: string, role: string | null, status = 'ACTIVE'): Promise<boolean> {
+  try {
+    await ensureInitialized();
+    const setter: ClaimSetter | null = claimSetterOverride ?? (adminAuth ? (uid, claims) => adminAuth!.setCustomUserClaims(uid, claims) : null);
+    if (!setter) return false;
+    await setter(userId, role && status === 'ACTIVE' ? { role } : { role: null });
+    structuredLog('firebase_role_claim_synced', { userId, role: status === 'ACTIVE' ? role : null });
+    return true;
+  } catch (error) {
+    structuredLog('firebase_role_claim_failed', { userId, message: error instanceof Error ? error.message : String(error) });
+    return false;
   }
 }
 

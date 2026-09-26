@@ -29,6 +29,7 @@ import { AI_ASSISTANT_ENABLED, INTEGRATION_SIMULATORS_ENABLED, IS_DEMO_MODE, DEM
 import { fetchNotifications, markAllNotificationsRead, markNotificationRead, NotificationItem } from '../lib/notificationClient';
 import { usePopoverDismiss } from '../hooks/usePopoverDismiss';
 import { Avatar } from './common/Avatar';
+import { ThemeToggle } from './common/ThemeToggle';
 
 interface NavbarProps {
   activeSurface: SurfaceType;
@@ -178,7 +179,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <button onClick={() => onSurfaceChange('PUBLIC')} className="flex items-center gap-3 text-right group focus:outline-none min-w-0" aria-label="العودة إلى صفحة مجال العامة">
+            <button onClick={() => onSurfaceChange('PUBLIC')} className="flex items-center gap-3 text-start group focus:outline-none min-w-0 focus-visible:ring-2 focus-visible:ring-gold-300" aria-label="العودة إلى صفحة مجال العامة">
               <span className="grid place-items-center w-11 h-11 rounded-2xl bg-white/[0.04] border border-gold-300/15 shrink-0 transition-all duration-200 group-hover:border-gold-300/35 group-hover:bg-gold-500/10">
                 <MajalMark size={26} />
               </span>
@@ -186,7 +187,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="text-2xl font-black majal-wordmark block truncate leading-tight">
                   مجال
                 </span>
-                <span className="block text-[11px] text-slate-400 font-medium truncate">
+                <span className="block text-xs text-slate-400 font-medium truncate">
                   منصة الحاضن التجاري المرخّص
                 </span>
               </div>
@@ -196,7 +197,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               /* Deliberately the loudest chip on the bar. Anyone glancing at a
                  shared screen should be able to tell that none of this inventory,
                  these orders or these payouts are real. */
-              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[11px] font-black bg-amber-500/15 text-amber-300 border border-amber-400/35">
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-black bg-amber-500/15 text-amber-300 border border-amber-400/35">
                 <FlaskConical className="w-3.5 h-3.5" aria-hidden="true" />
                 <span className="hidden sm:inline">بيئة تجريبية — بيانات مصطنعة</span>
                 <span className="sm:hidden">DEMO</span>
@@ -220,7 +221,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               </span>
             ) : (
-              <span className="hidden md:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-gold-500/10 text-gold-300 border border-gold-300/15">
+              <span className="hidden md:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gold-500/10 text-gold-300 border border-gold-300/15">
                 <LayoutGrid className="w-3.5 h-3.5" />
                 منصة مجال
               </span>
@@ -271,14 +272,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             {!IS_DEMO_MODE && authStatus === 'AUTHENTICATED' && <div className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-xl bg-white/5 border border-white/10">
               {/* Name/role are hidden on phones, but security + logout stay reachable. */}
               <span className="hidden sm:grid w-7 h-7 rounded-full bg-gold-500/20 text-gold-300 place-items-center font-black text-xs" aria-hidden="true">{activeUser.name.slice(0, 1)}</span>
-              <div className="hidden sm:flex flex-col text-right">
-                <span className="max-w-28 truncate text-[11px] font-bold text-slate-100">{activeUser.name}</span>
-                <span className="text-[11px] text-gold-300 font-semibold">{activeUser.accountType === 'SUPPLIER' ? 'مورد' : roleLabels[activeUser.role]}</span>
+              <div className="hidden sm:flex flex-col text-start">
+                <span className="max-w-28 truncate text-xs font-bold text-slate-100">{activeUser.name}</span>
+                <span className="text-xs text-gold-300 font-semibold">{activeUser.accountType === 'SUPPLIER' ? 'مورد' : roleLabels[activeUser.role]}</span>
               </div>
               {['SUPER_ADMIN', 'ADMIN'].includes(activeUser.role) && (
                 <button
                   onClick={() => onSurfaceChange(activeUser.role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'ADMIN')}
-                  className="px-2.5 py-1 rounded-lg bg-gold-500/20 hover:bg-gold-500/30 text-gold-300 text-[11px] font-bold border border-gold-300/30 transition cursor-pointer"
+                  className="px-2.5 py-1 rounded-lg bg-gold-500/20 hover:bg-gold-500/30 text-gold-300 text-xs font-bold border border-gold-300/30 transition cursor-pointer"
                   title="الانتقال المباشر للوحة التحكم"
                 >
                   لوحة الإدارة
@@ -306,6 +307,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="hidden sm:inline">مساعد مجال</span>
             </button>}
 
+            <ThemeToggle />
+
             {(IS_DEMO_MODE || authStatus === 'AUTHENTICATED') && <div className="relative" ref={notificationsRef}>
               <button
                 onClick={() => {
@@ -321,28 +324,28 @@ export const Navbar: React.FC<NavbarProps> = ({
                 aria-expanded={showNotifications}
               >
                 <Bell className="w-4 h-4" />
-                {unreadCount > 0 && <><span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-gold-300 animate-ping" /><span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-gold-300" /></>}
+                {unreadCount > 0 && <><span className="absolute top-2 start-2 w-2 h-2 rounded-full bg-gold-300 animate-ping" /><span className="absolute top-2 start-2 w-2 h-2 rounded-full bg-gold-300" /></>}
               </button>
 
               {showNotifications && (
-                <div className="absolute left-0 mt-2 w-96 max-w-[90vw] bg-ink-700/95 border border-white/10 rounded-2xl shadow-2xl p-4 text-xs text-slate-200 z-50 animate-in fade-in slide-in-from-top-2">
+                <div className="absolute end-0 mt-2 w-96 max-w-[90vw] bg-ink-700/95 border border-white/10 rounded-2xl shadow-2xl p-4 text-xs text-slate-200 z-50 animate-in fade-in slide-in-from-top-2">
                   <div className="font-bold pb-3 mb-3 flex justify-between items-center text-gold-300 border-b border-white/10">
-                    <div><span className="block">مركز القرار</span><span className="text-[11px] text-slate-400 font-medium">الأهم أولاً، والمتكرر يُدمج</span></div>
+                    <div><span className="block">مركز القرار</span><span className="text-xs text-slate-400 font-medium">الأهم أولاً، والمتكرر يُدمج</span></div>
                     <div className="flex items-center gap-2">
-                      {!IS_DEMO_MODE && unreadCount > 0 && <button onClick={() => markAllNotificationsRead().then(() => { setServerNotifications(current => current.map(item => ({ ...item, status: 'READ' }))); setServerUnreadCount(0); }).catch(() => undefined)} className="text-[11px] text-slate-300 hover:text-white">قرأت الكل</button>}
-                      <span className="text-[11px] text-slate-400">{unreadCount} غير مقروء</span>
+                      {!IS_DEMO_MODE && unreadCount > 0 && <button onClick={() => markAllNotificationsRead().then(() => { setServerNotifications(current => current.map(item => ({ ...item, status: 'READ' }))); setServerUnreadCount(0); }).catch(() => undefined)} className="text-xs text-slate-300 hover:text-white">قرأت الكل</button>}
+                      <span className="text-xs text-slate-400">{unreadCount} غير مقروء</span>
                     </div>
                   </div>
                   <div className="space-y-2.5">
                     {notificationCards.length ? notificationCards.map(item => (
-                      <button key={item.id} onClick={() => openNotification(item)} className={`w-full p-3 rounded-xl border text-right transition-colors ${item.status === 'UNREAD' ? 'bg-white/7 border-gold-300/20' : 'bg-white/[0.03] border-white/5 opacity-75'}`}>
+                      <button key={item.id} onClick={() => openNotification(item)} className={`w-full p-3 rounded-xl border text-start transition-colors ${item.status === 'UNREAD' ? 'bg-white/7 border-gold-300/20' : 'bg-white/[0.03] border-white/5 opacity-75'}`}>
                         <span className="flex items-center justify-between gap-2 mb-1">
                           <span className="font-bold text-slate-100">{item.title}</span>
-                          <span className={`text-[11px] px-2 py-0.5 rounded-full ${item.priority === 'URGENT' ? 'bg-rose-500/15 text-rose-200' : item.priority === 'NOW' ? 'bg-gold-500/15 text-gold-200' : 'bg-white/5 text-slate-400'}`}>{item.priority === 'URGENT' ? 'عاجل' : item.priority === 'NOW' ? 'الآن' : item.priority === 'SOON' ? 'قريباً' : 'راقب'}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${item.priority === 'URGENT' ? 'bg-rose-500/15 text-rose-200' : item.priority === 'NOW' ? 'bg-gold-500/15 text-gold-200' : 'bg-white/5 text-slate-400'}`}>{item.priority === 'URGENT' ? 'عاجل' : item.priority === 'NOW' ? 'الآن' : item.priority === 'SOON' ? 'قريباً' : 'راقب'}</span>
                         </span>
                         <span className="block text-slate-300 leading-6">{item.body}</span>
-                        {item.occurrence_count > 1 && <span className="block mt-1 text-[11px] text-slate-400">تكرر {item.occurrence_count} مرات وتم دمجه هنا</span>}
-                        {'action_label' in item && item.action_label && <span className="block mt-2 text-[11px] font-bold text-gold-300">{item.action_label} ←</span>}
+                        {item.occurrence_count > 1 && <span className="block mt-1 text-xs text-slate-400">تكرر {item.occurrence_count} مرات وتم دمجه هنا</span>}
+                        {'action_label' in item && item.action_label && <span className="block mt-2 text-xs font-bold text-gold-300">{item.action_label} ←</span>}
                       </button>
                     )) : <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5 text-center text-slate-400">لا توجد قرارات معلقة الآن.</div>}
                   </div>
@@ -357,21 +360,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setShowRoleDropdown(next);
                   if (next) setShowNotifications(false);
                 }}
-                className="flex items-center gap-2 p-1.5 pr-2.5 rounded-2xl bg-ink-700/80 hover:bg-ink-500 border border-white/10 text-xs font-medium transition-colors"
+                className="flex items-center gap-2 p-1.5 ps-2.5 rounded-2xl bg-ink-700/80 hover:bg-ink-500 border border-white/10 text-xs font-medium transition-colors"
                 aria-label="تبديل هوية العرض المحلية"
                 aria-expanded={showRoleDropdown}
               >
                 <Avatar name={activeUser.name} src={activeUser.avatar} size={32} />
-                <div className="text-right hidden md:block max-w-[180px]">
-                  <span className="block font-bold text-slate-200 text-[11px] leading-tight truncate">{activeUser.name}</span>
-                  <span className="block text-[11px] text-gold-300 truncate">{roleLabels[activeUser.role]}</span>
+                <div className="text-start hidden md:block max-w-[180px]">
+                  <span className="block font-bold text-slate-200 text-xs leading-tight truncate">{activeUser.name}</span>
+                  <span className="block text-xs text-gold-300 truncate">{roleLabels[activeUser.role]}</span>
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
               </button>
 
               {showRoleDropdown && (
-                <div role="menu" aria-label="تبديل هوية العرض المحلية" className="absolute left-0 mt-2 w-80 max-w-[90vw] bg-ink-700/96 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 text-xs text-slate-200 max-h-[70dvh] overflow-y-auto">
-                  <div className="px-2 py-2 text-[11px] text-slate-400 font-bold uppercase tracking-wider border-b border-white/10 mb-1">
+                <div role="menu" aria-label="تبديل هوية العرض المحلية" className="absolute end-0 mt-2 w-80 max-w-[90vw] bg-ink-700/96 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 text-xs text-slate-200 max-h-[70dvh] overflow-y-auto">
+                  <div className="px-2 py-2 text-xs text-slate-400 font-bold uppercase tracking-wider border-b border-white/10 mb-1">
                     تبديل أدوار العرض — Creator / Host / Admin / Super Admin
                   </div>
                   {store.users.map(u => (
@@ -383,15 +386,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                         onSurfaceChange(roleToSurface(u.role));
                         setShowRoleDropdown(false);
                       }}
-                      className={`w-full flex items-center justify-between p-2.5 rounded-xl text-right transition-colors ${u.status === 'SUSPENDED' ? 'opacity-40 cursor-not-allowed' : ''} ${
+                      className={`w-full flex items-center justify-between p-2.5 rounded-xl text-start transition-colors ${u.status === 'SUSPENDED' ? 'opacity-40 cursor-not-allowed' : ''} ${
                         activeUser.id === u.id ? 'bg-gold-500/15 text-gold-200 font-bold border border-gold-300/15' : 'hover:bg-white/5 text-slate-300'
                       }`}
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <Avatar name={u.name} src={u.avatar} size={32} />
-                        <div className="min-w-0 text-right">
-                          <span className="block text-[11px] font-medium truncate">{u.name}</span>
-                          <span className="block text-[11px] text-slate-400 truncate">{roleLabels[u.role]}{u.status === 'SUSPENDED' ? ' — موقوف' : ''}</span>
+                        <div className="min-w-0 text-start">
+                          <span className="block text-xs font-medium truncate">{u.name}</span>
+                          <span className="block text-xs text-slate-400 truncate">{roleLabels[u.role]}{u.status === 'SUSPENDED' ? ' — موقوف' : ''}</span>
                         </div>
                       </div>
                       {activeUser.id === u.id ? <UserCheck className="w-4 h-4 text-gold-300" /> : <Users className="w-4 h-4 text-slate-400" />}
@@ -410,7 +413,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 key={s.id}
                 onClick={() => onSurfaceChange(s.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl whitespace-nowrap text-[11px] font-medium ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl whitespace-nowrap text-xs font-medium ${
                   isActive ? 'bg-gold-500 text-slate-950 font-black' : 'bg-white/5 text-slate-300'
                 }`}
               >
