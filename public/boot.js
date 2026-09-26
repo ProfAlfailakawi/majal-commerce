@@ -7,6 +7,11 @@
  */
 (function () {
   window.__majalBootAt = Date.now();
+  // Apply the persisted theme before first paint (see src/lib/theme.ts).
+  try {
+    var theme = window.localStorage.getItem('majal-theme');
+    if (theme === 'light' || theme === 'contrast') document.documentElement.setAttribute('data-theme', theme);
+  } catch (e) { /* storage blocked: default dark */ }
   function wireRetry() {
     var retry = document.getElementById('majal-boot-retry');
     if (retry) retry.addEventListener('click', function () { location.reload(); });

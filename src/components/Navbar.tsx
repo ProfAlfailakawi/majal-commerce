@@ -29,6 +29,7 @@ import { AI_ASSISTANT_ENABLED, INTEGRATION_SIMULATORS_ENABLED, IS_DEMO_MODE, DEM
 import { fetchNotifications, markAllNotificationsRead, markNotificationRead, NotificationItem } from '../lib/notificationClient';
 import { usePopoverDismiss } from '../hooks/usePopoverDismiss';
 import { Avatar } from './common/Avatar';
+import { ThemeToggle } from './common/ThemeToggle';
 
 interface NavbarProps {
   activeSurface: SurfaceType;
@@ -305,6 +306,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Bot className="w-4 h-4 text-gold-300" />
               <span className="hidden sm:inline">مساعد مجال</span>
             </button>}
+
+            <ThemeToggle />
 
             {(IS_DEMO_MODE || authStatus === 'AUTHENTICATED') && <div className="relative" ref={notificationsRef}>
               <button

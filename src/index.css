@@ -721,3 +721,85 @@ textarea:disabled {
     transform: none !important;
   }
 }
+
+/* ── Themes ────────────────────────────────────────────────────────────────────
+   Dark is the identity and the default. «فاتح» and «تباين عالٍ» remap the same tokens
+   the utilities already read (Tailwind 4 emits `var(--color-*)`), so every surface
+   follows without per-component forks. The choice lives on <html data-theme> and is
+   persisted by src/lib/theme.ts. */
+:root[data-theme='light'] {
+  color-scheme: light;
+  --color-white: #0b1220;
+  --color-slate-50: #0b1220;
+  --color-slate-100: #111827;
+  --color-slate-200: #1f2937;
+  --color-slate-300: #334155;
+  --color-slate-400: #3f4b5e;
+  --color-slate-500: #4b5567;
+  --color-slate-600: #94a3b8;
+  --color-slate-700: #cbd5e1;
+  --color-slate-800: #e2e8f0;
+  --color-slate-900: #f1f5f9;
+  --color-slate-950: #ffffff;
+  --color-gold-100: #5c4618;
+  --color-gold-200: #6b5220;
+  --color-gold-300: #7d612b;
+  --color-gold-400: #957235;
+  --color-gold-500: #8a6a2c;
+  --color-emerald-300: #047857;
+  --color-emerald-400: #047857;
+  --color-rose-300: #be123c;
+  --color-sky-300: #0369a1;
+  --color-amber-300: #b45309;
+  --majal-bg: #f7f4ec;
+  --ink-850: #fbf8f1;
+  --ink-800: #f7f4ec;
+  --majal-panel: rgba(255, 255, 255, 0.92);
+  --majal-card: rgba(255, 255, 255, 0.86);
+  --majal-border: rgba(11, 18, 32, 0.12);
+  --edge-hi: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --elev-1: 0 1px 4px rgba(15, 23, 42, 0.08);
+  --elev-2: 0 6px 18px rgba(15, 23, 42, 0.1);
+  --elev-3: 0 16px 40px rgba(15, 23, 42, 0.14);
+}
+:root[data-theme='light'] body {
+  background-image: linear-gradient(180deg, #fbf8f1 0%, #f7f4ec 60%, #f1ece0 100%);
+  color: #0b1220;
+}
+:root[data-theme='light'] .glass-nav { background: rgba(255, 255, 255, 0.94); border-bottom-color: rgba(11, 18, 32, 0.1); }
+:root[data-theme='light'] .glass-input { background: #ffffff; border-color: rgba(11, 18, 32, 0.25); color: #0b1220; }
+:root[data-theme='light'] .glass-card { border-color: rgba(11, 18, 32, 0.1); }
+:root[data-theme='light'] .glass-card-hover:hover { background: #ffffff; }
+/* Gold fills keep light text in the light theme (text-slate-950 remaps to white). */
+
+:root[data-theme='contrast'] {
+  color-scheme: dark;
+  --color-slate-300: #f1f5f9;
+  --color-slate-400: #e2e8f0;
+  --color-slate-500: #cbd5e1;
+  --color-gold-300: #ffd98a;
+  --color-gold-500: #f0c060;
+  --color-emerald-300: #6ee7b7;
+  --color-rose-300: #fda4af;
+  --majal-bg: #000000;
+  --ink-850: #000000;
+  --ink-800: #000000;
+  --majal-panel: #05070c;
+  --majal-card: #0a0e16;
+  --majal-border: rgba(255, 255, 255, 0.55);
+}
+:root[data-theme='contrast'] body { background-image: none; color: #ffffff; }
+:root[data-theme='contrast'] .glass-panel,
+:root[data-theme='contrast'] .glass-card { backdrop-filter: none; -webkit-backdrop-filter: none; border-color: rgba(255, 255, 255, 0.55); }
+:root[data-theme='contrast'] .glass-input { background: #000000; border-color: #ffffff; }
+:root[data-theme='contrast'] .ambient-bg { display: none; }
+:root[data-theme='contrast'] :focus-visible { outline: 3px solid #ffd98a !important; outline-offset: 3px; }
+
+/* ── Print (payout statement "Save as PDF") ── */
+@media print {
+  body { background: #ffffff !important; color: #000000 !important; }
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; color: #000000 !important; }
+  .print-area { position: absolute; inset: 0; background: #ffffff !important; box-shadow: none !important; border: 0 !important; backdrop-filter: none !important; }
+  .print\:hidden { display: none !important; }
+}

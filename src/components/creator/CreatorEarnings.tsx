@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Wallet, ArrowDownRight, CheckCircle2, FileSpreadsheet, ShieldCheck, Clock3 } from 'lucide-react';
 import { store } from '../../lib/store';
 import { EmptyState } from '../common/EmptyState';
+import { PayoutStatement } from './PayoutStatement';
 
 export const CreatorEarnings: React.FC = () => {
   const currentCreatorId = store.activeUser.creatorId || '';
@@ -51,7 +52,7 @@ export const CreatorEarnings: React.FC = () => {
             <p className="text-xs text-slate-400 mt-1 leading-6">سجل محاسبي للحقوق الناتجة عن المبيعات. الاعتماد داخل مجال منفصل عن تأكيد التحويل البنكي الخارجي.</p>
           </div>
         </div>
-        <button onClick={handleDownloadStatement} className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 text-gold-300 font-bold rounded-xl border border-white/10 text-xs transition-colors">
+        <button type="button" onClick={handleDownloadStatement} className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 text-gold-300 font-bold rounded-xl border border-white/10 text-xs transition-colors">
           <FileSpreadsheet className="w-4 h-4" /><span>تصدير كشف CSV</span>
         </button>
       </section>
@@ -96,6 +97,8 @@ export const CreatorEarnings: React.FC = () => {
           ))}
         </div>
       </section>
+
+      <PayoutStatement />
     </div>
   );
 };
