@@ -368,6 +368,13 @@ export interface OfferTerms {
   createdAt: string;
 }
 
+/** A server-issued contract signature (production). Demo contracts carry only the *SignedAt fields. */
+export interface ContractSignatureRecord {
+  signerSide: 'CREATOR' | 'HOST';
+  signedAt: string;
+  signatureEvidenceSha256?: string;
+}
+
 export interface Contract {
   id: string;
   collaborationId: string;
@@ -380,6 +387,8 @@ export interface Contract {
   creatorSignerIp?: string;
   hostSignedAt?: string;
   hostSignerIp?: string;
+  /** Signature records from the server snapshot; the *SignedAt fields are the demo fallback. */
+  signatures?: ContractSignatureRecord[];
   status: 'DRAFT' | 'PENDING_CREATOR_SIGNATURE' | 'PENDING_HOST_SIGNATURE' | 'FULLY_SIGNED' | 'EXPIRED';
   createdAt: string;
 }

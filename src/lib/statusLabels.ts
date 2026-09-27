@@ -71,6 +71,8 @@ const STATUS: Record<string, StatusMeta> = {
   WITHDRAWN: { label: 'مسحوب', tone: 'neutral' },
   PENDING_CREATOR_SIGNATURE: { label: 'بانتظار توقيع المبدع', tone: 'warn' },
   PENDING_HOST_SIGNATURE: { label: 'بانتظار توقيع المنشأة', tone: 'warn' },
+  // The server's contract status until both signatures exist (server/domain.ts).
+  PENDING_SIGNATURES: { label: 'بانتظار التوقيعات', tone: 'warn' },
   FULLY_SIGNED: { label: 'موقّع بالكامل', tone: 'success' },
 
   // Launch, compliance, disputes, payments

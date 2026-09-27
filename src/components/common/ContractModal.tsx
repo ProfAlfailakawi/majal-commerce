@@ -86,8 +86,20 @@ export const ContractModal: React.FC<ContractModalProps> = ({
   const signLabel = isSigning ? 'جارٍ التحقق…' : IS_DEMO_MODE ? 'محاكاة الموافقة على المسودة' : paciRequestId ? 'تحقق من هويتي وثبّت التوقيع' : 'ابدأ طلب التوقيع عبر هويتي';
 
   const fullySigned = contract.status === 'FULLY_SIGNED';
+  // Who has signed: server signature records first (production), then the local timestamps
+  // (demo). FULLY_SIGNED means both sides signed, even if an older payload omits the rows.
+  const creatorRecord = contract.signatures?.find(sig => sig.signerSide === 'CREATOR');
+  const hostRecord = contract.signatures?.find(sig => sig.signerSide === 'HOST');
+  const creatorSignedAt = creatorRecord?.signedAt || contract.creatorSignedAt;
+  const hostSignedAt = hostRecord?.signedAt || contract.hostSignedAt;
+  const creatorSigned = fullySigned || !!creatorRecord || !!contract.creatorSignedAt;
+  const hostSigned = fullySigned || !!hostRecord || !!contract.hostSignedAt;
+  const creatorAuditRef = creatorRecord ? creatorRecord.signatureEvidenceSha256 : contract.creatorSignedAt ? contract.creatorSignerIp : undefined;
+  const hostAuditRef = hostRecord ? hostRecord.signatureEvidenceSha256 : contract.hostSignedAt ? contract.hostSignerIp : undefined;
+  const signedTitle = (name: string, at?: string) => (at ? `${name} — ${new Date(at).toLocaleString('ar-KW')}` : name);
+
   const paciBadge = paciStatus ? statusLabel(paciStatus) : undefined;
-  const pathDone = [true, !!contract.creatorSignedAt, !!contract.hostSignedAt, fullySigned];
+  const pathDone = [true, creatorSigned, hostSigned, fullySigned];
   const firstOpen = pathDone.indexOf(false);
   const stepState = (i: number): DnaStepState => (pathDone[i] ? 'done' : i === firstOpen ? 'current' : 'pending');
   const signingSteps: DnaStep[] = [
@@ -96,17 +108,17 @@ export const ContractModal: React.FC<ContractModalProps> = ({
       key: 'creator',
       label: 'المبدع',
       state: stepState(1),
-      stamp: contract.creatorSignedAt ? initials(contract.creatorLegalName) : undefined,
+      stamp: creatorSigned ? initials(contract.creatorLegalName) : undefined,
       badge: canSignAsCreator ? paciBadge : undefined,
-      title: contract.creatorSignedAt ? `${contract.creatorLegalName} — ${new Date(contract.creatorSignedAt).toLocaleString('ar-KW')}` : 'في انتظار التوقيع'
+      title: creatorSigned ? signedTitle(contract.creatorLegalName, creatorSignedAt) : 'في انتظار التوقيع'
     },
     {
       key: 'host',
       label: 'المنشأة',
       state: stepState(2),
-      stamp: contract.hostSignedAt ? initials(contract.hostCommercialName) : undefined,
+      stamp: hostSigned ? initials(contract.hostCommercialName) : undefined,
       badge: canSignAsHost ? paciBadge : undefined,
-      title: contract.hostSignedAt ? `${contract.hostCommercialName} — ${new Date(contract.hostSignedAt).toLocaleString('ar-KW')}` : 'في انتظار التوقيع'
+      title: hostSigned ? signedTitle(contract.hostCommercialName, hostSignedAt) : 'في انتظار التوقيع'
     },
     { key: 'signed', label: 'موقّع', state: stepState(3), icon: <ShieldCheck /> }
   ];
@@ -224,16 +236,16 @@ export const ContractModal: React.FC<ContractModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
             
             {/* Creator signature box */}
-            <div className={`p-4 rounded-xl border ${contract.creatorSignedAt ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
+            <div className={`p-4 rounded-xl border ${creatorSigned ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
               <div className="flex items-center justify-between mb-1">
                 <span className="font-bold text-xs">توقيع الطرف الأول (المبدع)</span>
-                {contract.creatorSignedAt && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                {creatorSigned && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
               </div>
-              {contract.creatorSignedAt ? (
+              {creatorSigned ? (
                 <div className="text-xs">
                   <p className="font-bold text-slate-100">{contract.creatorLegalName}</p>
-                  <p className="text-slate-400 text-xs">تاريخ التوقيع: {new Date(contract.creatorSignedAt).toLocaleString('ar-KW')}</p>
-                  <p className="text-slate-400 text-xs font-mono">Session Audit Ref: {contract.creatorSignerIp}</p>
+                  {creatorSignedAt && <p className="text-slate-400 text-xs">تاريخ التوقيع: {new Date(creatorSignedAt).toLocaleString('ar-KW')}</p>}
+                  {creatorAuditRef && <p className="text-slate-400 text-xs font-mono break-all">Session Audit Ref: {creatorAuditRef}</p>}
                 </div>
               ) : (
                 <span className="text-amber-400 font-semibold text-xs">في انتظار التوقيع...</span>
@@ -241,16 +253,16 @@ export const ContractModal: React.FC<ContractModalProps> = ({
             </div>
 
             {/* Host signature box */}
-            <div className={`p-4 rounded-xl border ${contract.hostSignedAt ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
+            <div className={`p-4 rounded-xl border ${hostSigned ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
               <div className="flex items-center justify-between mb-1">
                 <span className="font-bold text-xs">توقيع الطرف الثاني (المنشأة)</span>
-                {contract.hostSignedAt && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                {hostSigned && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
               </div>
-              {contract.hostSignedAt ? (
+              {hostSigned ? (
                 <div className="text-xs">
                   <p className="font-bold text-slate-100">{contract.hostCommercialName}</p>
-                  <p className="text-slate-400 text-xs">تاريخ التوقيع: {new Date(contract.hostSignedAt).toLocaleString('ar-KW')}</p>
-                  <p className="text-slate-400 text-xs font-mono">Session Audit Ref: {contract.hostSignerIp}</p>
+                  {hostSignedAt && <p className="text-slate-400 text-xs">تاريخ التوقيع: {new Date(hostSignedAt).toLocaleString('ar-KW')}</p>}
+                  {hostAuditRef && <p className="text-slate-400 text-xs font-mono break-all">Session Audit Ref: {hostAuditRef}</p>}
                 </div>
               ) : (
                 <span className="text-amber-400 font-semibold text-xs">في انتظار التوقيع...</span>
