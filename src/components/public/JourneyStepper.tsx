@@ -28,7 +28,7 @@ export const JourneyStepper: React.FC<{ detail?: 'body' | 'brief'; className?: s
       }))}
     />
     <details className="journey-dna-more group max-w-2xl mx-auto">
-      <summary className="list-none mx-auto w-fit inline-flex min-h-11 items-center gap-1.5 px-3 text-xs font-bold text-slate-400 hover:text-gold-300 cursor-pointer rounded-xl">
+      <summary className="list-none mx-auto w-fit flex min-h-11 items-center gap-1.5 px-3 text-xs font-bold text-slate-400 hover:text-gold-300 cursor-pointer rounded-xl">
         تفاصيل المحطات
         <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180" aria-hidden="true" />
       </summary>
