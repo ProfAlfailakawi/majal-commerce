@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { BadgeCheck, Bell, CheckCircle2, Clock3, CreditCard, ShoppingBag, Star, Store, Truck } from 'lucide-react';
+import { BadgeCheck, Bell, CheckCircle2, CreditCard, ShoppingBag, Star, Store, Truck } from 'lucide-react';
 import { Launch } from '../../types/majal';
 import { store } from '../../lib/store';
 import { IS_DEMO_MODE } from '../../lib/runtime';
@@ -7,6 +7,7 @@ import { formatFils, kwdToFils } from '../../lib/money';
 import { CheckoutOptions, commerceClient, newCheckoutKey, normalizeKuwaitPhone } from '../../lib/commerceClient';
 import { DomainApiError, domainClient } from '../../lib/domainClient';
 import { DropTrustChecklist } from './DropTrustChecklist';
+import { DnaRing, DnaStepper } from '../dna/DnaKit';
 
 interface Props { launch: Launch; acquisitionSource: 'MAJAL' | 'CREATOR' | 'HOST' }
 
@@ -127,22 +128,40 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
   if (placed) {
     const expired = countdown ? countdown.left === 0 : false;
     return (
-      <div role="status" className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 text-center space-y-3">
-        <CheckCircle2 className="w-10 h-10 text-emerald-300 mx-auto" aria-hidden="true" />
-        <div className="font-black text-emerald-300">تم حجز طلبك — رقم {placed.orderId}</div>
+      <div role="status" className="dna-surface p-5 text-center space-y-4">
+        <div className="font-black text-slate-100">تم حجز طلبك — رقم <span className="font-mono">{placed.orderId}</span></div>
+        <DnaStepper
+          size="sm"
+          ariaLabel="حالة الطلب"
+          steps={[
+            { key: 'hold', label: 'حجز', state: 'done', icon: <CheckCircle2 /> },
+            { key: 'pay', label: 'دفع', state: expired ? 'blocked' : 'current', icon: <CreditCard /> },
+            { key: 'prep', label: 'تجهيز', state: 'pending', icon: <ShoppingBag /> },
+            { key: 'pickup', label: 'استلام', state: 'pending', icon: <Store /> }
+          ]}
+        />
         <div className="text-sm text-slate-100">الإجمالي: <strong className="text-gold-300">{formatFils(placed.totalFils)}</strong></div>
         {countdown && (
-          <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-black ${expired ? 'bg-rose-500/10 text-rose-300' : 'bg-slate-950/50 text-gold-300'}`} aria-live="polite">
-            <Clock3 className="w-4 h-4" aria-hidden="true" />
-            {expired ? 'انتهت مهلة الحجز وتحررت الكمية.' : <>الحجز محفوظ لك: <span dir="ltr">{countdown.label}</span></>}
+          <div className="flex items-center justify-center gap-3" aria-live="polite">
+            <DnaRing
+              value={countdown.left}
+              max={(options?.holdMinutes ?? 15) * 60_000}
+              size={60}
+              tone={expired ? 'danger' : 'accent'}
+              label={<span dir="ltr">{countdown.label}</span>}
+              ariaLabel={expired ? 'انتهت مهلة الحجز' : `الوقت المتبقي للحجز ${countdown.label}`}
+            />
+            <span className={`text-sm font-black text-start ${expired ? 'text-rose-300' : 'text-slate-200'}`}>
+              {expired ? 'انتهت مهلة الحجز وتحررت الكمية.' : 'الحجز محفوظ لك'}
+            </span>
           </div>
         )}
         {placed.checkoutUrl && !expired && (
-          <a href={placed.checkoutUrl} className="w-full py-3.5 rounded-xl bg-gold-500 text-slate-950 font-black text-sm flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
+          <a href={placed.checkoutUrl} className="dna-btnp w-full min-h-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
             <CreditCard className="w-4 h-4" aria-hidden="true" /> أكمل الدفع
           </a>
         )}
-        <p className="text-xs text-slate-300">يتأكد الطلب فقط بعد تأكيد الدفع من البوابة. لم تُخصم أي أموال قبل ذلك.</p>
+        <p className="text-xs text-slate-400">يتأكد الطلب فقط بعد تأكيد الدفع من البوابة. لم تُخصم أي أموال قبل ذلك.</p>
       </div>
     );
   }
