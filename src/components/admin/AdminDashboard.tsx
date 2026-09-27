@@ -16,8 +16,12 @@ import {
   ShieldCheck,
   Users,
   Wallet,
-  ClipboardCheck
+  ClipboardCheck,
+  ChevronDown,
+  PauseCircle
 } from 'lucide-react';
+import { DnaHubMap } from '../dna/DnaKit';
+import { MajalMark } from '../brand/MajalMark';
 import { store } from '../../lib/store';
 import { AdminAuditLogs } from './AdminAuditLogs';
 import { TrustEngine } from './TrustEngine';
@@ -36,6 +40,31 @@ export const AdminDashboard: React.FC = () => {
     signedContractsCount: store.contracts.filter(c => c.status === 'FULLY_SIGNED').length,
     openDisputes: store.disputes.filter(d => !['RESOLVED', 'CLOSED'].includes(d.status)).length,
     verifiedHosts: store.hosts.filter(h => h.verificationStatus === 'VERIFIED').length
+  };
+
+  // Copy of the former overview paragraphs, kept verbatim behind the disclosures below.
+  const priorities = [
+    'مراجعة طلبات الموردين وإعلانات التوظيف الكويتية قبل النشر، مع متابعة طلبات المبدعين والمنشآت.',
+    'متابعة أذونات الإفصاح للوصفات عالية الحساسية.',
+    'حل التعارضات بين المبدع والمنشأة حول الشروط التجارية.',
+    'تشغيل التسويات المالية وإصدار إشعارات الاستحقاق.',
+    'التعامل مع الشكاوى الحرجة أو المخاطر المتعلقة بالجودة.'
+  ];
+  const limits = [
+    'يستطيع الأدمن إيقاف منتج مباشر عند الاشتباه في مشكلة امتثال أو سلامة.',
+    'يستطيع اعتماد العقود النموذجية ومراجعة الأذونات والطلبات.',
+    'لا يملك الأدمن تغيير سياسات النظام العليا أو منح نفسه صلاحيات السوبر أدمن.',
+    'لا يستطيع الأدمن الاطلاع على كل الأسرار إلا وفق سياسة الوصول المعتمدة.',
+    'كل إجراء حساس للأدمن يسجل في سجل التدقيق.'
+  ];
+  // Counts already held by the store; nothing is fetched or invented here.
+  const overview = {
+    review: store.products.filter(p => p.status === 'SUBMITTED' || p.status === 'SCREENING').length,
+    paused: store.products.filter(p => p.status === 'PAUSED').length,
+    access: store.recipeGrants.filter(g => g.status === 'REQUESTED').length,
+    disputes: totals.openDisputes,
+    compliance: store.hosts.filter(h => h.verificationStatus !== 'VERIFIED').length,
+    settlements: new Set(store.accruals.filter(a => a.settlementStatus === 'SETTLEMENT_ELIGIBLE').map(a => a.creatorId)).size
   };
 
   const handleRunMonthlySettlementEngine = async () => {
@@ -117,40 +146,39 @@ export const AdminDashboard: React.FC = () => {
       />
 
       {activeTab === 'OVERVIEW' && (
-        <section className="grid xl:grid-cols-[1fr_1fr] gap-6">
-          <div className="glass-panel rounded-3xl p-6 border border-white/10 space-y-4">
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-gold-300" />
-              <h2 className="text-lg font-black">أولويات الأدمن اليومية</h2>
-            </div>
-            {[
-              'مراجعة طلبات الموردين وإعلانات التوظيف الكويتية قبل النشر، مع متابعة طلبات المبدعين والمنشآت.',
-              'متابعة أذونات الإفصاح للوصفات عالية الحساسية.',
-              'حل التعارضات بين المبدع والمنشأة حول الشروط التجارية.',
-              'تشغيل التسويات المالية وإصدار إشعارات الاستحقاق.',
-              'التعامل مع الشكاوى الحرجة أو المخاطر المتعلقة بالجودة.'
-            ].map((item, idx) => (
-              <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10 text-sm text-slate-300 leading-7">
-                {item}
-              </div>
-            ))}
-          </div>
+        <section className="glass-panel rounded-3xl p-4 sm:p-6 border border-white/10 space-y-5">
+          <DnaHubMap
+            ariaLabel="خريطة أولويات الأدمن"
+            animate={false}
+            center={{ icon: <MajalMark size={40} tone="current" />, ariaLabel: 'مجال' }}
+            overline="أولويات الأدمن اليومية"
+            title="ما ينتظر قرارك اليوم"
+            nodes={[
+              { key: 'review', icon: <ClipboardCheck />, label: 'طابور المراجعة', value: overview.review, state: overview.review ? 'attention' : 'ok', onClick: () => setActiveTab('APPROVALS'), title: priorities[0] },
+              { key: 'paused', icon: <PauseCircle />, label: 'منتجات موقوفة', value: overview.paused, onClick: () => setActiveTab('COMPLIANCE'), title: priorities[4] },
+              { key: 'access', icon: <KeyRound />, label: 'طلبات الوصول', value: overview.access, state: overview.access ? 'attention' : 'ok', onClick: () => setActiveTab('ACCESS'), title: priorities[1] },
+              { key: 'disputes', icon: <Gavel />, label: 'نزاعات مفتوحة', value: overview.disputes, state: overview.disputes ? 'attention' : 'ok', onClick: () => setActiveTab('RISK'), title: priorities[2] },
+              { key: 'compliance', icon: <Building2 />, label: 'امتثال المنشآت', value: overview.compliance, onClick: () => setActiveTab('COMPLIANCE'), title: 'منشآت لم يكتمل تحققها' },
+              { key: 'settlements', icon: <Banknote />, label: 'تسويات مستحقة', value: overview.settlements, onClick: () => setActiveTab('SETTLEMENTS'), title: priorities[3] }
+            ]}
+          />
 
-          <div className="glass-panel rounded-3xl p-6 border border-white/10 space-y-4">
-            <div className="flex items-center gap-2">
-              <Gavel className="w-5 h-5 text-emerald-300" />
-              <h2 className="text-lg font-black">حدود صلاحيات الأدمن</h2>
-            </div>
+          <div className="grid md:grid-cols-2 gap-3">
             {[
-              'يستطيع الأدمن إيقاف منتج مباشر عند الاشتباه في مشكلة امتثال أو سلامة.',
-              'يستطيع اعتماد العقود النموذجية ومراجعة الأذونات والطلبات.',
-              'لا يملك الأدمن تغيير سياسات النظام العليا أو منح نفسه صلاحيات السوبر أدمن.',
-              'لا يستطيع الأدمن الاطلاع على كل الأسرار إلا وفق سياسة الوصول المعتمدة.',
-              'كل إجراء حساس للأدمن يسجل في سجل التدقيق.'
-            ].map((item, idx) => (
-              <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10 text-sm text-slate-300 leading-7">
-                {item}
-              </div>
+              { id: 'priorities', icon: <Users className="w-4 h-4 text-gold-300" />, title: 'أولويات الأدمن اليومية', items: priorities },
+              { id: 'limits', icon: <Lock className="w-4 h-4 text-gold-300" />, title: 'حدود صلاحياتك', items: limits }
+            ].map(group => (
+              <details key={group.id} className="group rounded-2xl bg-white/5 border border-white/10">
+                <summary className="list-none flex min-h-12 items-center justify-between gap-2 px-4 cursor-pointer [&::-webkit-details-marker]:hidden">
+                  <span className="flex items-center gap-2 text-sm font-black text-slate-100">{group.icon}{group.title}</span>
+                  <ChevronDown className="w-4 h-4 text-slate-400 transition-transform group-open:rotate-180" aria-hidden="true" />
+                </summary>
+                <ul className="px-4 pb-3 divide-y divide-dashed divide-slate-700/60">
+                  {group.items.map(item => (
+                    <li key={item} className="py-2.5 text-xs text-slate-300 leading-6">{item}</li>
+                  ))}
+                </ul>
+              </details>
             ))}
           </div>
         </section>

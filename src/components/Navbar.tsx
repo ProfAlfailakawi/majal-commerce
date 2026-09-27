@@ -320,11 +320,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }
                 }}
                 className="p-2.5 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-white/5 transition-colors relative"
-                aria-label="فتح التنبيهات"
+                aria-label={unreadCount > 0 ? `فتح التنبيهات: ${unreadCount} غير مقروء` : "فتح التنبيهات"}
                 aria-expanded={showNotifications}
               >
                 <Bell className="w-4 h-4" />
-                {unreadCount > 0 && <><span className="absolute top-2 start-2 w-2 h-2 rounded-full bg-gold-300 animate-ping" /><span className="absolute top-2 start-2 w-2 h-2 rounded-full bg-gold-300" /></>}
+                {unreadCount > 0 && <span aria-hidden="true" className="absolute top-0.5 end-0.5 min-w-4 h-4 px-1 rounded-full bg-gold-500 text-slate-950 text-[10px] font-black leading-4 text-center tabular-nums">{unreadCount > 99 ? '99+' : unreadCount}</span>}
               </button>
 
               {showNotifications && (
