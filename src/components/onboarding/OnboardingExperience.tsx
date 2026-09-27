@@ -16,7 +16,7 @@ import {
   X
 } from 'lucide-react';
 import { MajalMark } from '../brand/MajalMark';
-import { journeyStages } from '../../data/journey';
+import { JourneyStepper } from '../public/JourneyStepper';
 import { OnboardingIntent, intentSurface } from '../../lib/onboarding';
 import { SurfaceType, User } from '../../types/majal';
 import { canAccessSurface } from '../../lib/permissions';
@@ -366,41 +366,9 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                 </p>
               </div>
 
-              <ol className="relative space-y-3 ps-7 sm:ps-9 max-w-2xl mx-auto">
-                {/* The rail is the point of this screen — it is what makes the six items
-                    read as one sequence instead of six features. Decorative, so hidden. */}
-                <span
-                  aria-hidden="true"
-                  className="absolute top-3 bottom-3 start-[0.9rem] sm:start-[1.15rem] w-px bg-gradient-to-b from-gold-500/50 via-sky-400/30 to-emerald-400/40"
-                />
-                {journeyStages.map((stage, index) => (
-                  <li key={stage.index} style={rise(3 + index)} className="relative">
-                    <span
-                      aria-hidden="true"
-                      className={`absolute -start-7 sm:-start-9 top-4 w-[0.55rem] h-[0.55rem] rounded-full ring-4 ring-ink-800 ${stage.accent.dot}`}
-                    />
-                    <div
-                      className={`glass-card rounded-2xl border ${stage.accent.ring} px-4 py-3.5 flex items-center gap-4`}
-                    >
-                      <span
-                        className={`w-10 h-10 shrink-0 rounded-xl ${stage.accent.fill} border ${stage.accent.ring} grid place-items-center ${stage.accent.text}`}
-                      >
-                        {stage.icon}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="flex items-baseline gap-2">
-                          <span className={`text-xs font-black ${stage.accent.text}`} aria-hidden="true">
-                            {stage.index}.
-                          </span>
-                          <span className="text-sm font-black text-slate-100">{stage.title}</span>
-                          <span className="text-xs text-slate-400 font-bold">— {stage.actor}</span>
-                        </span>
-                        <span className="block mt-1 text-xs text-slate-400 leading-6">{stage.brief}</span>
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ol>
+              <div style={rise(3)} className="glass-card rounded-3xl p-4 sm:p-6 max-w-2xl mx-auto">
+                <JourneyStepper detail="brief" />
+              </div>
             </div>
           )}
 
