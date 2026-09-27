@@ -154,7 +154,7 @@ export const AdminDashboard: React.FC = () => {
             overline="أولويات الأدمن اليومية"
             title="ما ينتظر قرارك اليوم"
             nodes={[
-              { key: 'review', icon: <ClipboardCheck />, label: 'طابور المراجعة', value: overview.review, state: overview.review ? 'attention' : 'ok', onClick: () => setActiveTab('APPROVALS'), title: priorities[0] },
+              { key: 'review', icon: <ClipboardCheck />, label: 'منتجات للمراجعة', value: overview.review, state: overview.review ? 'attention' : 'ok', title: 'منتجات مقدَّمة أو قيد الفحص' },
               { key: 'paused', icon: <PauseCircle />, label: 'منتجات موقوفة', value: overview.paused, onClick: () => setActiveTab('COMPLIANCE'), title: priorities[4] },
               { key: 'access', icon: <KeyRound />, label: 'طلبات الوصول', value: overview.access, state: overview.access ? 'attention' : 'ok', onClick: () => setActiveTab('ACCESS'), title: priorities[1] },
               { key: 'disputes', icon: <Gavel />, label: 'نزاعات مفتوحة', value: overview.disputes, state: overview.disputes ? 'attention' : 'ok', onClick: () => setActiveTab('RISK'), title: priorities[2] },
