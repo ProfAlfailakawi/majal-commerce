@@ -55,6 +55,8 @@ export const INTEGRATION_SIMULATORS_ENABLED =
   IS_DEMO_MODE && import.meta.env.VITE_ENABLE_INTEGRATION_SIMULATORS === 'true';
 
 export const DEMO_STORAGE_KEY = 'majal_demo_state_v6';
+/** Demo suppliers, jobs and applications (see data/demoEcosystem.ts). */
+import { DEMO_ECOSYSTEM_STORAGE_KEY } from '../data/demoEcosystem';
 
 /**
  * Enter the demo in this tab.
@@ -82,6 +84,7 @@ export function exitDemoMode(): boolean {
   try {
     window.sessionStorage.removeItem(DEMO_ACTIVE_KEY);
     window.sessionStorage.removeItem(DEMO_STORAGE_KEY);
+    window.sessionStorage.removeItem(DEMO_ECOSYSTEM_STORAGE_KEY);
   } catch {
     return false;
   }
@@ -94,6 +97,7 @@ export function resetDemoData(): boolean {
   if (!IS_DEMO_MODE || typeof window === 'undefined') return false;
   try {
     window.sessionStorage.removeItem(DEMO_STORAGE_KEY);
+    window.sessionStorage.removeItem(DEMO_ECOSYSTEM_STORAGE_KEY);
   } catch {
     return false;
   }

@@ -383,7 +383,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       disabled={u.status === 'SUSPENDED'}
                       onClick={() => {
                         onUserChange(u);
-                        onSurfaceChange(roleToSurface(u.role));
+                        onSurfaceChange(u.accountType === 'SUPPLIER' ? 'SUPPLIER' : roleToSurface(u.role));
                         setShowRoleDropdown(false);
                       }}
                       className={`w-full flex items-center justify-between p-2.5 rounded-xl text-start transition-colors ${u.status === 'SUSPENDED' ? 'opacity-40 cursor-not-allowed' : ''} ${
@@ -394,7 +394,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         <Avatar name={u.name} src={u.avatar} size={32} />
                         <div className="min-w-0 text-start">
                           <span className="block text-xs font-medium truncate">{u.name}</span>
-                          <span className="block text-xs text-slate-400 truncate">{roleLabels[u.role]}{u.status === 'SUSPENDED' ? ' — موقوف' : ''}</span>
+                          <span className="block text-xs text-slate-400 truncate">{u.accountType === 'SUPPLIER' ? 'مورد' : roleLabels[u.role]}{u.status === 'SUSPENDED' ? ' — موقوف' : ''}</span>
                         </div>
                       </div>
                       {activeUser.id === u.id ? <UserCheck className="w-4 h-4 text-gold-300" /> : <Users className="w-4 h-4 text-slate-400" />}

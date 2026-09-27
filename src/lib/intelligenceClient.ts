@@ -10,10 +10,12 @@
  * never raw recipe secrets or hidden financials.
  */
 import { authCsrfToken } from './authClient';
-import { AI_ASSISTANT_ENABLED } from './runtime';
+import { AI_ASSISTANT_ENABLED, IS_DEMO_MODE } from './runtime';
 
 async function post<T>(url: string, body: unknown): Promise<T | null> {
-  if (!AI_ASSISTANT_ENABLED) return null;
+  // A demo tab has no session, so these endpoints can only answer 401; skip the
+  // request and keep the deterministic output, exactly as the degraded path does.
+  if (!AI_ASSISTANT_ENABLED || IS_DEMO_MODE) return null;
   try {
     const response = await fetch(url, {
       method: 'POST',
