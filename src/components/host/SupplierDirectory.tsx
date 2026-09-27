@@ -53,7 +53,7 @@ export const SupplierDirectory: React.FC = () => {
             return (
               <article key={supplier.id} className="rounded-2xl p-4 bg-white/[0.025] border border-white/10 space-y-3">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0"><h4 className="font-black text-sm text-slate-100 truncate">{supplier.commercialName}</h4><p className="text-xs text-slate-400 mt-1">{supplier.category} · {supplier.region}</p></div>
+                  <div className="min-w-0"><h4 className="font-black text-sm text-slate-100 break-words sm:truncate" title={supplier.commercialName}>{supplier.commercialName}</h4><p className="text-xs text-slate-400 mt-1">{supplier.category} · {supplier.region}</p></div>
                   <span className="shrink-0 inline-flex items-center gap-1 text-xs font-bold text-emerald-300"><PackageCheck className="w-3.5 h-3.5" /> معتمد</span>
                 </div>
                 {supplier.description && <p className="text-xs text-slate-400 leading-6 line-clamp-2">{supplier.description}</p>}

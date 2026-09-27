@@ -128,7 +128,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
                 </div>
               </div>
               <div className="p-5 space-y-4">
-                <div className="grid grid-cols-4 gap-2 text-center">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                   <div className="rounded-xl p-3 bg-white/5"><Star className="w-4 h-4 text-gold-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.rating.toFixed(1)}</div><div className="text-xs text-slate-400">الطعم</div></div>
                   <div className="rounded-xl p-3 bg-white/5"><Repeat2 className="w-4 h-4 text-emerald-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.repeat}%</div><div className="text-xs text-slate-400">يكرر</div></div>
                   <div className="rounded-xl p-3 bg-white/5"><Users className="w-4 h-4 text-sky-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.keep}%</div><div className="text-xs text-slate-400">نسبة التكرار</div></div>

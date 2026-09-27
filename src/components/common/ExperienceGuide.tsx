@@ -151,7 +151,7 @@ export const ExperienceGuide: React.FC<ExperienceGuideProps> = ({ activeSurface,
             <span className="w-10 h-10 shrink-0 rounded-xl bg-gold-500/15 border border-gold-300/20 grid place-items-center text-gold-300"><Compass className="w-5 h-5" /></span>
             <div className="min-w-0">
               <span className="block text-xs font-black tracking-wide text-gold-300 uppercase">{nextMove.eyebrow}</span>
-              <span className="block text-sm font-black text-slate-100 truncate">{nextMove.title}</span>
+              <span className="block text-sm font-black text-slate-100 sm:truncate" title={nextMove.title}>{nextMove.title}</span>
               {mode !== 'SIMPLE' && <span className="block text-xs text-slate-400 mt-1 leading-5">{nextMove.reason}</span>}
               {mode === 'EXPERT' && <span className="inline-flex mt-1 text-xs text-sky-300">إشارة السياق: {nextMove.signal} · السطح الحالي: {surfaceMeta[activeSurface].label}</span>}
             </div>

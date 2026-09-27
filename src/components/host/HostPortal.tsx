@@ -188,7 +188,7 @@ export const HostPortal: React.FC = () => {
             ))}
           </div>
 
-          {['HOST_OWNER', 'HOST_OPERATIONS'].includes(store.activeUser.role) && <EmployerJobsStrip onCreate={() => setShowJobComposer(true)} />}
+          {['HOST_OWNER', 'HOST_OPERATIONS'].includes(store.activeUser.role) && <EmployerJobsStrip viewerId={store.activeUser.id} onCreate={() => setShowJobComposer(true)} />}
 
           {canDiscover && <SupplierDirectory />}
           {canDiscover && <ProductDiscovery />}

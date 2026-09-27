@@ -60,7 +60,7 @@ export const TrustEngine: React.FC = () => {
           {hostSignals.map(card => (
             <div key={card.host.id} className="rounded-xl p-3 bg-slate-950/45 border border-white/10">
               <div className="flex items-center justify-between text-xs gap-3">
-                <div className="flex items-center gap-2 min-w-0"><UserRoundCheck className={`w-4 h-4 shrink-0 ${card.risk === 'LOW' ? 'text-emerald-300' : card.risk === 'MEDIUM' ? 'text-amber-300' : 'text-rose-300'}`} /><span className="font-bold text-slate-200 truncate">{card.host.commercialName}</span></div>
+                <div className="flex items-center gap-2 min-w-0"><UserRoundCheck className={`w-4 h-4 shrink-0 ${card.risk === 'LOW' ? 'text-emerald-300' : card.risk === 'MEDIUM' ? 'text-amber-300' : 'text-rose-300'}`} /><span className="font-bold text-slate-200 break-words sm:truncate" title={card.host.commercialName}>{card.host.commercialName}</span></div>
                 <strong className={card.risk === 'LOW' ? 'text-emerald-300' : card.risk === 'MEDIUM' ? 'text-amber-300' : 'text-rose-300'}>{card.score}/100</strong>
               </div>
               <div className="mt-2 h-2 rounded-full bg-white/5 overflow-hidden"><div className="h-full rounded-full bg-gradient-to-l from-emerald-400 to-gold-500" style={{ width: `${card.score}%` }} /></div>

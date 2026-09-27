@@ -229,7 +229,7 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
                 </h4>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full text-start">
+                  <table className="mobile-cards w-full text-start">
                     <thead>
                       <tr className="border-b border-slate-800 text-slate-400">
                         <th className="py-2 px-3 font-semibold">المكون</th>
@@ -242,11 +242,11 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
                     <tbody className="divide-y divide-slate-800/60">
                       {currentRecipe?.ingredients.map((ing, idx) => (
                         <tr key={idx} className={ing.isSecretPart ? 'bg-amber-500/5' : ''}>
-                          <td className="py-2 px-3 font-medium text-slate-200">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? 'مكوّن سري محجوب' : ing.name}</td>
-                          <td className="py-2 px-3 text-slate-300 font-bold">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? '•••' : ing.quantity}</td>
-                          <td className="py-2 px-3 text-slate-400">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? 'L3' : ing.unit}</td>
-                          <td className="py-2 px-3 text-amber-400 font-mono">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? 'محجوب' : `${ing.estimatedCostKwd.toFixed(3)} د.ك`}</td>
-                          <td className="py-2 px-3">
+                          <td data-label="المكون" className="py-2 px-3 font-medium text-slate-200">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? 'مكوّن سري محجوب' : ing.name}</td>
+                          <td data-label="الكمية" className="py-2 px-3 text-slate-300 font-bold">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? '•••' : ing.quantity}</td>
+                          <td data-label="الوحدة" className="py-2 px-3 text-slate-400">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? 'L3' : ing.unit}</td>
+                          <td data-label="التكلفة التقديرية" className="py-2 px-3 text-amber-400 font-mono">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? 'محجوب' : `${ing.estimatedCostKwd.toFixed(3)} د.ك`}</td>
+                          <td data-label="خاصية السرية" className="py-2 px-3">
                             {ing.isSecretPart ? (
                               <span className="px-2 py-0.5 rounded text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30">
                                 عنصر سري

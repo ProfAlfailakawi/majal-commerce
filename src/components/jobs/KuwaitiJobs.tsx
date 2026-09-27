@@ -1,4 +1,5 @@
 import React, { FormEvent, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { BriefcaseBusiness, CheckCircle2, MapPin, ShieldCheck, UserCheck, X } from 'lucide-react';
 import { applyToKuwaitiJob, fetchPublicEcosystem } from '../../lib/ecosystemClient';
 import { KuwaitiJobPost } from '../../types/majal';
@@ -110,12 +111,12 @@ export const KuwaitiJobs: React.FC = () => {
 
       <p className="text-xs text-slate-300 leading-5">اعتماد الإعلان من الإدارة لا يعني اعتماد المرشح أو التحقق من جنسيته. التحقق الرسمي من الهوية/الجنسية يحتاج تكاملًا حكوميًا معتمدًا.</p>
 
-      {selected && (
+      {selected && createPortal(
         <div
           className="fixed inset-0 z-[85] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4"
           onMouseDown={event => event.target === event.currentTarget && close()}
         >
-          <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="job-detail-title" className="w-full max-w-xl max-h-[90vh] overflow-y-auto glass-panel rounded-[28px] border border-white/10 p-6 relative">
+          <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="job-detail-title" className="w-full max-w-xl max-h-[90dvh] overflow-y-auto overscroll-contain glass-panel rounded-[28px] border border-white/10 p-6 relative">
             <button
               type="button"
               onClick={close}
@@ -200,7 +201,7 @@ export const KuwaitiJobs: React.FC = () => {
             )}
           </div>
         </div>
-      )}
+      , document.body)}
     </section>
   );
 };

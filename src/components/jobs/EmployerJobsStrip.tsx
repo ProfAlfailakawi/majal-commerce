@@ -6,10 +6,21 @@ import { JobApplicationsButton } from './JobApplications';
 
 const statusLabel = (status: KuwaitiJobPost['status']) => status === 'PENDING_REVIEW' ? 'بانتظار الإدارة' : status === 'APPROVED' ? 'منشور' : status === 'REJECTED' ? 'يحتاج تعديل' : 'مغلق';
 
-export const EmployerJobsStrip: React.FC<{ onCreate: () => void }> = ({ onCreate }) => {
+/**
+ * `viewerId` is the active identity. /me is derived from it (the demo switcher can move
+ * between two employers without unmounting the host portal), so the list is refetched —
+ * and the previous employer's jobs cleared — whenever it changes.
+ */
+export const EmployerJobsStrip: React.FC<{ onCreate: () => void; viewerId: string }> = ({ onCreate, viewerId }) => {
   const [jobs, setJobs] = useState<KuwaitiJobPost[]>([]);
   const [expanded, setExpanded] = useState(false);
-  useEffect(() => { let live = true; void fetchMyEcosystem().then(r => { if (live) setJobs(r.jobs); }).catch(() => undefined); return () => { live = false; }; }, []);
+  useEffect(() => {
+    let live = true;
+    setJobs([]);
+    setExpanded(false);
+    void fetchMyEcosystem().then(r => { if (live) setJobs(r.jobs); }).catch(() => undefined);
+    return () => { live = false; };
+  }, [viewerId]);
   const pending = jobs.filter(job => job.status === 'PENDING_REVIEW').length;
 
   return <section className="glass-card rounded-2xl border border-emerald-400/15 overflow-hidden">
@@ -22,7 +33,7 @@ export const EmployerJobsStrip: React.FC<{ onCreate: () => void }> = ({ onCreate
       <button type="button" onClick={onCreate} className="px-4 py-2.5 rounded-xl bg-emerald-400 text-slate-950 text-xs font-black whitespace-nowrap inline-flex items-center justify-center gap-1.5"><Plus className="w-4 h-4" />إعلان جديد</button>
     </div>
     {expanded && jobs.length > 0 && <div className="border-t border-white/5 px-5 pb-5 pt-4 space-y-2">
-      {jobs.slice(0, 8).map(job => <div key={job.id} className="rounded-xl p-3 bg-white/[0.025] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div className="min-w-0"><div className="font-black text-xs text-slate-100 truncate">{job.title}</div><div className="text-xs text-slate-400 mt-1 flex items-center gap-1"><Clock3 className="w-3 h-3" />{statusLabel(job.status)} · {job.location}</div>{job.adminNote && <div className="text-xs text-amber-300 mt-1">ملاحظة الإدارة: {job.adminNote}</div>}</div><JobApplicationsButton job={job} /></div>)}
+      {jobs.slice(0, 8).map(job => <div key={job.id} className="rounded-xl p-3 bg-white/[0.025] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div className="min-w-0"><div className="font-black text-sm sm:text-xs text-slate-100 break-words sm:truncate" title={job.title}>{job.title}</div><div className="text-xs text-slate-400 mt-1 flex items-center gap-1"><Clock3 className="w-3 h-3" />{statusLabel(job.status)} · {job.location}</div>{job.adminNote && <div className="text-xs text-amber-300 mt-1">ملاحظة الإدارة: {job.adminNote}</div>}</div><JobApplicationsButton job={job} /></div>)}
     </div>}
   </section>;
 };

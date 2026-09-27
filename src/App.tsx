@@ -178,7 +178,7 @@ export default function App() {
 
         <ExperienceGuide activeSurface={activeSurface} onSurfaceChange={handleSurfaceChange} />
 
-        <main id="main-content" tabIndex={-1} className="animate-in fade-in duration-300 flex-1 pb-10 outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
+        <main id="main-content" tabIndex={-1} className="animate-in fade-in duration-300 flex-1 pb-28 sm:pb-10 outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
           <Suspense fallback={<SurfaceFallback />}>
             {legalDocument ? <LegalCenter initialDocument={legalDocument} onBack={closeLegal} /> : <>
               {activeSurface === 'PUBLIC' && <PublicLanding onSurfaceChange={handleSurfaceChange} />}
@@ -193,10 +193,10 @@ export default function App() {
         </main>
       </div>
 
-      {AI_ASSISTANT_ENABLED && <div className="fixed bottom-6 end-6 z-40">
+      {AI_ASSISTANT_ENABLED && <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] end-4 sm:bottom-6 sm:end-6 z-40">
         <button
           onClick={() => setShowAiDrawer(true)}
-          className="px-4 py-3 bg-gradient-to-l from-gold-500 to-gold-300 hover:from-gold-400 hover:to-gold-200 text-slate-950 font-black rounded-full shadow-2xl transition-[filter] hover:brightness-110 flex items-center gap-2 text-xs border border-gold-200/30"
+          className="max-sm:min-h-12 max-sm:min-w-12 px-4 py-3 bg-gradient-to-l from-gold-500 to-gold-300 hover:from-gold-400 hover:to-gold-200 text-slate-950 font-black rounded-full shadow-2xl transition-[filter] hover:brightness-110 flex items-center gap-2 text-xs border border-gold-200/30"
           aria-label="فتح مساعد مجال الذكي"
         >
           <Bot className="w-5 h-5 text-slate-950" />

@@ -47,7 +47,7 @@ export const TeamPermissions: React.FC<TeamPermissionsProps> = ({ hostBusinessId
               <div className="flex items-center gap-3">
                 <Avatar name={member.name} src={member.avatar} size={44} shape="squircle" />
                 <div className="min-w-0">
-                  <div className="font-black text-slate-100 truncate">{member.name}</div>
+                  <div className="font-black text-slate-100 break-words sm:truncate" title={member.name}>{member.name}</div>
                   <div className="text-xs text-slate-400 mt-1 flex items-center gap-1.5">{roleIcon(member.role)} {roleLabel(member.role)}</div>
                 </div>
               </div>

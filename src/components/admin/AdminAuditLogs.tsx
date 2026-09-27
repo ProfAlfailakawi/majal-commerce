@@ -40,7 +40,7 @@ export const AdminAuditLogs: React.FC = () => {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-start">
+        <table className="mobile-cards w-full text-start">
           <thead>
             <tr className="border-b border-slate-800 text-slate-400">
               <th className="py-2.5 px-3 font-semibold">التاريخ والوقت</th>
@@ -53,15 +53,15 @@ export const AdminAuditLogs: React.FC = () => {
           <tbody className="divide-y divide-slate-800/60 font-mono">
             {filteredLogs.map(log => (
               <tr key={log.id} className="hover:bg-slate-800/40 transition-colors">
-                <td className="py-2.5 px-3 text-slate-400">{new Date(log.timestamp).toLocaleString('ar-KW')}</td>
-                <td className="py-2.5 px-3">
+                <td data-label="التاريخ والوقت" className="py-2.5 px-3 text-slate-400">{new Date(log.timestamp).toLocaleString('ar-KW')}</td>
+                <td data-label="نوع الحدث" className="py-2.5 px-3">
                   <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                     {log.action}
                   </span>
                 </td>
-                <td className="py-2.5 px-3 text-slate-300 font-bold">{log.entityType}</td>
-                <td className="py-2.5 px-3 text-slate-200 font-sans">{log.details}</td>
-                <td className="py-2.5 px-3 text-slate-400 text-xs">{log.ipAddress}</td>
+                <td data-label="نوع الكيان" className="py-2.5 px-3 text-slate-300 font-bold">{log.entityType}</td>
+                <td data-label="التفاصيل والوصف" className="py-2.5 px-3 text-slate-200 font-sans">{log.details}</td>
+                <td data-label="عنوان IP والمدينة" className="py-2.5 px-3 text-slate-400 text-xs">{log.ipAddress}</td>
               </tr>
             ))}
           </tbody>
