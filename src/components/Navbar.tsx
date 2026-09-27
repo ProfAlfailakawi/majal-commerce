@@ -177,17 +177,17 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="sticky top-0 z-40 glass-nav text-slate-100 shadow-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <button onClick={() => onSurfaceChange('PUBLIC')} className="flex items-center gap-3 text-start group focus:outline-none min-w-0 focus-visible:ring-2 focus-visible:ring-gold-300" aria-label="العودة إلى صفحة مجال العامة">
+        <div className="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <button onClick={() => onSurfaceChange('PUBLIC')} className="flex items-center gap-2 sm:gap-3 text-start group focus:outline-none shrink-0 xl:shrink xl:min-w-0 focus-visible:ring-2 focus-visible:ring-gold-300" aria-label="العودة إلى صفحة مجال العامة">
               <span className="grid place-items-center w-11 h-11 rounded-2xl bg-white/[0.04] border border-gold-300/15 shrink-0 transition-all duration-200 group-hover:border-gold-300/35 group-hover:bg-gold-500/10">
                 <MajalMark size={26} />
               </span>
               <div className="min-w-0">
-                <span className="text-2xl font-black majal-wordmark block truncate leading-tight">
+                <span className="text-xl sm:text-2xl font-black majal-wordmark block truncate leading-tight">
                   مجال
                 </span>
-                <span className="block text-xs text-slate-400 font-medium truncate">
+                <span className="hidden lg:block text-xs text-slate-400 font-medium truncate">
                   منصة الحاضن التجاري المرخّص
                 </span>
               </div>
@@ -197,16 +197,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               /* Deliberately the loudest chip on the bar. Anyone glancing at a
                  shared screen should be able to tell that none of this inventory,
                  these orders or these payouts are real. */
-              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-black bg-amber-500/15 text-amber-300 border border-amber-400/35">
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-black max-xl:whitespace-nowrap max-xl:shrink-0 bg-amber-500/15 text-amber-300 border border-amber-400/35">
                 <FlaskConical className="w-3.5 h-3.5" aria-hidden="true" />
-                <span className="hidden sm:inline">بيئة تجريبية — بيانات مصطنعة</span>
-                <span className="sm:hidden">DEMO</span>
+                <span className="hidden lg:inline">بيئة تجريبية — بيانات مصطنعة</span>
+                <span className="lg:hidden">DEMO</span>
                 <button
                   type="button"
                   onClick={() => resetDemoData()}
                   title="إعادة تعيين البيانات التجريبية"
                   aria-label="إعادة تعيين البيانات التجريبية"
-                  className="grid place-items-center w-5 h-5 rounded-full hover:bg-white/15 transition-colors"
+                  className="hidden sm:grid place-items-center w-5 h-5 rounded-full hover:bg-white/15 transition-colors"
                 >
                   <RefreshCw className="w-3 h-3" />
                 </button>
@@ -215,7 +215,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={() => exitDemoMode()}
                   title="الخروج من البيئة التجريبية"
                   aria-label="الخروج من البيئة التجريبية"
-                  className="grid place-items-center w-5 h-5 rounded-full hover:bg-white/15 transition-colors"
+                  className="hidden sm:grid place-items-center w-5 h-5 rounded-full hover:bg-white/15 transition-colors"
                 >
                   <LogOut className="w-3 h-3" />
                 </button>
@@ -246,7 +246,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             })}
           </nav>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
             {!IS_DEMO_MODE && authStatus === 'LOADING' && <span className="p-2.5 text-gold-300"><MajalLoader size={16} label="جاري التحقق من الجلسة" /></span>}
 
             {/* Offered only to a visitor with no live session: a signed-in operator
@@ -273,7 +273,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               {/* Name/role are hidden on phones, but security + logout stay reachable. */}
               <span className="hidden sm:grid w-7 h-7 rounded-full bg-gold-500/20 text-gold-300 place-items-center font-black text-xs" aria-hidden="true">{activeUser.name.slice(0, 1)}</span>
               <div className="hidden sm:flex flex-col text-start">
-                <span className="max-w-28 truncate text-xs font-bold text-slate-100">{activeUser.name}</span>
+                <span className="max-w-28 truncate text-xs font-bold text-slate-100" title={activeUser.name}>{activeUser.name}</span>
                 <span className="text-xs text-gold-300 font-semibold">{activeUser.accountType === 'SUPPLIER' ? 'مورد' : roleLabels[activeUser.role]}</span>
               </div>
               {['SUPER_ADMIN', 'ADMIN'].includes(activeUser.role) && (
@@ -300,7 +300,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {AI_ASSISTANT_ENABLED && <button
               onClick={onOpenAiDrawer}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold-500/10 text-gold-200 hover:bg-gold-500/15 border border-gold-300/20 text-xs font-medium transition-colors cursor-pointer"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold-500/10 text-gold-200 hover:bg-gold-500/15 border border-gold-300/20 text-xs font-medium transition-colors cursor-pointer"
               title="مساعد مجال الذكي"
             >
               <Bot className="w-4 h-4 text-gold-300" />
@@ -328,7 +328,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
 
               {showNotifications && (
-                <div className="absolute end-0 mt-2 w-96 max-w-[90vw] bg-ink-700/95 border border-white/10 rounded-2xl shadow-2xl p-4 text-xs text-slate-200 z-50 animate-in fade-in slide-in-from-top-2">
+                <div className="fixed inset-x-3 top-[4.5rem] sm:absolute sm:inset-x-auto sm:top-auto sm:end-0 mt-2 sm:w-96 max-w-[calc(100vw-1.5rem)] max-h-[calc(100dvh-6rem)] overflow-y-auto bg-ink-700 sm:bg-ink-700/95 border border-white/10 rounded-2xl shadow-2xl p-4 text-xs text-slate-200 z-50 animate-in fade-in slide-in-from-top-2">
                   <div className="font-bold pb-3 mb-3 flex justify-between items-center text-gold-300 border-b border-white/10">
                     <div><span className="block">مركز القرار</span><span className="text-xs text-slate-400 font-medium">الأهم أولاً، والمتكرر يُدمج</span></div>
                     <div className="flex items-center gap-2">
@@ -360,22 +360,27 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setShowRoleDropdown(next);
                   if (next) setShowNotifications(false);
                 }}
-                className="flex items-center gap-2 p-1.5 ps-2.5 rounded-2xl bg-ink-700/80 hover:bg-ink-500 border border-white/10 text-xs font-medium transition-colors"
+                className="flex items-center gap-1 sm:gap-2 max-sm:min-h-11 p-1.5 ps-1.5 sm:ps-2.5 rounded-2xl bg-ink-700/80 hover:bg-ink-500 border border-white/10 text-xs font-medium transition-colors"
                 aria-label="تبديل هوية العرض المحلية"
                 aria-expanded={showRoleDropdown}
               >
                 <Avatar name={activeUser.name} src={activeUser.avatar} size={32} />
-                <div className="text-start hidden md:block max-w-[180px]">
-                  <span className="block font-bold text-slate-200 text-xs leading-tight truncate">{activeUser.name}</span>
+                <div className="text-start hidden lg:block max-w-[180px]">
+                  <span className="block font-bold text-slate-200 text-xs leading-tight truncate" title={activeUser.name}>{activeUser.name}</span>
                   <span className="block text-xs text-gold-300 truncate">{roleLabels[activeUser.role]}</span>
                 </div>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                <ChevronDown className="hidden sm:block w-3.5 h-3.5 text-slate-400" />
               </button>
 
               {showRoleDropdown && (
-                <div role="menu" aria-label="تبديل هوية العرض المحلية" className="absolute end-0 mt-2 w-80 max-w-[90vw] bg-ink-700/96 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 text-xs text-slate-200 max-h-[70dvh] overflow-y-auto">
+                <div role="menu" aria-label="تبديل هوية العرض المحلية" className="fixed inset-x-3 top-[4.5rem] sm:absolute sm:inset-x-auto sm:top-auto sm:end-0 mt-2 sm:w-80 max-w-[calc(100vw-1.5rem)] bg-ink-700 sm:bg-ink-700/96 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 text-xs text-slate-200 max-h-[calc(100dvh-6rem)] sm:max-h-[70dvh] overflow-y-auto overscroll-contain">
                   <div className="px-2 py-2 text-xs text-slate-400 font-bold uppercase tracking-wider border-b border-white/10 mb-1">
                     تبديل أدوار العرض — Creator / Host / Admin / Super Admin
+                  </div>
+                  {/* On phones the demo chip is a plain badge; its two actions live here. */}
+                  <div className="sm:hidden grid grid-cols-2 gap-2 p-1 pb-2 mb-1 border-b border-white/10">
+                    <button type="button" onClick={() => resetDemoData()} className="min-h-11 flex items-center justify-center gap-2 rounded-xl bg-amber-500/10 border border-amber-400/30 text-amber-200 text-sm font-bold"><RefreshCw className="w-4 h-4" aria-hidden="true" />إعادة التعيين</button>
+                    <button type="button" onClick={() => exitDemoMode()} className="min-h-11 flex items-center justify-center gap-2 rounded-xl bg-white/5 border border-white/10 text-slate-200 text-sm font-bold"><LogOut className="w-4 h-4" aria-hidden="true" />خروج من العرض</button>
                   </div>
                   {store.users.map(u => (
                     <button
@@ -386,15 +391,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                         onSurfaceChange(u.accountType === 'SUPPLIER' ? 'SUPPLIER' : roleToSurface(u.role));
                         setShowRoleDropdown(false);
                       }}
-                      className={`w-full flex items-center justify-between p-2.5 rounded-xl text-start transition-colors ${u.status === 'SUSPENDED' ? 'opacity-40 cursor-not-allowed' : ''} ${
+                      className={`w-full max-sm:min-h-12 flex items-center justify-between max-sm:gap-2 p-2.5 rounded-xl text-start transition-colors ${u.status === 'SUSPENDED' ? 'opacity-40 cursor-not-allowed' : ''} ${
                         activeUser.id === u.id ? 'bg-gold-500/15 text-gold-200 font-bold border border-gold-300/15' : 'hover:bg-white/5 text-slate-300'
                       }`}
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <Avatar name={u.name} src={u.avatar} size={32} />
                         <div className="min-w-0 text-start">
-                          <span className="block text-xs font-medium truncate">{u.name}</span>
-                          <span className="block text-xs text-slate-400 truncate">{u.accountType === 'SUPPLIER' ? 'مورد' : roleLabels[u.role]}{u.status === 'SUSPENDED' ? ' — موقوف' : ''}</span>
+                          <span className="block text-sm sm:text-xs font-medium sm:truncate leading-snug" title={u.name}>{u.name}</span>
+                          <span className="block text-xs text-slate-400 sm:truncate">{u.accountType === 'SUPPLIER' ? 'مورد' : roleLabels[u.role]}{u.status === 'SUSPENDED' ? ' — موقوف' : ''}</span>
                         </div>
                       </div>
                       {activeUser.id === u.id ? <UserCheck className="w-4 h-4 text-gold-300" /> : <Users className="w-4 h-4 text-slate-400" />}
@@ -406,14 +411,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        <div className="xl:hidden flex items-center gap-2 overflow-x-auto py-3 border-t border-white/10 text-xs no-scrollbar">
+        <div className="xl:hidden flex items-center gap-2 overflow-x-auto py-2 sm:py-3 border-t border-white/10 text-xs no-scrollbar">
           {surfaces.map(s => {
             const isActive = activeSurface === s.id;
             return (
               <button
                 key={s.id}
                 onClick={() => onSurfaceChange(s.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl whitespace-nowrap text-xs font-medium ${
+                className={`flex items-center gap-1.5 px-3 py-2 min-h-11 rounded-xl whitespace-nowrap text-sm sm:text-xs font-medium ${
                   isActive ? 'bg-gold-500 text-slate-950 font-black' : 'bg-white/5 text-slate-300'
                 }`}
               >

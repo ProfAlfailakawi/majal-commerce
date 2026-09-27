@@ -803,3 +803,55 @@ textarea:disabled {
   .print-area { position: absolute; inset: 0; background: #ffffff !important; box-shadow: none !important; border: 0 !important; backdrop-filter: none !important; }
   .print\:hidden { display: none !important; }
 }
+
+/* ── Phones: touch targets ───────────────────────────────────────────────────
+   Desktop density is the identity; on a touch phone every control still needs a
+   44px hit area (WCAG 2.5.5 / Apple HIG). Scoped to narrow coarse-pointer screens
+   so the desktop layout does not move. Text links inside running copy are left alone. */
+@media (max-width: 767px), (max-width: 1279px) and (pointer: coarse) {
+  :where(button, [role="tab"], [role="menuitem"], select,
+         input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]),
+         a.inline-flex, a.flex):not(.sr-only) {
+    min-height: 44px;
+  }
+  input[type="range"] { min-height: 44px; }
+  /* iOS zooms into any field under 16px on focus; keep the page still. */
+  :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea) { font-size: max(16px, 1em); }
+  /* Keep the focused field clear of the on-screen keyboard and sticky header. */
+  :where(input, select, textarea) { scroll-margin-block: 96px 160px; }
+}
+
+/* ── Phones: tables become labelled cards ────────────────────────────────────
+   A five-column audit or payout table squeezed to 343px breaks words letter by
+   letter. Below md each row is a card and each cell carries its own column name
+   (data-label), so nothing is dropped and nothing scrolls sideways. */
+@media (max-width: 767px) {
+  table.mobile-cards, table.mobile-cards tbody { display: block; width: 100%; min-width: 0; }
+  table.mobile-cards thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  table.mobile-cards tr {
+    display: block; margin-block-end: 0.75rem; padding: 0.75rem 0.875rem;
+    border: 1px solid rgb(255 255 255 / 0.1); border-radius: 1rem; background: rgb(255 255 255 / 0.025);
+  }
+  table.mobile-cards td {
+    display: grid; grid-template-columns: minmax(6.5rem, 38%) 1fr; gap: 0.75rem; align-items: baseline;
+    padding: 0.4rem 0 !important; border: 0; font-size: 0.875rem; overflow-wrap: anywhere; text-align: start;
+  }
+  table.mobile-cards td + td { border-top: 1px dashed rgb(255 255 255 / 0.08); }
+  table.mobile-cards td::before {
+    content: attr(data-label); font-family: var(--font-sans, inherit); font-size: 0.75rem; font-weight: 700;
+    color: var(--color-slate-400, #94a3b8);
+  }
+  table.mobile-cards caption { display: block; }
+  [data-theme="light"] table.mobile-cards tr { border-color: rgb(15 23 42 / 0.12); background: rgb(255 255 255 / 0.6); }
+  [data-theme="light"] table.mobile-cards td + td { border-top-color: rgb(15 23 42 / 0.08); }
+  [data-theme="contrast"] table.mobile-cards tr { border-color: #fff; background: #000; }
+}
+
+/* Icon-only and compact square controls get the full 44px width on touch phones too. */
+@media (max-width: 767px), (max-width: 1279px) and (pointer: coarse) {
+  :where(button):has(> svg:only-child),
+  :where(button):where(.p-1, .p-1\.5, .p-2, .p-2\.5, .w-5, .w-6, .w-7, .w-8, .w-9, .w-10) { min-width: 44px; }
+}
+
+/* Notched phones (viewport-fit=cover): keep the sticky bar clear of the status bar. 0 elsewhere. */
+header.glass-nav { padding-top: env(safe-area-inset-top, 0px); }

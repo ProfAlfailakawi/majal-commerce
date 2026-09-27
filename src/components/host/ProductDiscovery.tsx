@@ -85,16 +85,16 @@ export const ProductDiscovery: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-300">
-            <span>حد أدنى للمطابقة:</span>
+            <span className="shrink-0 whitespace-nowrap">حد أدنى للمطابقة:</span>
             <input
               type="range"
               min="50"
               max="95"
               value={minMatchScore}
               onChange={(e) => setMinMatchScore(parseInt(e.target.value))}
-              className="accent-amber-500 flex-1"
+              className="accent-amber-500 flex-1 min-w-0"
             />
-            <span className="font-bold text-amber-400 font-mono">{minMatchScore}٪</span>
+            <span className="shrink-0 font-bold text-amber-400 font-mono">{minMatchScore}٪</span>
           </div>
         </div>
       </div>
@@ -125,8 +125,8 @@ export const ProductDiscovery: React.FC = () => {
                   <div className="flex items-center gap-3 min-w-0">
                     <img src={p.mediaUrls[0]} alt={p.publicName} loading="lazy" decoding="async" className="w-14 h-14 rounded-xl object-cover ring-1 ring-slate-700 shrink-0" />
                     <div className="min-w-0">
-                      <h3 className="font-black text-slate-100 text-base truncate">{p.publicName}</h3>
-                      <span className="text-xs text-slate-400 block truncate">بواسطة: <strong className="text-amber-400">{creator?.displayName}</strong></span>
+                      <h3 className="font-black text-slate-100 text-base line-clamp-2 sm:line-clamp-none sm:truncate" title={p.publicName}>{p.publicName}</h3>
+                      <span className="text-xs text-slate-400 block break-words sm:truncate" title={creator?.displayName}>بواسطة: <strong className="text-amber-400">{creator?.displayName}</strong></span>
                     </div>
                   </div>
 

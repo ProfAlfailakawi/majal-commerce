@@ -68,7 +68,7 @@ export const PayoutStatement: React.FC = () => {
           </dl>
           {data.lines.length === 0 ? <p className="text-xs text-slate-300">لا توجد طلبات مدفوعة بعد.</p> : (
             <div className="overflow-x-auto">
-              <table className="w-full text-xs text-start">
+              <table className="mobile-cards w-full text-xs text-start">
                 <caption className="sr-only">تفصيل المستحقات لكل طلب</caption>
                 <thead className="text-slate-300">
                   <tr className="border-b border-white/10">
@@ -78,12 +78,12 @@ export const PayoutStatement: React.FC = () => {
                 <tbody>
                   {data.lines.map(line => (
                     <tr key={line.accrualId} className="border-b border-white/5 align-top">
-                      <td className="py-2"><div className="font-bold text-slate-100">{line.productName}</div><div className="text-slate-300">{line.orderId} · {line.units} وحدة · {day(line.orderedAt)}</div></td>
-                      <td className="font-mono">{formatFils(line.grossFils)}</td>
-                      <td className="font-mono">−{formatFils(line.commissionFils)}</td>
-                      <td className="font-mono">−{formatFils(line.hostShareFils)}</td>
-                      <td className="font-mono font-black text-gold-300">{formatFils(line.creatorPayoutFils)}</td>
-                      <td><Timeline line={line} />{line.providerReference && <div className="text-slate-300 mt-1">مرجع التحويل: <span dir="ltr">{line.providerReference}</span></div>}</td>
+                      <td data-label="الطلب" className="py-2"><div className="font-bold text-slate-100">{line.productName}</div><div className="text-slate-300">{line.orderId} · {line.units} وحدة · {day(line.orderedAt)}</div></td>
+                      <td data-label="السعر" className="font-mono">{formatFils(line.grossFils)}</td>
+                      <td data-label="العمولة" className="font-mono">−{formatFils(line.commissionFils)}</td>
+                      <td data-label="حصة المنشأة" className="font-mono">−{formatFils(line.hostShareFils)}</td>
+                      <td data-label="مستحقك" className="font-mono font-black text-gold-300">{formatFils(line.creatorPayoutFils)}</td>
+                      <td data-label="المراحل"><Timeline line={line} />{line.providerReference && <div className="text-slate-300 mt-1">مرجع التحويل: <span dir="ltr">{line.providerReference}</span></div>}</td>
                     </tr>
                   ))}
                 </tbody>

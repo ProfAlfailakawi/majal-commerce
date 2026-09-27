@@ -84,7 +84,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+      <section className="grid grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4">
         {[
           { label: 'إجمالي المبيعات', value: `${totals.totalGmv.toFixed(3)} د.ك`, icon: <Wallet className="w-5 h-5 text-gold-300" /> },
           { label: 'رسوم المنصة', value: `${totals.totalPlatformFees.toFixed(3)} د.ك`, icon: <BadgeCheck className="w-5 h-5 text-emerald-300" /> },
@@ -92,10 +92,10 @@ export const AdminDashboard: React.FC = () => {
           { label: 'منشآت مرخّصة', value: `${totals.verifiedHosts}`, icon: <Building2 className="w-5 h-5 text-fuchsia-300" /> },
           { label: 'نزاعات مفتوحة', value: `${totals.openDisputes}`, icon: <AlertTriangle className="w-5 h-5 text-rose-300" /> }
         ].map((card, idx) => (
-          <div key={idx} className="glass-card rounded-2xl p-5 border border-white/10">
+          <div key={idx} className={`glass-card rounded-2xl p-4 sm:p-5 border border-white/10 min-w-0 ${idx === 0 ? 'col-span-2 sm:col-span-1' : ''}`}>
             <div>{card.icon}</div>
-            <div className="mt-4 text-xs text-slate-400">{card.label}</div>
-            <div className="mt-1 text-2xl font-black text-slate-100 font-mono">{card.value}</div>
+            <div className="mt-3 sm:mt-4 text-xs text-slate-400">{card.label}</div>
+            <div className="mt-1 text-xl sm:text-2xl font-black text-slate-100 font-mono break-words">{card.value}</div>
           </div>
         ))}
       </section>
@@ -222,14 +222,14 @@ export const AdminDashboard: React.FC = () => {
               <h2 className="text-lg font-black">سجل أذونات خزنة الوصفات</h2>
             </div>
             {store.recipeGrants.map(grant => (
-              <div key={grant.id} className="rounded-2xl p-4 bg-white/5 border border-white/10 flex items-center justify-between gap-3">
+              <div key={grant.id} className="rounded-2xl p-4 bg-white/5 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <div className="font-bold text-sm text-slate-100">{grant.id}</div>
                   <div className="text-xs text-slate-400 mt-1">{grant.purpose}</div>
                 </div>
-                <div className="text-end">
+                <div className="sm:text-end flex sm:block items-center justify-between gap-2">
                   <div className="text-sm font-black text-gold-300">L{grant.disclosureLevel}</div>
-                  <div className="text-xs text-slate-400 flex items-center justify-end gap-2 mt-1"><span>{new Date(grant.grantedAt || grant.requestedAt).toLocaleDateString('ar-KW')}</span><StatusPill status={grant.status} /></div>
+                  <div className="text-xs text-slate-400 flex items-center justify-end gap-2 mt-1"><span className="whitespace-nowrap">{new Date(grant.grantedAt || grant.requestedAt).toLocaleDateString('ar-KW')}</span><StatusPill status={grant.status} /></div>
                 </div>
               </div>
             ))}
