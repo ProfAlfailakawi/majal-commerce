@@ -56,3 +56,16 @@ test('demo ecosystem feeds supplier, jobs and approvals screens', async () => {
   assert.ok(queue.suppliers.length > 0 && queue.jobs.length > 0);
   for (const job of me.jobs) assert.ok((await demoEcosystem.applications(job.id)).job);
 });
+
+test('switching between host identities yields each employer its own jobs (strip must refetch)', async () => {
+  const hosts = u.users.filter(x => x.hostBusinessId && ['HOST_OWNER', 'HOST_OPERATIONS'].includes(x.role));
+  const views = await Promise.all(hosts.map(h => demoEcosystem.myView({ id: h.id, hostBusinessId: h.hostBusinessId })));
+  for (const [i, v] of views.entries()) for (const job of v.jobs) assert.equal(job.employerId, hosts[i].hostBusinessId);
+  const distinct = new Set(views.map(v => v.jobs.map(j => j.id).sort().join(',')));
+  assert.ok(new Set(hosts.map(h => h.hostBusinessId)).size < 2 || distinct.size > 1, 'different employers see different job lists');
+  // The strip is keyed to the viewer: its fetch effect must depend on the active identity.
+  const { readFileSync } = await import('node:fs');
+  const src = readFileSync(new URL('../components/jobs/EmployerJobsStrip.tsx', import.meta.url), 'utf8');
+  assert.match(src, /\}, \[viewerId\]\);/);
+  assert.match(readFileSync(new URL('../components/host/HostPortal.tsx', import.meta.url), 'utf8'), /<EmployerJobsStrip viewerId=\{store\.activeUser\.id\}/);
+});

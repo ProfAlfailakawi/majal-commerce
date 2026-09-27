@@ -6,10 +6,21 @@ import { JobApplicationsButton } from './JobApplications';
 
 const statusLabel = (status: KuwaitiJobPost['status']) => status === 'PENDING_REVIEW' ? 'بانتظار الإدارة' : status === 'APPROVED' ? 'منشور' : status === 'REJECTED' ? 'يحتاج تعديل' : 'مغلق';
 
-export const EmployerJobsStrip: React.FC<{ onCreate: () => void }> = ({ onCreate }) => {
+/**
+ * `viewerId` is the active identity. /me is derived from it (the demo switcher can move
+ * between two employers without unmounting the host portal), so the list is refetched —
+ * and the previous employer's jobs cleared — whenever it changes.
+ */
+export const EmployerJobsStrip: React.FC<{ onCreate: () => void; viewerId: string }> = ({ onCreate, viewerId }) => {
   const [jobs, setJobs] = useState<KuwaitiJobPost[]>([]);
   const [expanded, setExpanded] = useState(false);
-  useEffect(() => { let live = true; void fetchMyEcosystem().then(r => { if (live) setJobs(r.jobs); }).catch(() => undefined); return () => { live = false; }; }, []);
+  useEffect(() => {
+    let live = true;
+    setJobs([]);
+    setExpanded(false);
+    void fetchMyEcosystem().then(r => { if (live) setJobs(r.jobs); }).catch(() => undefined);
+    return () => { live = false; };
+  }, [viewerId]);
   const pending = jobs.filter(job => job.status === 'PENDING_REVIEW').length;
 
   return <section className="glass-card rounded-2xl border border-emerald-400/15 overflow-hidden">
