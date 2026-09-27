@@ -16,13 +16,13 @@
  * the screens read naturally; they correspond to no real person or business.
  */
 import type {
-  Accrual, AuditLog, Collaboration, CreatorProduct, CreatorProfile, DisputeCase,
-  HostBusiness, Launch, Order, Review, SettlementBatch, User,
+  Accrual, AuditLog, Challenge, Collaboration, CreatorProduct, CreatorProfile, DealDecision, DisputeCase,
+  HostBusiness, LabBatch, Launch, Order, RecipeVersion, Review, SettlementBatch, User,
 } from '../types/majal';
 import {
   INITIAL_ACCRUALS, INITIAL_AUDIT_LOGS, INITIAL_COLLABORATIONS, INITIAL_CREATORS,
   INITIAL_HOSTS, INITIAL_LAUNCHES, INITIAL_ORDERS, INITIAL_PRODUCTS, INITIAL_REVIEWS,
-  INITIAL_USERS,
+  INITIAL_USERS, INITIAL_RECIPE_VERSIONS, INITIAL_CHALLENGES,
 } from './seedData';
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
@@ -60,7 +60,7 @@ const CREATORS: ReadonlyArray<readonly [string, string, string, string]> = [
 ];
 
 const HOSTS: ReadonlyArray<readonly [string, HostBusiness['businessType'], string, string]> = [
-  ['مطابخ الديرة المركزية', 'CENTRAL_KITCHEN', 'مطبخ مركزي كويتي مرخّص', 'بيوت الكويت والدواوين'],
+  ['مطابخ القبلة المركزية', 'CENTRAL_KITCHEN', 'مطبخ مركزي كويتي مرخّص', 'بيوت الكويت والدواوين'],
   ['مخبز السالمية الحديث', 'BAKERY', 'مخبز حديث بخط إنتاج يومي', 'العائلات وسوق التوصيل'],
   ['مطعم الشرق التراثي', 'RESTAURANT', 'مطعم كويتي تراثي في قلب العاصمة', 'زوار المطاعم والسياحة الداخلية'],
   ['كافيه الرملة', 'CAFE', 'كافيه محلي بحضور قوي في حولي', 'الشباب ورواد المقاهي'],
@@ -138,7 +138,20 @@ function demoUsers(creators: CreatorProfile[], hosts: HostBusiness[]): User[] {
     hostBusinessId: host.id,
     lastLoginAt: ago((index + 3) % 11),
   }));
-  return [...base, ...creatorUsers, ...hostUsers];
+  // The supplier portal is its own surface; without a supplier identity in the
+  // switcher it was unreachable in demo. Its profile lives in demoEcosystem.ts.
+  const supplierUser: User = {
+    id: 'usr_supplier_demo',
+    name: 'مؤسسة الخليج لمواد التغليف',
+    email: 'supplier@demo.majal.test',
+    phone: '+965 2245 1180',
+    role: 'CONSUMER',
+    accountType: 'SUPPLIER',
+    supplierId: 'sup_demo_main',
+    status: 'ACTIVE',
+    lastLoginAt: ago(1),
+  };
+  return [...base, supplierUser, ...creatorUsers, ...hostUsers];
 }
 
 function demoCreators(): CreatorProfile[] {
@@ -218,7 +231,9 @@ function demoProducts(creators: CreatorProfile[]): CreatorProduct[] {
         category,
         shortDescription,
         story: creator.story,
-        status: pick(PRODUCT_STATUSES, index),
+        // The last item of every catalogue stays open for matching, so each
+        // creator's opportunity radar has hosts to rank.
+        status: n === count - 1 ? 'AVAILABLE_FOR_MATCHING' : pick(PRODUCT_STATUSES, index),
         estimatedUnitCostKwd: kwd(cost),
         targetSellingPriceKwd: kwd(price),
         estimatedPrepTimeMinutes: 15 + ((index * 7) % 50),
@@ -274,7 +289,10 @@ function demoTrading(products: CreatorProduct[], hosts: HostBusiness[], creators
   const royaltyByCreator = new Map<string, number>();
 
   tradable.forEach((product, index) => {
-    const host = pick(hosts.filter(h => h.verificationStatus === 'VERIFIED'), index);
+    // Launched products (every third) rotate through the verified hosts on their
+    // own counter; otherwise index % 3 === 0 only ever lands on two hosts and the
+    // rest open an empty war room.
+    const host = pick(hosts.filter(h => h.verificationStatus === 'VERIFIED'), index % 3 === 0 ? index / 3 : index);
     const collaborationId = `col_demo_${index + 1}`;
     const stage = (['INTEREST', 'ACCESS_GRANTED', 'TASTING_COMPLETED', 'OFFER_SENT', 'COMMERCIAL_AGREED', 'SIGNED', 'PRE_LAUNCH'] as const)[index % 7];
     collaborations.push({
@@ -295,7 +313,10 @@ function demoTrading(products: CreatorProduct[], hosts: HostBusiness[], creators
     if (index % 3 !== 0) return;
 
     const launchId = `launch_demo_${index + 1}`;
-    const blocked = index === 6;
+    // One launch per verified host opens first and live (the war room needs it);
+    // the one blocked by the gate comes later in the rotation.
+    const round = index / 3;
+    const blocked = round === 7;
     const unitsSold = 20 + Math.floor(random() * 480);
     const royaltyPercent = 8 + Math.floor(random() * 8);
     launches.push({
@@ -313,7 +334,7 @@ function demoTrading(products: CreatorProduct[], hosts: HostBusiness[], creators
       branches: host.branches.filter(b => b.isActive).slice(0, 2).map(b => b.id),
       startDate: ago(25 - (index % 24)),
       endDate: index % 4 === 0 ? ahead(5 + (index % 20)) : undefined,
-      status: blocked ? 'SCHEDULED' : (['LIVE', 'PERMANENT', 'LIVE', 'COMPLETED', 'PAUSED'] as const)[index % 5],
+      status: blocked ? 'SCHEDULED' : round < 6 ? (round % 2 ? 'PERMANENT' : 'LIVE') : (['LIVE', 'PERMANENT', 'LIVE', 'COMPLETED', 'PAUSED'] as const)[index % 5],
       gateChecklist: blocked ? { ...BLOCKED_GATE } : { ...OPEN_GATE },
       createdAt: ago(26 - (index % 24)),
     } as Launch);
@@ -333,7 +354,7 @@ function demoTrading(products: CreatorProduct[], hosts: HostBusiness[], creators
         productId: product.id,
         creatorId: product.creatorId,
         hostBusinessId: host.id,
-        branchId: host.branches[0]?.id,
+        branchId: (host.branches.filter(b => b.isActive).slice(0, 2)[n % 2] || host.branches[0])?.id,
         acquisitionSource: (['CREATOR', 'HOST', 'MAJAL', 'UNKNOWN'] as const)[(index + n) % 4],
         customerName: pick(CUSTOMER_NAMES, index * 5 + n),
         customerPhone: undefined,
@@ -387,24 +408,107 @@ function demoTrading(products: CreatorProduct[], hosts: HostBusiness[], creators
     }
   });
 
+  // Hosts still in verification cannot launch, but they can already be talking
+  // to creators. Without this their lab & deal tab rendered a blank panel.
+  hosts.filter(h => h.verificationStatus !== 'VERIFIED').forEach((host, hi) => {
+    const open = products.filter(p => p.status === 'AVAILABLE_FOR_MATCHING' && p.id.startsWith('prod_demo_'));
+    (['INTEREST', 'ACCESS_REQUESTED'] as const).forEach((stage, n) => {
+      const product = pick(open, hi * 2 + n);
+      if (!product) return;
+      collaborations.push({
+        ...clone(collabTemplate),
+        id: `col_demo_${host.id}_${n + 1}`,
+        productId: product.id,
+        creatorId: product.creatorId,
+        hostBusinessId: host.id,
+        stage,
+        offerHistory: [],
+        currentOffer: undefined,
+        contract: undefined,
+        activeLaunch: undefined,
+        createdAt: ago(6 - n),
+        updatedAt: ago(2 - n),
+      } as Collaboration);
+    });
+  });
+
+  // The war room splits live sales by branch. Any live branch with no tracked
+  // order read «لا يوجد Branch Attribution»; give each one a few real orders.
+  launches.filter(l => l.status === 'LIVE' || l.status === 'PERMANENT').forEach((launch, li) => {
+    (launch.branches || []).forEach((branchId, bi) => {
+      if (orders.some(o => o.launchId === launch.id && o.branchId === branchId && o.status === 'COMPLETED')) return;
+      for (let n = 0; n < 3; n += 1) {
+        const units = 1 + ((li + bi + n) % 3);
+        const gross = kwd(launch.sellingPriceKwd * units);
+        const royalty = kwd(gross * 0.12);
+        const platformFee = kwd(gross * 0.05);
+        orders.push({
+          ...clone(orderTemplate),
+          id: `ord_demo_${launch.id}_${branchId}_${n + 1}`,
+          launchId: launch.id,
+          productId: launch.productId,
+          creatorId: launch.creatorId,
+          hostBusinessId: launch.hostBusinessId,
+          branchId,
+          acquisitionSource: (['CREATOR', 'HOST', 'MAJAL'] as const)[n % 3],
+          customerName: pick(CUSTOMER_NAMES, li * 3 + bi + n),
+          customerPhone: undefined,
+          grossAmountKwd: gross,
+          unitsCount: units,
+          creatorRoyaltyKwd: royalty,
+          platformFeeKwd: platformFee,
+          hostNetKwd: kwd(gross - royalty - platformFee),
+          status: 'COMPLETED',
+          createdAt: ago(1 + n + bi),
+        } as Order);
+        accruals.push({
+          ...clone(accrualTemplate),
+          id: `acc_demo_${launch.id}_${branchId}_${n + 1}`,
+          creatorId: launch.creatorId,
+          collaborationId: launch.collaborationId,
+          orderId: `ord_demo_${launch.id}_${branchId}_${n + 1}`,
+          grossSaleKwd: gross,
+          royaltyRatePercent: 12,
+          accruedAmountKwd: royalty,
+          settlementStatus: 'ACCRUED',
+          settlementBatchId: undefined,
+          createdAt: ago(1 + n + bi),
+        } as Accrual);
+      }
+    });
+  });
+
   // A settlement run per earning creator, mostly closed with a couple still
   // awaiting approval — the super-admin screen needs something to approve.
   let batchIndex = 0;
-  royaltyByCreator.forEach((total, creatorId) => {
+  royaltyByCreator.forEach((_total, creatorId) => {
     const creator = creators.find(c => c.id === creatorId);
+    const batchId = `set_demo_${creatorId}`;
+    const inBatch = accruals.filter(a => a.settlementBatchId === batchId);
+    // Every fourth earner has no run yet: their first accruals stay eligible so
+    // the settlements board has a real batch waiting for approval.
+    if (batchIndex % 4 === 0) {
+      inBatch.forEach(a => { a.settlementStatus = 'SETTLEMENT_ELIGIBLE'; a.settlementBatchId = undefined; });
+      batchIndex += 1;
+      return;
+    }
+    const status: SettlementBatch['status'] = batchIndex % 4 === 1 ? 'APPROVED' : 'PAID';
+    // Keep each accrual's state in step with the batch that carries it, so the
+    // creator's statement and the admin's settlement board tell the same story.
+    inBatch.forEach(a => { a.settlementStatus = status === 'PAID' ? 'PAID' : 'SETTLEMENT_LOCKED'; });
     settlements.push({
-      id: `set_demo_${creatorId}`,
+      id: batchId,
       creatorId,
+      creatorName: creator?.displayName || creatorId,
+      totalAmountKwd: kwd(inBatch.reduce((sum, a) => sum + a.accruedAmountKwd, 0)),
       periodStart: ago(30),
-      periodEnd: ago(0),
-      totalAccruedKwd: total,
-      accrualIds: [],
-      status: batchIndex % 4 === 0 ? 'PENDING_APPROVAL' : batchIndex % 4 === 1 ? 'APPROVED' : 'PAID',
-      approvedBy: batchIndex % 4 === 0 ? undefined : 'usr_super_admin',
-      approvedAt: batchIndex % 4 === 0 ? undefined : ago(2),
+      periodEnd: ago(1),
+      status,
+      approvedAt: ago(2),
+      approvedByAdmin: 'usr_super_admin',
+      paidAt: status === 'PAID' ? ago(1) : undefined,
       createdAt: ago(3),
-      notes: `تسوية شهرية — ${creator?.displayName || creatorId}`,
-    } as unknown as SettlementBatch);
+    });
     batchIndex += 1;
   });
 
@@ -436,22 +540,145 @@ function demoTrading(products: CreatorProduct[], hosts: HostBusiness[], creators
 
 function demoDisputes(orders: Order[]): DisputeCase[] {
   const disputed = orders.filter(order => order.status === 'REFUNDED').slice(0, 6);
-  return disputed.map((order, index) => ({
-    id: `dis_demo_${index + 1}`,
-    orderId: order.id,
-    launchId: order.launchId,
-    creatorId: order.creatorId,
-    hostBusinessId: order.hostBusinessId,
-    raisedBy: index % 2 === 0 ? 'CONSUMER' : 'CREATOR',
-    reason: index % 3 === 0 ? 'QUALITY' : index % 3 === 1 ? 'DELIVERY' : 'PRICING',
-    description: index % 3 === 0 ? 'الطلب وصل بجودة أقل من العينة المعتمدة.'
-      : index % 3 === 1 ? 'تأخر التوصيل أكثر من ساعتين عن الموعد.'
-      : 'السعر المعروض يختلف عن السعر المتفق عليه في العقد.',
-    status: index % 4 === 0 ? 'OPEN' : index % 4 === 1 ? 'UNDER_REVIEW' : 'RESOLVED',
-    amountKwd: order.grossAmountKwd,
-    createdAt: order.createdAt,
-    updatedAt: order.createdAt,
-  } as unknown as DisputeCase));
+  const TYPES: DisputeCase['type'][] = ['QUALITY_COMPLAINT', 'PAYMENT_DISPUTE', 'SAFETY_ALLERGEN', 'QUALITY_COMPLAINT', 'IP_RECIPE_LEAK', 'PAYMENT_DISPUTE'];
+  const TEXT: Record<DisputeCase['type'], [string, string]> = {
+    QUALITY_COMPLAINT: ['شكوى جودة على دفعة إطلاق', 'الطلب وصل بجودة أقل من العينة المعتمدة في المختبر.'],
+    PAYMENT_DISPUTE: ['اعتراض على مبلغ الطلب', 'السعر المحصّل يختلف عن السعر المتفق عليه في العقد.'],
+    SAFETY_ALLERGEN: ['بلاغ مسببات حساسية', 'العميل أفاد بعدم ذكر السمسم على الملصق.'],
+    IP_RECIPE_LEAK: ['اشتباه تسريب وصفة', 'منتج مشابه ظهر في فرع غير مرخّص له بالوصفة.'],
+  };
+  return disputed.map((order, index): DisputeCase => {
+    const type = TYPES[index % TYPES.length];
+    const status: DisputeCase['status'] = index % 4 === 0 ? 'OPEN' : index % 4 === 1 ? 'UNDER_INVESTIGATION' : index % 4 === 2 ? 'RESOLVED' : 'CLOSED';
+    return {
+      id: `dis_demo_${index + 1}`,
+      type,
+      title: `${TEXT[type][0]} — ${order.id}`,
+      productId: order.productId,
+      creatorId: order.creatorId,
+      hostBusinessId: order.hostBusinessId,
+      priority: type === 'SAFETY_ALLERGEN' ? 'CRITICAL' : type === 'IP_RECIPE_LEAK' ? 'HIGH' : 'MEDIUM',
+      status,
+      description: TEXT[type][1],
+      evidence: [`طلب ${order.id}`, 'صورة من العميل', 'سجل الدفعة من المختبر'],
+      resolutionNotes: status === 'RESOLVED' || status === 'CLOSED' ? 'تم استرجاع المبلغ وإعادة فحص الدفعة.' : undefined,
+      createdAt: order.createdAt,
+    };
+  });
+}
+
+/* The workbench: recipe versions, lab batches, deal-room decisions and host
+ * challenges. Without them every deal room read «لا توجد نسخة», every lab
+ * showed «ما فيه دفعات محفوظة» and only one host had a challenge board. */
+const STAGE_ORDER: Collaboration['stage'][] = ['INTEREST', 'ACCESS_REQUESTED', 'ACCESS_GRANTED', 'TASTING_PLANNED', 'TASTING_COMPLETED', 'LAB_ACTIVE', 'OFFER_SENT', 'COUNTERED', 'COMMERCIAL_AGREED', 'CONTRACT_DRAFTED', 'SIGNED', 'PRE_LAUNCH', 'LIVE', 'REVIEW', 'RENEWED', 'ENDED'];
+const reached = (stage: Collaboration['stage'], target: Collaboration['stage']) =>
+  STAGE_ORDER.indexOf(stage) >= STAGE_ORDER.indexOf(target);
+
+function demoWorkbench(products: CreatorProduct[], collaborations: Collaboration[], hosts: HostBusiness[], creators: CreatorProfile[]) {
+  const recipeVersions: RecipeVersion[] = clone(INITIAL_RECIPE_VERSIONS);
+  const template = recipeVersions[0];
+  products.forEach((product, index) => {
+    if (recipeVersions.some(v => v.productId === product.id && v.versionNumber === product.currentRecipeVersion)) return;
+    const creator = creators.find(c => c.id === product.creatorId);
+    const cost = product.estimatedUnitCostKwd || 0.8;
+    recipeVersions.push({
+      ...clone(template),
+      id: `rv_demo_${product.id}`,
+      productId: product.id,
+      versionNumber: product.currentRecipeVersion || 'V1.0',
+      createdById: creator?.userId || template.createdById,
+      createdAt: ago(20 + (index % 15)),
+      yield: 12,
+      batchSize: `دفعة 12 وحدة — ${product.publicName}`,
+      ingredients: [
+        { name: 'المكوّن الأساسي', quantity: 1, unit: 'كجم', estimatedCostKwd: kwd(cost * 5) },
+        { name: 'سمن بلدي / زيت', quantity: 250, unit: 'جم', estimatedCostKwd: kwd(cost * 2) },
+        { name: `خلطة ${creator?.displayName || 'المبدع'} الخاصة`, quantity: 40, unit: 'جم', estimatedCostKwd: kwd(cost * 3), isSecretPart: true },
+      ],
+      preparationSteps: ['تجهيز المكوّنات بالأوزان المعتمدة.', 'التحضير حسب خطوات المبدع الموثقة.', 'فحص الجودة قبل التغليف.'],
+      criticalSecrets: `نِسب خلطة ${product.publicName} وتوقيت إضافتها.`,
+      equipmentNeeded: ['أفران غاز معتمدة'],
+      qualityCheckpoints: ['اللون والقوام مطابقان للعينة المعتمدة', 'الوزن ضمن ±3%'],
+      allergenNotes: product.category === 'مشروبات' ? 'قد يحتوي على الحليب' : 'يحتوي على الجلوتين وقد يحتوي على المكسرات',
+      changeLogNote: index % 2 ? 'تعديل نسبة الملح بعد تجربة المختبر' : 'النسخة المعتمدة للإنتاج التجاري',
+    });
+  });
+
+  const labBatches: LabBatch[] = [];
+  const dealDecisions: DealDecision[] = [];
+  const RESULTS = ['القوام ممتاز والطعم مطابق للعينة المنزلية.', 'يحتاج تقليل السكر ١٠٪ ليتماشى مع ذوق الفرع.', 'اللون أغمق من المطلوب — خفض حرارة الفرن ١٠ درجات.'];
+  collaborations.forEach((col, index) => {
+    const product = products.find(p => p.id === col.productId);
+    const creator = creators.find(c => c.id === col.creatorId);
+    const host = hosts.find(h => h.id === col.hostBusinessId);
+    const version = product?.currentRecipeVersion || 'V1.0';
+    if (reached(col.stage, 'TASTING_COMPLETED') || col.stage === 'ACCESS_GRANTED') {
+      const count = col.stage === 'ACCESS_GRANTED' ? 1 : 2;
+      for (let n = 0; n < count; n += 1) {
+        const cost = kwd((product?.estimatedUnitCostKwd || 0.9) * (1.08 - n * 0.06));
+        labBatches.push({
+          id: `lab_demo_${col.id}_${n + 1}`,
+          collaborationId: col.id,
+          recipeVersion: version,
+          batchDate: ago(14 - n * 5 - (index % 4)),
+          yieldQuantity: 20 + n * 20,
+          measuredCostKwd: cost,
+          prepTimeMinutes: (product?.estimatedPrepTimeMinutes || 30) + (n ? 0 : 8),
+          wastePercentage: n ? 4 : 9,
+          tastingResult: RESULTS[(index + n) % RESULTS.length],
+          photos: [],
+          proposedChanges: n ? 'لا تغييرات — جاهزة للإنتاج.' : 'تثبيت درجة الحرارة وتقليل زمن الراحة.',
+          decision: n === count - 1 && count > 1 ? 'PRODUCTION_CANDIDATE' : 'APPROVE_NEXT',
+          createdAt: ago(14 - n * 5 - (index % 4)),
+        });
+      }
+    }
+    const hostName = host ? `مدير ${host.commercialName}` : 'مدير المنشأة';
+    const entries: Array<[DealDecision['category'], string, boolean]> = [
+      ['MILESTONE', `بدء التعاون على ${product?.publicName || 'المنتج'} مع ${creator?.displayName || 'المبدع'}.`, true],
+      ['NOTE', 'تم الاتفاق على تجربة أولى بكمية ٢٠ وحدة في المطبخ المركزي.', false],
+    ];
+    if (reached(col.stage, 'TASTING_COMPLETED')) entries.push(['DECISION', 'نتيجة التذوق مقبولة — ننتقل لصياغة العرض التجاري.', false]);
+    if (reached(col.stage, 'OFFER_SENT')) entries.push(['RISK', 'هامش المنشأة حساس لسعر الزعفران؛ نثبت السعر لـ٣ أشهر.', true]);
+    entries.forEach(([category, text, byHost], n) => dealDecisions.push({
+      id: `dd_demo_${col.id}_${n + 1}`,
+      collaborationId: col.id,
+      authorUserId: byHost ? (col.hostBusinessId === 'hb_main' ? 'usr_host_owner' : `usr_host_${hosts.findIndex(h => h.id === col.hostBusinessId) + 1}`) : (creator?.userId || 'usr_creator_main'),
+      authorName: byHost ? hostName : (creator?.displayName || 'المبدع'),
+      authorRole: byHost ? 'HOST_OWNER' : 'CREATOR',
+      text,
+      category,
+      createdAt: ago(18 - n * 3 - (index % 3)),
+    }));
+  });
+
+  const challenges: Challenge[] = clone(INITIAL_CHALLENGES);
+  const IDEAS: Array<[string, string, string, number, number]> = [
+    ['تحدي حلى رمضان ٢٠٢٧', 'حلى كويتي يتحمّل التوصيل ويقدَّم في الغبقات.', 'حلويات', 3.75, 1.1],
+    ['تحدي فطور الدوام', 'فطيرة أو معجنات صباحية بسعر مناسب للموظفين.', 'مخبوزات', 1.25, 0.35],
+    ['تحدي مشروب الصيف', 'مشروب بارد تقليدي بلمسة جديدة بدون سكر مضاف.', 'مشروبات', 1.9, 0.5],
+    ['تحدي طبق الديوانية', 'طبق مشاركة للدواوين يُحضَّر بكميات.', 'وجبات', 6.5, 2.0],
+  ];
+  hosts.filter(h => h.id !== 'hb_main').forEach((host, index) => {
+    const [title, brief, category, price, ceiling] = pick(IDEAS, index);
+    challenges.push({
+      id: `ch_demo_${host.id}`,
+      hostBusinessId: host.id,
+      title: `${title} — ${host.commercialName}`,
+      brief,
+      category,
+      targetPriceKwd: price,
+      costCeilingKwd: ceiling,
+      estimatedVolumeUnits: 150 + index * 50,
+      deadline: ahead(10 + index * 3),
+      equipmentAvailable: ['أفران غاز معتمدة', 'غرفة تبريد وتجميد'],
+      dietaryConstraints: ['حلال معتمد'],
+      exclusivityPreference: index % 2 === 0,
+      status: index % 3 === 2 ? 'IN_REVIEW' : 'OPEN',
+      createdAt: ago(3 + index),
+    });
+  });
+  return { recipeVersions, labBatches, dealDecisions, challenges };
 }
 
 export interface DemoUniverse {
@@ -467,6 +694,10 @@ export interface DemoUniverse {
   settlements: SettlementBatch[];
   disputes: DisputeCase[];
   auditLogs: AuditLog[];
+  recipeVersions: RecipeVersion[];
+  labBatches: LabBatch[];
+  dealDecisions: DealDecision[];
+  challenges: Challenge[];
 }
 
 let cached: DemoUniverse | null = null;
@@ -478,7 +709,9 @@ export function buildDemoUniverse(): DemoUniverse {
   const hosts = demoHosts();
   const products = demoProducts(creators);
   const trading = demoTrading(products, hosts, creators);
+  const workbench = demoWorkbench(products, trading.collaborations, hosts, creators);
   cached = {
+    ...workbench,
     users: demoUsers(creators, hosts),
     creators,
     hosts,

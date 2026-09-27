@@ -87,12 +87,12 @@ export class Store {
   public creators: CreatorProfile[] = demoUniverse('creators');
   public hosts: HostBusiness[] = demoUniverse('hosts');
   public products: CreatorProduct[] = demoUniverse('products');
-  public recipeVersions: RecipeVersion[] = demoData(INITIAL_RECIPE_VERSIONS);
+  public recipeVersions: RecipeVersion[] = demoUniverse('recipeVersions');
   public recipeGrants: RecipeAccessGrant[] = demoData(INITIAL_RECIPE_GRANTS);
   public matches: ProductMatch[] = demoData(INITIAL_MATCHES);
-  public challenges: Challenge[] = demoData(INITIAL_CHALLENGES);
+  public challenges: Challenge[] = demoUniverse('challenges');
   public tastings: TastingSession[] = demoData(INITIAL_TASTINGS);
-  public labBatches: LabBatch[] = demoData(INITIAL_LAB_BATCHES);
+  public labBatches: LabBatch[] = demoUniverse('labBatches');
   public offers: OfferTerms[] = demoData(INITIAL_OFFERS);
   public contracts: Contract[] = demoData(INITIAL_CONTRACTS);
   public launches: Launch[] = demoUniverse('launches');
@@ -104,7 +104,7 @@ export class Store {
   public compliance: ComplianceRequirement[] = demoData(INITIAL_COMPLIANCE);
   public disputes: DisputeCase[] = demoUniverse('disputes');
   public auditLogs: AuditLog[] = demoUniverse('auditLogs');
-  public dealDecisions: DealDecision[] = [];
+  public dealDecisions: DealDecision[] = demoUniverse('dealDecisions');
   public policy: PlatformPolicy = {
     platformFeePercent: 5,
     recipeGrantDays: 90,
