@@ -175,14 +175,17 @@ export const demoEcosystem = {
   apply(who: DemoIdentity, id: string, input: { summary?: string; yearsExperience?: number }) {
     const s = current();
     if (!s.jobs.some(j => j.id === id && j.status === 'APPROVED')) return Promise.reject(new Error('الإعلان لم يعد متاحًا.'));
+    const email = who.email || 'visitor@demo.majal.test';
+    // Mirror the live unique (job, applicant) constraint → ALREADY_APPLIED.
+    if (s.applications.some(a => a.jobId === id && a.email === email)) return Promise.reject(new Error('سبق أن قدمت على هذه الوظيفة.'));
     const now = new Date().toISOString();
-    const application: KuwaitiJobApplication = { id: `app_demo_${Date.now()}`, jobId: id, fullName: who.name || 'متقدم تجريبي', email: who.email || 'visitor@demo.majal.test', phone: who.phone || '+965 5000 0000', summary: input.summary || '', yearsExperience: input.yearsExperience ?? 0, kuwaitiDeclaration: true, status: 'SUBMITTED', createdAt: now, updatedAt: now };
+    const application: KuwaitiJobApplication = { id: `app_demo_${Date.now()}`, jobId: id, fullName: who.name || 'متقدم تجريبي', email, phone: who.phone || '+965 5000 0000', summary: input.summary || '', yearsExperience: input.yearsExperience ?? 0, kuwaitiDeclaration: true, status: 'SUBMITTED', createdAt: now, updatedAt: now };
     s.applications.unshift(application); commit();
     return delay({ id: application.id, status: 'SUBMITTED', note: 'وصل طلبك إلى جهة التوظيف (بيئة العرض).' });
   },
   reviewQueue() {
     const s = current();
-    return delay({ suppliers: s.suppliers.filter(x => x.verificationStatus === 'PENDING'), jobs: s.jobs.filter(j => j.status === 'PENDING_REVIEW') });
+    return delay({ suppliers: s.suppliers.filter(x => x.verificationStatus === 'PENDING' || x.verificationStatus === 'NEEDS_ACTION'), jobs: s.jobs.filter(j => j.status === 'PENDING_REVIEW') });
   },
   reviewSupplier(id: string, decision: 'VERIFIED' | 'NEEDS_ACTION' | 'SUSPENDED', adminNote = '') {
     const supplier = current().suppliers.find(x => x.id === id);
