@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>مجال | من الفكرة إلى منتج تجاري</title>
     <meta name="description" content="مجال — منصة كويتية لتحويل ابتكارات المبدعين إلى منتجات تجارية عبر منشآت مرخّصة: اكتشاف، حماية، مختبر، تعاقد، إطلاق ومستحقات في مسار واحد." />
-    <meta name="theme-color" content="#0b1220" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#f7f4ec" />
+    <meta name="color-scheme" content="light" />
+    <!-- Applies the stored theme (light by default) before first paint; also runs the 8s boot failsafe. -->
+    <script src="/boot.js"></script>
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
@@ -208,6 +210,31 @@
         #majal-splash .splash-tagline,
         #majal-splash .splash-rail { animation: none; opacity: 1; transform: none; }
       }
+      /* ── Theme-aware boot surfaces. Dark is the base (no data-theme); light is the
+         first-visit default and is applied by /boot.js before first paint. */
+      #majal-boot-failed { color: #f8fafc; background: linear-gradient(180deg, #0a101b, #070d18); }
+      #majal-boot-failed .boot-mark { color: #c7a55b; }
+      #majal-boot-failed .boot-muted { color: #94a3b8; }
+      #majal-boot-retry { background: #c7a55b; color: #020617; }
+      html[data-theme='light'] #majal-boot-failed { color: #0b1220; background: linear-gradient(180deg, #fbf8f1, #f1ece0); }
+      html[data-theme='light'] #majal-boot-failed .boot-mark { color: #8a6a2c; }
+      html[data-theme='light'] #majal-boot-failed .boot-muted { color: #4b5567; }
+      html[data-theme='light'] #majal-boot-retry { background: #8a6a2c; color: #ffffff; }
+      html[data-theme='contrast'] #majal-boot-failed { background: #000000; }
+      html[data-theme='light'] #majal-splash {
+        background:
+          radial-gradient(circle at 50% 42%, rgba(138, 106, 44, 0.1) 0, transparent 46%),
+          linear-gradient(180deg, #fbf8f1 0%, #f7f4ec 55%, #f1ece0 100%);
+      }
+      html[data-theme='light'] #majal-splash .splash-word { background-image: linear-gradient(180deg, #a8843c 0%, #8a6a2c 55%, #6b5220 100%); }
+      html[data-theme='light'] #majal-splash .splash-latin { color: #7d612b; }
+      html[data-theme='light'] #majal-splash .splash-tagline { color: #4b5567; }
+      html[data-theme='light'] #majal-splash .splash-rail { background: rgba(11, 18, 32, 0.08); }
+      html[data-theme='light'] #majal-splash .splash-rail span { background: linear-gradient(90deg, transparent, #8a6a2c, transparent); }
+      html[data-theme='light'] #majal-splash stop:nth-child(1) { stop-color: #6b5220; }
+      html[data-theme='light'] #majal-splash stop:nth-child(2) { stop-color: #8a6a2c; }
+      html[data-theme='light'] #majal-splash stop:nth-child(3) { stop-color: #a8843c; }
+      html[data-theme='contrast'] #majal-splash { background: #000000; }
     </style>
   
     <!-- iOS launch screens (generated) -->
@@ -270,30 +297,28 @@
 
     <!-- Revealed only when the bundle never executed. Plain markup and inline styles on
          purpose: whatever broke may well have been the stylesheet or the network. -->
-    <div id="majal-boot-failed" hidden style="position:fixed;inset:0;z-index:9998;display:grid;place-items:center;padding:2rem;text-align:center;font-family:'Tajawal',system-ui,Tahoma,sans-serif;color:#f8fafc;background:linear-gradient(180deg,#0a101b,#070d18)">
+    <div id="majal-boot-failed" hidden style="position:fixed;inset:0;z-index:9998;display:grid;place-items:center;padding:2rem;text-align:center;font-family:'Tajawal',system-ui,Tahoma,sans-serif">
       <div style="max-width:26rem">
-        <svg viewBox="0 0 64 64" width="64" height="64" fill="none" aria-hidden="true" style="margin:0 auto 1.25rem">
-          <path d="M11 53 V33 A21 21 0 0 1 53 33 V53" stroke="#c7a55b" stroke-width="6.5" stroke-linecap="round"/>
-          <circle cx="32" cy="34" r="9" stroke="#c7a55b" stroke-width="6"/>
+        <svg class="boot-mark" viewBox="0 0 64 64" width="64" height="64" fill="none" aria-hidden="true" style="margin:0 auto 1.25rem">
+          <path d="M11 53 V33 A21 21 0 0 1 53 33 V53" stroke="currentColor" stroke-width="6.5" stroke-linecap="round"/>
+          <circle cx="32" cy="34" r="9" stroke="currentColor" stroke-width="6"/>
         </svg>
         <h1 style="font-size:1.25rem;font-weight:700;margin:0 0 .75rem">تعذّر تحميل مجال</h1>
-        <p style="font-size:.875rem;line-height:1.9;color:#94a3b8;margin:0 0 1.5rem">
+        <p class="boot-muted" style="font-size:.875rem;line-height:1.9;margin:0 0 1.5rem">
           ما قدرنا نجيب ملفات المنصة. تأكد من اتصالك بالإنترنت وأعد المحاولة، وإذا تكرر الأمر تواصل مع الدعم.
         </p>
-        <button id="majal-boot-retry" type="button" style="cursor:pointer;padding:.75rem 1.5rem;border-radius:.875rem;border:0;background:#c7a55b;color:#020617;font-weight:800;font-size:.8125rem;font-family:inherit">
+        <button id="majal-boot-retry" type="button" style="cursor:pointer;padding:.75rem 1.5rem;border-radius:.875rem;border:0;font-weight:800;font-size:.8125rem;font-family:inherit">
           أعد المحاولة
         </button>
       </div>
     </div>
 
     <noscript>
-      <div style="padding:2rem;font-family:system-ui,sans-serif;color:#f8fafc;background:#0b1220;text-align:center;position:fixed;inset:0;z-index:10000">
+      <div style="padding:2rem;font-family:system-ui,sans-serif;color:#0b1220;background:#f7f4ec;text-align:center;position:fixed;inset:0;z-index:10000">
         منصة مجال تحتاج إلى تفعيل JavaScript في المتصفح لعرض المحتوى.
       </div>
     </noscript>
 
-    <!-- Boot guard (timestamp + 8s failsafe) is external so CSP script-src 'self' allows it. -->
-    <script src="/boot.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

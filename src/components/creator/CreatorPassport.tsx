@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { store } from '../../lib/store';
 import { Avatar } from '../common/Avatar';
+import { DnaRing, DnaStepper } from '../dna/DnaKit';
 
 interface CreatorPassportProps {
   creatorId: string;
@@ -33,7 +34,7 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
     return { revenue, avgRating, keepRate };
   }, [orders, reviews]);
 
-  const stage = launches.length >= 2 ? 'Brand Ready' : launches.length >= 1 ? 'Proven Creator' : products.length ? 'Market Ready' : 'Discovered';
+  const stage = launches.length >= 2 ? 'علامة جاهزة' : launches.length >= 1 ? 'مبدع مُثبَت' : products.length ? 'جاهز للسوق' : 'مُكتشَف';
 
   if (!profile) return <section className="glass-panel rounded-3xl p-6 text-center text-slate-400">ملف المبدع غير متاح لهذا المعرّف.</section>;
 
@@ -58,9 +59,9 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: 'منتجات مسجلة', value: products.length, icon: <PackageCheck className="w-4 h-4 text-sky-300" /> },
-          { label: 'تعاونات تجارية', value: collaborations.length, icon: <Building2 className="w-4 h-4 text-fuchsia-300" /> },
-          { label: 'مبيعات مسجلة', value: `${stats.revenue.toFixed(3)} د.ك`, icon: <TrendingUp className="w-4 h-4 text-emerald-300" /> },
+          { label: 'منتجات مسجلة', value: products.length, icon: <PackageCheck className="w-4 h-4 text-gold-300" /> },
+          { label: 'تعاونات تجارية', value: collaborations.length, icon: <Building2 className="w-4 h-4 text-gold-300" /> },
+          { label: 'مبيعات مسجلة', value: `${stats.revenue.toFixed(3)} د.ك`, icon: <TrendingUp className="w-4 h-4 text-gold-300" /> },
           { label: 'نسبة التكرار', value: `${stats.keepRate}%`, icon: <Repeat2 className="w-4 h-4 text-gold-300" /> }
         ].map((item, idx) => (
           <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10">
@@ -70,36 +71,37 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-[1fr_1fr] gap-4">
+      <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-4">
         <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3">
-          <div className="flex items-center gap-2 font-bold text-slate-100"><Gauge className="w-4 h-4 text-sky-300" /> مؤشرات الثقة المهنية</div>
-          {[
-            ['الالتزام التشغيلي', 94],
-            ['جودة المنتج', Math.round((stats.avgRating / 5) * 100) || 90],
-            ['الشفافية والتوثيق', 97],
-            ['القابلية للتوسع', 88]
-          ].map(([label, value], idx) => (
-            <div key={idx}>
-              <div className="flex justify-between text-xs mb-1"><span className="text-slate-400">{label as string}</span><strong className="text-slate-100">{value as number}%</strong></div>
-              <div className="h-2 rounded-full bg-slate-950/70 overflow-hidden"><div className="h-full rounded-full bg-gradient-to-l from-gold-500 to-emerald-400" style={{ width: `${value}%` }} /></div>
+          <div className="flex items-center gap-2 font-bold text-slate-100"><Gauge className="w-4 h-4 text-gold-300" /> مؤشرات الثقة المهنية</div>
+          <div className="flex items-center gap-4">
+            <DnaRing
+              value={reviews.length ? (stats.avgRating / 5) * 100 : null}
+              size={64}
+              stroke={5}
+              ariaLabel={reviews.length ? `جودة المنتج ${Math.round((stats.avgRating / 5) * 100)}%` : 'جودة المنتج: لا تقييمات بعد'}
+            />
+            <div>
+              <div className="text-xs font-bold text-slate-200">جودة المنتج</div>
+              <div className="text-xs text-slate-400 mt-1">{reviews.length ? `${stats.avgRating.toFixed(1)} / 5 · ${reviews.length} تقييم` : 'لا تقييمات بعد'}</div>
             </div>
-          ))}
+          </div>
         </div>
 
-        <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3">
+        <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-4">
           <div className="flex items-center gap-2 font-bold text-slate-100"><Crown className="w-4 h-4 text-gold-300" /> مسار الترقّي</div>
-          {[
-            { label: 'Discovered', done: true, icon: <Sparkles className="w-4 h-4" /> },
-            { label: 'Tested', done: profile.badges.includes('TESTED'), icon: <BookOpenCheck className="w-4 h-4" /> },
-            { label: 'Launched', done: launches.length > 0, icon: <PackageCheck className="w-4 h-4" /> },
-            { label: 'Proven', done: profile.badges.includes('PROVEN'), icon: <ShieldCheck className="w-4 h-4" /> },
-            { label: 'Brand Ready', done: launches.length >= 2, icon: <Crown className="w-4 h-4" /> }
-          ].map((step, idx) => (
-            <div key={idx} className={`flex items-center justify-between p-3 rounded-xl border ${step.done ? 'bg-emerald-500/8 border-emerald-400/15' : 'bg-white/[0.02] border-white/10'}`}>
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-200">{step.icon}{step.label}</div>
-              <span className={`text-xs font-black ${step.done ? 'text-emerald-300' : 'text-slate-400'}`}>{step.done ? 'مكتمل' : 'قادم'}</span>
-            </div>
-          ))}
+          <DnaStepper
+            size="md"
+            ariaLabel="مسار الترقّي"
+            stateText={{ done: 'مكتمل', pending: 'قادم' }}
+            steps={[
+              { key: 'discovered', label: 'مُكتشَف', done: true, icon: <Sparkles /> },
+              { key: 'tested', label: 'مُختبَر', done: profile.badges.includes('TESTED'), icon: <BookOpenCheck /> },
+              { key: 'launched', label: 'مُطلَق', done: launches.length > 0, icon: <PackageCheck /> },
+              { key: 'proven', label: 'مُثبَت', done: profile.badges.includes('PROVEN'), icon: <ShieldCheck /> },
+              { key: 'brand', label: 'علامة جاهزة', done: launches.length >= 2, icon: <Crown /> }
+            ].map(({ done, ...step }) => ({ ...step, state: done ? 'done' as const : 'pending' as const }))}
+          />
         </div>
       </div>
     </section>

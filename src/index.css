@@ -723,7 +723,7 @@ textarea:disabled {
 }
 
 /* ── Themes ────────────────────────────────────────────────────────────────────
-   Dark is the identity and the default. «فاتح» and «تباين عالٍ» remap the same tokens
+   Light («فاتح») is the first-visit default (public/boot.js); dark is the base token set. «فاتح» and «تباين عالٍ» remap the same tokens
    the utilities already read (Tailwind 4 emits `var(--color-*)`), so every surface
    follows without per-component forks. The choice lives on <html data-theme> and is
    persisted by src/lib/theme.ts. */
@@ -751,6 +751,54 @@ textarea:disabled {
   --color-rose-300: #be123c;
   --color-sky-300: #0369a1;
   --color-amber-300: #b45309;
+  /* Pastel text tones written for the dark ground are unreadable on cream. Status hues
+     (emerald = done, rose = problem, amber = waiting) keep their meaning at AA depth;
+     every decorative hue (sky, fuchsia, violet, indigo, blue, cyan) folds into the one
+     light-theme accent, gold. 400–600 steps are fills behind white text here. */
+  --color-emerald-100: #065f46;
+  --color-emerald-200: #047857;
+  --color-emerald-500: #047857;
+  --color-emerald-600: #065f46;
+  --color-rose-200: #be123c;
+  --color-rose-400: #be123c;
+  --color-rose-500: #be123c;
+  --color-amber-100: #92400e;
+  --color-amber-200: #92400e;
+  --color-amber-400: #b45309;
+  --color-amber-500: #b45309;
+  --color-amber-600: #92400e;
+  --color-sky-100: #5c4618;
+  --color-sky-200: #6b5220;
+  --color-sky-300: #7d612b;
+  --color-sky-400: #8a6a2c;
+  --color-sky-500: #8a6a2c;
+  --color-fuchsia-200: #6b5220;
+  --color-fuchsia-300: #7d612b;
+  --color-fuchsia-400: #8a6a2c;
+  --color-fuchsia-500: #8a6a2c;
+  --color-violet-300: #7d612b;
+  --color-violet-400: #8a6a2c;
+  --color-violet-500: #8a6a2c;
+  --color-indigo-200: #6b5220;
+  --color-indigo-400: #8a6a2c;
+  --color-indigo-500: #8a6a2c;
+  --color-blue-200: #6b5220;
+  --color-blue-300: #7d612b;
+  --color-blue-500: #8a6a2c;
+  --color-blue-600: #7d612b;
+  --color-cyan-300: #7d612b;
+  --color-cyan-400: #8a6a2c;
+  --color-cyan-500: #8a6a2c;
+  /* IntegrationHubModal is written on Tailwind's neutral scale; invert it like slate. */
+  --color-neutral-100: #111827;
+  --color-neutral-200: #1f2937;
+  --color-neutral-300: #334155;
+  --color-neutral-400: #4b5567;
+  --color-neutral-500: #64748b;
+  --color-neutral-700: #cbd5e1;
+  --color-neutral-800: #e2e8f0;
+  --color-neutral-900: #f8fafc;
+  --color-neutral-950: #ffffff;
   --majal-bg: #f7f4ec;
   --ink-850: #fbf8f1;
   --ink-800: #f7f4ec;
@@ -771,6 +819,23 @@ textarea:disabled {
 :root[data-theme='light'] .glass-card { border-color: rgba(11, 18, 32, 0.1); }
 :root[data-theme='light'] .glass-card-hover:hover { background: #ffffff; }
 /* Gold fills keep light text in the light theme (text-slate-950 remaps to white). */
+/* Every solid status or accent fill is a deep tone in this theme, so its label is always
+   white. Without this, `text-white` (remapped to ink) and `text-slate-100` sat on those
+   fills at about 2.4:1. Unlayered, so it outranks the text utility on the same element;
+   disabled buttons keep their own muted utilities. */
+:root[data-theme='light'] :is(
+  .bg-emerald-400, .bg-emerald-500, .bg-emerald-600,
+  .bg-rose-400, .bg-rose-500,
+  .bg-amber-400, .bg-amber-500, .bg-amber-600,
+  .bg-sky-400, .bg-sky-500,
+  .bg-fuchsia-300, .bg-fuchsia-400, .bg-fuchsia-500,
+  .bg-violet-400, .bg-violet-500,
+  .bg-indigo-400, .bg-indigo-500,
+  .bg-blue-500, .bg-blue-600,
+  .bg-cyan-400, .bg-cyan-500
+):not(:disabled) {
+  color: #ffffff;
+}
 
 :root[data-theme='contrast'] {
   color-scheme: dark;

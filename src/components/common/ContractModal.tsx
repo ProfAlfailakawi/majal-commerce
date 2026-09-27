@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, FileText, CheckCircle2, ShieldCheck, PenTool, Lock } from 'lucide-react';
+import { X, FileText, CheckCircle2, ShieldCheck, PenTool, PenLine, Lock } from 'lucide-react';
+import { DnaStatusHeader, DnaStepper, DnaStep, DnaStepState } from '../dna/DnaKit';
 import { Contract } from '../../types/majal';
 import { store } from '../../lib/store';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
@@ -7,6 +8,10 @@ import { IS_DEMO_MODE } from '../../lib/runtime';
 import { paciClient } from '../../lib/paciClient';
 import { statusLabel } from '../../lib/statusLabels';
 import { MajalLoader } from '../brand/MajalLoader';
+
+/** Two-letter signature stamp from a legal name (first letter of the first two words). */
+const initials = (name: string) =>
+  name.trim().split(/\s+/).filter(Boolean).slice(0, 2).map(word => word.charAt(0)).join(' ');
 
 interface ContractModalProps {
   isOpen: boolean;
@@ -77,37 +82,96 @@ export const ContractModal: React.FC<ContractModalProps> = ({
   };
 
   const hasUserSigned = canSignAsCreator ? !!contract.creatorSignedAt : canSignAsHost ? !!contract.hostSignedAt : false;
+  const showSignForm = canCurrentUserSign && !hasUserSigned && contract.status !== 'FULLY_SIGNED';
+  const signLabel = isSigning ? 'جارٍ التحقق…' : IS_DEMO_MODE ? 'محاكاة الموافقة على المسودة' : paciRequestId ? 'تحقق من هويتي وثبّت التوقيع' : 'ابدأ طلب التوقيع عبر هويتي';
+
+  const fullySigned = contract.status === 'FULLY_SIGNED';
+  // Who has signed: server signature records first (production), then the local timestamps
+  // (demo). FULLY_SIGNED means both sides signed, even if an older payload omits the rows.
+  const creatorRecord = contract.signatures?.find(sig => sig.signerSide === 'CREATOR');
+  const hostRecord = contract.signatures?.find(sig => sig.signerSide === 'HOST');
+  const creatorSignedAt = creatorRecord?.signedAt || contract.creatorSignedAt;
+  const hostSignedAt = hostRecord?.signedAt || contract.hostSignedAt;
+  const creatorSigned = fullySigned || !!creatorRecord || !!contract.creatorSignedAt;
+  const hostSigned = fullySigned || !!hostRecord || !!contract.hostSignedAt;
+  const creatorAuditRef = creatorRecord ? creatorRecord.signatureEvidenceSha256 : contract.creatorSignedAt ? contract.creatorSignerIp : undefined;
+  const hostAuditRef = hostRecord ? hostRecord.signatureEvidenceSha256 : contract.hostSignedAt ? contract.hostSignerIp : undefined;
+  const signedTitle = (name: string, at?: string) => (at ? `${name} — ${new Date(at).toLocaleString('ar-KW')}` : name);
+
+  const paciBadge = paciStatus ? statusLabel(paciStatus) : undefined;
+  const pathDone = [true, creatorSigned, hostSigned, fullySigned];
+  const firstOpen = pathDone.indexOf(false);
+  const stepState = (i: number): DnaStepState => (pathDone[i] ? 'done' : i === firstOpen ? 'current' : 'pending');
+  const signingSteps: DnaStep[] = [
+    { key: 'draft', label: 'مسودة', state: stepState(0), icon: <FileText /> },
+    {
+      key: 'creator',
+      label: 'المبدع',
+      state: stepState(1),
+      stamp: creatorSigned ? initials(contract.creatorLegalName) : undefined,
+      badge: canSignAsCreator ? paciBadge : undefined,
+      title: creatorSigned ? signedTitle(contract.creatorLegalName, creatorSignedAt) : 'في انتظار التوقيع'
+    },
+    {
+      key: 'host',
+      label: 'المنشأة',
+      state: stepState(2),
+      stamp: hostSigned ? initials(contract.hostCommercialName) : undefined,
+      badge: canSignAsHost ? paciBadge : undefined,
+      title: hostSigned ? signedTitle(contract.hostCommercialName, hostSignedAt) : 'في انتظار التوقيع'
+    },
+    { key: 'signed', label: 'موقّع', state: stepState(3), icon: <ShieldCheck /> }
+  ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
       <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="contract-modal-title" className="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl text-slate-100 flex flex-col max-h-[92dvh]">
         
-        {/* Header */}
-        <div className="p-5 bg-slate-800/90 border-b border-slate-700 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl border border-amber-500/30">
-              <FileText className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 id="contract-modal-title" className="font-black text-lg text-slate-100">
-                  مسودة شراكة تجريبية — غير ملزمة
-                </h3>
-                <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                  contract.status === 'FULLY_SIGNED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                }`}>
-                  {contract.status === 'FULLY_SIGNED' ? 'اكتملت المحاكاة' : 'محاكاة موافقات'}
-                </span>
-              </div>
-              <p className="text-xs text-slate-400">
-                نسخة العقد التشغيلية رقم: <span className="text-amber-300 font-mono font-bold">{contract.versionNumber}</span>
-              </p>
-            </div>
-          </div>
-
-          <button onClick={onClose} aria-label="إغلاق مسودة العقد" className="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-700">
-            <X className="w-5 h-5" />
-          </button>
+        {/* Header: status tile + status + the sign action, then the signing path. */}
+        <div className="p-5 border-b border-slate-700/70 bg-slate-900">
+          <DnaStatusHeader
+            as="div"
+            icon={<FileText />}
+            tone={contract.status === 'FULLY_SIGNED' ? 'accent' : 'neutral'}
+            divider="dashed"
+            title={statusLabel(contract.status)}
+            subtitle={
+              <>
+                <span id="contract-modal-title">مسودة شراكة تجريبية — غير ملزمة</span>
+                {' · '}
+                {contract.status === 'FULLY_SIGNED' ? 'اكتملت المحاكاة' : 'محاكاة موافقات'}
+                {' · '}
+                نسخة العقد التشغيلية رقم: <span className="font-mono font-bold">{contract.versionNumber}</span>
+              </>
+            }
+            actions={
+              <>
+                {showSignForm && (
+                  <button
+                    type="button"
+                    onClick={handleSign}
+                    disabled={!agreedTerms || isSigning}
+                    aria-busy={isSigning}
+                    aria-label={signLabel}
+                    title={signLabel}
+                    className="dna-btnp disabled:opacity-45 disabled:cursor-not-allowed"
+                  >
+                    {isSigning ? <MajalLoader size={16} label="جارٍ التحقق من التوقيع…" /> : <PenLine />}
+                    <span>توقيع</span>
+                  </button>
+                )}
+                <button type="button" onClick={onClose} aria-label="إغلاق مسودة العقد" className="dna-ibtn">
+                  <X />
+                </button>
+              </>
+            }
+          >
+            <DnaStepper
+              size="md"
+              ariaLabel="مسار توقيع العقد"
+              steps={signingSteps}
+            />
+          </DnaStatusHeader>
         </div>
 
         {/* Contract Legal Body */}
@@ -116,7 +180,7 @@ export const ContractModal: React.FC<ContractModalProps> = ({
           
           {/* Parties block */}
           <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
-            <h4 className="font-bold text-amber-400 text-sm">أطراف الاتفاقية التجارية:</h4>
+            <h4 className="font-bold text-gold-300 text-sm">أطراف الاتفاقية التجارية:</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
               <div>
                 <span className="text-slate-400 block">الطرف الأول (المبدع وصاحب الحق):</span>
@@ -136,11 +200,11 @@ export const ContractModal: React.FC<ContractModalProps> = ({
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div className="p-2.5 bg-slate-900 rounded-lg border border-slate-800">
                 <span className="text-slate-400 text-xs block">سعر البيع المعتمد</span>
-                <span className="font-bold text-amber-400 text-sm">{contract.terms.sellingPriceKwd.toFixed(3)} د.ك</span>
+                <span className="font-bold text-gold-300 text-sm">{contract.terms.sellingPriceKwd.toFixed(3)} د.ك</span>
               </div>
               <div className="p-2.5 bg-slate-900 rounded-lg border border-slate-800">
                 <span className="text-slate-400 text-xs block">نسبة حقوق المبدع</span>
-                <span className="font-bold text-amber-400 text-sm">{contract.terms.creatorRoyaltyRatePercent}٪ من المبيعات</span>
+                <span className="font-bold text-gold-300 text-sm">{contract.terms.creatorRoyaltyRatePercent}٪ من المبيعات</span>
               </div>
               <div className="p-2.5 bg-slate-900 rounded-lg border border-slate-800">
                 <span className="text-slate-400 text-xs block">عمولة تشغيل المنصة</span>
@@ -172,16 +236,16 @@ export const ContractModal: React.FC<ContractModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
             
             {/* Creator signature box */}
-            <div className={`p-4 rounded-xl border ${contract.creatorSignedAt ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
+            <div className={`p-4 rounded-xl border ${creatorSigned ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
               <div className="flex items-center justify-between mb-1">
                 <span className="font-bold text-xs">توقيع الطرف الأول (المبدع)</span>
-                {contract.creatorSignedAt && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                {creatorSigned && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
               </div>
-              {contract.creatorSignedAt ? (
+              {creatorSigned ? (
                 <div className="text-xs">
                   <p className="font-bold text-slate-100">{contract.creatorLegalName}</p>
-                  <p className="text-slate-400 text-xs">تاريخ التوقيع: {new Date(contract.creatorSignedAt).toLocaleString('ar-KW')}</p>
-                  <p className="text-slate-400 text-xs font-mono">Session Audit Ref: {contract.creatorSignerIp}</p>
+                  {creatorSignedAt && <p className="text-slate-400 text-xs">تاريخ التوقيع: {new Date(creatorSignedAt).toLocaleString('ar-KW')}</p>}
+                  {creatorAuditRef && <p className="text-slate-400 text-xs font-mono break-all">Session Audit Ref: {creatorAuditRef}</p>}
                 </div>
               ) : (
                 <span className="text-amber-400 font-semibold text-xs">في انتظار التوقيع...</span>
@@ -189,16 +253,16 @@ export const ContractModal: React.FC<ContractModalProps> = ({
             </div>
 
             {/* Host signature box */}
-            <div className={`p-4 rounded-xl border ${contract.hostSignedAt ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
+            <div className={`p-4 rounded-xl border ${hostSigned ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
               <div className="flex items-center justify-between mb-1">
                 <span className="font-bold text-xs">توقيع الطرف الثاني (المنشأة)</span>
-                {contract.hostSignedAt && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                {hostSigned && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
               </div>
-              {contract.hostSignedAt ? (
+              {hostSigned ? (
                 <div className="text-xs">
                   <p className="font-bold text-slate-100">{contract.hostCommercialName}</p>
-                  <p className="text-slate-400 text-xs">تاريخ التوقيع: {new Date(contract.hostSignedAt).toLocaleString('ar-KW')}</p>
-                  <p className="text-slate-400 text-xs font-mono">Session Audit Ref: {contract.hostSignerIp}</p>
+                  {hostSignedAt && <p className="text-slate-400 text-xs">تاريخ التوقيع: {new Date(hostSignedAt).toLocaleString('ar-KW')}</p>}
+                  {hostAuditRef && <p className="text-slate-400 text-xs font-mono break-all">Session Audit Ref: {hostAuditRef}</p>}
                 </div>
               ) : (
                 <span className="text-amber-400 font-semibold text-xs">في انتظار التوقيع...</span>
@@ -208,10 +272,10 @@ export const ContractModal: React.FC<ContractModalProps> = ({
           </div>
 
           {/* Signature box is shown only to an authorized contractual party. */}
-          {canCurrentUserSign && !hasUserSigned && contract.status !== 'FULLY_SIGNED' && (
-            <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-3">
-              <h5 className="font-bold text-amber-300 flex items-center gap-2">
-                <PenTool className="w-4 h-4 text-amber-400" />
+          {showSignForm && (
+            <div className="p-4 bg-gold-500/5 border border-gold-500/25 rounded-xl space-y-3">
+              <h5 className="font-bold text-gold-300 flex items-center gap-2">
+                <PenTool className="w-4 h-4 text-gold-300" />
                 <span>{IS_DEMO_MODE ? `محاكاة موافقتك المحلية بصفتك (${store.activeUser.name})` : `التوقيع الموثق بصفتك (${store.activeUser.name})`}</span>
               </h5>
 
@@ -221,13 +285,13 @@ export const ContractModal: React.FC<ContractModalProps> = ({
                   type="text"
                   value={signatureName}
                   onChange={(e) => setSignatureName(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 font-bold focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 font-bold focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
                 />
               </div>
 
               {!IS_DEMO_MODE && (
-                <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-3 space-y-2">
-                  <label className="block text-xs font-bold text-blue-200">الرقم المدني لطلب هويتي</label>
+                <div className="rounded-xl border border-slate-700 bg-slate-950/40 p-3 space-y-2">
+                  <label className="block text-xs font-bold text-slate-200">الرقم المدني لطلب هويتي</label>
                   <input
                     inputMode="numeric"
                     autoComplete="off"
@@ -237,8 +301,8 @@ export const ContractModal: React.FC<ContractModalProps> = ({
                     aria-label="الرقم المدني لطلب هويتي"
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-100 font-mono"
                   />
-                  {paciRequestId && <p className="text-xs text-slate-400">طلب PACI: <span className="font-mono text-blue-300">{paciRequestId}</span> — {paciStatus || 'PENDING'}</p>}
-                  {paciDeepLink && <a href={paciDeepLink} rel="noreferrer" className="inline-flex text-xs font-bold text-blue-300 underline">فتح الطلب في تطبيق هويتي</a>}
+                  {paciRequestId && <p className="text-xs text-slate-400">طلب PACI: <span className="font-mono text-gold-300">{paciRequestId}</span> — {paciStatus || 'PENDING'}</p>}
+                  {paciDeepLink && <a href={paciDeepLink} rel="noreferrer" className="inline-flex text-xs font-bold text-gold-300 underline">فتح الطلب في تطبيق هويتي</a>}
                   {signError && <p role="alert" className="text-xs text-rose-300">{signError}</p>}
                 </div>
               )}
@@ -249,27 +313,22 @@ export const ContractModal: React.FC<ContractModalProps> = ({
                   id="agree_terms"
                   checked={agreedTerms}
                   onChange={(e) => setAgreedTerms(e.target.checked)}
-                  className="rounded bg-slate-800 border-slate-700 text-amber-500 focus:ring-amber-500"
+                  className="rounded bg-slate-800 border-slate-700 text-gold-500 focus:ring-gold-500"
                 />
                 <label htmlFor="agree_terms" className="text-slate-300 cursor-pointer">
                   أقر بقراءة وتدقيق كافة بنود العقد وشروط الحقوق والتسويات وأوافق على تسجيل هذه الموافقة. في الإنتاج لا يثبت التوقيع إلا بعد تحقق PACI الموثق على نسخة العقد الحالية.
                 </label>
               </div>
 
-              <button
-                onClick={handleSign}
-                disabled={!agreedTerms || isSigning}
-                aria-busy={isSigning}
-                className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 font-black rounded-xl transition-colors flex items-center justify-center gap-2"
-              >
-                {isSigning ? <MajalLoader size={16} label="جارٍ التحقق من التوقيع…" /> : <ShieldCheck className="w-4 h-4" />}
-                <span>{isSigning ? 'جارٍ التحقق…' : IS_DEMO_MODE ? 'محاكاة الموافقة على المسودة' : paciRequestId ? 'تحقق من هويتي وثبّت التوقيع' : 'ابدأ طلب التوقيع عبر هويتي'}</span>
-              </button>
+              <p className="flex items-center gap-2 text-xs text-slate-400">
+                <PenLine className="w-4 h-4 text-gold-300 shrink-0" aria-hidden="true" />
+                <span>{signLabel} — زر «توقيع» أعلى العقد.</span>
+              </p>
             </div>
           )}
 
           {!canCurrentUserSign && contract.status !== 'FULLY_SIGNED' && (
-            <div className="p-4 rounded-xl bg-sky-500/5 border border-sky-400/15 text-xs text-slate-400 leading-6">
+            <div className="p-4 rounded-xl bg-slate-950/40 border border-slate-700/60 text-xs text-slate-400 leading-6">
               وضع مشاهدة فقط: التوقيع متاح للمبدع صاحب التعاون أو مالك المنشأة المرتبطة بالعقد فقط.
             </div>
           )}

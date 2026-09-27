@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Contrast, Moon, Sun } from 'lucide-react';
-import { applyTheme, MajalTheme, nextTheme, readTheme, THEMES } from '../../lib/theme';
+import { applyTheme, DEFAULT_THEME, MajalTheme, nextTheme, readTheme, THEMES } from '../../lib/theme';
 
 const ICONS: Record<MajalTheme, React.ReactNode> = {
   dark: <Moon className="w-4 h-4" aria-hidden="true" />,
@@ -10,7 +10,7 @@ const ICONS: Record<MajalTheme, React.ReactNode> = {
 
 /** Cycles dark → light → high contrast; the choice persists per browser. */
 export const ThemeToggle: React.FC = () => {
-  const [theme, setTheme] = useState<MajalTheme>(() => (typeof window === 'undefined' ? 'dark' : readTheme()));
+  const [theme, setTheme] = useState<MajalTheme>(() => (typeof window === 'undefined' ? DEFAULT_THEME : readTheme()));
   useEffect(() => { applyTheme(theme); }, [theme]);
   const current = THEMES.find(t => t.id === theme)!;
   const upcoming = THEMES.find(t => t.id === nextTheme(theme))!;

@@ -446,6 +446,17 @@ export class Store {
               creatorSignerIp: '127.0.0.1',
               hostSignedAt: ct.hostSignedAt || ct.host_signed_at,
               hostSignerIp: '127.0.0.1',
+              // Read-through of the snapshot's signature rows so the contract view can show
+              // who has signed; nothing else reads them.
+              signatures: Array.isArray(ct.signatures)
+                ? ct.signatures
+                    .filter((sig: any) => ['CREATOR', 'HOST'].includes(String(sig.signerSide || sig.signer_side)))
+                    .map((sig: any) => ({
+                      signerSide: String(sig.signerSide || sig.signer_side) as 'CREATOR' | 'HOST',
+                      signedAt: String(sig.signedAt || sig.signed_at || ''),
+                      signatureEvidenceSha256: sig.signatureEvidenceSha256 || sig.signature_evidence_sha256 || undefined
+                    }))
+                : undefined,
               status: (ct.status || 'FULLY_SIGNED') as any,
               createdAt: String(ct.createdAt || ct.created_at || new Date().toISOString())
             };
