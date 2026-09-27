@@ -819,6 +819,23 @@ textarea:disabled {
 :root[data-theme='light'] .glass-card { border-color: rgba(11, 18, 32, 0.1); }
 :root[data-theme='light'] .glass-card-hover:hover { background: #ffffff; }
 /* Gold fills keep light text in the light theme (text-slate-950 remaps to white). */
+/* Every solid status or accent fill is a deep tone in this theme, so its label is always
+   white. Without this, `text-white` (remapped to ink) and `text-slate-100` sat on those
+   fills at about 2.4:1. Unlayered, so it outranks the text utility on the same element;
+   disabled buttons keep their own muted utilities. */
+:root[data-theme='light'] :is(
+  .bg-emerald-400, .bg-emerald-500, .bg-emerald-600,
+  .bg-rose-400, .bg-rose-500,
+  .bg-amber-400, .bg-amber-500, .bg-amber-600,
+  .bg-sky-400, .bg-sky-500,
+  .bg-fuchsia-300, .bg-fuchsia-400, .bg-fuchsia-500,
+  .bg-violet-400, .bg-violet-500,
+  .bg-indigo-400, .bg-indigo-500,
+  .bg-blue-500, .bg-blue-600,
+  .bg-cyan-400, .bg-cyan-500
+):not(:disabled) {
+  color: #ffffff;
+}
 
 :root[data-theme='contrast'] {
   color-scheme: dark;
