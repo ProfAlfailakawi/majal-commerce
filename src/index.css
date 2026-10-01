@@ -799,6 +799,14 @@ textarea:disabled {
   --color-neutral-800: #e2e8f0;
   --color-neutral-900: #f8fafc;
   --color-neutral-950: #ffffff;
+  /* Ink fills (role switcher, notification and role menus, toasts, sticky sheet headers)
+     stayed navy on cream while their text remapped to ink, so names were unreadable.
+     They become raised cream/white surfaces. ink-800/900 stay dark: the onboarding
+     overlay keeps its own dark ground and fades into ink-900. */
+  --color-ink-400: #ede6d6;
+  --color-ink-500: #f1ebdd;
+  --color-ink-600: #ffffff;
+  --color-ink-700: #ffffff;
   --majal-bg: #f7f4ec;
   --ink-850: #fbf8f1;
   --ink-800: #f7f4ec;
