@@ -133,7 +133,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
         {/* Header */}
         <div className="p-5 bg-slate-800/90 border-b border-slate-700 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-amber-500/20 text-amber-400 rounded-xl">
+            <div className="p-2 bg-gold-500/20 text-gold-400 rounded-xl">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
@@ -153,7 +153,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
         {/* Stepper progress bar */}
         <div className="w-full h-1 bg-slate-800">
           <div
-            className="h-full bg-amber-500 transition-all duration-300"
+            className="h-full bg-gold-500 transition-all duration-300"
             style={{ width: `${(step / 3) * 100}%` }}
           />
         </div>
@@ -164,7 +164,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
           
           {step === 1 && (
             <div className="space-y-4 animate-in fade-in">
-              <h4 className="font-bold text-amber-400 text-sm">١. معلومات المنتج والقصة التسويقية</h4>
+              <h4 className="font-bold text-gold-400 text-sm">١. معلومات المنتج والقصة التسويقية</h4>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -178,7 +178,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                     placeholder="مثال: قرص عقيلي فاخر بالزعفران"
                     maxLength={80}
                     required
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
                   />
                 </div>
 
@@ -188,7 +188,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                     aria-label="فئة المنتج"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
                   >
                     {PRODUCT_CATEGORIES.map(item => (
                       <option key={item.id} value={item.id}>{item.label}</option>
@@ -207,7 +207,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                   placeholder="وصف مشوق يوضح ما يجعل هذا المنتج استثنائياً..."
                   maxLength={240}
                   required
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 resize-none focus-visible:ring-2 focus-visible:ring-gold-300"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-gold-500 resize-none focus-visible:ring-2 focus-visible:ring-gold-300"
                 />
               </div>
 
@@ -221,7 +221,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                   placeholder="كيف بدأت شغفك بهذه الوصفة وما سر تميزها التراثي أو العصري..."
                   maxLength={800}
                   required
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 resize-none focus-visible:ring-2 focus-visible:ring-gold-300"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-gold-500 resize-none focus-visible:ring-2 focus-visible:ring-gold-300"
                 />
               </div>
             </div>
@@ -229,7 +229,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
 
           {step === 2 && (
             <div className="space-y-4 animate-in fade-in">
-              <h4 className="font-bold text-amber-400 text-sm">٢. المكونات، مسببات الحساسية والأسعار التقديرية</h4>
+              <h4 className="font-bold text-gold-400 text-sm">٢. المكونات، مسببات الحساسية والأسعار التقديرية</h4>
 
               <div>
                 <label className="block text-slate-300 font-bold mb-1">المكونات العامة (مفصولة بفواصل):</label>
@@ -241,7 +241,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                   placeholder="مثال: دقيق، بيض، هيل طازج، زعفران، كريمة"
                   maxLength={400}
                   required
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
                 />
               </div>
 
@@ -255,7 +255,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                   placeholder="مثال: بيض، حليب، سمسم، جلوتين"
                   maxLength={300}
                   required
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
                 />
               </div>
 
@@ -281,7 +281,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                     min="0.001"
                     value={targetSellingPriceKwd}
                     onChange={(e) => setTargetSellingPriceKwd(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-amber-400 font-bold"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-gold-400 font-bold"
                   />
                 </div>
               </div>
@@ -290,10 +290,10 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
 
           {step === 3 && (
             <div className="space-y-4 animate-in fade-in">
-              <h4 className="font-bold text-amber-400 text-sm">٣. حماية الوصفة وخزنة الأسرار</h4>
+              <h4 className="font-bold text-gold-400 text-sm">٣. حماية الوصفة وخزنة الأسرار</h4>
 
-              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-2.5 text-amber-300">
-                <Lock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <div className="p-3 bg-gold-500/10 border border-gold-500/30 rounded-xl flex items-start gap-2.5 text-gold-300">
+                <Lock className="w-5 h-5 text-gold-400 shrink-0 mt-0.5" />
                 <p>
                   هذه نسخة عرض محلية فقط. في الإنتاج سيبقى حفظ الوصفة مقفلاً حتى ربط خزنة خادمية مشفّرة ومصادقة المستخدم.
                 </p>
@@ -309,7 +309,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                   placeholder="الخطوة ١: خفق الصفار مع الزعفران والنقع&#10;الخطوة ٢: الخبز بفرن حراري..."
                   maxLength={2000}
                   required
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-amber-500 font-mono resize-none focus-visible:ring-2 focus-visible:ring-gold-300"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-gold-500 font-mono resize-none focus-visible:ring-2 focus-visible:ring-gold-300"
                 />
               </div>
 
@@ -322,7 +322,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                   onChange={(e) => setCriticalSecrets(e.target.value)}
                   placeholder="إضافة زهرة معينة، توقيع حراري خاص..."
                   maxLength={1000}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-amber-300 focus:outline-none focus:border-amber-500 resize-none font-medium focus-visible:ring-2 focus-visible:ring-gold-300"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-gold-300 focus:outline-none focus:border-gold-500 resize-none font-medium focus-visible:ring-2 focus-visible:ring-gold-300"
                 />
               </div>
             </div>
@@ -344,7 +344,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
           {step < 3 ? (
             <button
               onClick={goNext}
-              className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl transition-colors flex items-center gap-1.5"
+              className="px-5 py-2 bg-gold-500 hover:bg-gold-400 text-slate-950 font-black rounded-xl transition-colors flex items-center gap-1.5"
             >
               <span>متابعة المعالج</span>
               <ArrowRight className="w-4 h-4 rotate-180" />
@@ -354,7 +354,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
               onClick={handleSubmit}
               disabled={isSubmitting}
               aria-busy={isSubmitting}
-              className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-80 text-slate-950 font-black rounded-xl transition-colors flex items-center gap-1.5 shadow-lg"
+              className="px-6 py-2.5 bg-gold-500 hover:bg-gold-400 disabled:opacity-80 text-slate-950 font-black rounded-xl transition-colors flex items-center gap-1.5 shadow-lg"
             >
               {isSubmitting ? <MajalLoader size={16} label="جاري حفظ المنتج…" /> : <Check className="w-4 h-4" />}
               <span>{isSubmitting ? 'جاري الحفظ…' : 'تقديم المنتج للمراجعة والربط'}</span>
