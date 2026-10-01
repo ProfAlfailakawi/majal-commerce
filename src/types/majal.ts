@@ -637,6 +637,8 @@ export interface AuditLog {
     | 'PLATFORM_POLICY_CHANGED'
     | 'ORDER_PLACED'
     | 'ORDER_PAID_SIMULATED'
+    | 'ORDER_CANCELLED_SIMULATED'
+    | 'ORDER_REFUNDED_SIMULATED'
     | 'REVIEW_SUBMITTED'
     | 'CHALLENGE_PUBLISHED';
   entityType: string;

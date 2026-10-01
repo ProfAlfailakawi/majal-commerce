@@ -1440,6 +1440,35 @@ export class Store {
     return order;
   }
 
+  /** Demo only: the buyer abandons an order that is still waiting for payment. */
+  public cancelDemoOrder(orderId: string) {
+    if (!IS_DEMO_MODE) return this.fail('إلغاء الطلب التجريبي متاح في وضع العرض فقط.');
+    const order = this.orders.find(o => o.id === orderId);
+    if (!order) return this.fail('الطلب غير موجود.');
+    if (order.status !== 'PENDING_PAYMENT') return this.fail('لا يمكن إلغاء طلب مدفوع؛ استخدم الاسترجاع.');
+    this.orders = this.orders.filter(o => o.id !== orderId);
+    this.addAuditLog('ORDER_CANCELLED_SIMULATED', 'ORDER', orderId, 'إلغاء طلب غير مدفوع وتحرير الكمية المحجوزة (وضع العرض)');
+    this.notify();
+    return true;
+  }
+
+  /** Demo only: refund a paid order. Reverses units sold and the creator accrual unless it already settled. */
+  public refundDemoOrder(orderId: string) {
+    if (!IS_DEMO_MODE) return this.fail('الاسترجاع التجريبي متاح في وضع العرض فقط.');
+    const order = this.orders.find(o => o.id === orderId);
+    if (!order) return this.fail('الطلب غير موجود.');
+    if (order.status !== 'COMPLETED') return this.fail('الاسترجاع متاح للطلبات المدفوعة فقط.');
+    const accrual = this.accruals.find(a => a.orderId === orderId);
+    if (accrual && ['SETTLEMENT_LOCKED', 'PAID'].includes(accrual.settlementStatus)) return this.fail('المستحق ضمن تسوية معتمدة؛ يُعالج الاسترجاع عبر الأدمن.');
+    order.status = 'REFUNDED';
+    const launch = this.launches.find(l => l.id === order.launchId);
+    if (launch) launch.unitsSold = Math.max(0, launch.unitsSold - order.unitsCount);
+    this.accruals = this.accruals.filter(a => a.orderId !== orderId);
+    this.addAuditLog('ORDER_REFUNDED_SIMULATED', 'ORDER', orderId, `استرجاع ${order.grossAmountKwd.toFixed(3)} د.ك وإلغاء مستحق المبدع (وضع العرض)`);
+    this.notify();
+    return order;
+  }
+
   public submitReview(launchId: string, tasteRating: number, valueRating: number, portionRating: number, comment: string, keepItVote: boolean, customerName: string, orderId?: string) {
     /*
      * «موثّق الشراء» صار خاصية بنيوية: التقييم يُرسل على معرّف طلب مدفوع يملكه صاحب

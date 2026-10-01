@@ -569,6 +569,29 @@ function demoTrading(products: CreatorProduct[], hosts: HostBusiness[], creators
     batchIndex += 1;
   });
 
+  // The flagship creator is the one most demos open on; give her a closed, paid run so
+  // the earnings screen shows the whole cycle (paid, awaiting approval, still accruing).
+  if (!settlements.some(b => b.creatorId === 'cr_main')) {
+    const older = accruals.filter(a => a.creatorId === 'cr_main' && a.settlementStatus === 'ACCRUED').slice(-3);
+    if (older.length) {
+      const batchId = 'set_demo_cr_main_paid';
+      older.forEach(a => { a.settlementStatus = 'PAID'; a.settlementBatchId = batchId; });
+      settlements.push({
+        id: batchId,
+        creatorId: 'cr_main',
+        creatorName: creators.find(c => c.id === 'cr_main')?.displayName || 'cr_main',
+        totalAmountKwd: kwd(older.reduce((sum, a) => sum + a.accruedAmountKwd, 0)),
+        periodStart: ago(30),
+        periodEnd: ago(4),
+        status: 'PAID',
+        approvedAt: ago(3),
+        approvedByAdmin: 'usr_super_admin',
+        paidAt: ago(2),
+        createdAt: ago(4),
+      } as SettlementBatch);
+    }
+  }
+
   const ACTIONS: AuditLog['action'][] = [
     'RECIPE_VIEWED', 'ACCESS_REQUESTED', 'ACCESS_GRANTED', 'ACCESS_REVOKED', 'OFFER_CHANGED',
     'CONTRACT_SIGNED', 'LAUNCH_PREPARED', 'LAUNCH_GATE_UPDATED', 'LAUNCH_ACTIVATED',

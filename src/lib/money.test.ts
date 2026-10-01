@@ -21,3 +21,12 @@ test('sales totals count completed orders only, so every dashboard agrees', asyn
   assert.equal(t.salesKwd, 12);
   assert.ok(Math.abs(t.platformFeesKwd - 0.6) < 1e-9);
 });
+
+test('demo assistant answers by topic and is offline', async () => {
+  const { demoAiAnswer } = await import('./demoAi');
+  assert.match(demoAiAnswer('POLISH', 'كيف أحمي وصفتي؟', { productNames: ['قرص عقيلي'] }), /قرص عقيلي/);
+  assert.match(demoAiAnswer('POLISH', 'كيف أسعّر المنتج؟'), /عمولة المنصة/);
+  assert.match(demoAiAnswer('POLISH', 'متى أوقّع العقد؟'), /الطرفين/);
+  assert.match(demoAiAnswer('POLISH', 'كليجا بالهيل'), /الهيل/);
+  assert.match(demoAiAnswer('EXPLAIN_MATCH', 'بسكويت'), /الملاءمة/);
+});
