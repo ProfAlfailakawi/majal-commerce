@@ -68,7 +68,7 @@ export const CreatorEarnings: React.FC = () => {
       </div>
 
       {totals.lifetime > 0 && (
-        <div role="img" aria-label="توزيع الحقوق حسب حالة التسوية" className="flex h-2 w-full overflow-hidden rounded-full bg-white/5">
+        <div role="img" aria-label="توزيع الحقوق حسب حالة التسوية" className="flex h-1 w-full overflow-hidden rounded-full bg-white/5 opacity-80">
           <span className="bg-gold-400/80" style={{ width: `${(totals.eligible / totals.lifetime) * 100}%` }} />
           <span className="bg-sky-400/80" style={{ width: `${(totals.locked / totals.lifetime) * 100}%` }} />
           <span className="bg-emerald-400/80" style={{ width: `${(totals.paid / totals.lifetime) * 100}%` }} />
