@@ -155,7 +155,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
           {IS_DEMO_MODE ? <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-4">
             <button
               onClick={() => openDemoRole('CREATOR', 'CREATOR')}
-              className="px-6 py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 hover:brightness-110 text-slate-950 font-black text-sm shadow-[0_14px_40px_rgba(199,165,91,0.24)] transition-all flex items-center gap-2"
+              className="px-6 py-3.5 rounded-2xl bg-gold-500 hover:bg-gold-400 text-slate-950 font-black text-sm shadow-sm transition-all flex items-center gap-2"
             >
               <span>استعرض تجربة المبدع</span>
               <ChevronLeft className="w-4 h-4" />
@@ -170,7 +170,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
             </button>
 
           </div> : <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-4">
-            <button onClick={() => onSurfaceChange('CONSUMER')} className="px-6 py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 hover:brightness-110 text-slate-950 font-black text-sm shadow-[0_14px_40px_rgba(199,165,91,0.24)] transition-all flex items-center gap-2">
+            <button onClick={() => onSurfaceChange('CONSUMER')} className="px-6 py-3.5 rounded-2xl bg-gold-500 hover:bg-gold-400 text-slate-950 font-black text-sm shadow-sm transition-all flex items-center gap-2">
               <Store className="w-4 h-4" /> استكشف السوق
             </button>
             <span className="px-4 py-3 rounded-2xl bg-emerald-500/5 border border-emerald-400/15 text-emerald-200 text-xs flex items-center gap-2">
