@@ -69,3 +69,16 @@ test('switching between host identities yields each employer its own jobs (strip
   assert.match(src, /\}, \[viewerId\]\);/);
   assert.match(readFileSync(new URL('../components/host/HostPortal.tsx', import.meta.url), 'utf8'), /<EmployerJobsStrip viewerId=\{store\.activeUser\.id\}/);
 });
+
+test('every deal at or past offer stage carries its paper trail; admin counters are non-zero', () => {
+  const order = ['TASTING_COMPLETED', 'OFFER_SENT', 'COMMERCIAL_AGREED', 'SIGNED', 'PRE_LAUNCH', 'LIVE'];
+  for (const col of u.collaborations.filter(c => order.includes(c.stage))) {
+    assert.ok(col.currentOffer && col.currentOffer.collaborationId === col.id, `offer for ${col.id}`);
+    assert.ok(u.offers.some(o => o.id === col.currentOffer?.id));
+    if (!['TASTING_COMPLETED', 'OFFER_SENT', 'COMMERCIAL_AGREED'].includes(col.stage)) assert.equal(col.contract?.status, 'FULLY_SIGNED', `contract for ${col.id}`);
+  }
+  assert.ok(u.recipeGrants.some(g => g.status === 'REQUESTED') && u.recipeGrants.some(g => g.status === 'APPROVED'));
+  assert.ok(u.matches.length > 20 && u.tastings.length > 5 && u.compliance.length > 20);
+  assert.ok(u.products.some(p => p.status === 'SUBMITTED') && u.products.some(p => p.status === 'SCREENING') && u.products.some(p => p.status === 'PAUSED'));
+  for (const g of u.recipeGrants) assert.ok(u.products.some(p => p.id === g.productId) && u.hosts.some(h => h.id === g.hostBusinessId));
+});
