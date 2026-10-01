@@ -41,7 +41,7 @@ function useCountdown(deadline: string | null) {
 }
 
 export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => {
-  const [paidDemo, setPaidDemo] = useState(false);
+  const [demoState, setDemoState] = useState<'PENDING' | 'PAID' | 'CANCELLED' | 'REFUNDED'>('PENDING');
   const [options, setOptions] = useState<CheckoutOptions | null>(IS_DEMO_MODE ? demoOptions(launch) : null);
   const [loadError, setLoadError] = useState('');
   const [reviews, setReviews] = useState<{ count: number; taste: number; keepItPercent: number } | null>(null);
@@ -137,13 +137,13 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
           ariaLabel="حالة الطلب"
           steps={[
             { key: 'hold', label: 'حجز', state: 'done', icon: <CheckCircle2 /> },
-            { key: 'pay', label: 'دفع', state: paidDemo ? 'done' : expired ? 'blocked' : 'current', icon: <CreditCard /> },
-            { key: 'prep', label: 'تجهيز', state: paidDemo ? 'current' : 'pending', icon: <ShoppingBag /> },
+            { key: 'pay', label: 'دفع', state: demoState === 'PENDING' ? (expired ? 'blocked' : 'current') : demoState === 'CANCELLED' ? 'blocked' : 'done', icon: <CreditCard /> },
+            { key: 'prep', label: 'تجهيز', state: demoState === 'PAID' ? 'current' : 'pending', icon: <ShoppingBag /> },
             { key: 'pickup', label: 'استلام', state: 'pending', icon: <Store /> }
           ]}
         />
         <div className="text-sm text-slate-100">الإجمالي: <strong className="text-gold-300">{formatFils(placed.totalFils)}</strong></div>
-        {countdown && !paidDemo && (
+        {countdown && demoState === 'PENDING' && (
           <div className="flex items-center justify-center gap-3" aria-live="polite">
             <DnaRing
               value={countdown.left}
@@ -163,11 +163,22 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
             <CreditCard className="w-4 h-4" aria-hidden="true" /> أكمل الدفع
           </a>
         )}
-        {IS_DEMO_MODE && !expired && (
-          <button type="button" onClick={() => { store.simulateDemoPayment(placed.orderId); setPaidDemo(true); }} disabled={paidDemo} className="dna-btnp w-full min-h-12 disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
-            <CreditCard className="w-4 h-4" aria-hidden="true" /> {paidDemo ? 'تم الدفع (محاكاة) — الطلب مؤكد' : 'ادفع الآن (محاكاة بوابة الدفع)'}
-          </button>
+        {IS_DEMO_MODE && demoState === 'PENDING' && !expired && (
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => { store.simulateDemoPayment(placed.orderId); setDemoState('PAID'); }} className="dna-btnp min-h-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
+              <CreditCard className="w-4 h-4" aria-hidden="true" /> ادفع الآن (محاكاة)
+            </button>
+            <button type="button" onClick={() => { if (store.cancelDemoOrder(placed.orderId)) setDemoState('CANCELLED'); }} className="min-h-12 rounded-xl bg-white/5 border border-white/10 text-slate-200 font-bold text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">إلغاء الطلب</button>
+          </div>
         )}
+        {IS_DEMO_MODE && demoState === 'PAID' && (
+          <div className="space-y-2">
+            <div role="status" className="text-emerald-300 font-black text-sm">تم الدفع (محاكاة) — الطلب مؤكد</div>
+            <button type="button" onClick={() => { if (store.refundDemoOrder(placed.orderId)) setDemoState('REFUNDED'); }} className="w-full min-h-11 rounded-xl bg-white/5 border border-white/10 text-rose-200 font-bold text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">طلب استرجاع (محاكاة)</button>
+          </div>
+        )}
+        {IS_DEMO_MODE && demoState === 'CANCELLED' && <div role="status" className="text-slate-300 font-black text-sm">أُلغي الطلب وتحررت الكمية المحجوزة.</div>}
+        {IS_DEMO_MODE && demoState === 'REFUNDED' && <div role="status" className="text-amber-200 font-black text-sm">تم استرجاع المبلغ (محاكاة) وأُلغي مستحق المبدع.</div>}
         <p className="text-xs text-slate-400">يتأكد الطلب فقط بعد تأكيد الدفع من البوابة. لم تُخصم أي أموال قبل ذلك.</p>
       </div>
     );

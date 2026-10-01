@@ -2,6 +2,13 @@ import React, { useState } from 'react';
 import { ShieldCheck, Search, Filter, Lock, FileText, CheckCircle2 } from 'lucide-react';
 import { store } from '../../lib/store';
 
+const ACTION_LABELS: Record<string, string> = {
+  ORDER_PLACED: 'حجز طلب',
+  ORDER_PAID_SIMULATED: 'دفع طلب (محاكاة)',
+  ORDER_CANCELLED_SIMULATED: 'إلغاء طلب (محاكاة)',
+  ORDER_REFUNDED_SIMULATED: 'استرجاع طلب (محاكاة)'
+};
+
 export const AdminAuditLogs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [actionFilter, setActionFilter] = useState<string>('ALL');
@@ -56,7 +63,7 @@ export const AdminAuditLogs: React.FC = () => {
                 <td data-label="التاريخ والوقت" className="py-2.5 px-3 text-slate-400">{new Date(log.timestamp).toLocaleString('ar-KW')}</td>
                 <td data-label="نوع الحدث" className="py-2.5 px-3">
                   <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                    {log.action}
+                    <span title={log.action}>{ACTION_LABELS[log.action] || log.action}</span>
                   </span>
                 </td>
                 <td data-label="نوع الكيان" className="py-2.5 px-3 text-slate-300 font-bold">{log.entityType}</td>
