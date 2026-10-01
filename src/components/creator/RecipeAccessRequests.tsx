@@ -6,6 +6,28 @@ interface RecipeAccessRequestsProps {
   creatorId: string;
 }
 
+const DAY = 86_400_000;
+
+/** Remaining-days arc: how much of the grant's window is left. The date stays printed beside it. */
+const DaysArc: React.FC<{ from?: string; until: string }> = ({ from, until }) => {
+  const end = new Date(until).getTime();
+  const start = from ? new Date(from).getTime() : NaN;
+  if (!Number.isFinite(end)) return null;
+  const days = Math.max(0, Math.ceil((end - Date.now()) / DAY));
+  const span = Number.isFinite(start) && end > start ? end - start : Math.max(days, 1) * DAY;
+  const left = Math.max(0, Math.min(1, (end - Date.now()) / span));
+  const r = 17, c = 2 * Math.PI * r;
+  return (
+    <span className="relative inline-grid place-items-center w-11 h-11 shrink-0" role="img" aria-label={`المتبقي ${days} يوم`}>
+      <svg viewBox="0 0 44 44" className="absolute inset-0 w-full h-full -rotate-90" aria-hidden="true">
+        <circle cx="22" cy="22" r={r} fill="none" strokeWidth="3" className="stroke-white/10" />
+        <circle cx="22" cy="22" r={r} fill="none" strokeWidth="3" strokeLinecap="round" className="stroke-emerald-400" strokeDasharray={c} strokeDashoffset={c * (1 - left)} />
+      </svg>
+      <span className="relative text-xs font-black text-slate-100 tabular-nums leading-none">{days}</span>
+    </span>
+  );
+};
+
 export const RecipeAccessRequests: React.FC<RecipeAccessRequestsProps> = ({ creatorId }) => {
   const requests = store.recipeGrants.filter(g => g.creatorId === creatorId && (g.status === 'REQUESTED' || g.status === 'APPROVED'));
 
@@ -30,7 +52,7 @@ export const RecipeAccessRequests: React.FC<RecipeAccessRequestsProps> = ({ crea
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-black text-slate-100">{product?.publicName}</span>
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-black ${grant.status === 'REQUESTED' ? 'bg-amber-500/10 text-amber-300 border border-amber-400/20' : 'bg-emerald-500/10 text-emerald-300 border border-emerald-400/20'}`}>
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-black ${grant.status === 'REQUESTED' ? 'bg-gold-500/10 text-gold-300 border border-gold-400/20' : 'bg-emerald-500/10 text-emerald-300 border border-emerald-400/20'}`}>
                     {grant.status === 'REQUESTED' ? 'طلب جديد' : 'إذن فعّال'}
                   </span>
                 </div>
@@ -46,7 +68,7 @@ export const RecipeAccessRequests: React.FC<RecipeAccessRequestsProps> = ({ crea
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <span className="px-3 py-2 rounded-xl bg-emerald-500/8 border border-emerald-400/15 text-emerald-300 text-xs font-black flex items-center gap-1.5"><Clock3 className="w-4 h-4" /> حتى {grant.expiresAt ? new Date(grant.expiresAt).toLocaleDateString('ar-KW') : 'غير محدد'}</span>
+                  <span className="px-3 py-1.5 rounded-xl bg-emerald-500/8 border border-emerald-400/15 text-emerald-300 text-xs font-black flex items-center gap-2">{grant.expiresAt ? <DaysArc from={grant.grantedAt || grant.requestedAt} until={grant.expiresAt} /> : <Clock3 className="w-4 h-4" />} حتى {grant.expiresAt ? new Date(grant.expiresAt).toLocaleDateString('ar-KW') : 'غير محدد'}</span>
                   <button onClick={async () => { await Promise.resolve(store.revokeRecipeAccess(grant.id)); }} className="px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-400/20 text-rose-300 text-xs font-black">سحب الإذن</button>
                 </div>
               )}

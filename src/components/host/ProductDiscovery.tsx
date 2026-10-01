@@ -5,6 +5,8 @@ import { CreatorProduct, HostBusiness, DisclosureLevel } from '../../types/majal
 import { RecipeVaultModal } from '../common/RecipeVaultModal';
 import { hasPermission } from '../../lib/permissions';
 import { PRODUCT_CATEGORIES } from '../../data/catalog';
+import { ScoreRing, MicroBars, FoldedNote } from '../common/MatchMeter';
+import { CapGrid } from '../common/CapGrid';
 import { EmptyState } from '../common/EmptyState';
 import { Building2 } from 'lucide-react';
 
@@ -50,7 +52,7 @@ export const ProductDiscovery: React.FC = () => {
       <div className="bg-slate-900/90 p-6 rounded-2xl border border-slate-800 space-y-4">
         <div>
           <h2 className="text-xl font-black text-slate-100 flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-amber-400" />
+            <Sparkles className="w-5 h-5 text-gold-400" />
             <span>محرك الاكتشاف والمطابقة المفسرة</span>
           </h2>
           <p className="text-xs text-slate-400">
@@ -67,7 +69,7 @@ export const ProductDiscovery: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="البحث باسم المنتج، المكونات، أو المبدع..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl ps-9 pe-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl ps-9 pe-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
             />
           </div>
 
@@ -75,7 +77,7 @@ export const ProductDiscovery: React.FC = () => {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-200 focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
             >
               <option value="ALL">جميع الفئات</option>
               {PRODUCT_CATEGORIES.map(item => (
@@ -92,21 +94,21 @@ export const ProductDiscovery: React.FC = () => {
               max="95"
               value={minMatchScore}
               onChange={(e) => setMinMatchScore(parseInt(e.target.value))}
-              className="accent-amber-500 flex-1 min-w-0"
+              className="accent-gold-500 flex-1 min-w-0"
             />
-            <span className="shrink-0 font-bold text-amber-400 font-mono">{minMatchScore}٪</span>
+            <span className="shrink-0 font-bold text-gold-400 font-mono">{minMatchScore}٪</span>
           </div>
         </div>
       </div>
 
       {requestSentNotice && (
-        <div className="p-3 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-bold animate-in fade-in">
+        <div className="p-3 bg-gold-500/20 text-gold-300 border border-gold-500/30 rounded-xl text-xs font-bold animate-in fade-in">
           {requestSentNotice}
         </div>
       )}
 
       {/* Product Match Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <CapGrid className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {visibleProducts.map(p => {
           const creator = store.creators.find(cr => cr.id === p.creatorId);
           const matchCalc = store.calculateMatchScore(p, host);
@@ -126,44 +128,24 @@ export const ProductDiscovery: React.FC = () => {
                     <img src={p.mediaUrls[0]} alt={p.publicName} loading="lazy" decoding="async" className="w-14 h-14 rounded-xl object-cover ring-1 ring-slate-700 shrink-0" />
                     <div className="min-w-0">
                       <h3 className="font-black text-slate-100 text-base line-clamp-2 sm:line-clamp-none sm:truncate" title={p.publicName}>{p.publicName}</h3>
-                      <span className="text-xs text-slate-400 block break-words sm:truncate" title={creator?.displayName}>بواسطة: <strong className="text-amber-400">{creator?.displayName}</strong></span>
+                      <span className="text-xs text-slate-400 block break-words sm:truncate" title={creator?.displayName}>بواسطة: <strong className="text-gold-400">{creator?.displayName}</strong></span>
                     </div>
                   </div>
 
-                  {/* Match Score Badge */}
-                  <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 text-center shrink-0">
-                    <span className="text-xs text-slate-400 block">نسبة المطابقة</span>
-                    <span className="text-lg font-black font-mono">{matchCalc.overallScore}٪</span>
-                  </div>
+                  {/* Match score: ring with the number kept inside */}
+                  <ScoreRing value={matchCalc.overallScore} suffix="٪" caption="نسبة المطابقة" size={60} />
                 </div>
 
                 <p className="text-slate-300 text-xs leading-relaxed">{p.shortDescription}</p>
 
-                {/* Match Score Breakdown */}
-                <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 space-y-2 text-xs">
-                  <div className="flex items-center justify-between text-slate-300 font-bold">
-                    <span>تحليل التوافق التشغيلي المفسَّر:</span>
-                    <span className="text-amber-400 text-xs">معدات + هامش + شريحة</span>
-                  </div>
-
-                  <p className="text-slate-400 text-xs leading-relaxed">
-                    {matchCalc.explanationAr}
-                  </p>
-
-                  <div className="grid grid-cols-3 gap-2 text-center text-xs pt-1">
-                    <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
-                      <span className="text-slate-400 block">توافق المعدات</span>
-                      <span className="font-bold text-slate-200">{matchCalc.equipmentFit}٪</span>
-                    </div>
-                    <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
-                      <span className="text-slate-400 block">ملاءمة الهامش</span>
-                      <span className="font-bold text-amber-400">{matchCalc.marginFit}٪</span>
-                    </div>
-                    <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
-                      <span className="text-slate-400 block">مطابقة الجمهور</span>
-                      <span className="font-bold text-slate-200">{matchCalc.brandFit}٪</span>
-                    </div>
-                  </div>
+                {/* Match Score Breakdown: three thin bars, the explanation folded */}
+                <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 space-y-3">
+                  <MicroBars suffix="٪" bars={[
+                    { label: 'توافق المعدات', value: matchCalc.equipmentFit },
+                    { label: 'ملاءمة الهامش', value: matchCalc.marginFit },
+                    { label: 'مطابقة الجمهور', value: matchCalc.brandFit }
+                  ]} />
+                  <FoldedNote summary="تحليل التوافق التشغيلي المفسَّر">{matchCalc.explanationAr}</FoldedNote>
                 </div>
 
               </div>
@@ -171,7 +153,7 @@ export const ProductDiscovery: React.FC = () => {
               {/* Actions Footer */}
               <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between text-xs mt-4">
                 <div className="text-slate-400">
-                  سعر البيع المستهدف: <strong className="text-amber-400 font-mono">{p.targetSellingPriceKwd.toFixed(3)} د.ك</strong>
+                  سعر البيع المستهدف: <strong className="text-gold-400 font-mono">{p.targetSellingPriceKwd.toFixed(3)} د.ك</strong>
                 </div>
 
                 {hasApprovedGrant ? (
@@ -190,7 +172,7 @@ export const ProductDiscovery: React.FC = () => {
                   <div className="flex items-center gap-2 flex-wrap justify-end">
                     <button
                       onClick={() => handleRequestAccess(p, 2)}
-                      className="px-3 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl transition-colors flex items-center gap-1.5 shadow-md"
+                      className="px-3 py-2 bg-gold-500 hover:bg-gold-400 text-slate-950 font-black rounded-xl transition-colors flex items-center gap-1.5 shadow-md"
                     >
                       <Lock className="w-3.5 h-3.5" />
                       <span>طلب L2</span>
@@ -222,7 +204,7 @@ export const ProductDiscovery: React.FC = () => {
             />
           </div>
         )}
-      </div>
+      </CapGrid>
 
       {selectedProductForVault && (
         <RecipeVaultModal
