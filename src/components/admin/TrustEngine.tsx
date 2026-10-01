@@ -45,7 +45,7 @@ export const TrustEngine: React.FC = () => {
             <p className="text-xs text-slate-400 mt-1 leading-6">درجة إرشادية قابلة للتفسير مبنية فقط على بيانات مسجلة: النزاعات، الامتثال، حالة المنشأة، وضغط طلبات الوصول. ليست حكمًا آليًا نهائيًا.</p>
           </div>
         </div>
-        <span className={`px-3 py-1.5 rounded-full text-xs font-bold border ${postureClass}`}>Risk posture: {overallRisk}</span>
+        <span className={`px-3 py-1.5 rounded-full text-xs font-bold border ${postureClass}`}>مستوى المخاطر: {({ LOW: 'منخفض', MEDIUM: 'متوسط', HIGH: 'مرتفع' } as Record<string, string>)[overallRisk] ?? overallRisk}</span>
       </div>
 
       <div className="grid md:grid-cols-3 gap-4">
@@ -56,7 +56,7 @@ export const TrustEngine: React.FC = () => {
 
       <div className="grid lg:grid-cols-[1fr_1fr] gap-4">
         <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3">
-          <div className="font-bold text-slate-100 flex items-center gap-2"><Gauge className="w-4 h-4 text-gold-300" /> Heuristic Risk Score للمنشآت</div>
+          <div className="font-bold text-slate-100 flex items-center gap-2"><Gauge className="w-4 h-4 text-gold-300" /> مؤشر المخاطر الاسترشادي للمنشآت</div>
           {hostSignals.map(card => (
             <div key={card.host.id} className="rounded-xl p-3 bg-slate-950/45 border border-white/10">
               <div className="flex items-center justify-between text-xs gap-3">

@@ -134,7 +134,7 @@ export const SuperAdminDashboard: React.FC = () => {
             {roleRows.map(role => (
               <div key={role} className="rounded-2xl p-4 bg-white/5 border border-white/10">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-                  <div><div className="font-black text-slate-100">{roleLabel(role)}</div><div className="text-xs text-slate-400 mt-1">{role}</div></div>
+                  <div className="lg:w-40 shrink-0"><div className="font-black text-slate-100">{roleLabel(role)}</div><div className="text-xs text-slate-400 mt-1">{role}</div></div>
                   <div className="flex flex-wrap gap-2 lg:justify-end">
                     {getRolePermissions(role).map(permission => <span key={permission} className="px-2.5 py-1 rounded-lg bg-slate-950/50 border border-white/10 text-xs text-slate-400">{permission}</span>)}
                   </div>
@@ -198,12 +198,12 @@ export const SuperAdminDashboard: React.FC = () => {
           <PlatformPolicyCenter />
           <div className="grid lg:grid-cols-3 gap-4">
             {[
-              { icon: <Server className="w-5 h-5 text-emerald-300" />, title: 'Application Layer', body: 'واجهة React/Vite معيارية تفصل تجارب الأطراف، مع Domain Guards داخل طبقة الحالة وليس مجرد إخفاء أزرار.' },
-              { icon: <Database className="w-5 h-5 text-sky-300" />, title: 'Production Data Path', body: 'المصادقة والجلسات وصندوق القرارات وسجلات التكامل أصبحت خادمية ودائمة. عمليات المجال الحساسة تبقى مقفلة إنتاجيًا حتى نقلها بالكامل إلى API وPostgreSQL وObject Storage مشفّر.' },
-              { icon: <FileKey2 className="w-5 h-5 text-fuchsia-300" />, title: 'Sensitive Domains', body: 'الوصفات والعقود والأذونات تعامل كبيانات حساسة؛ الوصول الكامل سياقي ومؤقت، وليس نتيجة رتبة إدارية فقط.' },
+              { icon: <Server className="w-5 h-5 text-emerald-300" />, title: 'طبقة التطبيق', body: 'واجهة React/Vite معيارية تفصل تجارب الأطراف، مع Domain Guards داخل طبقة الحالة وليس مجرد إخفاء أزرار.' },
+              { icon: <Database className="w-5 h-5 text-sky-300" />, title: 'مسار بيانات الإنتاج', body: 'المصادقة والجلسات وصندوق القرارات وسجلات التكامل أصبحت خادمية ودائمة. عمليات المجال الحساسة تبقى مقفلة إنتاجيًا حتى نقلها بالكامل إلى API وPostgreSQL وObject Storage مشفّر.' },
+              { icon: <FileKey2 className="w-5 h-5 text-fuchsia-300" />, title: 'النطاقات الحساسة', body: 'الوصفات والعقود والأذونات تعامل كبيانات حساسة؛ الوصول الكامل سياقي ومؤقت، وليس نتيجة رتبة إدارية فقط.' },
               { icon: <Settings2 className="w-5 h-5 text-gold-300" />, title: 'طبقة السياسات', body: 'القيم التشغيلية العليا أصبحت سياسة فعلية قابلة للتحكم من السوبر أدمن وتنعكس مباشرة على منطق المتجر.' },
-              { icon: <ShieldCheck className="w-5 h-5 text-emerald-300" />, title: 'Compliance Layer', body: 'بوابة الإطلاق وحالة المستندات والنزاعات وأذونات الوصفة Records صريحة ومشتقة من بيانات حقيقية.' },
-              { icon: <Activity className="w-5 h-5 text-rose-300" />, title: 'Observability', body: 'العمليات الحرجة—الوصول، التوقيع، المختبر، الإطلاق، الطلب، التقييم، السياسة والتسوية—تُصدر أحداث Audit واضحة.' }
+              { icon: <ShieldCheck className="w-5 h-5 text-emerald-300" />, title: 'طبقة الامتثال', body: 'بوابة الإطلاق وحالة المستندات والنزاعات وأذونات الوصفة Records صريحة ومشتقة من بيانات حقيقية.' },
+              { icon: <Activity className="w-5 h-5 text-rose-300" />, title: 'الرصد والمراقبة', body: 'العمليات الحرجة—الوصول، التوقيع، المختبر، الإطلاق، الطلب، التقييم، السياسة والتسوية—تُصدر أحداث Audit واضحة.' }
             ].map((card, idx) => <section key={idx} className="glass-card rounded-3xl p-5 border border-white/10"><div>{card.icon}</div><h3 className="font-black mt-4">{card.title}</h3><p className="text-xs text-slate-400 leading-6 mt-2">{card.body}</p></section>)}
           </div>
         </div>

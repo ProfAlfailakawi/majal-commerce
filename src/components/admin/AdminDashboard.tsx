@@ -198,8 +198,8 @@ export const AdminDashboard: React.FC = () => {
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-bold text-slate-100">{host.commercialName}</span>
-                    <span className="px-2.5 py-1 rounded-full text-xs bg-emerald-500/10 border border-emerald-400/20 text-emerald-300">
-                      {host.verificationStatus === 'VERIFIED' ? 'مرخّص ومتحقق' : host.verificationStatus}
+                    <span className={`px-2.5 py-1 rounded-full text-xs border ${host.verificationStatus === 'VERIFIED' ? 'bg-emerald-500/10 border-emerald-400/20 text-emerald-300' : host.verificationStatus === 'SUSPENDED' || host.verificationStatus === 'EXPIRED_DOCS' ? 'bg-rose-500/10 border-rose-400/20 text-rose-300' : 'bg-amber-500/10 border-amber-400/20 text-amber-300'}`}>
+                      {({ VERIFIED: 'مرخّص ومتحقق', PENDING: 'قيد التحقق', NEEDS_ACTION: 'يحتاج إجراء', UNVERIFIED: 'غير متحقق', SUSPENDED: 'موقوف', EXPIRED_DOCS: 'مستندات منتهية' } as Record<string, string>)[host.verificationStatus] ?? host.verificationStatus}
                     </span>
                   </div>
                   <div className="text-xs text-slate-400 mt-1 leading-6">
