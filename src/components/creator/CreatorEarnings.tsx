@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Wallet, ArrowDownRight, CheckCircle2, FileSpreadsheet, ShieldCheck, Clock3 } from 'lucide-react';
+import { shortRef } from '../../lib/displayRef';
 import { store } from '../../lib/store';
 import { EmptyState } from '../common/EmptyState';
 import { PayoutStatement } from './PayoutStatement';
@@ -59,15 +60,15 @@ export const CreatorEarnings: React.FC = () => {
 
       {exported && <div className="p-3 bg-emerald-500/10 border border-emerald-400/20 text-emerald-300 font-bold text-xs rounded-xl">تم إنشاء كشف فعلي من البيانات الحالية وتنزيله بصيغة CSV.</div>}
 
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="glass-card p-5 rounded-2xl border border-white/10"><div className="text-xs text-slate-400">إجمالي الحقوق المسجلة</div><div className="text-2xl font-black text-gold-300 font-mono mt-2">{totals.lifetime.toFixed(3)} <span className="text-xs">د.ك</span></div></div>
-        <div className="glass-card p-5 rounded-2xl border border-amber-400/15"><div className="flex items-center justify-between text-xs text-amber-300"><span>مؤهل للتسوية</span><ArrowDownRight className="w-4 h-4" /></div><div className="text-2xl font-black text-amber-300 font-mono mt-2">{totals.eligible.toFixed(3)} <span className="text-xs">د.ك</span></div></div>
-        <div className="glass-card p-5 rounded-2xl border border-sky-400/15"><div className="flex items-center justify-between text-xs text-sky-300"><span>ضمن دفعة معتمدة</span><Clock3 className="w-4 h-4" /></div><div className="text-2xl font-black text-sky-300 font-mono mt-2">{totals.locked.toFixed(3)} <span className="text-xs">د.ك</span></div></div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div className="glass-card p-4 sm:p-5 rounded-2xl border border-white/10"><div className="text-xs text-slate-400">إجمالي الحقوق المسجلة</div><div className="text-xl sm:text-2xl font-black text-gold-300 font-mono mt-2">{totals.lifetime.toFixed(3)} <span className="text-xs">د.ك</span></div></div>
+        <div className="glass-card p-4 sm:p-5 rounded-2xl border border-amber-400/15"><div className="flex items-center justify-between text-xs text-amber-300"><span>مؤهل للتسوية</span><ArrowDownRight className="w-4 h-4" /></div><div className="text-xl sm:text-2xl font-black text-amber-300 font-mono mt-2">{totals.eligible.toFixed(3)} <span className="text-xs">د.ك</span></div></div>
+        <div className="glass-card p-4 sm:p-5 rounded-2xl border border-sky-400/15"><div className="flex items-center justify-between text-xs text-sky-300"><span>ضمن دفعة معتمدة</span><Clock3 className="w-4 h-4" /></div><div className="text-xl sm:text-2xl font-black text-sky-300 font-mono mt-2">{totals.locked.toFixed(3)} <span className="text-xs">د.ك</span></div></div>
         <div className="glass-card p-5 rounded-2xl border border-emerald-400/15"><div className="flex items-center justify-between text-xs text-emerald-300"><span>مدفوع ومؤكد</span><CheckCircle2 className="w-4 h-4" /></div><div className="text-2xl font-black text-emerald-300 font-mono mt-2">{totals.paid.toFixed(3)} <span className="text-xs">د.ك</span></div></div>
       </div>
 
       {totals.lifetime > 0 && (
-        <div role="img" aria-label="توزيع الحقوق حسب حالة التسوية" className="flex h-1 w-full overflow-hidden rounded-full bg-white/5 opacity-80">
+        <div role="img" aria-label="توزيع الحقوق حسب حالة التسوية" className="flex h-2 w-full overflow-hidden rounded-full bg-white/5">
           <span className="bg-amber-400/80" style={{ width: `${(totals.eligible / totals.lifetime) * 100}%` }} />
           <span className="bg-sky-400/80" style={{ width: `${(totals.locked / totals.lifetime) * 100}%` }} />
           <span className="bg-emerald-400/80" style={{ width: `${(totals.paid / totals.lifetime) * 100}%` }} />
@@ -82,7 +83,7 @@ export const CreatorEarnings: React.FC = () => {
             <tbody className="divide-y divide-white/5">
               {creatorAccruals.map(a => {
                 const [label, cls] = statusLabel(a.settlementStatus);
-                return <tr key={a.id} className="hover:bg-white/3"><td data-label="الطلب" className="py-3 px-3 font-mono text-slate-200">{a.orderId}</td><td data-label="التاريخ" className="py-3 px-3 text-slate-400">{new Date(a.createdAt).toLocaleString('ar-KW')}</td><td data-label="المبيعات" className="py-3 px-3 font-bold">{a.grossSaleKwd.toFixed(3)} د.ك</td><td data-label="النسبة" className="py-3 px-3 text-gold-300 font-bold">{a.royaltyRatePercent}%</td><td data-label="حق المبدع" className="py-3 px-3 text-gold-300 font-black font-mono">{a.accruedAmountKwd.toFixed(3)} د.ك</td><td data-label="الحالة" className="py-3 px-3"><span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${cls}`}>{label}</span></td></tr>;
+                return <tr key={a.id} className="hover:bg-white/3"><td data-label="الطلب" className="py-3 px-3 font-mono text-slate-200" title={a.orderId}>{shortRef(a.orderId, 'ط')}</td><td data-label="التاريخ" className="py-3 px-3 text-slate-400">{new Date(a.createdAt).toLocaleString('ar-KW')}</td><td data-label="المبيعات" className="py-3 px-3 font-bold">{a.grossSaleKwd.toFixed(3)} د.ك</td><td data-label="النسبة" className="py-3 px-3 text-gold-300 font-bold">{a.royaltyRatePercent}%</td><td data-label="حق المبدع" className="py-3 px-3 text-gold-300 font-black font-mono">{a.accruedAmountKwd.toFixed(3)} د.ك</td><td data-label="الحالة" className="py-3 px-3"><span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${cls}`}>{label}</span></td></tr>;
               })}
             </tbody>
           </table>
@@ -99,7 +100,7 @@ export const CreatorEarnings: React.FC = () => {
             body="المستحقات تتجمّع مع كل عملية بيع، وتنتقل هنا عند إقفال أول دورة تسوية."
           /> : creatorSettlements.map(batch => (
             <div key={batch.id} className="p-4 rounded-2xl bg-slate-950/35 border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-3"><div className={`p-2 rounded-xl border ${batch.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'}`}><ShieldCheck className="w-5 h-5" /></div><div><span className="font-bold text-slate-100 block text-sm">دفعة #{batch.id}</span><span className="text-slate-400 text-xs">{new Date(batch.periodStart).toLocaleDateString('ar-KW')} — {new Date(batch.periodEnd).toLocaleDateString('ar-KW')}</span></div></div>
+              <div className="flex items-center gap-3"><div className={`p-2 rounded-xl border ${batch.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'}`}><ShieldCheck className="w-5 h-5" /></div><div><span className="font-bold text-slate-100 block text-sm"><span title={batch.id}>دفعة {shortRef(batch.id, 'ت')}</span></span><span className="text-slate-400 text-xs">{new Date(batch.periodStart).toLocaleDateString('ar-KW')} — {new Date(batch.periodEnd).toLocaleDateString('ar-KW')}</span></div></div>
               <div className="sm:text-end"><span className="block font-black text-gold-300 text-lg font-mono">{batch.totalAmountKwd.toFixed(3)} د.ك</span><span className="text-xs text-slate-400">{batch.status === 'PAID' && batch.paidAt ? `تأكيد الدفع: ${new Date(batch.paidAt).toLocaleDateString('ar-KW')}` : 'معتمدة — بانتظار تأكيد الدفع الخارجي'}</span></div>
             </div>
           ))}

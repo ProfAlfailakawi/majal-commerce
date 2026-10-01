@@ -94,7 +94,7 @@ export const CreatorPortal: React.FC = () => {
             <Avatar name={profile.displayName} src={profile.avatarUrl} size={80} shape="squircle" className="shadow-xl" />
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-400/20 text-xs font-black">CREATOR SPACE</span>
+                <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-400/20 text-xs font-black">مساحة المبدع</span>
                 <span className="text-xs text-slate-400">{profile.specialty}</span>
               </div>
               <h1 className="text-2xl md:text-3xl font-black mt-2">أهلًا {profile.displayName}، هذا مجال نموّك</h1>

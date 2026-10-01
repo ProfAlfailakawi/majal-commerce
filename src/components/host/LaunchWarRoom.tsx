@@ -70,7 +70,7 @@ const LaunchWarRoomBody: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => 
   const pct = (v: number) => trackedSourceUnits ? Math.round(v / trackedSourceUnits * 100) : 0;
 
   const signals = [
-    { level: metrics.sellThrough >= 50 ? 'GOOD' : 'WATCH', title: 'Sell-through', text: `تم بيع ${metrics.sellThrough}% من الحد المحدد للإطلاق.` },
+    { level: metrics.sellThrough >= 50 ? 'GOOD' : 'WATCH', title: 'نسبة البيع', text: `تم بيع ${metrics.sellThrough}% من الحد المحدد للإطلاق.` },
     { level: reviews.length && metrics.repeatIntent >= 60 ? 'GOOD' : 'WATCH', title: 'نية إعادة الشراء', text: reviews.length ? `${metrics.repeatIntent}% من التقييمات المسجلة تشير إلى شراء متكرر.` : 'لا توجد تقييمات كافية لاستخراج إشارة إعادة شراء.' },
     { level: metrics.sellThrough > 70 ? 'WATCH' : 'GOOD', title: 'المخزون', text: metrics.sellThrough > 70 ? 'اقترب الإطلاق من استهلاك غالبية الكمية المتاحة.' : 'الكمية المتبقية ضمن النطاق الحالي.' }
   ];
@@ -88,9 +88,9 @@ const LaunchWarRoomBody: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => 
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {[
-          { label: canSeeFinance ? 'GMV الحالي' : 'المؤشر المالي', value: canSeeFinance ? `${metrics.gmv.toFixed(3)} د.ك` : 'محجوب', icon: <TrendingUp className="w-4 h-4 text-emerald-300" /> },
+          { label: canSeeFinance ? 'المبيعات الحالية' : 'المؤشر المالي', value: canSeeFinance ? `${metrics.gmv.toFixed(3)} د.ك` : 'محجوب', icon: <TrendingUp className="w-4 h-4 text-emerald-300" /> },
           { label: 'الوحدات المباعة', value: `${metrics.units}`, icon: <PackageOpen className="w-4 h-4 text-sky-300" /> },
-          { label: 'Sell-through', value: `${metrics.sellThrough}%`, icon: <Gauge className="w-4 h-4 text-gold-300" /> },
+          { label: 'نسبة البيع', value: `${metrics.sellThrough}%`, icon: <Gauge className="w-4 h-4 text-gold-300" /> },
           { label: 'نية إعادة الشراء', value: reviews.length ? `${metrics.repeatIntent}%` : '—', icon: <Users className="w-4 h-4 text-fuchsia-300" /> },
           { label: 'الفروع المتاحة', value: `${launch.branches.length}`, icon: <Building2 className="w-4 h-4 text-amber-300" /> }
         ].map((item, idx) => <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="flex items-center gap-2 text-xs text-slate-400">{item.icon}{item.label}</div><div className="mt-2 text-lg font-black font-mono">{item.value}</div></div>)}
@@ -100,9 +100,12 @@ const LaunchWarRoomBody: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => 
         <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3">
           <div className="font-bold flex items-center gap-2"><Store className="w-4 h-4 text-sky-300" /> تتبع الفروع</div>
           {branchRows.length ? branchRows.map(branch => (
-            <div key={branch.id} className="rounded-xl p-3 bg-slate-950/45 border border-white/10 flex items-center justify-between gap-3">
-              <span className="text-xs text-slate-300 font-bold">{branch.name}</span>
-              <span className={`text-xs ${branch.hasTrackedData ? 'text-sky-300 font-mono' : 'text-slate-400'}`}>{branch.hasTrackedData ? `${branch.units} وحدة متتبعة` : 'لا يوجد Branch Attribution في الطلبات بعد'}</span>
+            <div key={branch.id} className="rounded-xl p-3 bg-slate-950/45 border border-white/10 space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs text-slate-300 font-bold">{branch.name}</span>
+                <span className={`text-xs ${branch.hasTrackedData ? 'text-sky-300 font-mono' : 'text-slate-400'}`}>{branch.hasTrackedData ? `${branch.units} وحدة متتبعة` : 'لا توجد طلبات منسوبة لهذا الفرع بعد'}</span>
+              </div>
+              {branch.hasTrackedData && <div role="img" aria-label={`حصة الفرع من الوحدات: ${Math.round((branch.units / Math.max(1, ...branchRows.map(b => b.units))) * 100)}%`} className="h-2 rounded-full bg-white/5 overflow-hidden"><div className="h-full rounded-full bg-sky-400/80" style={{ width: `${Math.max(6, (branch.units / Math.max(1, ...branchRows.map(b => b.units))) * 100)}%` }} /></div>}
             </div>
           )) : <div className="text-xs text-slate-400">لم تحدد فروع لهذا الإطلاق.</div>}
         </div>
@@ -115,12 +118,12 @@ const LaunchWarRoomBody: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => 
 
       <div className="rounded-2xl p-4 bg-gradient-to-l from-gold-500/8 via-white/[0.03] to-fuchsia-500/8 border border-white/10 space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div><div className="font-black">إسناد النمو</div><div className="text-xs text-slate-400 mt-1">النسب تظهر فقط من الطلبات التي تحمل acquisitionSource فعلية؛ لا توجد نسب مختلقة.</div></div>
+          <div><div className="font-black">إسناد النمو</div><div className="text-xs text-slate-400 mt-1">النسب تظهر فقط من الطلبات التي تحمل مصدر اكتساب فعلي؛ لا توجد نسب مختلقة.</div></div>
           <button onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/drop/${launch.id}`)} className="px-3 py-2 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center gap-2"><Link2 className="w-4 h-4" /> نسخ رابط الإطلاق</button>
         </div>
         <div className="grid md:grid-cols-4 gap-3 text-xs">
-          {[['Creator-driven', sourceUnits.CREATOR, pct(sourceUnits.CREATOR), 'text-emerald-300'], ['Host-driven', sourceUnits.HOST, pct(sourceUnits.HOST), 'text-sky-300'], ['Majal-driven', sourceUnits.MAJAL, pct(sourceUnits.MAJAL), 'text-gold-300'], ['غير منسوب', sourceUnits.UNKNOWN, null, 'text-slate-400']].map(([label, units, percentage, tone]) => (
-            <div key={label as string} className="rounded-xl p-3 bg-slate-950/45 border border-white/10"><div className="text-slate-400">{label}</div><div className={`text-xl font-black mt-1 ${tone}`}>{percentage === null ? `${units} وحدة` : `${percentage}%`}</div><div className="text-xs text-slate-400 mt-1">{percentage === null ? 'يحتاج Tracking source' : `${units} وحدة متتبعة`}</div></div>
+          {[['عبر المبدع', sourceUnits.CREATOR, pct(sourceUnits.CREATOR), 'text-emerald-300'], ['عبر المنشأة', sourceUnits.HOST, pct(sourceUnits.HOST), 'text-sky-300'], ['عبر مجال', sourceUnits.MAJAL, pct(sourceUnits.MAJAL), 'text-gold-300'], ['غير منسوب', sourceUnits.UNKNOWN, null, 'text-slate-400']].map(([label, units, percentage, tone]) => (
+            <div key={label as string} className="rounded-xl p-3 bg-slate-950/45 border border-white/10"><div className="text-slate-400">{label}</div><div className={`text-xl font-black mt-1 ${tone}`}>{percentage === null ? `${units} وحدة` : `${percentage}%`}</div><div className="text-xs text-slate-400 mt-1">{percentage === null ? 'يحتاج تحديد مصدر الطلب' : `${units} وحدة متتبعة`}</div></div>
           ))}
         </div>
       </div>

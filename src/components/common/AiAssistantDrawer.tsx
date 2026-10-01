@@ -86,7 +86,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
               </div>
               <div>
                 <h3 id="ai-drawer-title" className="font-bold text-sm text-slate-100">
-                  مساعد مجال الذكي (Gemini AI)
+                  {IS_DEMO_MODE ? 'مساعد مجال الذكي (عرض تجريبي)' : 'مساعد مجال الذكي (Gemini AI)'}
                 </h3>
                 <p className="text-xs text-slate-400">
                   تحسين وصف المنتجات، صياغة القصة، وتحليل ملاءمة المطابقة

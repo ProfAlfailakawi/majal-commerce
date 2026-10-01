@@ -3,6 +3,7 @@ import { CheckCircle2, Circle, FileSpreadsheet, Printer, Receipt } from 'lucide-
 import { commerceClient, CreatorStatement, StatementLine } from '../../lib/commerceClient';
 import { formatFils } from '../../lib/money';
 import { IS_DEMO_MODE } from '../../lib/runtime';
+import { shortRef } from '../../lib/displayRef';
 import { store } from '../../lib/store';
 
 const STAGES: { key: Exclude<StatementLine['stage'], 'REVERSED'>; label: string }[] = [
@@ -110,7 +111,7 @@ export const PayoutStatement: React.FC = () => {
                 <tbody>
                   {data.lines.map(line => (
                     <tr key={line.accrualId} className="border-b border-white/5 align-top">
-                      <td data-label="الطلب" className="py-2"><div className="font-bold text-slate-100">{line.productName}</div><div className="text-slate-300">{line.orderId} · {line.units} وحدة · {day(line.orderedAt)}</div></td>
+                      <td data-label="الطلب" className="py-2"><div className="font-bold text-slate-100">{line.productName}</div><div className="text-slate-300"><span title={line.orderId}>{shortRef(line.orderId, 'ط')}</span> · {line.units} وحدة · {day(line.orderedAt)}</div></td>
                       <td data-label="السعر" className="font-mono">{formatFils(line.grossFils)}</td>
                       <td data-label="العمولة" className="font-mono">−{formatFils(line.commissionFils)}</td>
                       <td data-label="حصة المنشأة" className="font-mono">−{formatFils(line.hostShareFils)}</td>

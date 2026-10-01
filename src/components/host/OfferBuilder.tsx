@@ -45,7 +45,7 @@ export const OfferBuilder: React.FC<OfferBuilderProps> = ({ collaboration }) => 
       <div className="border-b border-slate-800 pb-4">
         <h3 className="text-lg font-black text-slate-100 flex items-center gap-2">
           <FileText className="w-5 h-5 text-amber-400" />
-          <span>منشئ ومعد العروض التجارية الهيكلية Offer Builder</span>
+          <span>منشئ ومعد العروض التجارية الهيكلية</span>
         </h3>
         <p className="text-xs text-slate-400">
           تحديد بنود الشراكة المالية، السعر، النسبة، التزامات الإنتاج، والنطاق الحصري

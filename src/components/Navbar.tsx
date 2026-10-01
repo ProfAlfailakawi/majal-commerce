@@ -367,7 +367,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <Avatar name={activeUser.name} src={activeUser.avatar} size={32} />
                 <div className="text-start hidden lg:block max-w-[180px]">
                   <span className="block font-bold text-slate-200 text-xs leading-tight truncate" title={activeUser.name}>{activeUser.name}</span>
-                  <span className="block text-xs text-gold-300 truncate">{roleLabels[activeUser.role]}</span>
+                  <span className="block text-xs text-gold-300 truncate">{activeUser.accountType === 'SUPPLIER' ? 'مورد' : roleLabels[activeUser.role]}</span>
                 </div>
                 <ChevronDown className="hidden sm:block w-3.5 h-3.5 text-slate-400" />
               </button>

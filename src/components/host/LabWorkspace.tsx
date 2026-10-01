@@ -4,6 +4,7 @@ import { store } from '../../lib/store';
 import { Collaboration, LabBatch } from '../../types/majal';
 import { UnitEconomicsModal } from '../common/UnitEconomicsModal';
 import { EmptyState } from '../common/EmptyState';
+import { roleLabel } from '../../lib/permissions';
 
 interface LabWorkspaceProps {
   collaboration: Collaboration;
@@ -76,8 +77,8 @@ export const LabWorkspace: React.FC<LabWorkspaceProps> = ({ collaboration }) => 
 
       {tastingSession && (
         <section className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
-          <div className="flex items-center justify-between gap-3 flex-wrap"><div className="flex items-center gap-2 text-gold-300 font-bold text-sm"><Award className="w-5 h-5" /><span>جلسة التذوق المسجلة — Blind Tasting</span></div><span className="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-300 border border-emerald-400/20 font-mono">{tastingSession.aggregateOverallScore} / 10</span></div>
-          <div className="grid md:grid-cols-2 gap-4 text-xs">{tastingSession.scorecards.map((sc, i) => <div key={i} className="p-4 rounded-xl bg-slate-950/45 border border-white/10"><div className="flex items-center justify-between font-bold"><span>{sc.evaluatorName} — {sc.evaluatorRole}</span><span className="text-gold-300">{sc.overallScore}/10</span></div><p className="text-slate-400 text-xs leading-6 mt-2">{sc.notes}</p></div>)}</div>
+          <div className="flex items-center justify-between gap-3 flex-wrap"><div className="flex items-center gap-2 text-gold-300 font-bold text-sm"><Award className="w-5 h-5" /><span>جلسة التذوق المسجلة — التذوق الأعمى</span></div><span dir="ltr" className="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-300 border border-emerald-400/20 font-mono">{tastingSession.aggregateOverallScore} / 10</span></div>
+          <div className="grid md:grid-cols-2 gap-4 text-xs">{tastingSession.scorecards.map((sc, i) => <div key={i} className="p-4 rounded-xl bg-slate-950/45 border border-white/10"><div className="flex items-center justify-between font-bold"><span>{sc.evaluatorName} — {roleLabel(sc.evaluatorRole as never) || sc.evaluatorRole}</span><span dir="ltr" className="text-gold-300">{sc.overallScore}/10</span></div><p className="text-slate-400 text-xs leading-6 mt-2">{sc.notes}</p></div>)}</div>
         </section>
       )}
 

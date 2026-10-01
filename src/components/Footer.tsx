@@ -101,7 +101,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
             </ul>
           </div>
 
-          <div className="space-y-3 glass-card p-4 rounded-xl border border-white/10">
+          <div className="space-y-3 glass-card p-4 rounded-xl self-start border border-white/10">
             <div className="flex items-center gap-2 text-gold-300 font-bold text-xs">
               <Globe className="w-4 h-4" />
               <span>نطاق العمل — دولة الكويت</span>

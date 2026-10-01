@@ -69,6 +69,15 @@ export const roleLabel = (role: UserRole): string => ({
   CONSUMER: 'عميل'
 }[role]);
 
+/** Arabic display names for permission codes (display only). */
+export const permissionLabel = (action: PermissionAction): string => ({
+  VIEW_CREATOR_PORTAL: 'دخول بوابة المبدع', VIEW_HOST_PORTAL: 'دخول بوابة المنشأة', VIEW_ADMIN_PORTAL: 'دخول لوحة الأدمن', VIEW_SUPER_ADMIN_PORTAL: 'دخول لوحة السوبر أدمن',
+  VIEW_RECIPE_L1: 'اطلاع وصفة — مستوى 1', VIEW_RECIPE_L2: 'اطلاع وصفة — مستوى 2', VIEW_RECIPE_L3: 'اطلاع وصفة — مستوى 3', MANAGE_RECIPE_GRANTS: 'إدارة أذونات الوصفات',
+  MANAGE_CHALLENGES: 'إدارة التحديات', MANAGE_LAB: 'إدارة المختبر', MANAGE_OFFERS: 'إدارة العروض', SIGN_CONTRACT: 'توقيع العقود', VIEW_HOST_FINANCE: 'اطلاع على مالية المنشأة',
+  RUN_SETTLEMENTS: 'تشغيل التسويات', MANAGE_COMPLIANCE: 'إدارة الامتثال', MANAGE_DISPUTES: 'إدارة النزاعات', MANAGE_USERS: 'إدارة المستخدمين', MANAGE_ROLES: 'إدارة الأدوار',
+  CHANGE_PLATFORM_POLICY: 'تغيير سياسة المنصة', PAUSE_PRODUCT: 'إيقاف منتج', VIEW_AUDIT_LOGS: 'اطلاع على سجل التدقيق', VIEW_RISK_ENGINE: 'اطلاع على محرك المخاطر'
+}[action] ?? action);
+
 export function hasPermission(user: User, action: PermissionAction): boolean {
   if (user.status === 'SUSPENDED' || user.status === 'INVITED') return false;
   return rolePermissions[user.role]?.includes(action) ?? false;

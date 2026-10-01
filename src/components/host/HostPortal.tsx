@@ -159,11 +159,11 @@ export const HostPortal: React.FC = () => {
             <Avatar name={host.commercialName} src={host.logoUrl} size={80} shape="squircle" className="ring-2 ring-sky-400/25 shadow-xl" />
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className={`px-2.5 py-1 rounded-full border text-xs font-black ${host.verificationStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'}`}>{host.verificationStatus === 'VERIFIED' ? 'LICENSED HOST' : 'بانتظار التحقق من المنشأة'}</span>
+                <span className={`px-2.5 py-1 rounded-full border text-xs font-black ${host.verificationStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'}`}>{host.verificationStatus === 'VERIFIED' ? 'منشأة مرخّصة' : 'بانتظار التحقق من المنشأة'}</span>
                 <span className="px-2.5 py-1 rounded-full bg-gold-500/10 text-gold-300 border border-gold-300/20 text-xs font-black">{roleLabel(store.activeUser.role)}</span>
               </div>
               <h1 className="text-2xl md:text-3xl font-black mt-2">{host.commercialName}</h1>
-              <p className="text-sm text-slate-400 mt-2 max-w-2xl leading-7">Innovation OS للمنشأة: اكتشاف مواهب، اختبار منتج، تفاوض، إطلاق، تشغيل وقياس — بصلاحيات مختلفة لكل عضو فريق.</p>
+              <p className="text-sm text-slate-400 mt-2 max-w-2xl leading-7">منصة الابتكار للمنشأة: اكتشاف مواهب، اختبار منتج، تفاوض، إطلاق، تشغيل وقياس — بصلاحيات مختلفة لكل عضو فريق.</p>
             </div>
           </div>
 
@@ -207,7 +207,7 @@ export const HostPortal: React.FC = () => {
       {activeTab === 'CHALLENGES' && (
         <div className="space-y-5">
           <div className="glass-panel rounded-3xl p-5 border border-white/10 flex items-center justify-between gap-4">
-            <div><h3 className="font-black text-lg">تحديات الابتكار</h3><p className="text-xs text-slate-400 mt-1">حوّل احتياج المنشأة إلى Brief واضح يستقبل حلول المبدعين.</p></div>
+            <div><h3 className="font-black text-lg">تحديات الابتكار</h3><p className="text-xs text-slate-400 mt-1">حوّل احتياج المنشأة إلى ملخص واضح يستقبل حلول المبدعين.</p></div>
             <button onClick={() => setShowPublisher(true)} className="px-4 py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center gap-2"><Plus className="w-4 h-4" /> تحدٍ جديد</button>
           </div>
           <div className="grid md:grid-cols-2 gap-4">

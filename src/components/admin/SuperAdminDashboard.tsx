@@ -18,7 +18,7 @@ import {
   Users
 } from 'lucide-react';
 import { store } from '../../lib/store';
-import { getRolePermissions, roleLabel } from '../../lib/permissions';
+import { getRolePermissions, roleLabel, permissionLabel } from '../../lib/permissions';
 import { UserRole } from '../../types/majal';
 import { TrustEngine } from './TrustEngine';
 import { MarketplaceLiquidity } from './MarketplaceLiquidity';
@@ -46,7 +46,7 @@ export const SuperAdminDashboard: React.FC = () => {
   const roleRows: UserRole[] = ['SUPER_ADMIN','ADMIN','HOST_OWNER','HOST_OPERATIONS','HOST_CHEF','HOST_FINANCE','HOST_MARKETING','HOST_SUPPORT','CREATOR','CONSUMER'];
 
   const tabs = [
-    ['COMMAND', 'Command Center'],
+    ['COMMAND', 'مركز القيادة'],
     ['PERMISSIONS', 'الصلاحيات'],
     ['LIQUIDITY', 'سيولة السوق'],
     ['TRUST', 'الثقة والمخاطر'],
@@ -60,7 +60,7 @@ export const SuperAdminDashboard: React.FC = () => {
         <div className="majal-glow -top-[19rem] -end-[17rem] w-[44rem] h-[44rem]" style={{ '--glow': 'rgba(232,121,249,0.10)' } as React.CSSProperties} />
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
           <div className="space-y-3 max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-fuchsia-500/10 border border-fuchsia-400/20 text-fuchsia-200 text-xs font-black"><Crown className="w-4 h-4" /> MAJAL SUPER ADMIN</div>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-fuchsia-500/10 border border-fuchsia-400/20 text-fuchsia-200 text-xs font-black"><Crown className="w-4 h-4" /> سوبر أدمن مجال</div>
             <h1 className="text-2xl md:text-4xl font-black">مركز قيادة «مجال»</h1>
             <p className="text-sm text-slate-400 leading-7">السوبر أدمن لا يدير شاشة فقط؛ يدير السوق نفسه: الأدوار، السياسات، المخاطر، سيولة العرض والطلب، سلامة الوصول والبيانات، ومؤشرات الشركة العليا.</p>
           </div>
@@ -98,7 +98,7 @@ export const SuperAdminDashboard: React.FC = () => {
               { icon: <Users className="w-5 h-5 text-sky-300" />, label: 'الحسابات', value: store.users.length },
               { icon: <Sparkles className="w-5 h-5 text-emerald-300" />, label: 'المبدعون', value: store.creators.length },
               { icon: <Building2 className="w-5 h-5 text-gold-300" />, label: 'المنشآت', value: store.hosts.length },
-              { icon: <Network className="w-5 h-5 text-fuchsia-300" />, label: 'Matches', value: store.matches.length }
+              { icon: <Network className="w-5 h-5 text-fuchsia-300" />, label: 'إشارات المطابقة', value: store.matches.length }
             ].map((item, idx) => (
               <div key={idx} className="glass-card rounded-2xl p-5 border border-white/10"><div>{item.icon}</div><div className="mt-4 text-xs text-slate-400">{item.label}</div><div className="mt-1 text-3xl font-black font-mono">{item.value}</div></div>
             ))}
@@ -108,10 +108,10 @@ export const SuperAdminDashboard: React.FC = () => {
             <section className="glass-panel rounded-3xl p-6 border border-white/10 space-y-4">
               <div className="flex items-center gap-2"><Activity className="w-5 h-5 text-emerald-300" /><h2 className="text-lg font-black">النبض التنفيذي</h2></div>
               {[
-                ['حركة السوق', 'المنصة تملك عرضًا من المبدعين وطلبات من المنشآت ويمكن قياس التوازن في Liquidity Center.'],
-                ['حماية الحقوق', 'كل Recipe Grant وسجل عقد وتغيير حساس يدخل في Audit Trail.'],
+                ['حركة السوق', 'المنصة تملك عرضًا من المبدعين وطلبات من المنشآت ويمكن قياس التوازن في مركز سيولة السوق.'],
+                ['حماية الحقوق', 'كل إذن وصفة وسجل عقد وتغيير حساس يدخل في سجل التدقيق.'],
                 ['الفصل التشغيلي', 'صلاحيات المالية، الشيف، التسويق، الأدمن والسوبر أدمن منفصلة.'],
-                ['التوسع', 'نواة المنصة مصممة لتبدأ بالطعام ثم تضيف Verticals جديدة بنفس محرك الشراكة.']
+                ['التوسع', 'نواة المنصة مصممة لتبدأ بالطعام ثم تضيف قطاعات جديدة بنفس محرك الشراكة.']
               ].map(([title, body], idx) => <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="font-black text-slate-100">{title}</div><div className="text-xs text-slate-400 mt-2 leading-6">{body}</div></div>)}
             </section>
 
@@ -136,9 +136,9 @@ export const SuperAdminDashboard: React.FC = () => {
             {roleRows.map(role => (
               <div key={role} className="rounded-2xl p-4 bg-white/5 border border-white/10">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-                  <div className="lg:w-40 shrink-0"><div className="font-black text-slate-100">{roleLabel(role)}</div><div className="text-xs text-slate-400 mt-1">{role}</div></div>
+                  <div className="lg:w-40 shrink-0"><div className="font-black text-slate-100">{roleLabel(role)}</div></div>
                   <div className="flex flex-wrap gap-2 lg:justify-end">
-                    {getRolePermissions(role).map(permission => <span key={permission} className="px-2.5 py-1 rounded-lg bg-slate-950/50 border border-white/10 text-xs text-slate-400">{permission}</span>)}
+                    {getRolePermissions(role).map(permission => <span key={permission} className="px-2.5 py-1 rounded-lg bg-slate-950/50 border border-white/10 text-xs text-slate-300" title={permission}>{permissionLabel(permission)}</span>)}
                   </div>
                 </div>
               </div>
@@ -200,12 +200,12 @@ export const SuperAdminDashboard: React.FC = () => {
           <PlatformPolicyCenter />
           <div className="grid lg:grid-cols-3 gap-4">
             {[
-              { icon: <Server className="w-5 h-5 text-emerald-300" />, title: 'طبقة التطبيق', body: 'واجهة React/Vite معيارية تفصل تجارب الأطراف، مع Domain Guards داخل طبقة الحالة وليس مجرد إخفاء أزرار.' },
-              { icon: <Database className="w-5 h-5 text-sky-300" />, title: 'مسار بيانات الإنتاج', body: 'المصادقة والجلسات وصندوق القرارات وسجلات التكامل أصبحت خادمية ودائمة. عمليات المجال الحساسة تبقى مقفلة إنتاجيًا حتى نقلها بالكامل إلى API وPostgreSQL وObject Storage مشفّر.' },
+              { icon: <Server className="w-5 h-5 text-emerald-300" />, title: 'طبقة التطبيق', body: 'واجهة معيارية تفصل تجارب الأطراف، مع حواجز حماية داخل طبقة الحالة وليس مجرد إخفاء أزرار.' },
+              { icon: <Database className="w-5 h-5 text-sky-300" />, title: 'مسار بيانات الإنتاج', body: 'المصادقة والجلسات وصندوق القرارات وسجلات التكامل أصبحت خادمية ودائمة. عمليات المجال الحساسة تبقى مقفلة إنتاجيًا حتى نقلها بالكامل إلى واجهة برمجية وقاعدة بيانات وتخزين مشفّر.' },
               { icon: <FileKey2 className="w-5 h-5 text-fuchsia-300" />, title: 'النطاقات الحساسة', body: 'الوصفات والعقود والأذونات تعامل كبيانات حساسة؛ الوصول الكامل سياقي ومؤقت، وليس نتيجة رتبة إدارية فقط.' },
               { icon: <Settings2 className="w-5 h-5 text-gold-300" />, title: 'طبقة السياسات', body: 'القيم التشغيلية العليا أصبحت سياسة فعلية قابلة للتحكم من السوبر أدمن وتنعكس مباشرة على منطق المتجر.' },
-              { icon: <ShieldCheck className="w-5 h-5 text-emerald-300" />, title: 'طبقة الامتثال', body: 'بوابة الإطلاق وحالة المستندات والنزاعات وأذونات الوصفة Records صريحة ومشتقة من بيانات حقيقية.' },
-              { icon: <Activity className="w-5 h-5 text-rose-300" />, title: 'الرصد والمراقبة', body: 'العمليات الحرجة—الوصول، التوقيع، المختبر، الإطلاق، الطلب، التقييم، السياسة والتسوية—تُصدر أحداث Audit واضحة.' }
+              { icon: <ShieldCheck className="w-5 h-5 text-emerald-300" />, title: 'طبقة الامتثال', body: 'بوابة الإطلاق وحالة المستندات والنزاعات وأذونات الوصفة سجلات صريحة ومشتقة من بيانات حقيقية.' },
+              { icon: <Activity className="w-5 h-5 text-rose-300" />, title: 'الرصد والمراقبة', body: 'العمليات الحرجة—الوصول، التوقيع، المختبر، الإطلاق، الطلب، التقييم، السياسة والتسوية—تُصدر أحداث تدقيق واضحة.' }
             ].map((card, idx) => <section key={idx} className="glass-card rounded-3xl p-5 border border-white/10"><div>{card.icon}</div><h3 className="font-black mt-4">{card.title}</h3><p className="text-xs text-slate-400 leading-6 mt-2">{card.body}</p></section>)}
           </div>
         </div>

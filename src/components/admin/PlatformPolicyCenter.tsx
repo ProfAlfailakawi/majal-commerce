@@ -31,9 +31,9 @@ export const PlatformPolicyCenter: React.FC = () => {
   const fields = [
     { key: 'platformFeePercent', label: 'عمولة مجال الافتراضية', suffix: '%', min: 0, max: 30, icon: <Percent className="w-4 h-4" />, help: 'تستخدم كقيمة افتراضية عندما لا يحدد عرض تجاري نسبة مختلفة.' },
     { key: 'recipeGrantDays', label: 'مدة إذن الوصفة', suffix: 'يوم', min: 1, max: 365, icon: <KeyRound className="w-4 h-4" />, help: 'مدة صلاحية الوصول بعد موافقة المبدع قبل أن ينتهي تلقائيًا.' },
-    { key: 'maxOrderUnits', label: 'الحد الأعلى لوحدات الطلب', suffix: 'وحدة', min: 1, max: 100, icon: <ShoppingCart className="w-4 h-4" />, help: 'حاجز Domain Guard يطبق حتى لو استدعيت العملية خارج الواجهة.' },
-    { key: 'complianceWarningDays', label: 'نافذة تحذير الامتثال', suffix: 'يوم', min: 1, max: 120, icon: <Clock3 className="w-4 h-4" />, help: 'قبل انتهاء المستند بهذه المدة يتحول إلى EXPIRING_SOON.' },
-    { key: 'strongMatchThreshold', label: 'عتبة المطابقة القوية', suffix: '%', min: 50, max: 100, icon: <Radar className="w-4 h-4" />, help: 'تستخدم في مؤشرات Pulse وقياس الفرص عالية الملاءمة.' },
+    { key: 'maxOrderUnits', label: 'الحد الأعلى لوحدات الطلب', suffix: 'وحدة', min: 1, max: 100, icon: <ShoppingCart className="w-4 h-4" />, help: 'حاجز الحماية في طبقة الحالة يطبَّق حتى لو استدعيت العملية خارج الواجهة.' },
+    { key: 'complianceWarningDays', label: 'نافذة تحذير الامتثال', suffix: 'يوم', min: 1, max: 120, icon: <Clock3 className="w-4 h-4" />, help: 'قبل انتهاء المستند بهذه المدة يُصنَّف «قريب الانتهاء».' },
+    { key: 'strongMatchThreshold', label: 'عتبة المطابقة القوية', suffix: '%', min: 50, max: 100, icon: <Radar className="w-4 h-4" />, help: 'تستخدم في مؤشرات نبض مجال وقياس الفرص عالية الملاءمة.' },
     { key: 'settlementCycleDays', label: 'دورة التسوية', suffix: 'يوم', min: 1, max: 90, icon: <Gauge className="w-4 h-4" />, help: 'تحدد النافذة الافتراضية لكشف التسوية، ولا تعني أن التحويل البنكي تم.' }
   ] as const;
 
@@ -59,7 +59,7 @@ export const PlatformPolicyCenter: React.FC = () => {
         </div>
         <div className="text-xs text-slate-400 leading-5">
           آخر تحديث: {new Date(store.policy.updatedAt).toLocaleString('ar-KW')}<br />
-          بواسطة: {store.policy.updatedBy}
+          بواسطة: {store.policy.updatedBy === 'system-default' ? 'الإعداد الافتراضي للنظام' : store.policy.updatedBy}
         </div>
       </div>
 

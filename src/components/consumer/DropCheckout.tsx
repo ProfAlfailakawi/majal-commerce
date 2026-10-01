@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BadgeCheck, Bell, CheckCircle2, CreditCard, ShoppingBag, Star, Store, Truck } from 'lucide-react';
 import { Launch } from '../../types/majal';
+import { shortRef } from '../../lib/displayRef';
 import { store } from '../../lib/store';
 import { IS_DEMO_MODE } from '../../lib/runtime';
 import { formatFils, kwdToFils } from '../../lib/money';
@@ -131,7 +132,7 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
     const expired = countdown ? countdown.left === 0 : false;
     return (
       <div role="status" className="dna-surface p-5 text-center space-y-4">
-        <div className="font-black text-slate-100">تم حجز طلبك — رقم <span className="font-mono">{placed.orderId}</span></div>
+        <div className="font-black text-slate-100">تم حجز طلبك — رقم <span className="font-mono" title={placed.orderId}>{shortRef(placed.orderId, 'ط')}</span></div>
         <DnaStepper
           size="sm"
           ariaLabel="حالة الطلب"
@@ -142,7 +143,7 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
             { key: 'pickup', label: 'استلام', state: 'pending', icon: <Store /> }
           ]}
         />
-        <div className="text-sm text-slate-100">الإجمالي: <strong className="text-gold-300">{formatFils(placed.totalFils)}</strong></div>
+        <div className="text-sm text-slate-100 pt-2">الإجمالي: <strong className="text-gold-300">{formatFils(placed.totalFils)}</strong></div>
         {countdown && demoState === 'PENDING' && (
           <div className="flex items-center justify-center gap-3" aria-live="polite">
             <DnaRing
@@ -179,7 +180,7 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
         )}
         {IS_DEMO_MODE && demoState === 'CANCELLED' && <div role="status" className="text-slate-300 font-black text-sm">أُلغي الطلب وتحررت الكمية المحجوزة.</div>}
         {IS_DEMO_MODE && demoState === 'REFUNDED' && <div role="status" className="text-amber-200 font-black text-sm">تم استرجاع المبلغ (محاكاة) وأُلغي مستحق المبدع.</div>}
-        <p className="text-xs text-slate-400">يتأكد الطلب فقط بعد تأكيد الدفع من البوابة. لم تُخصم أي أموال قبل ذلك.</p>
+        {demoState === 'PENDING' && <p className="text-xs text-slate-400">يتأكد الطلب فقط بعد تأكيد الدفع من البوابة. لم تُخصم أي أموال قبل ذلك.</p>}
       </div>
     );
   }

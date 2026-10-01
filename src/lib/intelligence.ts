@@ -8,6 +8,7 @@ import {
   User
 } from '../types/majal';
 import { hasPermission } from './permissions';
+import { statusLabel } from './statusLabels';
 
 type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
 
@@ -59,7 +60,7 @@ export function buildDealRoomCopilot(args: {
 }): DealRoomCopilotIntelligence {
   const latestOffer = args.offers[0] || args.collaboration.currentOffer;
   const optionSummaries = args.offers.slice(0, 3).map(offer =>
-    `V${offer.version}: سعر ${offer.sellingPriceKwd.toFixed(3)} د.ك، royalty ${offer.creatorRoyaltyRatePercent}%، fee ${offer.platformFeePercent}%، مدة ${offer.termMonths} شهر.`
+    `V${offer.version}: سعر ${offer.sellingPriceKwd.toFixed(3)} د.ك، نسبة المبدع ${offer.creatorRoyaltyRatePercent}%، رسوم المنصة ${offer.platformFeePercent}%، مدة ${offer.termMonths} شهر.`
   );
   const risks: { level: RiskLevel; text: string }[] = [];
   if (!latestOffer) risks.push({ level: 'MEDIUM', text: 'لا يوجد عرض تجاري قابل للمقارنة.' });
@@ -68,7 +69,7 @@ export function buildDealRoomCopilot(args: {
   if (args.collaboration.contract?.status !== 'FULLY_SIGNED') risks.push({ level: 'HIGH', text: 'العقد غير مكتمل التوقيع؛ أي تنفيذ تجاري يحتاج المسار القانوني الحالي.' });
 
   return {
-    summary: `${args.product?.publicName || 'منتج'} مع ${args.host?.commercialName || 'منشأة'} في مرحلة ${args.collaboration.stage}. التحليل يلخص ولا يقرر.`,
+    summary: `${args.product?.publicName || 'منتج'} مع ${args.host?.commercialName || 'منشأة'} في مرحلة ${statusLabel(args.collaboration.stage)}. التحليل يلخص ولا يقرر.`,
     optionSummaries: optionSummaries.length ? optionSummaries : ['لا توجد خيارات عروض محفوظة.'],
     risks,
     openQuestions: [

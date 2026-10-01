@@ -194,7 +194,7 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
       <div className="pt-4 border-t border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start gap-2 text-xs">
           {isAllReady ? (
-            <span key="ready" className="majal-settle-in flex items-start gap-2"><ShieldCheck className="w-4 h-4 text-emerald-300 mt-0.5" /><span className="text-emerald-300 font-bold">جميع المتطلبات اجتازت البوابة. يمكن تحويل الإطلاق إلى LIVE.</span></span>
+            <span key="ready" className="majal-settle-in flex items-start gap-2"><ShieldCheck className="w-4 h-4 text-emerald-300 mt-0.5" /><span className="text-emerald-300 font-bold">جميع المتطلبات اجتازت البوابة. يمكن تحويل الإطلاق إلى إطلاق حيّ.</span></span>
           ) : (
             <><AlertTriangle className="w-4 h-4 text-amber-300 mt-0.5" /><span className="text-amber-200">الإطلاق مقفول حتى تكتمل جميع المتطلبات النظامية والتشغيلية.</span></>
           )}

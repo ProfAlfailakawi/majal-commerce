@@ -51,7 +51,7 @@ export const ProductDiscovery: React.FC = () => {
         <div>
           <h2 className="text-xl font-black text-slate-100 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-amber-400" />
-            <span>محرك الاكتشاف والمطابقة المفسرة Matching & Discovery Engine</span>
+            <span>محرك الاكتشاف والمطابقة المفسرة</span>
           </h2>
           <p className="text-xs text-slate-400">
             اكتشاف المنتجات والوصفات المبتكرة المتوافقة مع تجهيزات ومعدات وشريحة عملاء منشأتك ({host.commercialName})

@@ -30,3 +30,10 @@ test('demo assistant answers by topic and is offline', async () => {
   assert.match(demoAiAnswer('POLISH', 'كليجا بالهيل'), /الهيل/);
   assert.match(demoAiAnswer('EXPLAIN_MATCH', 'بسكويت'), /الملاءمة/);
 });
+
+test('short references are stable and never expose the raw id', async () => {
+  const { shortRef } = await import('./displayRef');
+  assert.equal(shortRef('set_demo_cr_demo_2', 'D'), shortRef('set_demo_cr_demo_2', 'D'));
+  assert.notEqual(shortRef('set_demo_cr_demo_2'), shortRef('set_demo_cr_demo_3'));
+  assert.match(shortRef('ord_demo_launch_mango_br_haw_1', 'ط'), /^ط-[0-9A-Z]{4}$/);
+});
