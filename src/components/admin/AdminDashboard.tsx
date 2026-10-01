@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { DnaHubMap } from '../dna/DnaKit';
 import { MajalMark } from '../brand/MajalMark';
+import { shortRef } from '../../lib/displayRef';
 import { store } from '../../lib/store';
 import { AdminAuditLogs } from './AdminAuditLogs';
 import { TrustEngine } from './TrustEngine';
@@ -254,7 +255,7 @@ export const AdminDashboard: React.FC = () => {
             {store.recipeGrants.map(grant => (
               <div key={grant.id} className="rounded-2xl p-4 bg-white/5 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <div className="font-bold text-sm text-slate-100">{grant.id}</div>
+                  <div className="font-bold text-sm text-slate-100" title={grant.id}>إذن وصفة — {store.products.find(p => p.id === grant.productId)?.publicName || 'منتج'} <span className="text-slate-400 font-normal">· {store.hosts.find(h => h.id === grant.hostBusinessId)?.commercialName || 'منشأة'}</span></div>
                   <div className="text-xs text-slate-400 mt-1">{grant.purpose}</div>
                 </div>
                 <div className="sm:text-end flex sm:block items-center justify-between gap-2">
@@ -273,7 +274,7 @@ export const AdminDashboard: React.FC = () => {
             {store.contracts.slice(0, 6).map(contract => (
               <div key={contract.id} className="rounded-2xl p-4 bg-white/5 border border-white/10 flex items-center justify-between gap-3">
                 <div>
-                  <div className="font-bold text-sm text-slate-100">{contract.id} — {contract.versionNumber}</div>
+                  <div className="font-bold text-sm text-slate-100"><span title={contract.id}>{(() => { const col = store.collaborations.find(c => c.id === contract.collaborationId); const prod = store.products.find(p => p.id === col?.productId); const host = store.hosts.find(h => h.id === col?.hostBusinessId); return `عقد ${prod?.publicName || 'شراكة'}${host ? ` × ${host.commercialName}` : ''}`; })()} — {contract.versionNumber}</span></div>
                   <div className="mt-1.5"><StatusPill status={contract.status} prefix="الحالة" /></div>
                 </div>
                 <div className="text-xs text-slate-400">{new Date(contract.createdAt).toLocaleDateString('ar-KW')}</div>
@@ -305,7 +306,7 @@ export const AdminDashboard: React.FC = () => {
               <div key={batch.id} className="rounded-2xl p-4 bg-white/5 border border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div>
                   <div className="font-black text-slate-100">{batch.creatorName}</div>
-                  <div className="text-xs text-slate-400 mt-1">{batch.id} — {new Date(batch.periodStart).toLocaleDateString('ar-KW')} إلى {new Date(batch.periodEnd).toLocaleDateString('ar-KW')}</div>
+                  <div className="text-xs text-slate-400 mt-1"><span title={batch.id}>دفعة {shortRef(batch.id, 'ت')}</span> — {new Date(batch.periodStart).toLocaleDateString('ar-KW')} إلى {new Date(batch.periodEnd).toLocaleDateString('ar-KW')}</div>
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="text-lg font-black text-gold-300 font-mono">{batch.totalAmountKwd.toFixed(3)} د.ك</div>

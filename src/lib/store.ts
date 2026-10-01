@@ -946,9 +946,19 @@ export class Store {
     const margin = (target - cogs) / target;
     const marginFit = Math.min(98, Math.max(60, Math.round(margin * 130)));
 
-    const brandFit = 88;
-    const capacityFit = 90;
-    const priceFit = 85;
+    // Demo only: the engine's brand/capacity/price inputs are constants, which made every
+    // host score identically on the radar. Spread them deterministically per host/product
+    // pair so the walkthrough shows a believable ranking. Production scoring is unchanged.
+    const spread = (salt: string, range: number) => {
+      if (!IS_DEMO_MODE) return 0;
+      let h = 2166136261;
+      const key = `${host.id}|${product.id}|${salt}`;
+      for (let i = 0; i < key.length; i += 1) { h ^= key.charCodeAt(i); h = Math.imul(h, 16777619); }
+      return ((h >>> 0) % (range * 2 + 1)) - range;
+    };
+    const brandFit = 88 + spread('brand', 7);
+    const capacityFit = 90 + spread('capacity', 8);
+    const priceFit = 85 + spread('price', 9);
 
     const overallScore = Math.round(
       equipmentFit * 0.25 + marginFit * 0.25 + brandFit * 0.20 + capacityFit * 0.15 + priceFit * 0.15
@@ -1405,7 +1415,7 @@ export class Store {
       createdAt: new Date().toISOString()
     };
     this.orders.unshift(order);
-    this.addAuditLog('ORDER_PLACED', 'ORDER', order.id, `حجز تجريبي معلق للدفع: ${unitsCount} وحدة على الإطلاق ${launchId}`);
+    this.addAuditLog('ORDER_PLACED', 'ORDER', order.id, `حجز تجريبي معلق للدفع: ${unitsCount} وحدة — ${launch.title}`);
 
     this.notify();
     return order;

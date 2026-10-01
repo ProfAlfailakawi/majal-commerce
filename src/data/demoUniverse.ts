@@ -592,6 +592,14 @@ function demoTrading(products: CreatorProduct[], hosts: HostBusiness[], creators
     }
   }
 
+  const AUDIT_DETAILS: Partial<Record<AuditLog['action'], string>> = {
+    RECIPE_VIEWED: 'فتح خزنة الوصفة بمستوى إفصاح 2', ACCESS_REQUESTED: 'طلب إذن الاطلاع على وصفة منتج', ACCESS_GRANTED: 'الموافقة على إذن إفصاح محدد المدة',
+    ACCESS_REVOKED: 'سحب إذن الإفصاح بعد انتهاء الغرض', OFFER_CHANGED: 'تعديل نسبة المبدع في العرض التجاري', CONTRACT_SIGNED: 'توقيع العقد التجاري إلكترونياً',
+    LAUNCH_PREPARED: 'تجهيز إطلاق جديد للمراجعة', LAUNCH_GATE_UPDATED: 'تحديث بند في بوابة الامتثال قبل الإطلاق', LAUNCH_ACTIVATED: 'تفعيل الإطلاق للبيع',
+    ORDER_PLACED: 'حجز طلب جديد بانتظار الدفع', REVIEW_SUBMITTED: 'تقييم جديد من عميل', SETTLEMENT_APPROVED: 'اعتماد دفعة تسوية للمبدع',
+    SETTLEMENT_PAID: 'تأكيد صرف دفعة التسوية', COMPLIANCE_STATUS_CHANGED: 'تغيّر حالة وثيقة امتثال', DISPUTE_UPDATED: 'تحديث حالة نزاع مفتوح',
+    PRODUCT_PAUSED: 'إيقاف منتج مؤقتاً للمراجعة', RECIPE_EXPORTED: 'تصدير نسخة مراقبة بعلامة مائية',
+  };
   const ACTIONS: AuditLog['action'][] = [
     'RECIPE_VIEWED', 'ACCESS_REQUESTED', 'ACCESS_GRANTED', 'ACCESS_REVOKED', 'OFFER_CHANGED',
     'CONTRACT_SIGNED', 'LAUNCH_PREPARED', 'LAUNCH_GATE_UPDATED', 'LAUNCH_ACTIVATED',
@@ -610,7 +618,7 @@ function demoTrading(products: CreatorProduct[], hosts: HostBusiness[], creators
       action,
       entityType: action.startsWith('RECIPE') ? 'RecipeVersion' : action.startsWith('LAUNCH') ? 'Launch' : action.startsWith('SETTLEMENT') ? 'SettlementBatch' : 'Collaboration',
       entityId: `ent_demo_${index + 1}`,
-      details: `${action} — سجل تدقيق مصطنع في البيئة التجريبية.`,
+      details: AUDIT_DETAILS[action] ? `${AUDIT_DETAILS[action]} — ${creator.displayName}` : `${action} — ${creator.displayName}`,
       ipAddress: pick(IPS, index),
     } as AuditLog);
   }

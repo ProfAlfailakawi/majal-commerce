@@ -95,7 +95,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
         <div className="majal-glow -top-80 -end-48 w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
         <div className="relative z-10 grid lg:grid-cols-[1.05fr_.95fr] gap-8 items-center">
           <div className="space-y-5">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-400/20 text-rose-300 text-xs font-black"><Flame className="w-4 h-4" /> MAJAL DROPS — إطلاقات تستحق التجربة</div>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-400/20 text-rose-300 text-xs font-black"><Flame className="w-4 h-4" /> إطلاقات مجال — منتجات تستحق التجربة</div>
             <h1 className="text-3xl md:text-5xl font-black leading-tight">مو مجرد طلب أكل.<br /><span className="text-gold-300">أنت تشارك في اكتشاف الاسم القادم.</span></h1>
             <p className="text-sm text-slate-400 max-w-2xl leading-7">كل منتج هنا مرّ بمبدع، منشأة مرخّصة، اختبار، اتفاق، وإطلاق. جرّبه، قيّمه، وقرر مع الجمهور هل يستحق البقاء.</p>
 
@@ -144,7 +144,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
           )}
           {!featured && (
             <div className="rounded-[28px] min-h-72 bg-slate-950/45 border border-dashed border-white/15 grid place-items-center p-8 text-center">
-              <div className="space-y-4 max-w-sm"><div className="w-16 h-16 mx-auto rounded-3xl bg-gold-500/10 border border-gold-300/20 grid place-items-center"><PackageOpen className="w-8 h-8 text-gold-300" /></div><h2 className="text-xl font-black">الإطلاق القادم يُجهّز الآن</h2><p className="text-xs text-slate-400 leading-6">لا نعرض منتجات غير مكتملة. يظهر أول Drop هنا بعد اجتياز الاختبار والامتثال وبوابة الإطلاق.</p></div>
+              <div className="space-y-4 max-w-sm"><div className="w-16 h-16 mx-auto rounded-3xl bg-gold-500/10 border border-gold-300/20 grid place-items-center"><PackageOpen className="w-8 h-8 text-gold-300" /></div><h2 className="text-xl font-black">الإطلاق القادم يُجهّز الآن</h2><p className="text-xs text-slate-400 leading-6">لا نعرض منتجات غير مكتملة. يظهر أول إطلاق هنا بعد اجتياز الاختبار والامتثال وبوابة الإطلاق.</p></div>
             </div>
           )}
         </div>
@@ -193,7 +193,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
           <div ref={orderDialogRef} role="dialog" aria-modal="true" aria-labelledby="consumer-order-title" className="glass-panel w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[28px] p-6 border border-white/15 shadow-2xl space-y-5 relative">
             <button type="button" aria-label="إغلاق نافذة الطلب" onClick={closeOrderModal} className="absolute top-4 end-4 p-2 rounded-full bg-white/5 text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
-            <div><span className="text-xs text-gold-300 font-black">MAJAL DROP</span><h3 id="consumer-order-title" className="text-xl font-black mt-1">{selectedLaunch.title}</h3></div>
+            <div><span className="text-xs text-gold-300 font-black">إطلاق من مجال</span><h3 id="consumer-order-title" className="text-xl font-black mt-1">{selectedLaunch.title}</h3></div>
 
             <DropCheckout launch={selectedLaunch} acquisitionSource={acquisitionSource} />
           </div>

@@ -290,7 +290,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
 
           {step === 3 && (
             <div className="space-y-4 animate-in fade-in">
-              <h4 className="font-bold text-amber-400 text-sm">٣. حماية الوصفة وخزنة الأسرار Recipe Vault</h4>
+              <h4 className="font-bold text-amber-400 text-sm">٣. حماية الوصفة وخزنة الأسرار</h4>
 
               <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-2.5 text-amber-300">
                 <Lock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />

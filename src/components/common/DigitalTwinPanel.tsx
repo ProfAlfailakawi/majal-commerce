@@ -17,6 +17,7 @@ import { store } from '../../lib/store';
 import { CreatorProduct } from '../../types/majal';
 import { hasPermission } from '../../lib/permissions';
 import { StatusPill } from './StatusPill';
+import { statusLabel } from '../../lib/statusLabels';
 
 interface DigitalTwinPanelProps {
   product: CreatorProduct;
@@ -105,7 +106,7 @@ export const DigitalTwinPanel: React.FC<DigitalTwinPanelProps> = ({ product, hos
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
               { label: 'نسخة الوصفة', value: product.currentRecipeVersion, icon: <History className="w-4 h-4" /> },
-              { label: 'حالة العقد', value: twin.contract?.status || 'لا يوجد', icon: <ScrollText className="w-4 h-4" /> },
+              { label: 'حالة العقد', value: twin.contract?.status ? statusLabel(twin.contract.status) : 'لا يوجد', icon: <ScrollText className="w-4 h-4" /> },
               { label: 'المبيعات المسجلة', value: canSeeFinancials ? `${twin.revenue.toFixed(3)} د.ك` : 'محجوب حسب الدور', icon: <Store className="w-4 h-4" /> },
               { label: 'مستحقات المبدع', value: canSeeFinancials ? `${twin.creatorRoyalty.toFixed(3)} د.ك` : 'محجوب حسب الدور', icon: <Wallet className="w-4 h-4" /> }
             ].map((item, idx) => (
@@ -167,8 +168,8 @@ export const DigitalTwinPanel: React.FC<DigitalTwinPanelProps> = ({ product, hos
             <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3 text-xs">
               <div className="font-bold text-slate-100 flex items-center gap-2"><Activity className="w-4 h-4 text-emerald-300" /> صحة التوأم الرقمي</div>
               {[
-                [<LockKeyhole className="w-4 h-4 text-fuchsia-300" />, 'أذونات الوصفة', `${twin.grants.length} Grant`],
-                [<PackageCheck className="w-4 h-4 text-sky-300" />, 'الإطلاق', twin.launch?.status || 'غير مباشر'],
+                [<LockKeyhole className="w-4 h-4 text-fuchsia-300" />, 'أذونات الوصفة', `${twin.grants.length} إذن`],
+                [<PackageCheck className="w-4 h-4 text-sky-300" />, 'الإطلاق', twin.launch?.status ? statusLabel(twin.launch.status) : 'غير مباشر'],
                 [<ShieldCheck className="w-4 h-4 text-emerald-300" />, 'بوابة الإطلاق', twin.launch?.gateChecklist.allRequirementsPassed ? 'مكتمل' : 'يحتاج مراجعة'],
                 [<Store className="w-4 h-4 text-gold-300" />, 'نسبة التكرار', `${twin.keepVotes}%`]
               ].map(([icon, label, value], idx) => (

@@ -36,13 +36,13 @@ export const MarketplaceLiquidity: React.FC = () => {
           <div className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-400/20 flex items-center justify-center text-sky-300"><CircleGauge className="w-6 h-6" /></div>
           <div><h3 className="text-lg font-black text-slate-100">سيولة السوق</h3><p className="text-xs text-slate-400 mt-1">مؤشر تشغيلي مبني على المنتجات القابلة للمطابقة والتحديات المفتوحة، وليس على كل السجلات المؤرشفة.</p></div>
         </div>
-        <div className="flex gap-2 text-xs flex-wrap"><span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-300">متوسط Match: <strong className="text-sky-300">{avgMatch}%</strong></span><span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-300">تحديات مفتوحة: <strong className="text-gold-300">{openChallenges.length}</strong></span></div>
+        <div className="flex gap-2 text-xs flex-wrap"><span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-300">متوسط المطابقة: <strong className="text-sky-300">{avgMatch}%</strong></span><span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-300">تحديات مفتوحة: <strong className="text-gold-300">{openChallenges.length}</strong></span></div>
       </div>
 
       <div className="grid md:grid-cols-3 gap-4">
         <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><Sparkles className="w-5 h-5 text-emerald-300" /><div className="mt-3 text-xs text-slate-400">منتجات قابلة للمطابقة</div><div className="text-2xl font-black mt-1">{matchableProducts.length}</div></div>
         <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><Building2 className="w-5 h-5 text-sky-300" /><div className="mt-3 text-xs text-slate-400">منشآت متحققة</div><div className="text-2xl font-black mt-1">{store.hosts.filter(h => h.verificationStatus === 'VERIFIED').length}</div></div>
-        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><SearchCheck className="w-5 h-5 text-gold-300" /><div className="mt-3 text-xs text-slate-400">إشارات Match</div><div className="text-2xl font-black mt-1">{store.matches.length}</div></div>
+        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><SearchCheck className="w-5 h-5 text-gold-300" /><div className="mt-3 text-xs text-slate-400">إشارات المطابقة</div><div className="text-2xl font-black mt-1">{store.matches.length}</div></div>
       </div>
 
       <div className="grid gap-3">

@@ -19,6 +19,7 @@ import { buildDealRoomCopilot } from '../../lib/intelligence';
 import { intelligenceClient, type DealRoomEnrichment } from '../../lib/intelligenceClient';
 import { Bot } from 'lucide-react';
 import { StatusPill } from './StatusPill';
+import { statusLabel } from '../../lib/statusLabels';
 import { EmptyState } from './EmptyState';
 
 interface DealRoomProps {
@@ -50,7 +51,7 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
   const tasks = [
     { title: 'تثبيت نسخة الوصفة الحالية', done: !!currentRecipe, owner: 'المبدع + الشيف', detail: currentRecipe?.versionNumber || 'لا توجد نسخة' },
     { title: 'تثبيت الشروط التجارية', done: collaboration.currentOffer?.status === 'ACCEPTED' || ['COMMERCIAL_AGREED','CONTRACT_DRAFTED','SIGNED','PRE_LAUNCH','LIVE','REVIEW','RENEWED'].includes(collaboration.stage), owner: 'الطرفان', detail: collaboration.currentOffer ? `V${collaboration.currentOffer.version}` : 'لا يوجد عرض' },
-    { title: 'توقيع العقد', done: collaboration.contract?.status === 'FULLY_SIGNED', owner: 'المبدع + مالك المنشأة', detail: collaboration.contract?.status || 'لم ينشأ' },
+    { title: 'توقيع العقد', done: collaboration.contract?.status === 'FULLY_SIGNED', owner: 'المبدع + مالك المنشأة', detail: collaboration.contract?.status ? statusLabel(collaboration.contract.status) : 'لم ينشأ' },
     { title: 'اجتياز بوابة الإطلاق', done: !!gate?.allRequirementsPassed, owner: 'التشغيل + النظام', detail: gate ? `${Object.entries(gate).filter(([k,v]) => k !== 'allRequirementsPassed' && v).length}/11` : 'غير مهيأ' }
   ];
 
@@ -198,9 +199,9 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
       </div>
 
       <div className="grid md:grid-cols-3 gap-3 text-xs">
-        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><FileCheck2 className="w-4 h-4 text-sky-300 mb-2" /><div className="text-slate-400">العقد</div><div className="font-black text-slate-100 mt-1">{collaboration.contract?.status || 'لم ينشأ'}</div></div>
+        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><FileCheck2 className="w-4 h-4 text-sky-300 mb-2" /><div className="text-slate-400">العقد</div><div className="font-black text-slate-100 mt-1">{collaboration.contract?.status ? statusLabel(collaboration.contract.status) : 'لم ينشأ'}</div></div>
         <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><Sparkles className="w-4 h-4 text-gold-300 mb-2" /><div className="text-slate-400">آخر عرض</div><div className="font-black text-slate-100 mt-1">{collaboration.currentOffer ? `${collaboration.currentOffer.creatorRoyaltyRatePercent}% للمبدع — V${collaboration.currentOffer.version}` : 'لا يوجد'}</div></div>
-        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><UserRoundCheck className="w-4 h-4 text-emerald-300 mb-2" /><div className="text-slate-400">سلامة السجل</div><div className="font-black text-emerald-300 mt-1">محفوظ + مرتبط بـ Audit</div></div>
+        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><UserRoundCheck className="w-4 h-4 text-emerald-300 mb-2" /><div className="text-slate-400">سلامة السجل</div><div className="font-black text-emerald-300 mt-1">محفوظ + مرتبط بسجل التدقيق</div></div>
       </div>
     </section>
   );

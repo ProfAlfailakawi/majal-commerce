@@ -31,7 +31,7 @@ export const MajalPulse: React.FC = () => {
   const cards = [
     { label: 'مبدعون متاحون', value: pulse.creatorsAvailable, detail: 'جاهزون للمطابقة', icon: <Sparkles className="w-5 h-5" />, tone: 'text-emerald-300' },
     { label: 'منشآت متحققة', value: pulse.verifiedHosts, detail: 'قادرة على الاحتضان', icon: <Building2 className="w-5 h-5" />, tone: 'text-gold-300' },
-    { label: 'Matches قوية', value: pulse.strongMatches, detail: `${store.policy.strongMatchThreshold}% فأعلى`, icon: <Radar className="w-5 h-5" />, tone: 'text-sky-300' },
+    { label: 'مطابقات قوية', value: pulse.strongMatches, detail: `${store.policy.strongMatchThreshold}% فأعلى`, icon: <Radar className="w-5 h-5" />, tone: 'text-sky-300' },
     { label: 'في المختبر', value: pulse.labs, detail: 'تذوق أو تطوير', icon: <FlaskConical className="w-5 h-5" />, tone: 'text-violet-300' },
     { label: 'قريبة من الإطلاق', value: pulse.contractPipeline, detail: 'عقد / Pre-launch', icon: <FileSignature className="w-5 h-5" />, tone: 'text-fuchsia-300' },
     { label: 'منتجات حية', value: pulse.liveProducts, detail: 'تباع الآن', icon: <TrendingUp className="w-5 h-5" />, tone: 'text-emerald-300' },
@@ -45,7 +45,7 @@ export const MajalPulse: React.FC = () => {
       <div className="relative z-10 space-y-5">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
           <div>
-            <div className="inline-flex items-center gap-2 text-emerald-300 text-xs font-black"><Activity className="w-4 h-4" /> MAJAL PULSE</div>
+            <div className="inline-flex items-center gap-2 text-emerald-300 text-xs font-black"><Activity className="w-4 h-4" /> نبض مجال</div>
             <h2 className="text-xl md:text-2xl font-black mt-2">نبض مجال — السوق كله في شاشة واحدة</h2>
             <p className="text-xs text-slate-400 mt-2 leading-6">من العرض والطلب إلى المختبر والعقود والإطلاق والقيمة الاقتصادية، مع إبراز أي نقطة تحتاج تدخل الإدارة.</p>
           </div>

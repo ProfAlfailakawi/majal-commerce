@@ -3,11 +3,18 @@ import { ShieldCheck, Search, Filter, Lock, FileText, CheckCircle2 } from 'lucid
 import { store } from '../../lib/store';
 
 const ACTION_LABELS: Record<string, string> = {
+  RECIPE_VIEWED: 'فتح خزنة الوصفة', ACCESS_REQUESTED: 'طلب إذن وصفة', ACCESS_GRANTED: 'منح إذن وصفة', ACCESS_REVOKED: 'سحب إذن وصفة',
+  OFFER_CHANGED: 'تعديل عرض تجاري', CONTRACT_SIGNED: 'توقيع عقد', LAUNCH_PREPARED: 'تجهيز إطلاق', LAUNCH_GATE_UPDATED: 'تحديث بوابة الإطلاق',
+  LAUNCH_ACTIVATED: 'تفعيل إطلاق', REVIEW_SUBMITTED: 'تقييم عميل', SETTLEMENT_APPROVED: 'اعتماد تسوية', SETTLEMENT_PAID: 'تأكيد صرف تسوية',
+  COMPLIANCE_STATUS_CHANGED: 'تغيّر حالة الامتثال', DISPUTE_UPDATED: 'تحديث نزاع', PRODUCT_PAUSED: 'إيقاف منتج مؤقتاً', RECIPE_EXPORTED: 'تصدير نسخة وصفة',
+  PLATFORM_POLICY_CHANGED: 'تغيير سياسة المنصة',
   ORDER_PLACED: 'حجز طلب',
   ORDER_PAID_SIMULATED: 'دفع طلب (محاكاة)',
   ORDER_CANCELLED_SIMULATED: 'إلغاء طلب (محاكاة)',
   ORDER_REFUNDED_SIMULATED: 'استرجاع طلب (محاكاة)'
 };
+
+const ENTITY_LABELS: Record<string, string> = { RecipeVersion: 'نسخة وصفة', Launch: 'إطلاق', SettlementBatch: 'دفعة تسوية', Collaboration: 'تعاون', ORDER: 'طلب', PRODUCT: 'منتج', CONTRACT: 'عقد', LAUNCH: 'إطلاق', SETTLEMENT: 'تسوية', COLLABORATION: 'تعاون', REVIEW: 'تقييم', RECIPE_ACCESS_GRANT: 'إذن وصفة', RECIPE_ACCESS_REQUEST: 'طلب إذن وصفة', SETTLEMENT_BATCH: 'دفعة تسوية', CHALLENGE: 'تحدٍّ', DEAL_DECISION: 'قرار صفقة', LAB_BATCH: 'دفعة مختبر', OFFER: 'عرض تجاري', PLATFORM_POLICY: 'سياسة المنصة', USER: 'مستخدم', DATABASE: 'قاعدة البيانات' };
 
 export const AdminAuditLogs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -66,7 +73,7 @@ export const AdminAuditLogs: React.FC = () => {
                     <span title={log.action}>{ACTION_LABELS[log.action] || log.action}</span>
                   </span>
                 </td>
-                <td data-label="نوع الكيان" className="py-2.5 px-3 text-slate-300 font-bold">{log.entityType}</td>
+                <td data-label="نوع الكيان" className="py-2.5 px-3 text-slate-300 font-bold">{ENTITY_LABELS[log.entityType] || log.entityType}</td>
                 <td data-label="التفاصيل والوصف" className="py-2.5 px-3 text-slate-200 font-sans">{log.details}</td>
                 <td data-label="عنوان IP والمدينة" className="py-2.5 px-3 text-slate-400 text-xs">{log.ipAddress}</td>
               </tr>
