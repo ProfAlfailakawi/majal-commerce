@@ -279,7 +279,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               {['SUPER_ADMIN', 'ADMIN'].includes(activeUser.role) && (
                 <button
                   onClick={() => onSurfaceChange(activeUser.role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'ADMIN')}
-                  className="px-2.5 py-1 rounded-lg bg-gold-500/20 hover:bg-gold-500/30 text-gold-300 text-xs font-bold border border-gold-300/30 transition cursor-pointer"
+                  className="hidden sm:inline-block px-2.5 py-1 rounded-lg bg-gold-500/20 hover:bg-gold-500/30 text-gold-300 text-xs font-bold border border-gold-300/30 transition cursor-pointer"
                   title="الانتقال المباشر للوحة التحكم"
                 >
                   لوحة الإدارة
