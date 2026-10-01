@@ -66,6 +66,14 @@ export const CreatorEarnings: React.FC = () => {
         <div className="glass-card p-5 rounded-2xl border border-emerald-400/15"><div className="flex items-center justify-between text-xs text-emerald-300"><span>مدفوع ومؤكد</span><CheckCircle2 className="w-4 h-4" /></div><div className="text-2xl font-black text-emerald-300 font-mono mt-2">{totals.paid.toFixed(3)} <span className="text-xs">د.ك</span></div></div>
       </div>
 
+      {totals.lifetime > 0 && (
+        <div role="img" aria-label="توزيع الحقوق حسب حالة التسوية" className="flex h-1 w-full overflow-hidden rounded-full bg-white/5 opacity-80">
+          <span className="bg-amber-400/80" style={{ width: `${(totals.eligible / totals.lifetime) * 100}%` }} />
+          <span className="bg-sky-400/80" style={{ width: `${(totals.locked / totals.lifetime) * 100}%` }} />
+          <span className="bg-emerald-400/80" style={{ width: `${(totals.paid / totals.lifetime) * 100}%` }} />
+        </div>
+      )}
+
       <section className="glass-panel rounded-3xl border border-white/10 p-6 space-y-4">
         <div className="flex items-center justify-between border-b border-white/10 pb-3"><h3 className="font-black">تفاصيل الحقوق حسب الطلب</h3><span className="text-xs text-slate-400">{creatorAccruals.length} سجلات</span></div>
         <div className="overflow-x-auto text-xs">

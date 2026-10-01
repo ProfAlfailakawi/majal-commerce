@@ -197,7 +197,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               /* Deliberately the loudest chip on the bar. Anyone glancing at a
                  shared screen should be able to tell that none of this inventory,
                  these orders or these payouts are real. */
-              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-black max-xl:whitespace-nowrap max-xl:shrink-0 bg-amber-500/15 text-amber-300 border border-amber-400/35">
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-black whitespace-nowrap shrink-0 bg-amber-500/15 text-amber-300 border border-amber-400/35">
                 <FlaskConical className="w-3.5 h-3.5" aria-hidden="true" />
                 <span className="hidden lg:inline">بيئة تجريبية — بيانات مصطنعة</span>
                 <span className="lg:hidden">DEMO</span>
@@ -235,7 +235,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   key={s.id}
                   onClick={() => onSurfaceChange(s.id)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap shrink-0 transition-all ${
                     isActive ? 'bg-gold-500 text-slate-950 font-black shadow-sm' : 'text-slate-300 hover:text-slate-100 hover:bg-white/5'
                   }`}
                 >
@@ -374,8 +374,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {showRoleDropdown && (
                 <div role="menu" aria-label="تبديل هوية العرض المحلية" className="fixed inset-x-3 top-[4.5rem] sm:absolute sm:inset-x-auto sm:top-auto sm:end-0 mt-2 sm:w-80 max-w-[calc(100vw-1.5rem)] bg-ink-700 sm:bg-ink-700/96 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 text-xs text-slate-200 max-h-[calc(100dvh-6rem)] sm:max-h-[70dvh] overflow-y-auto overscroll-contain">
-                  <div className="px-2 py-2 text-xs text-slate-400 font-bold uppercase tracking-wider border-b border-white/10 mb-1">
-                    تبديل أدوار العرض — Creator / Host / Admin / Super Admin
+                  <div className="px-2 py-2 text-xs text-slate-400 font-bold border-b border-white/10 mb-1">
+                    تبديل أدوار العرض — مبدع / مالك منشأة / أدمن / سوبر أدمن
                   </div>
                   {/* On phones the demo chip is a plain badge; its two actions live here. */}
                   <div className="sm:hidden grid grid-cols-2 gap-2 p-1 pb-2 mb-1 border-b border-white/10">

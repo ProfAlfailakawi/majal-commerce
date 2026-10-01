@@ -60,7 +60,7 @@ export function SurfaceTabs<T extends string>({ tabs, active, onChange, tone = '
       role="tablist"
       aria-label={label}
       onKeyDown={onKeyDown}
-      className="flex gap-2 overflow-x-auto no-scrollbar border-b border-white/10 pb-3"
+      className="flex gap-2 overflow-x-auto no-scrollbar max-sm:pe-16 max-sm:scroll-pe-16 border-b border-white/10 pb-3"
     >
       {tabs.map(tab => {
         const isActive = active === tab.id;

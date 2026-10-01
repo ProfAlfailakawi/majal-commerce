@@ -25,6 +25,7 @@ export const MarketplaceLiquidity: React.FC = () => {
     const balance = demand === supply ? 'BALANCED' : demand > supply ? 'NEED_SUPPLY' : 'NEED_DEMAND';
     return { category, supply, demand, balance };
   });
+  const liquidityScale = Math.max(1, ...categories.flatMap(c => [c.supply, c.demand]));
 
   const avgMatch = store.matches.length ? Math.round(store.matches.reduce((s, m) => s + m.matchScore.overallScore, 0) / store.matches.length) : 0;
 
@@ -53,6 +54,11 @@ export const MarketplaceLiquidity: React.FC = () => {
           /> : categories.map((row, idx) => (
           <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div><div className="font-black text-slate-100">{row.category}</div><div className="text-xs text-slate-400 mt-1">مقارنة مباشرة بين العرض القابل للمطابقة والطلب المفتوح</div></div>
+            <div aria-hidden="true" className="hidden md:flex flex-1 max-w-xs items-center gap-0.5">
+              <div className="flex-1 flex justify-end"><span className="h-2 rounded-s-full bg-emerald-400/70" style={{ width: `${(row.supply / liquidityScale) * 100}%` }} /></div>
+              <span className="w-px h-4 bg-white/20" />
+              <div className="flex-1 flex justify-start"><span className="h-2 rounded-e-full bg-sky-400/70" style={{ width: `${(row.demand / liquidityScale) * 100}%` }} /></div>
+            </div>
             <div className="flex items-center gap-3 text-xs flex-wrap"><div className="px-3 py-2 rounded-xl bg-emerald-500/7 border border-emerald-400/15 flex items-center gap-2"><ArrowUpFromLine className="w-4 h-4 text-emerald-300" /> عرض: <strong>{row.supply}</strong></div><div className="px-3 py-2 rounded-xl bg-sky-500/7 border border-sky-400/15 flex items-center gap-2"><ArrowDownToLine className="w-4 h-4 text-sky-300" /> طلب: <strong>{row.demand}</strong></div><div className={`px-3 py-2 rounded-xl border font-black ${row.balance === 'BALANCED' ? 'bg-emerald-500/7 border-emerald-400/15 text-emerald-300' : 'bg-amber-500/7 border-amber-400/15 text-amber-300'}`}>{row.balance === 'BALANCED' ? 'متوازن عدديًا' : row.balance === 'NEED_SUPPLY' ? 'فجوة عرض' : 'فجوة طلب'}</div></div>
           </div>
         ))}
