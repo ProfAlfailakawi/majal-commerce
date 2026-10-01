@@ -41,6 +41,7 @@ function useCountdown(deadline: string | null) {
 }
 
 export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => {
+  const [paidDemo, setPaidDemo] = useState(false);
   const [options, setOptions] = useState<CheckoutOptions | null>(IS_DEMO_MODE ? demoOptions(launch) : null);
   const [loadError, setLoadError] = useState('');
   const [reviews, setReviews] = useState<{ count: number; taste: number; keepItPercent: number } | null>(null);
@@ -119,6 +120,7 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
   const joinWaitlist = async () => {
     const contactPhone = normalizeKuwaitPhone(phone);
     if (!contactPhone) { setWaitlistMsg('أدخل رقمك الكويتي أولًا لنبلغك عبر واتساب.'); return; }
+    if (IS_DEMO_MODE) { setWaitlistMsg('تم! (عرض تجريبي) بنرسل لك على واتساب أول ما يتوفر.'); return; }
     try {
       const r = await commerceClient.joinWaitlist(launch.id, contactPhone);
       setWaitlistMsg(`تم! بنرسل لك على واتساب أول ما يتوفر. عدد المنتظرين: ${r.waiting}`);
@@ -135,13 +137,13 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
           ariaLabel="حالة الطلب"
           steps={[
             { key: 'hold', label: 'حجز', state: 'done', icon: <CheckCircle2 /> },
-            { key: 'pay', label: 'دفع', state: expired ? 'blocked' : 'current', icon: <CreditCard /> },
-            { key: 'prep', label: 'تجهيز', state: 'pending', icon: <ShoppingBag /> },
+            { key: 'pay', label: 'دفع', state: paidDemo ? 'done' : expired ? 'blocked' : 'current', icon: <CreditCard /> },
+            { key: 'prep', label: 'تجهيز', state: paidDemo ? 'current' : 'pending', icon: <ShoppingBag /> },
             { key: 'pickup', label: 'استلام', state: 'pending', icon: <Store /> }
           ]}
         />
         <div className="text-sm text-slate-100">الإجمالي: <strong className="text-gold-300">{formatFils(placed.totalFils)}</strong></div>
-        {countdown && (
+        {countdown && !paidDemo && (
           <div className="flex items-center justify-center gap-3" aria-live="polite">
             <DnaRing
               value={countdown.left}
@@ -160,6 +162,11 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
           <a href={placed.checkoutUrl} className="dna-btnp w-full min-h-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
             <CreditCard className="w-4 h-4" aria-hidden="true" /> أكمل الدفع
           </a>
+        )}
+        {IS_DEMO_MODE && !expired && (
+          <button type="button" onClick={() => { store.simulateDemoPayment(placed.orderId); setPaidDemo(true); }} disabled={paidDemo} className="dna-btnp w-full min-h-12 disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
+            <CreditCard className="w-4 h-4" aria-hidden="true" /> {paidDemo ? 'تم الدفع (محاكاة) — الطلب مؤكد' : 'ادفع الآن (محاكاة بوابة الدفع)'}
+          </button>
         )}
         <p className="text-xs text-slate-400">يتأكد الطلب فقط بعد تأكيد الدفع من البوابة. لم تُخصم أي أموال قبل ذلك.</p>
       </div>

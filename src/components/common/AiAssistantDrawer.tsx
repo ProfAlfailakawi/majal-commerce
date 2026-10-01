@@ -3,6 +3,16 @@ import { X, Bot, Sparkles, Send, Lightbulb, Check } from 'lucide-react';
 import { store } from '../../lib/store';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { MajalLoader } from '../brand/MajalLoader';
+import { IS_DEMO_MODE } from '../../lib/runtime';
+
+/** Demo only: a fixed Arabic answer so the walkthrough never depends on (or calls) an external AI service. */
+function demoAiAnswer(mode: 'POLISH' | 'EXPLAIN_MATCH', input: string): string {
+  const topic = input.trim().slice(0, 120);
+  if (mode === 'POLISH') {
+    return `نسخة محسّنة (نموذج توضيحي): ${topic}\n\nتُحضَّر على الطريقة الكويتية الأصيلة بمكونات منتقاة وطعم متوازن يحمل ذكرى البيت العائلي، وتُقدَّم طازجة بجودة ثابتة في كل دفعة. مناسبة للمناسبات والضيافة اليومية.`;
+  }
+  return `تحليل المطابقة (نموذج توضيحي) لمنتج «${topic}»:\n• الملاءمة التشغيلية عالية: المعدات المتاحة (فرن دوار وعجانة 50 لتر) تغطي خطوات التحضير الأساسية.\n• هامش الربح المتوقع جيد عند سعر البيع المقترح.\n• يُنصح بدفعة تجريبية صغيرة في المختبر قبل الإطلاق الحي.`;
+}
 
 interface AiAssistantDrawerProps {
   isOpen: boolean;
@@ -24,6 +34,11 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
     setAiOutput(null);
 
     try {
+      if (IS_DEMO_MODE) {
+        await new Promise(resolve => setTimeout(resolve, 700));
+        setAiOutput(demoAiAnswer(mode, promptInput));
+        return;
+      }
       if (mode === 'POLISH') {
         const res = await fetch('/api/ai/polish-description', {
           method: 'POST',

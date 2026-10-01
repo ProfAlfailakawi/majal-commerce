@@ -26,6 +26,7 @@ import { AdminAuditLogs } from './AdminAuditLogs';
 import { MajalPulse } from './MajalPulse';
 import { PlatformPolicyCenter } from './PlatformPolicyCenter';
 import { PredictiveInterventionRadar } from './PredictiveInterventionRadar';
+import { completedOrderTotals } from '../../lib/money';
 import { SurfaceTabs } from '../common/SurfaceTabs';
 import { Avatar } from '../common/Avatar';
 
@@ -34,9 +35,10 @@ export const SuperAdminDashboard: React.FC = () => {
   useEffect(() => store.subscribe(() => setTick(t => t + 1)), []);
   const [activeTab, setActiveTab] = useState<'COMMAND' | 'PERMISSIONS' | 'LIQUIDITY' | 'TRUST' | 'SYSTEM' | 'AUDIT'>('COMMAND');
 
+  const orderTotals = completedOrderTotals(store.orders);
   const metrics = {
-    gmv: store.orders.reduce((s, o) => s + o.grossAmountKwd, 0),
-    platform: store.orders.reduce((s, o) => s + o.platformFeeKwd, 0),
+    gmv: orderTotals.salesKwd,
+    platform: orderTotals.platformFeesKwd,
     live: store.launches.filter(l => ['LIVE', 'PERMANENT'].includes(l.status)).length,
     signed: store.contracts.filter(c => c.status === 'FULLY_SIGNED').length
   };
@@ -64,8 +66,8 @@ export const SuperAdminDashboard: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-3 w-full xl:w-auto xl:min-w-[320px]">
-            <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">إجمالي المبيعات</div><div className="mt-2 text-2xl font-black text-gold-300 font-mono">{metrics.gmv.toFixed(3)}</div></div>
-            <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">رسوم مجال</div><div className="mt-2 text-2xl font-black text-emerald-300 font-mono">{metrics.platform.toFixed(3)}</div></div>
+            <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">إجمالي المبيعات (د.ك، طلبات مكتملة)</div><div className="mt-2 text-2xl font-black text-gold-300 font-mono">{metrics.gmv.toFixed(3)}</div></div>
+            <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">رسوم مجال (د.ك)</div><div className="mt-2 text-2xl font-black text-emerald-300 font-mono">{metrics.platform.toFixed(3)}</div></div>
             <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">إطلاقات حيّة</div><div className="mt-2 text-2xl font-black text-sky-300 font-mono">{metrics.live}</div></div>
             <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">عقود موقعة</div><div className="mt-2 text-2xl font-black text-fuchsia-300 font-mono">{metrics.signed}</div></div>
           </div>

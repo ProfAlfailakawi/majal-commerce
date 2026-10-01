@@ -3,6 +3,7 @@ import { CheckCircle2, Circle, FileSpreadsheet, Printer, Receipt } from 'lucide-
 import { commerceClient, CreatorStatement, StatementLine } from '../../lib/commerceClient';
 import { formatFils } from '../../lib/money';
 import { IS_DEMO_MODE } from '../../lib/runtime';
+import { store } from '../../lib/store';
 
 const STAGES: { key: Exclude<StatementLine['stage'], 'REVERSED'>; label: string }[] = [
   { key: 'PENDING', label: 'قيد الانتظار' },
@@ -35,21 +36,52 @@ const Timeline: React.FC<{ line: StatementLine }> = ({ line }) => {
  * creator payout. "Paid" appears only when the settlement carries the provider's transfer
  * reference. Exports: Arabic CSV (server) and a printable view (browser "Save as PDF").
  */
+/** Demo only: the same statement shape the server returns, derived from the local demo ledger. No network. */
+function buildDemoStatement(): CreatorStatement {
+  const creatorId = store.activeUser.creatorId || '';
+  const fils = (kwd: number) => Math.round(kwd * 1000);
+  const lines: StatementLine[] = store.accruals
+    .filter(a => a.creatorId === creatorId)
+    .map(a => {
+      const order = store.orders.find(o => o.id === a.orderId);
+      const product = store.products.find(p => p.id === order?.productId);
+      const stage: StatementLine['stage'] = a.settlementStatus === 'PAID' ? 'PAID' : a.settlementStatus === 'SETTLEMENT_LOCKED' ? 'APPROVED' : 'PENDING';
+      const gross = fils(a.grossSaleKwd);
+      const commission = fils(order?.platformFeeKwd ?? a.grossSaleKwd * 0.05);
+      const creatorPayout = fils(a.accruedAmountKwd);
+      return {
+        accrualId: a.id, orderId: a.orderId, productName: product?.publicName || 'منتج', units: order?.unitsCount ?? 1, orderedAt: order?.createdAt || a.createdAt,
+        grossFils: gross, commissionFils: commission, hostShareFils: Math.max(0, gross - commission - creatorPayout), creatorPayoutFils: creatorPayout,
+        stage,
+        timeline: { pendingAt: a.createdAt, approvedAt: stage === 'PENDING' ? null : a.createdAt, paidAt: stage === 'PAID' ? a.createdAt : null },
+        providerReference: stage === 'PAID' ? 'مرجع-تحويل-تجريبي' : null
+      };
+    })
+    .sort((x, y) => y.orderedAt.localeCompare(x.orderedAt));
+  const sum = (pick: (l: StatementLine) => number, stages?: StatementLine['stage'][]) => lines.filter(l => !stages || stages.includes(l.stage)).reduce((t, l) => t + pick(l), 0);
+  return {
+    creatorId, currency: 'KWD', lines,
+    totals: {
+      grossFils: sum(l => l.grossFils), commissionFils: sum(l => l.commissionFils), hostShareFils: sum(l => l.hostShareFils), creatorPayoutFils: sum(l => l.creatorPayoutFils),
+      pendingFils: sum(l => l.creatorPayoutFils, ['PENDING']), approvedFils: sum(l => l.creatorPayoutFils, ['APPROVED']), paidFils: sum(l => l.creatorPayoutFils, ['PAID'])
+    }
+  };
+}
+
 export const PayoutStatement: React.FC = () => {
   const [data, setData] = useState<CreatorStatement | null>(null);
   const [error, setError] = useState('');
   useEffect(() => {
-    if (IS_DEMO_MODE) return;
+    if (IS_DEMO_MODE) { setData(buildDemoStatement()); return; }
     commerceClient.statement().then(setData).catch(() => setError('تعذّر تحميل كشف المستحقات من الخادم.'));
   }, []);
-  if (IS_DEMO_MODE) return null;
 
   return (
     <section className="glass-panel rounded-3xl border border-white/10 p-6 space-y-4 print-area" aria-labelledby="payout-statement-title">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
         <h3 id="payout-statement-title" className="font-black flex items-center gap-2"><Receipt className="w-5 h-5 text-gold-300" aria-hidden="true" /> كشف الصرف التفصيلي</h3>
         <div className="flex gap-2 print:hidden">
-          <a href={commerceClient.statementCsvUrl} download className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 text-gold-300 font-bold rounded-xl border border-white/10 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"><FileSpreadsheet className="w-4 h-4" aria-hidden="true" /> CSV بالعربية</a>
+          {!IS_DEMO_MODE && <a href={commerceClient.statementCsvUrl} download className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 text-gold-300 font-bold rounded-xl border border-white/10 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"><FileSpreadsheet className="w-4 h-4" aria-hidden="true" /> CSV بالعربية</a>}
           <button type="button" onClick={() => window.print()} className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 text-gold-300 font-bold rounded-xl border border-white/10 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"><Printer className="w-4 h-4" aria-hidden="true" /> طباعة / PDF</button>
         </div>
       </div>

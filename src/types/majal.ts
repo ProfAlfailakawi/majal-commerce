@@ -636,6 +636,7 @@ export interface AuditLog {
     | 'SETTLEMENT_PAID'
     | 'PLATFORM_POLICY_CHANGED'
     | 'ORDER_PLACED'
+    | 'ORDER_PAID_SIMULATED'
     | 'REVIEW_SUBMITTED'
     | 'CHALLENGE_PUBLISHED';
   entityType: string;

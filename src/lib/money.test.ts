@@ -9,3 +9,15 @@ test('KWD is always shown with three decimals', () => {
   assert.equal(formatKwd(Number.NaN), '0.000 د.ك');
   assert.equal(kwdToFils(2.3455), 2346);
 });
+
+test('sales totals count completed orders only, so every dashboard agrees', async () => {
+  const { completedOrderTotals } = await import('./money');
+  const t = completedOrderTotals([
+    { status: 'COMPLETED', grossAmountKwd: 10, platformFeeKwd: 0.5 },
+    { status: 'REFUNDED', grossAmountKwd: 7, platformFeeKwd: 0.35 },
+    { status: 'PENDING_PAYMENT', grossAmountKwd: 5, platformFeeKwd: 0.25 },
+    { status: 'COMPLETED', grossAmountKwd: 2, platformFeeKwd: 0.1 }
+  ]);
+  assert.equal(t.salesKwd, 12);
+  assert.ok(Math.abs(t.platformFeesKwd - 0.6) < 1e-9);
+});

@@ -1411,6 +1411,35 @@ export class Store {
     return order;
   }
 
+  /**
+   * Demo only: stands in for the payment gateway's confirmation. In production an order
+   * becomes COMPLETED solely through the provider webhook; nothing here touches the network.
+   */
+  public simulateDemoPayment(orderId: string) {
+    if (!IS_DEMO_MODE) return this.fail('تأكيد الدفع التجريبي متاح في وضع العرض فقط.');
+    const order = this.orders.find(o => o.id === orderId);
+    if (!order) return this.fail('الطلب غير موجود.');
+    if (order.status !== 'PENDING_PAYMENT') return order;
+    const launch = this.launches.find(l => l.id === order.launchId);
+    order.status = 'COMPLETED';
+    if (launch) launch.unitsSold += order.unitsCount;
+    const col = launch ? this.collaborations.find(c => c.id === launch.collaborationId) : undefined;
+    this.accruals.unshift({
+      id: `acc_${order.id}`,
+      creatorId: order.creatorId,
+      collaborationId: launch?.collaborationId || col?.id || '',
+      orderId: order.id,
+      grossSaleKwd: order.grossAmountKwd,
+      royaltyRatePercent: col?.currentOffer?.creatorRoyaltyRatePercent || 13,
+      accruedAmountKwd: order.creatorRoyaltyKwd,
+      settlementStatus: 'ACCRUED',
+      createdAt: new Date().toISOString()
+    });
+    this.addAuditLog('ORDER_PAID_SIMULATED', 'ORDER', order.id, 'تأكيد دفع تجريبي (محاكاة بوابة الدفع) في وضع العرض');
+    this.notify();
+    return order;
+  }
+
   public submitReview(launchId: string, tasteRating: number, valueRating: number, portionRating: number, comment: string, keepItVote: boolean, customerName: string, orderId?: string) {
     /*
      * «موثّق الشراء» صار خاصية بنيوية: التقييم يُرسل على معرّف طلب مدفوع يملكه صاحب
