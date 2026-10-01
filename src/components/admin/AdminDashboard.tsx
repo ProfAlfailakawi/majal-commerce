@@ -27,6 +27,7 @@ import { AdminAuditLogs } from './AdminAuditLogs';
 import { TrustEngine } from './TrustEngine';
 import { StatusPill } from '../common/StatusPill';
 import { EmptyState } from '../common/EmptyState';
+import { completedOrderTotals } from '../../lib/money';
 import { SurfaceTabs } from '../common/SurfaceTabs';
 import { EcosystemApprovals } from './EcosystemApprovals';
 
@@ -34,9 +35,10 @@ export const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'APPROVALS' | 'COMPLIANCE' | 'ACCESS' | 'SETTLEMENTS' | 'RISK' | 'AUDIT'>('OVERVIEW');
   const [notice, setNotice] = useState<string | null>(null);
 
+  const orderTotals = completedOrderTotals(store.orders);
   const totals = {
-    totalGmv: store.accruals.reduce((sum, a) => sum + a.grossSaleKwd, 0),
-    totalPlatformFees: store.orders.reduce((sum, o) => sum + o.platformFeeKwd, 0),
+    totalGmv: orderTotals.salesKwd,
+    totalPlatformFees: orderTotals.platformFeesKwd,
     signedContractsCount: store.contracts.filter(c => c.status === 'FULLY_SIGNED').length,
     openDisputes: store.disputes.filter(d => !['RESOLVED', 'CLOSED'].includes(d.status)).length,
     verifiedHosts: store.hosts.filter(h => h.verificationStatus === 'VERIFIED').length
@@ -115,7 +117,7 @@ export const AdminDashboard: React.FC = () => {
 
       <section className="grid grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4">
         {[
-          { label: 'إجمالي المبيعات', value: `${totals.totalGmv.toFixed(3)} د.ك`, icon: <Wallet className="w-5 h-5 text-gold-300" /> },
+          { label: 'إجمالي المبيعات (طلبات مكتملة)', value: `${totals.totalGmv.toFixed(3)} د.ك`, icon: <Wallet className="w-5 h-5 text-gold-300" /> },
           { label: 'رسوم المنصة', value: `${totals.totalPlatformFees.toFixed(3)} د.ك`, icon: <BadgeCheck className="w-5 h-5 text-emerald-300" /> },
           { label: 'عقود موقعة', value: `${totals.signedContractsCount}`, icon: <FileCheck2 className="w-5 h-5 text-sky-300" /> },
           { label: 'منشآت مرخّصة', value: `${totals.verifiedHosts}`, icon: <Building2 className="w-5 h-5 text-fuchsia-300" /> },
