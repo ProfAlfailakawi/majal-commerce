@@ -164,7 +164,7 @@ export const ExperienceGuide: React.FC<ExperienceGuideProps> = ({ activeSurface,
         </div>
       </section>
 
-      {store.guardNotice && <div role="alert" aria-live="assertive" className="fixed bottom-5 start-5 z-[95] w-[min(420px,calc(100vw-2.5rem))] rounded-2xl bg-ink-600/98 border border-rose-400/25 shadow-2xl p-4 flex items-start gap-3">
+      {store.guardNotice && <div role="alert" aria-live="assertive" className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] start-5 z-[95] w-[min(420px,calc(100vw-2.5rem))] rounded-2xl bg-ink-600/98 border border-rose-400/25 shadow-2xl p-4 flex items-start gap-3">
         <span className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-300 grid place-items-center shrink-0"><ShieldAlert className="w-5 h-5" /></span>
         <div className="flex-1"><span className="block text-xs font-black text-slate-100">منعت مجال هذه الخطوة</span><span className="block mt-1 text-xs leading-6 text-slate-300">{store.guardNotice.message}</span></div>
         <button onClick={() => store.dismissGuardNotice()} aria-label="إغلاق سبب المنع" className="p-1.5 text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>

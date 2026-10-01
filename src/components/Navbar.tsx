@@ -177,7 +177,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="sticky top-0 z-40 glass-nav text-slate-100 shadow-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-4">
+        <div className="flex items-center justify-between max-sm:flex-wrap max-sm:min-h-16 max-sm:py-2 sm:h-20 gap-2 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button onClick={() => onSurfaceChange('PUBLIC')} className="flex items-center gap-2 sm:gap-3 text-start group focus:outline-none shrink-0 xl:shrink xl:min-w-0 focus-visible:ring-2 focus-visible:ring-gold-300" aria-label="العودة إلى صفحة مجال العامة">
               <span className="grid place-items-center w-11 h-11 rounded-2xl bg-white/[0.04] border border-gold-300/15 shrink-0 transition-all duration-200 group-hover:border-gold-300/35 group-hover:bg-gold-500/10">
