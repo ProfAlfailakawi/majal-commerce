@@ -129,7 +129,7 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
           يجب أولًا إنشاء سجل إطلاق بعد اكتمال التفاوض والعقد. لا يتم افتراض جاهزية الإطلاق تلقائيًا.
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 gap-3">
+        <div className="grid md:grid-cols-2 gap-3 md:[&>*:last-child:nth-child(odd)]:col-span-2">
           {itemsConfig.map(item => {
             const checked = gate[item.key];
             const manual = item.source === 'HOST';
