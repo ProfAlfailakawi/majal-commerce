@@ -192,11 +192,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[120] overflow-y-auto majal-grain"
-      style={{
-        background:
-          'radial-gradient(circle at 50% -10%, rgba(199,165,91,0.16) 0, transparent 45%), linear-gradient(180deg, #0a101b 0%, #0b1220 55%, #070d18 100%)'
-      }}
+      className="majal-onb fixed inset-0 z-[120] overflow-y-auto majal-grain"
     >
       {/* Two slow, very low-contrast fields. They give the screen depth without ever
           competing with the type, and they are the only ambient motion in the flow. */}
@@ -479,7 +475,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           )}
         </main>
 
-        <footer className="sticky bottom-0 shrink-0 space-y-4 -mx-4 sm:-mx-8 px-4 sm:px-8 pt-8 pb-3 bg-gradient-to-t from-ink-900 via-ink-900 via-65% to-transparent">
+        <footer className="sticky bottom-0 shrink-0 space-y-4 -mx-4 sm:-mx-8 px-4 sm:px-8 pt-8 pb-3 bg-gradient-to-t from-(--onb-fade) via-(--onb-fade) via-65% to-transparent">
           {/* A segmented rail, not dots: it shows how much is left, which is the only
               honest way to ask someone to keep going. */}
           <div className="flex items-center gap-1.5" aria-hidden="true">

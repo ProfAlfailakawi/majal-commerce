@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Search, Filter, Lock, FileText, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Search, Filter, Lock, FileText, CheckCircle2, CalendarDays, ChevronDown } from 'lucide-react';
 import { store } from '../../lib/store';
 
 const ACTION_LABELS: Record<string, string> = {
@@ -28,13 +28,23 @@ export const AdminAuditLogs: React.FC = () => {
     return true;
   });
 
+  const groups = Array.from(
+    filteredLogs.reduce((map, l) => {
+      const day = new Date(l.timestamp).toLocaleDateString('ar-KW');
+      (map.get(day) ?? map.set(day, []).get(day)!).push(l);
+      return map;
+    }, new Map<string, typeof filteredLogs>())
+  );
+  const actionCounts = (rows: typeof filteredLogs) =>
+    Array.from(rows.reduce((m, l) => m.set(l.action, (m.get(l.action) || 0) + 1), new Map<string, number>())).sort((a, b) => b[1] - a[1]);
+
   return (
     <div className="bg-slate-900/90 rounded-2xl border border-slate-800 p-6 space-y-4 text-slate-100 text-xs">
       
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-3">
         <div>
           <h3 className="font-bold text-base text-slate-100 flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-amber-400" />
+            <ShieldCheck className="w-5 h-5 text-gold-400" />
             <span>سجل التدقيق والأمان الرقمي</span>
           </h3>
           <p className="text-slate-400 text-xs">
@@ -48,38 +58,55 @@ export const AdminAuditLogs: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="بحث بالوصف أو المعرف..."
-            className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
+            className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
           />
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="mobile-cards w-full text-start">
-          <thead>
-            <tr className="border-b border-slate-800 text-slate-400">
-              <th className="py-2.5 px-3 font-semibold">التاريخ والوقت</th>
-              <th className="py-2.5 px-3 font-semibold">نوع الحدث</th>
-              <th className="py-2.5 px-3 font-semibold">نوع الكيان</th>
-              <th className="py-2.5 px-3 font-semibold">التفاصيل والوصف</th>
-              <th className="py-2.5 px-3 font-semibold">عنوان IP والمدينة</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-800/60 font-mono">
-            {filteredLogs.map(log => (
-              <tr key={log.id} className="hover:bg-slate-800/40 transition-colors">
-                <td data-label="التاريخ والوقت" className="py-2.5 px-3 text-slate-400">{new Date(log.timestamp).toLocaleString('ar-KW')}</td>
-                <td data-label="نوع الحدث" className="py-2.5 px-3">
-                  <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                    <span title={log.action}>{ACTION_LABELS[log.action] || log.action}</span>
-                  </span>
-                </td>
-                <td data-label="نوع الكيان" className="py-2.5 px-3 text-slate-300 font-bold">{ENTITY_LABELS[log.entityType] || log.entityType}</td>
-                <td data-label="التفاصيل والوصف" className="py-2.5 px-3 text-slate-200 font-sans">{log.details}</td>
-                <td data-label="عنوان IP والمدينة" className="py-2.5 px-3 text-slate-400 text-xs">{log.ipAddress}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="space-y-3">
+        {groups.map(([day, rows], index) => (
+          <details key={day} open={index < 2} className="group rounded-2xl border border-slate-800 bg-slate-950/40">
+            <summary className="cursor-pointer list-none flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 [&::-webkit-details-marker]:hidden">
+              <CalendarDays className="w-4 h-4 text-gold-300 shrink-0" aria-hidden="true" />
+              <span className="font-black text-slate-100 text-sm">{day}</span>
+              <span className="px-2 py-0.5 rounded-full text-xs font-black bg-gold-500/15 text-gold-300 border border-gold-500/30 tabular-nums">{rows.length}</span>
+              <span className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
+                {actionCounts(rows).slice(0, 4).map(([action, n]) => (
+                  <span key={action} className="px-2 py-0.5 rounded-full text-xs text-slate-300 bg-white/5 border border-white/10 whitespace-nowrap">{ACTION_LABELS[action] || action} <b className="tabular-nums text-slate-100">{n}</b></span>
+                ))}
+              </span>
+              <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+            </summary>
+            <div className="overflow-x-auto px-2 pb-2">
+              <table className="mobile-cards w-full text-start">
+                <thead>
+                  <tr className="border-b border-slate-800 text-slate-400">
+                    <th className="py-2.5 px-3 font-semibold">التاريخ والوقت</th>
+                    <th className="py-2.5 px-3 font-semibold">نوع الحدث</th>
+                    <th className="py-2.5 px-3 font-semibold">نوع الكيان</th>
+                    <th className="py-2.5 px-3 font-semibold">التفاصيل والوصف</th>
+                    <th className="py-2.5 px-3 font-semibold">عنوان IP والمدينة</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {rows.map(log => (
+                      <tr key={log.id} className="hover:bg-slate-800/40 transition-colors">
+                        <td data-label="التاريخ والوقت" className="py-2.5 px-3 text-slate-400">{new Date(log.timestamp).toLocaleString('ar-KW')}</td>
+                        <td data-label="نوع الحدث" className="py-2.5 px-3">
+                          <span className="px-2 py-0.5 rounded text-xs font-bold bg-gold-500/20 text-gold-300 border border-gold-500/30">
+                            <span title={log.action}>{ACTION_LABELS[log.action] || log.action}</span>
+                          </span>
+                        </td>
+                        <td data-label="نوع الكيان" className="py-2.5 px-3 text-slate-300 font-bold">{ENTITY_LABELS[log.entityType] || log.entityType}</td>
+                        <td data-label="التفاصيل والوصف" className="py-2.5 px-3 text-slate-200">{log.details}</td>
+                        <td data-label="عنوان IP والمدينة" className="py-2.5 px-3 text-slate-400 text-xs">{log.ipAddress}</td>
+                      </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
+        ))}
       </div>
 
     </div>

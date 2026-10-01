@@ -41,7 +41,7 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
         {/* Header */}
         <div className="p-5 bg-slate-800/80 border-b border-slate-700 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-amber-500/20 text-amber-400 rounded-lg">
+            <div className="p-2 bg-gold-500/20 text-gold-400 rounded-lg">
               <Calculator className="w-5 h-5" />
             </div>
             <div>
@@ -70,9 +70,9 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
               <input
                 type="number"
                 step="0.250"
-                value={sellingPrice}
+                value={Number(sellingPrice.toFixed(3))}
                 onChange={(e) => setSellingPrice(parseFloat(e.target.value) || 0)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-amber-400 font-bold text-sm focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-gold-400 font-bold text-sm focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
               />
             </div>
 
@@ -83,9 +83,9 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
               <input
                 type="number"
                 step="0.5"
-                value={royaltyRate}
+                value={Number(royaltyRate.toFixed(2))}
                 onChange={(e) => setRoyaltyRate(parseFloat(e.target.value) || 0)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-amber-400 font-bold text-sm focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-gold-400 font-bold text-sm focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
               />
             </div>
 
@@ -96,9 +96,9 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
               <input
                 type="number"
                 step="0.100"
-                value={ingredientCost}
+                value={Number(ingredientCost.toFixed(3))}
                 onChange={(e) => setIngredientCost(parseFloat(e.target.value) || 0)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
               />
             </div>
 
@@ -109,9 +109,9 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
               <input
                 type="number"
                 step="0.050"
-                value={packagingCost}
+                value={Number(packagingCost.toFixed(3))}
                 onChange={(e) => setPackagingCost(parseFloat(e.target.value) || 0)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
               />
             </div>
 
@@ -122,9 +122,9 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
               <input
                 type="number"
                 step="0.050"
-                value={laborCost}
+                value={Number(laborCost.toFixed(3))}
                 onChange={(e) => setLaborCost(parseFloat(e.target.value) || 0)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-gold-300"
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
               />
             </div>
 
@@ -141,7 +141,7 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
           {/* Breakdown Results Visual Card */}
           <div className="bg-slate-800/80 p-5 rounded-xl border border-slate-700 space-y-4">
             <h4 className="font-bold text-slate-200 flex items-center gap-2">
-              <PieChart className="w-4 h-4 text-amber-400" />
+              <PieChart className="w-4 h-4 text-gold-400" />
               <span>توزيع القيمة للقطعة الواحدة</span>
             </h4>
 
@@ -156,7 +156,7 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
               </div>
               <div
                 style={{ width: `${royaltyRate}%` }}
-                className="bg-amber-500 h-full flex items-center justify-center text-xs font-bold text-slate-950"
+                className="bg-gold-500 h-full flex items-center justify-center text-xs font-bold text-slate-950"
                 title="حقوق المبدع"
               >
                 {royaltyRate}%
@@ -181,9 +181,9 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
                 <span className="block text-slate-400 text-xs">إجمالي التكلفة</span>
                 <span className="block font-bold text-slate-200 text-sm">{totalCOGS.toFixed(3)} د.ك</span>
               </div>
-              <div className="p-3 bg-amber-500/10 rounded-lg border border-amber-500/30">
-                <span className="block text-amber-400 text-xs">مستحق المبدع للقطعة</span>
-                <span className="block font-bold text-amber-300 text-sm">{creatorRoyaltyKwd.toFixed(3)} د.ك</span>
+              <div className="p-3 bg-gold-500/10 rounded-lg border border-gold-500/30">
+                <span className="block text-gold-400 text-xs">مستحق المبدع للقطعة</span>
+                <span className="block font-bold text-gold-300 text-sm">{creatorRoyaltyKwd.toFixed(3)} د.ك</span>
               </div>
               <div className="p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/30">
                 <span className="block text-emerald-400 text-xs">صافي المنشأة</span>
@@ -196,8 +196,8 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
             </div>
           </div>
 
-          <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-start gap-2">
-            <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <div className="p-3 rounded-lg bg-gold-500/10 border border-gold-500/20 text-xs text-gold-300 flex items-start gap-2">
+            <ShieldAlert className="w-4 h-4 text-gold-400 shrink-0 mt-0.5" />
             <p>
               هذه الحسبة تقديرية محاكية لمرحلة التفاوض والتشغيل التجاري، وتستخدم لاحقاً كأساس محدد بدقة داخل عقد الشراكة النهائي.
             </p>
@@ -209,7 +209,7 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
         <div className="p-4 bg-slate-800/80 border-t border-slate-700 flex justify-end">
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl transition-colors"
+            className="px-5 py-2 bg-gold-500 hover:bg-gold-400 text-slate-950 font-bold rounded-xl transition-colors"
           >
             اعتماد الحسبة المبدئية
           </button>

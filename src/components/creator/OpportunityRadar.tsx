@@ -1,9 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Radar,
-  Building2,
-  Target,
-  TrendingUp,
   Zap,
   ChevronLeft,
   ShieldCheck,
@@ -11,6 +8,7 @@ import {
   Globe,
   ExternalLink
 } from 'lucide-react';
+import { ScoreRing, MicroBars, FoldedNote } from '../common/MatchMeter';
 import { store } from '../../lib/store';
 import { marketQueryForProduct } from '../../lib/intelligence';
 import { intelligenceClient, type GroundedMarketSignal } from '../../lib/intelligenceClient';
@@ -113,21 +111,16 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId, o
                   <div className="text-xs text-slate-400">{product.publicName}</div>
                   <h4 className="font-black text-slate-100 mt-1">{host?.commercialName || 'منشأة مرخّصة'}</h4>
                 </div>
-                <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 flex flex-col items-center justify-center">
-                  <span className="text-xl font-black text-emerald-300">{matchScore.overallScore}</span>
-                  <span className="text-xs text-emerald-400">تطابق</span>
-                </div>
+                <ScoreRing value={matchScore.overallScore} caption="تطابق" />
               </div>
 
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between"><span className="text-slate-400 flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" /> توافق التشغيل</span><strong className="text-slate-100">{matchScore.equipmentFit}%</strong></div>
-                <div className="flex items-center justify-between"><span className="text-slate-400 flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5" /> توافق الهامش</span><strong className="text-slate-100">{matchScore.marginFit}%</strong></div>
-                <div className="flex items-center justify-between"><span className="text-slate-400 flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /> توافق العلامة</span><strong className="text-slate-100">{matchScore.brandFit}%</strong></div>
-              </div>
+              <MicroBars bars={[
+                { label: 'توافق التشغيل', value: matchScore.equipmentFit },
+                { label: 'توافق الهامش', value: matchScore.marginFit },
+                { label: 'توافق العلامة', value: matchScore.brandFit }
+              ]} />
 
-              <div className="rounded-xl p-3 bg-slate-950/45 border border-white/10 text-xs leading-6 text-slate-400">
-                {matchScore.explanationAr}
-              </div>
+              <FoldedNote summary="تحليل التوافق التشغيلي المفسَّر">{matchScore.explanationAr}</FoldedNote>
 
               <button
                 type="button"

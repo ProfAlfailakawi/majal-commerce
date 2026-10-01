@@ -18,11 +18,11 @@ const Timeline: React.FC<{ line: StatementLine }> = ({ line }) => {
   if (line.stage === 'REVERSED') return <span className="text-rose-300 font-bold">ملغى (استرجاع)</span>;
   const dates = [line.timeline.pendingAt, line.timeline.approvedAt, line.timeline.paidAt];
   return (
-    <ol className="flex items-center gap-2" aria-label="مراحل الصرف">
+    <ol className="flex flex-wrap items-center gap-x-3 gap-y-1" aria-label="مراحل الصرف">
       {STAGES.map((stage, i) => {
         const done = rank[line.stage] >= i;
         return (
-          <li key={stage.key} className={`flex items-center gap-1 ${done ? 'text-emerald-300' : 'text-slate-300'}`}>
+          <li key={stage.key} className={`flex items-center gap-1 whitespace-nowrap ${done ? 'text-emerald-300' : 'text-slate-300'}`}>
             {done ? <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> : <Circle className="w-3.5 h-3.5" aria-hidden="true" />}
             <span>{stage.label}{done && dates[i] ? ` · ${day(dates[i])}` : ''}</span>
           </li>
@@ -31,6 +31,46 @@ const Timeline: React.FC<{ line: StatementLine }> = ({ line }) => {
     </ol>
   );
 };
+
+
+type Totals = CreatorStatement['totals'];
+interface Seg { label: string; fils: number; bar: string; dot: string }
+
+/** One proportional bar with its legend; every figure stays printed beside its swatch. */
+const SplitBar: React.FC<{ title: string; total: number; totalLabel: string; segs: Seg[] }> = ({ title, total, totalLabel, segs }) => (
+  <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3">
+    <div className="flex items-baseline justify-between gap-3">
+      <span className="text-xs font-bold text-slate-300">{title}</span>
+      <span className="text-xs text-slate-300 whitespace-nowrap">{totalLabel} <b className="text-gold-300 text-base font-black tabular-nums whitespace-nowrap">{formatFils(total)}</b></span>
+    </div>
+    <div role="img" aria-label={`${title}: ${segs.map(g => `${g.label} ${formatFils(g.fils)}`).join('، ')}`} className="flex h-3 w-full overflow-hidden rounded-full bg-white/5 gap-px" dir="rtl">
+      {total > 0 && segs.filter(g => g.fils > 0).map(g => <span key={g.label} className={g.bar} style={{ width: `${(g.fils / total) * 100}%` }} />)}
+    </div>
+    <dl className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-x-4 gap-y-2 text-xs">
+      {segs.map(g => (
+        <div key={g.label} className="min-w-0">
+          <dt className="flex items-center gap-1.5 text-slate-300"><span aria-hidden="true" className={`w-2 h-2 rounded-full shrink-0 ${g.dot}`} />{g.label}</dt>
+          <dd className="font-black text-slate-100 mt-0.5 tabular-nums whitespace-nowrap">{formatFils(g.fils)}</dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+);
+
+const EarningsSplit: React.FC<{ totals: Totals }> = ({ totals }) => (
+  <div className="grid lg:grid-cols-2 gap-3">
+    <SplitBar title="توزيع إجمالي المبيعات" totalLabel="إجمالي المبيعات" total={totals.grossFils} segs={[
+      { label: 'مستحقك', fils: totals.creatorPayoutFils, bar: 'bg-gold-400', dot: 'bg-gold-400' },
+      { label: 'حصة المنشأة', fils: totals.hostShareFils, bar: 'bg-steel-400', dot: 'bg-steel-400' },
+      { label: 'عمولة المنصة', fils: totals.commissionFils, bar: 'bg-slate-500', dot: 'bg-slate-500' }
+    ]} />
+    <SplitBar title="مراحل مستحقك" totalLabel="مستحقك" total={totals.creatorPayoutFils} segs={[
+      { label: 'مدفوع فعليًا', fils: totals.paidFils, bar: 'bg-emerald-400', dot: 'bg-emerald-400' },
+      { label: 'معتمد', fils: totals.approvedFils, bar: 'bg-gold-400', dot: 'bg-gold-400' },
+      { label: 'قيد الانتظار', fils: totals.pendingFils, bar: 'bg-slate-500', dot: 'bg-slate-500' }
+    ]} />
+  </div>
+);
 
 /**
  * Server-computed payout statement: per order price − platform commission − host share =
@@ -90,15 +130,7 @@ export const PayoutStatement: React.FC = () => {
       {!data && !error && <div role="status" className="text-xs text-slate-300">جارٍ التحميل…</div>}
       {data && (
         <>
-          <dl className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-            {[
-              ['إجمالي المبيعات', data.totals.grossFils], ['عمولة المنصة', data.totals.commissionFils],
-              ['حصة المنشأة', data.totals.hostShareFils], ['مستحقك', data.totals.creatorPayoutFils],
-              ['قيد الانتظار', data.totals.pendingFils], ['معتمد', data.totals.approvedFils], ['مدفوع فعليًا', data.totals.paidFils]
-            ].map(([label, fils]) => (
-              <div key={label as string} className="rounded-xl p-3 bg-white/5 border border-white/10"><dt className="text-slate-300">{label}</dt><dd className="font-black text-gold-300 mt-1 font-mono">{formatFils(fils as number)}</dd></div>
-            ))}
-          </dl>
+          <EarningsSplit totals={data.totals} />
           {data.lines.length === 0 ? <p className="text-xs text-slate-300">لا توجد طلبات مدفوعة بعد.</p> : (
             <div className="overflow-x-auto">
               <table className="mobile-cards w-full text-xs text-start">
@@ -112,11 +144,11 @@ export const PayoutStatement: React.FC = () => {
                   {data.lines.map(line => (
                     <tr key={line.accrualId} className="border-b border-white/5 align-top">
                       <td data-label="الطلب" className="py-2"><div className="font-bold text-slate-100">{line.productName}</div><div className="text-slate-300"><span title={line.orderId}>{shortRef(line.orderId, 'ط')}</span> · {line.units} وحدة · {day(line.orderedAt)}</div></td>
-                      <td data-label="السعر" className="font-mono">{formatFils(line.grossFils)}</td>
-                      <td data-label="العمولة" className="font-mono">−{formatFils(line.commissionFils)}</td>
-                      <td data-label="حصة المنشأة" className="font-mono">−{formatFils(line.hostShareFils)}</td>
-                      <td data-label="مستحقك" className="font-mono font-black text-gold-300">{formatFils(line.creatorPayoutFils)}</td>
-                      <td data-label="المراحل"><Timeline line={line} />{line.providerReference && <div className="text-slate-300 mt-1">مرجع التحويل: <span dir="ltr">{line.providerReference}</span></div>}</td>
+                      <td data-label="السعر" className="tabular-nums">{formatFils(line.grossFils)}</td>
+                      <td data-label="العمولة" className="tabular-nums">−{formatFils(line.commissionFils)}</td>
+                      <td data-label="حصة المنشأة" className="tabular-nums">−{formatFils(line.hostShareFils)}</td>
+                      <td data-label="مستحقك" className="tabular-nums font-black text-gold-300">{formatFils(line.creatorPayoutFils)}</td>
+                      <td data-label="المراحل" className="mc-full"><Timeline line={line} />{line.providerReference && <div className="text-slate-300 mt-1">مرجع التحويل: <span dir="ltr">{line.providerReference}</span></div>}</td>
                     </tr>
                   ))}
                 </tbody>
