@@ -36,6 +36,12 @@
      than this UI's ground can carry. */
   --color-steel-400: #6b87bd;
   --color-steel-500: #4b6aa3;
+
+  /* The brand face for both families. `font-sans` on the app root used to resolve to
+     Tailwind's system stack (two Arabic typefaces side by side), and `font-mono` broke
+     Arabic letter joining («موقّع بالكامل», «د.ك»). Digits stay tabular via the html rule. */
+  --font-sans: 'Tajawal', 'Segoe UI', Tahoma, 'Noto Sans Arabic', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Tajawal', 'Segoe UI', Tahoma, 'Noto Sans Arabic', system-ui, -apple-system, sans-serif;
 }
 
 :root {
@@ -915,6 +921,9 @@ textarea:disabled {
     color: var(--color-slate-400, #94a3b8);
   }
   table.mobile-cards caption { display: block; }
+  /* A cell whose content is itself a row of items (payout stages) takes the full card
+     width with its label above, instead of a 60% column that breaks words. */
+  table.mobile-cards td.mc-full { grid-template-columns: 1fr; gap: 0.35rem; }
   [data-theme="light"] table.mobile-cards tr { border-color: rgb(15 23 42 / 0.12); background: rgb(255 255 255 / 0.6); }
   [data-theme="light"] table.mobile-cards td + td { border-top-color: rgb(15 23 42 / 0.08); }
   [data-theme="contrast"] table.mobile-cards tr { border-color: #fff; background: #000; }
@@ -928,3 +937,26 @@ textarea:disabled {
 
 /* Notched phones (viewport-fit=cover): keep the sticky bar clear of the status bar. 0 elsewhere. */
 header.glass-nav { padding-top: env(safe-area-inset-top, 0px); }
+
+/* ── Capped card grids (CapGrid): first N cards, the rest behind a CSS-only toggle ── */
+.cap-toggle:not(:checked) ~ .cap-grid > :nth-child(n+7) { display: none; }
+.cap-toggle:checked ~ .cap-btn .cap-more,
+.cap-toggle:not(:checked) ~ .cap-btn .cap-less { display: none; }
+.cap-toggle:focus-visible ~ .cap-btn { outline: 2px solid var(--color-gold-300); outline-offset: 2px; }
+
+/* ── Onboarding ground ────────────────────────────────────────────────────────
+   The overlay used to hard-code a navy gradient while its text followed the theme, so
+   light mode painted navy headings on navy. The ground now follows the theme too. */
+.majal-onb {
+  --onb-fade: #070d18;
+  background:
+    radial-gradient(circle at 50% -10%, rgba(199, 165, 91, 0.16) 0, transparent 45%),
+    linear-gradient(180deg, #0a101b 0%, #0b1220 55%, #070d18 100%);
+}
+:root[data-theme='light'] .majal-onb {
+  --onb-fade: #f2ede1;
+  background:
+    radial-gradient(circle at 50% -10%, rgba(199, 165, 91, 0.22) 0, transparent 50%),
+    linear-gradient(180deg, #fbf8f1 0%, #f7f4ec 55%, #f1ece0 100%);
+}
+:root[data-theme='light'] .majal-onb .glass-card { background: rgba(255, 255, 255, 0.85); }
