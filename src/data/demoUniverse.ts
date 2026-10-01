@@ -16,13 +16,15 @@
  * the screens read naturally; they correspond to no real person or business.
  */
 import type {
-  Accrual, AuditLog, Challenge, Collaboration, CreatorProduct, CreatorProfile, DealDecision, DisputeCase,
-  HostBusiness, LabBatch, Launch, Order, RecipeVersion, Review, SettlementBatch, User,
+  Accrual, AuditLog, Challenge, Collaboration, ComplianceRequirement, Contract, CreatorProduct, CreatorProfile,
+  DealDecision, DisputeCase, HostBusiness, LabBatch, Launch, OfferTerms, Order, ProductMatch, RecipeAccessGrant,
+  RecipeVersion, Review, SettlementBatch, TastingSession, User,
 } from '../types/majal';
 import {
   INITIAL_ACCRUALS, INITIAL_AUDIT_LOGS, INITIAL_COLLABORATIONS, INITIAL_CREATORS,
   INITIAL_HOSTS, INITIAL_LAUNCHES, INITIAL_ORDERS, INITIAL_PRODUCTS, INITIAL_REVIEWS,
-  INITIAL_USERS, INITIAL_RECIPE_VERSIONS, INITIAL_CHALLENGES,
+  INITIAL_USERS, INITIAL_RECIPE_VERSIONS, INITIAL_CHALLENGES, INITIAL_OFFERS, INITIAL_CONTRACTS,
+  INITIAL_RECIPE_GRANTS, INITIAL_COMPLIANCE,
 } from './seedData';
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
@@ -92,6 +94,12 @@ const PRODUCTS: ReadonlyArray<readonly [string, string, string, number, number]>
   ['عصيدة بالتمر', 'حلويات', 'عصيدة كويتية بدبس التمر والسمن.', 0.65, 2.5],
   ['صلصة الشطة البيتية', 'صلصات', 'شطة حارة بخلطة فلفل مجفف.', 0.3, 1.25],
 ];
+
+/* Only the dish illustrations that ship in /public are referenced; no new asset is invented. */
+const DISH_BY_CATEGORY: Record<string, string> = {
+  'حلويات': '/dishes/qurs-ageili.svg', 'مخبوزات': '/dishes/qurs-ageili.svg', 'مشروبات': '/dishes/sobia.svg',
+  'وجبات': '/dishes/machboos.svg', 'صلصات': '/dishes/machboos.svg', 'مقبلات': '/dishes/machboos.svg',
+};
 
 const PRODUCT_STATUSES: CreatorProduct['status'][] = [
   'AVAILABLE_FOR_MATCHING', 'IN_DISCUSSION', 'TESTING', 'COMMERCIAL_NEGOTIATION',
@@ -231,6 +239,7 @@ function demoProducts(creators: CreatorProfile[]): CreatorProduct[] {
         category,
         shortDescription,
         story: creator.story,
+        mediaUrls: [DISH_BY_CATEGORY[category] || '/dishes/qurs-ageili.svg'],
         // The last item of every catalogue stays open for matching, so each
         // creator's opportunity radar has hosts to rank.
         status: n === count - 1 ? 'AVAILABLE_FOR_MATCHING' : pick(PRODUCT_STATUSES, index),
@@ -244,7 +253,31 @@ function demoProducts(creators: CreatorProfile[]): CreatorProduct[] {
       } as CreatorProduct);
     }
   });
-  return [...base, ...extras];
+  // Products waiting on the admin queue (and a couple the admin paused) so the
+  // "products for review / paused" counters and approval lists carry real rows.
+  const QUEUE: ReadonlyArray<readonly [CreatorProduct['status'], number]> = [
+    ['SUBMITTED', 0], ['SUBMITTED', 1], ['SUBMITTED', 2], ['SCREENING', 3], ['SCREENING', 4], ['PAUSED', 5], ['PAUSED', 6],
+  ];
+  const queued = QUEUE.map(([status, n]) => {
+    const creator = creators[2 + n];
+    const [name, category, shortDescription, cost, price] = pick(PRODUCTS, 40 + n * 3);
+    return {
+      ...clone(template),
+      id: `prod_rev_${n + 1}`,
+      creatorId: creator.id,
+      internalName: `${name} (دفعة جديدة) — ${creator.displayName}`,
+      publicName: `${name} — إصدار ${['الربيع', 'الصيف', 'الخريف', 'الشتاء'][n % 4]}`,
+      category,
+      shortDescription,
+      story: creator.story,
+      status,
+      estimatedUnitCostKwd: kwd(cost),
+      targetSellingPriceKwd: kwd(price),
+      createdAt: ago(2 + n * 2),
+      currentRecipeVersion: 'V1.0',
+    } as CreatorProduct;
+  });
+  return [...base, ...extras, ...queued];
 }
 
 const OPEN_GATE: Launch['gateChecklist'] = {
@@ -288,13 +321,37 @@ function demoTrading(products: CreatorProduct[], hosts: HostBusiness[], creators
   const tradable = products.filter(product => product.id.startsWith('prod_demo_'));
   const royaltyByCreator = new Map<string, number>();
 
+  // Every creator trades at least one product: a creator whose products all sit in
+  // the pipeline would open an earnings, sales and reviews screen full of dashes.
+  const regularLaunch = (index: number) => index % 3 === 0;
+  const extraLaunch = new Set<number>();
+  creators.forEach(creator => {
+    const own = tradable.map((p, i) => [p, i] as const).filter(([p]) => p.creatorId === creator.id);
+    if (own.length && !own.some(([, i]) => regularLaunch(i))) extraLaunch.add(own[0][1]);
+  });
+  const trades = (index: number) => regularLaunch(index) || extraLaunch.has(index);
+
   tradable.forEach((product, index) => {
     // Launched products (every third) rotate through the verified hosts on their
     // own counter; otherwise index % 3 === 0 only ever lands on two hosts and the
     // rest open an empty war room.
-    const host = pick(hosts.filter(h => h.verificationStatus === 'VERIFIED'), index % 3 === 0 ? index / 3 : index);
+    const host = pick(hosts.filter(h => h.verificationStatus === 'VERIFIED'), regularLaunch(index) ? index / 3 : index);
     const collaborationId = `col_demo_${index + 1}`;
-    const stage = (['INTEREST', 'ACCESS_GRANTED', 'TASTING_COMPLETED', 'OFFER_SENT', 'COMMERCIAL_AGREED', 'SIGNED', 'PRE_LAUNCH'] as const)[index % 7];
+    // Every deal in the pipeline has at least reached tasting, so every deal room has an offer to show.
+    const pipeline = (['TASTING_COMPLETED', 'OFFER_SENT', 'COMMERCIAL_AGREED', 'SIGNED', 'PRE_LAUNCH', 'OFFER_SENT', 'SIGNED'] as const)[index % 7];
+    // A product that trades is past the pipeline: its deal is live (except the one
+    // launch parked behind the gate, which sits at pre-launch).
+    const launched = trades(index);
+    const stage: Collaboration['stage'] = launched ? (regularLaunch(index) && index / 3 === 7 ? 'PRE_LAUNCH' : 'LIVE') : pipeline;
+    if (product.status !== 'AVAILABLE_FOR_MATCHING') {
+      const launchType = (['LIMITED_DROP', 'TRIAL_PERIOD', 'PERMANENT_MENU', 'SEASONAL'] as const)[index % 4];
+      const byStage: Partial<Record<Collaboration['stage'], CreatorProduct['status']>> = {
+        INTEREST: 'IN_DISCUSSION', ACCESS_GRANTED: 'IN_DISCUSSION', TASTING_COMPLETED: 'TESTING', OFFER_SENT: 'COMMERCIAL_NEGOTIATION',
+        COMMERCIAL_AGREED: 'COMMERCIAL_NEGOTIATION', SIGNED: 'CONTRACTING', PRE_LAUNCH: launched ? 'LAUNCH_GATE' : 'READY_TO_LAUNCH',
+        LIVE: launchType === 'PERMANENT_MENU' ? 'LIVE_PERMANENT' : launchType === 'TRIAL_PERIOD' ? 'LIVE_TRIAL' : 'LIVE_DROP',
+      };
+      product.status = byStage[stage] || product.status;
+    }
     collaborations.push({
       ...clone(collabTemplate),
       id: collaborationId,
@@ -310,12 +367,12 @@ function demoTrading(products: CreatorProduct[], hosts: HostBusiness[], creators
     // Only products that actually reached the market carry a launch, orders and
     // royalties. The rest sit at earlier stages, which is what a real pipeline
     // looks like.
-    if (index % 3 !== 0) return;
+    if (!trades(index)) return;
 
     const launchId = `launch_demo_${index + 1}`;
     // One launch per verified host opens first and live (the war room needs it);
     // the one blocked by the gate comes later in the rotation.
-    const round = index / 3;
+    const round = regularLaunch(index) ? index / 3 : 99;
     const blocked = round === 7;
     const unitsSold = 20 + Math.floor(random() * 480);
     const royaltyPercent = 8 + Math.floor(random() * 8);
@@ -681,6 +738,223 @@ function demoWorkbench(products: CreatorProduct[], collaborations: Collaboration
   return { recipeVersions, labBatches, dealDecisions, challenges };
 }
 
+
+/* The commercial paper trail: offers, contracts, recipe-access grants, matches,
+ * tasting sessions and compliance documents. The seed carried these for the
+ * three founding deals only, so every other deal room read «لا يوجد عرض», the
+ * admin access tab listed a single grant and the match engine showed 0%. Each
+ * record below follows from the stage the collaboration already sits at. */
+interface Deals {
+  offers: OfferTerms[];
+  contracts: Contract[];
+  recipeGrants: RecipeAccessGrant[];
+  matches: ProductMatch[];
+  tastings: TastingSession[];
+  compliance: ComplianceRequirement[];
+}
+
+const SCORERS: ReadonlyArray<readonly [string, string, string]> = [
+  ['مطبخك يغطي معدات الوصفة', 'هامش الربح يتجاوز الحد الأدنى', 'الوصفة تنسجم مع هوية العلامة'],
+  ['السعة اليومية تكفي الطلب المتوقع', 'السعر المستهدف قريب من سلة المنشأة', 'جمهور المنشأة يطابق جمهور المنتج'],
+  ['ينقص معدة واحدة يمكن استئجارها', 'الهامش مقبول بعد التفاوض', 'قرب جغرافي من فروع المنشأة'],
+];
+
+function demoDeals(
+  products: CreatorProduct[], collaborations: Collaboration[], hosts: HostBusiness[], creators: CreatorProfile[], accruals: Accrual[],
+): Deals {
+  const random = makeRandom(0x7d31);
+  const offers: OfferTerms[] = clone(INITIAL_OFFERS);
+  const contracts: Contract[] = clone(INITIAL_CONTRACTS);
+  const recipeGrants: RecipeAccessGrant[] = clone(INITIAL_RECIPE_GRANTS);
+  const tastings: TastingSession[] = [];
+  const hostUserId = (hostId: string) => hostId === 'hb_main' ? 'usr_host_owner' : `usr_host_${hosts.findIndex(h => h.id === hostId) + 1}`;
+
+  collaborations.forEach((col, index) => {
+    const product = products.find(p => p.id === col.productId);
+    const creator = creators.find(c => c.id === col.creatorId);
+    const host = hosts.find(h => h.id === col.hostBusinessId);
+    if (!product || !creator || !host) return;
+    const seeded = offers.some(o => o.collaborationId === col.id);
+
+    if (!seeded) {
+      col.currentOffer = undefined;
+      col.contract = undefined;
+      col.offerHistory = [];
+      const rank = STAGE_ORDER.indexOf(col.stage);
+      if (rank >= STAGE_ORDER.indexOf('TASTING_COMPLETED')) {
+        const accrual = accruals.find(a => a.collaborationId === col.id);
+        const royalty = accrual?.royaltyRatePercent ?? 9 + Math.floor(random() * 6);
+        const base = (status: OfferTerms['status'], version: number, senderRole: 'HOST' | 'CREATOR', days: number, price: number, rate: number): OfferTerms => ({
+          id: `off_demo_${col.id}_v${version}`,
+          version,
+          collaborationId: col.id,
+          senderRole,
+          sellingPriceKwd: kwd(price),
+          creatorRoyaltyModel: 'PERCENTAGE',
+          creatorRoyaltyRatePercent: rate,
+          fixedAmountPerUnitKwd: 0,
+          platformFeePercent: 5,
+          termMonths: [6, 12, 12, 18][index % 4],
+          exclusivityType: product.acceptsExclusivity && index % 2 === 0 ? 'EXCLUSIVE' : 'NON_EXCLUSIVE',
+          territory: 'دولة الكويت',
+          channels: index % 3 === 0 ? ['DELIVERY', 'PICKUP', 'DINE_IN'] : ['DELIVERY', 'PICKUP'],
+          minimumCommitmentUnits: 100 + (index % 5) * 100,
+          notes: version === 1 ? 'العرض الأول من المنشأة بعد نتيجة التذوق.' : 'تعديل على نسبة العائد مقابل التزام أعلى بالكمية.',
+          status,
+          createdAt: ago(days),
+        });
+        const history: OfferTerms[] = [];
+        const price = product.targetSellingPriceKwd;
+        if (col.stage === 'TASTING_COMPLETED') {
+          history.push(base('PENDING', 1, 'HOST', 3, price, royalty));
+        } else if (col.stage === 'OFFER_SENT') {
+          history.push(base('COUNTERED', 1, 'HOST', 9, price, Math.max(5, royalty - 3)));
+          history.push(base('PENDING', 2, 'CREATOR', 4, price, royalty));
+        } else {
+          history.push(base('COUNTERED', 1, 'HOST', 14, price, Math.max(5, royalty - 3)));
+          history.push(base('ACCEPTED', 2, 'CREATOR', 8, price, royalty));
+        }
+        offers.push(...history);
+        col.offerHistory = history;
+        col.currentOffer = history[history.length - 1];
+        if (rank >= STAGE_ORDER.indexOf('COMMERCIAL_AGREED')) {
+          const signed = rank >= STAGE_ORDER.indexOf('SIGNED');
+          const contract: Contract = {
+            id: `ctr_demo_${col.id}`,
+            collaborationId: col.id,
+            versionNumber: 'V1.0',
+            terms: col.currentOffer,
+            creatorLegalName: creator.legalName,
+            hostCommercialName: host.commercialName,
+            contractPdfUrl: '#',
+            creatorSignedAt: ago(6),
+            creatorSignerIp: 'local-demo:creator',
+            hostSignedAt: signed ? ago(5) : undefined,
+            hostSignerIp: signed ? 'local-demo:host' : undefined,
+            status: signed ? 'FULLY_SIGNED' : 'PENDING_HOST_SIGNATURE',
+            createdAt: ago(7),
+          };
+          contracts.push(contract);
+          col.contract = contract;
+        }
+      }
+    }
+
+    // Recipe access follows the pipeline: asked for at interest, granted from then on.
+    if (!recipeGrants.some(g => g.productId === col.productId && g.hostBusinessId === col.hostBusinessId)) {
+      const granted = STAGE_ORDER.indexOf(col.stage) >= STAGE_ORDER.indexOf('ACCESS_GRANTED');
+      const lapsed = index % 11 === 4;
+      recipeGrants.push({
+        id: `grant_demo_${col.id}`,
+        productId: col.productId,
+        creatorId: col.creatorId,
+        hostBusinessId: col.hostBusinessId,
+        disclosureLevel: ([1, 2, 2, 3] as const)[index % 4],
+        status: !granted ? 'REQUESTED' : lapsed ? 'REVOKED' : 'APPROVED',
+        requestedByUserId: hostUserId(col.hostBusinessId),
+        requestedAt: ago(24 - (index % 12)),
+        grantedByUserId: granted ? creator.userId : undefined,
+        grantedAt: granted ? ago(22 - (index % 12)) : undefined,
+        expiresAt: granted && !lapsed ? ahead(40 + (index % 50)) : undefined,
+        revokedAt: granted && lapsed ? ago(3) : undefined,
+        purpose: `تجربة وإعداد ${product.publicName} في مطبخ ${host.commercialName}.`,
+      });
+    }
+
+    // Tasting sessions: planned while access is fresh, scored once tasting is done.
+    if (!tastings.some(t => t.collaborationId === col.id) && (col.stage === 'ACCESS_GRANTED' || STAGE_ORDER.indexOf(col.stage) >= STAGE_ORDER.indexOf('TASTING_COMPLETED'))) {
+      const done = col.stage !== 'ACCESS_GRANTED';
+      const names: ReadonlyArray<readonly [string, string]> = [['مدير المطبخ', 'HOST_OPERATIONS'], ['رئيس الطهاة', 'HOST_OPERATIONS'], ['مسؤول العلامة', 'HOST_OWNER']];
+      const scorecards = done ? names.map(([evaluatorName, evaluatorRole], n) => {
+        const score = (offset: number) => Math.max(6, Math.min(10, 7 + Math.floor(random() * 3) + offset));
+        const taste = score(n === 0 ? 1 : 0);
+        const parts = [taste, score(0), score(-1), score(0), score(-1), score(0), score(0)];
+        return {
+          evaluatorName, evaluatorRole,
+          tasteScore: parts[0], appearanceScore: parts[1], differentiationScore: parts[2], productionFeasibilityScore: parts[3],
+          deliveryResilienceScore: parts[4], costPotentialScore: parts[5], brandFitScore: parts[6],
+          overallScore: Number((parts.reduce((a, b) => a + b, 0) / parts.length).toFixed(1)),
+          notes: ['الطعم مطابق للعينة والقوام ثابت.', 'قابل للتوسع بدون تغيير الخلطة.', 'يحتاج تغليفًا يحافظ على الحرارة أثناء التوصيل.'][n],
+        };
+      }) : [];
+      tastings.push({
+        id: `tast_demo_${col.id}`,
+        collaborationId: col.id,
+        hostBusinessId: col.hostBusinessId,
+        location: `مطبخ ${host.commercialName} — ${host.branches[0]?.area || 'العاصمة'}`,
+        date: done ? ago(16 - (index % 6)) : ahead(2 + (index % 5)),
+        isBlindMode: index % 2 === 0,
+        scorecards,
+        aggregateOverallScore: done ? Number((scorecards.reduce((a, c) => a + c.overallScore, 0) / scorecards.length).toFixed(1)) : 0,
+        status: done ? 'COMPLETED' : 'PLANNED',
+      });
+    }
+  });
+
+  // Match engine output: every open product against two verified hosts.
+  const verified = hosts.filter(h => h.verificationStatus === 'VERIFIED');
+  const matches: ProductMatch[] = [];
+  products.filter(p => p.status === 'AVAILABLE_FOR_MATCHING').forEach((product, pi) => {
+    [0, 1].forEach(offset => {
+      const host = pick(verified, pi + offset * 3 + 1);
+      const fit = () => 55 + Math.floor(random() * 43);
+      const parts = { equipmentFit: fit(), marginFit: fit(), brandFit: fit(), capacityFit: fit(), priceFit: fit() };
+      const overall = Math.round((parts.equipmentFit + parts.marginFit + parts.brandFit + parts.capacityFit + parts.priceFit) / 5);
+      const [e, m, b] = pick(SCORERS, pi + offset);
+      const col = collaborations.find(c => c.productId === product.id && c.hostBusinessId === host.id);
+      matches.push({
+        id: `match_demo_${pi + 1}_${offset + 1}`,
+        productId: product.id,
+        hostBusinessId: host.id,
+        matchScore: {
+          overallScore: overall, ...parts,
+          tastingScore: col ? 78 + Math.floor(random() * 20) : undefined,
+          demandSignalScore: 50 + Math.floor(random() * 45),
+          explanationAr: `${e}؛ ${m}؛ ${b}.`,
+          explanationEn: 'Equipment, margin and brand fit were scored against the host profile.',
+        },
+        status: col ? (col.stage === 'INTEREST' ? 'INTEREST_EXPRESSED' : 'ACCESS_GRANTED') : (['DISCOVERED', 'DISCOVERED', 'INTEREST_EXPRESSED', 'DECLINED'] as const)[(pi + offset) % 4],
+        createdAt: ago(1 + ((pi * 2 + offset) % 25)),
+      });
+    });
+  });
+
+  // Compliance documents for every host. The verified ones are in date (one is
+  // Hosts that are still in verification carry the problem papers (one inside the
+  // warning window, one rejected, one expired); a verified host with a lapsed paper
+  // would contradict its own live launches.
+  const DOCS: ReadonlyArray<readonly [ComplianceRequirement['documentType'], string, string]> = [
+    ['COMMERCIAL_LICENSE', 'DEMO-LIC', 'وزارة التجارة والصناعة — الكويت'],
+    ['HEALTH_PERMIT', 'DEMO-HLT', 'الهيئة العامة للغذاء والتغذية'],
+    ['HYGIENE_CERT', 'DEMO-HYG', 'بلدية الكويت — إدارة الرقابة الغذائية'],
+    ['FIRE_SAFETY', 'DEMO-FIR', 'الإدارة العامة للإطفاء'],
+  ];
+  const compliance: ComplianceRequirement[] = clone(INITIAL_COMPLIANCE);
+  hosts.forEach((host, hi) => {
+    DOCS.forEach(([documentType, prefix, issuingAuthority], di) => {
+      if (compliance.some(c => c.hostBusinessId === host.id && c.documentType === documentType)) return;
+      let expiresIn = 120 + ((hi * 37 + di * 53) % 260);
+      let status: ComplianceRequirement['status'] = 'VALID';
+      if (host.id === 'hb_demo_8' && di === 1) { expiresIn = 18; status = 'EXPIRING_SOON'; }
+      if (host.id === 'hb_demo_6' && di === 3) status = 'REJECTED';
+      if (host.id === 'hb_demo_6' && di === 2) { expiresIn = -12; status = 'EXPIRED'; }
+      compliance.push({
+        id: `comp_demo_${hi}_${di}`,
+        hostBusinessId: host.id,
+        documentType,
+        documentNumber: `${prefix}-${String(40000 + hi * 311 + di * 97)}`,
+        issuingAuthority,
+        issueDate: ago(365 - expiresIn),
+        expiryDate: expiresIn >= 0 ? ahead(expiresIn) : ago(-expiresIn),
+        status,
+        fileUrl: '#',
+      });
+    });
+  });
+
+  return { offers, contracts, recipeGrants, matches, tastings, compliance };
+}
+
 export interface DemoUniverse {
   users: User[];
   creators: CreatorProfile[];
@@ -698,6 +972,12 @@ export interface DemoUniverse {
   labBatches: LabBatch[];
   dealDecisions: DealDecision[];
   challenges: Challenge[];
+  offers: OfferTerms[];
+  contracts: Contract[];
+  recipeGrants: RecipeAccessGrant[];
+  matches: ProductMatch[];
+  tastings: TastingSession[];
+  compliance: ComplianceRequirement[];
 }
 
 let cached: DemoUniverse | null = null;
@@ -709,9 +989,11 @@ export function buildDemoUniverse(): DemoUniverse {
   const hosts = demoHosts();
   const products = demoProducts(creators);
   const trading = demoTrading(products, hosts, creators);
+  const deals = demoDeals(products, trading.collaborations, hosts, creators, trading.accruals);
   const workbench = demoWorkbench(products, trading.collaborations, hosts, creators);
   cached = {
     ...workbench,
+    ...deals,
     users: demoUsers(creators, hosts),
     creators,
     hosts,
