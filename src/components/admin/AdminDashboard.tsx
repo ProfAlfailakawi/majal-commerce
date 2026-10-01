@@ -99,7 +99,7 @@ export const AdminDashboard: React.FC = () => {
 
           <button
             onClick={handleRunMonthlySettlementEngine}
-            className="px-5 py-3 bg-gradient-to-l from-gold-500 to-gold-300 hover:from-gold-400 hover:to-gold-200 text-slate-950 font-black rounded-2xl text-xs flex items-center gap-2 shadow-lg transition-[filter] hover:brightness-110"
+            className="px-5 py-3 bg-gold-500 hover:bg-gold-400 text-slate-950 font-black rounded-2xl text-xs flex items-center gap-2 shadow-sm transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             <span>تشغيل محرك التسويات الشهرية</span>
