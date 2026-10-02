@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, FileText, Lock, Globe, Scale, Crown, Mail, PlayCircle } from 'lucide-react';
+import { Shield, FileText, Lock, Globe, Scale, Crown, Mail, PlayCircle, ChevronDown } from 'lucide-react';
 import { MajalMark } from './brand/MajalMark';
 import { SurfaceType } from '../types/majal';
 import { store } from '../lib/store';
@@ -35,7 +35,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
 
   return (
     <footer className="glass-panel text-slate-400 text-xs border-t border-white/10 mt-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div className="space-y-3">
             <div className="flex items-center gap-2.5">
@@ -91,25 +91,30 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
             </ul>
           </div>
 
-          <div className="space-y-2">
-            <h4 className="font-bold text-slate-200 text-sm mb-3 border-b border-slate-800 pb-1">الأمان والامتثال</h4>
-            <ul className="space-y-2 text-slate-400">
-              <li className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-slate-400" /><span>خزنة الوصفات مقفلة حتى المصادقة</span></li>
-              <li className="flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-slate-400" /><span>التوقيع يُفعّل بعد ربط الهوية</span></li>
-              <li className="flex items-center gap-1.5"><Scale className="w-3.5 h-3.5 text-slate-400" /><span>فصل واضح للصلاحيات والتسويات</span></li>
-              <li className="flex items-center gap-1.5"><Crown className="w-3.5 h-3.5 text-slate-400" /><span>مراجعة وتوثيق لكل اتفاق</span></li>
-            </ul>
-          </div>
-
-          <div className="space-y-3 glass-card p-4 rounded-xl self-start border border-white/10">
-            <div className="flex items-center gap-2 text-gold-300 font-bold text-xs">
-              <Globe className="w-4 h-4" />
-              <span>نطاق العمل — دولة الكويت</span>
+          <details className="group md:col-span-2 self-start rounded-2xl border border-white/10 glass-card">
+            <summary className="flex items-center gap-2 min-h-11 px-4 py-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden font-bold text-slate-200 text-sm">
+              <Shield className="w-4 h-4 text-gold-400" aria-hidden="true" />
+              <span className="flex-1">الأمان والامتثال</span>
+              <ChevronDown className="w-4 h-4 text-slate-400 transition-transform group-open:rotate-180" aria-hidden="true" />
+            </summary>
+            <div className="px-4 pb-4 grid gap-4 md:grid-cols-2">
+              <ul className="space-y-2 text-slate-400">
+                <li className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-slate-400" /><span>خزنة الوصفات مقفلة حتى المصادقة</span></li>
+                <li className="flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-slate-400" /><span>التوقيع يُفعّل بعد ربط الهوية</span></li>
+                <li className="flex items-center gap-1.5"><Scale className="w-3.5 h-3.5 text-slate-400" /><span>فصل واضح للصلاحيات والتسويات</span></li>
+                <li className="flex items-center gap-1.5"><Crown className="w-3.5 h-3.5 text-slate-400" /><span>مراجعة وتوثيق لكل اتفاق</span></li>
+              </ul>
+              <div className="space-y-2 self-start">
+                <div className="flex items-center gap-2 text-gold-300 font-bold text-xs">
+                  <Globe className="w-4 h-4" />
+                  <span>نطاق العمل — دولة الكويت</span>
+                </div>
+                <p className="text-xs text-slate-400 leading-normal">
+                  البيع التجاري والإنتاج يتمان عبر المنشآت المرخّصة، بينما تدير مجال دورة الاكتشاف، المطابقة، الحوكمة، العقود، والتسويات ضمن تجربة موحدة.
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-slate-400 leading-normal">
-              البيع التجاري والإنتاج يتمان عبر المنشآت المرخّصة، بينما تدير مجال دورة الاكتشاف، المطابقة، الحوكمة، العقود، والتسويات ضمن تجربة موحدة.
-            </p>
-          </div>
+          </details>
         </div>
 
         <div className="pt-6 border-t border-slate-800/80 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-400">
