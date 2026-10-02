@@ -11,13 +11,26 @@ import {
   ShieldCheck,
   Activity,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  ArrowUp,
+  ArrowDown,
+  Minus
 } from 'lucide-react';
 import { store } from '../../lib/store';
 import { CreatorProduct } from '../../types/majal';
 import { hasPermission } from '../../lib/permissions';
 import { StatusPill } from './StatusPill';
 import { statusLabel } from '../../lib/statusLabels';
+
+/** Direction of change between the two shown values. Icon + hidden text; no new numbers. */
+const Delta: React.FC<{ now?: number; before?: number; goodWhen: 'up' | 'down' }> = ({ now, before, goodWhen }) => {
+  if (typeof now !== 'number' || typeof before !== 'number') return null;
+  const dir = now > before ? 'up' : now < before ? 'down' : 'same';
+  const cls = dir === 'same' ? 'text-slate-400' : dir === goodWhen ? 'text-emerald-300' : 'text-amber-300';
+  const Icon = dir === 'up' ? ArrowUp : dir === 'down' ? ArrowDown : Minus;
+  const text = dir === 'up' ? 'أعلى من السابقة' : dir === 'down' ? 'أقل من السابقة' : 'دون تغيير عن السابقة';
+  return <span className={`inline-flex items-center ms-1 align-middle ${cls}`} title={text}><Icon className="w-3.5 h-3.5" aria-hidden="true" /><span className="sr-only">{text}</span></span>;
+};
 
 interface DigitalTwinPanelProps {
   product: CreatorProduct;
@@ -142,9 +155,9 @@ export const DigitalTwinPanel: React.FC<DigitalTwinPanelProps> = ({ product, hos
                   <div className="rounded-xl p-4 bg-slate-950/60 border border-white/10">
                     <div className="font-black text-sky-300">الحالية — {currentRecipe?.versionNumber || product.currentRecipeVersion}</div>
                     <div className="mt-3 space-y-2 text-slate-400">
-                      <div>تكلفة المكونات/حصة من هذه النسخة: <strong className="text-slate-100">{currentRecipeUnitCost !== undefined ? `${currentRecipeUnitCost.toFixed(3)} د.ك` : 'غير مسجل'}</strong></div>
+                      <div>تكلفة المكونات/حصة من هذه النسخة: <strong className="text-slate-100">{currentRecipeUnitCost !== undefined ? `${currentRecipeUnitCost.toFixed(3)} د.ك` : 'غير مسجل'}</strong><Delta now={currentRecipeUnitCost} before={previousRecipeUnitCost} goodWhen="down" /></div>
                       <div>حجم الدفعة: <strong className="text-slate-100">{currentRecipe?.batchSize || 'غير مسجل'}</strong></div>
-                      <div>العائد المعياري: <strong className="text-slate-100">{currentRecipe?.yield ?? 'غير مسجل'} حصة</strong></div>
+                      <div>العائد المعياري: <strong className="text-slate-100">{currentRecipe?.yield ?? 'غير مسجل'} حصة</strong><Delta now={currentRecipe?.yield} before={previousRecipe?.yield} goodWhen="up" /></div>
                       <div>ملاحظة النسخة: <strong className="text-slate-100">{currentRecipe?.changeLogNote || 'لا توجد ملاحظة'}</strong></div>
                     </div>
                   </div>

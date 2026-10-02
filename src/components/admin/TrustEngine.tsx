@@ -5,6 +5,7 @@ import {
   Eye,
   Fingerprint,
   Gauge,
+  Handshake,
   ShieldAlert,
   ShieldCheck,
   UserRoundCheck
@@ -63,8 +64,13 @@ export const TrustEngine: React.FC = () => {
                 <div className="flex items-center gap-2 min-w-0"><UserRoundCheck className={`w-4 h-4 shrink-0 ${card.risk === 'LOW' ? 'text-emerald-300' : card.risk === 'MEDIUM' ? 'text-amber-300' : 'text-rose-300'}`} /><span className="font-bold text-slate-200 break-words sm:truncate" title={card.host.commercialName}>{card.host.commercialName}</span></div>
                 <strong className={card.risk === 'LOW' ? 'text-emerald-300' : card.risk === 'MEDIUM' ? 'text-amber-300' : 'text-rose-300'}>{card.score}/100</strong>
               </div>
-              <div className="mt-2 h-2 rounded-full bg-white/5 overflow-hidden"><div className="h-full rounded-full bg-emerald-400" style={{ width: `${card.score}%` }} /></div>
-              <div className="mt-2 text-xs text-slate-400">نزاعات: {card.disputes} • مستندات مشكلة: {card.docs} • وصولات نشطة: {card.grants} • تعاونات: {card.collaborations}</div>
+              <div role="img" aria-label={`${card.score} من 100`} className="mt-2 h-2 rounded-full bg-white/5 overflow-hidden"><div className={`h-full rounded-full ${card.risk === 'LOW' ? 'bg-emerald-400' : card.risk === 'MEDIUM' ? 'bg-amber-400' : 'bg-rose-400'}`} style={{ width: `${card.score}%` }} /></div>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+                <span className="inline-flex items-center gap-1"><ShieldAlert className="w-3 h-3" aria-hidden="true" /> نزاعات: {card.disputes}</span>
+                <span className="inline-flex items-center gap-1"><AlertTriangle className="w-3 h-3" aria-hidden="true" /> مستندات مشكلة: {card.docs}</span>
+                <span className="inline-flex items-center gap-1"><Eye className="w-3 h-3" aria-hidden="true" /> وصولات نشطة: {card.grants}</span>
+                <span className="inline-flex items-center gap-1"><Handshake className="w-3 h-3" aria-hidden="true" /> تعاونات: {card.collaborations}</span>
+              </div>
             </div>
           ))}
         </div>

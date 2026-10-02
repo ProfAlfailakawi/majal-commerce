@@ -28,13 +28,17 @@ export const MajalPulse: React.FC = () => {
     return { creatorsAvailable, verifiedHosts, strongMatches, labs, contractPipeline, liveProducts, attention, economicValue, creatorValue };
   })();
 
+  const funnel = [
+    { label: 'مبدعون متاحون', detail: 'جاهزون للمطابقة', value: pulse.creatorsAvailable, icon: <Sparkles className="w-4 h-4" />, tone: 'text-emerald-300', bar: 'bg-emerald-400/70' },
+    { label: 'مطابقات قوية', detail: `${store.policy.strongMatchThreshold}% فأعلى`, value: pulse.strongMatches, icon: <Radar className="w-4 h-4" />, tone: 'text-sky-300', bar: 'bg-sky-400/70' },
+    { label: 'في المختبر', detail: 'تذوق أو تطوير', value: pulse.labs, icon: <FlaskConical className="w-4 h-4" />, tone: 'text-violet-300', bar: 'bg-violet-400/70' },
+    { label: 'قريبة من الإطلاق', detail: 'عقد / ما قبل الإطلاق', value: pulse.contractPipeline, icon: <FileSignature className="w-4 h-4" />, tone: 'text-fuchsia-300', bar: 'bg-fuchsia-400/70' },
+    { label: 'منتجات حية', detail: 'تباع الآن', value: pulse.liveProducts, icon: <TrendingUp className="w-4 h-4" />, tone: 'text-emerald-300', bar: 'bg-emerald-400/70' }
+  ];
+  const funnelMax = Math.max(1, ...funnel.map(f => f.value));
+
   const cards = [
-    { label: 'مبدعون متاحون', value: pulse.creatorsAvailable, detail: 'جاهزون للمطابقة', icon: <Sparkles className="w-5 h-5" />, tone: 'text-emerald-300' },
     { label: 'منشآت متحققة', value: pulse.verifiedHosts, detail: 'قادرة على الاحتضان', icon: <Building2 className="w-5 h-5" />, tone: 'text-gold-300' },
-    { label: 'مطابقات قوية', value: pulse.strongMatches, detail: `${store.policy.strongMatchThreshold}% فأعلى`, icon: <Radar className="w-5 h-5" />, tone: 'text-sky-300' },
-    { label: 'في المختبر', value: pulse.labs, detail: 'تذوق أو تطوير', icon: <FlaskConical className="w-5 h-5" />, tone: 'text-violet-300' },
-    { label: 'قريبة من الإطلاق', value: pulse.contractPipeline, detail: 'عقد / ما قبل الإطلاق', icon: <FileSignature className="w-5 h-5" />, tone: 'text-fuchsia-300' },
-    { label: 'منتجات حية', value: pulse.liveProducts, detail: 'تباع الآن', icon: <TrendingUp className="w-5 h-5" />, tone: 'text-emerald-300' },
     { label: 'تحتاج تدخلًا', value: pulse.attention, detail: 'نزاع أو امتثال', icon: <CircleAlert className="w-5 h-5" />, tone: pulse.attention ? 'text-rose-300' : 'text-slate-400' },
     { label: 'قيمة اقتصادية', value: `${pulse.economicValue.toFixed(3)} د.ك`, detail: `حقوق مبدعين ${pulse.creatorValue.toFixed(3)} د.ك`, icon: <WalletCards className="w-5 h-5" />, tone: 'text-gold-300' }
   ];
@@ -54,7 +58,18 @@ export const MajalPulse: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <ol aria-label="مسار الصفقات من المبدعين إلى الإطلاق" className="rounded-2xl p-4 bg-slate-950/35 border border-white/10 space-y-2.5">
+          {funnel.map(step => (
+            <li key={step.label} className="flex items-center gap-3 text-xs">
+              <span className={`flex items-center gap-1.5 w-40 shrink-0 font-bold text-slate-200`}><span className={step.tone} aria-hidden="true">{step.icon}</span>{step.label}</span>
+              <span className="hidden md:block w-40 shrink-0 text-slate-400">{step.detail}</span>
+              <span className="flex-1 h-3 rounded-full bg-white/5 overflow-hidden" aria-hidden="true"><span className={`block h-full rounded-full ${step.bar}`} style={{ width: `${(step.value / funnelMax) * 100}%` }} /></span>
+              <strong className={`w-10 text-end font-mono text-base ${step.tone}`}>{step.value}</strong>
+            </li>
+          ))}
+        </ol>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {cards.map((card, index) => (
             <div key={index} className="rounded-2xl p-4 bg-slate-950/35 border border-white/10 hover:border-white/20 transition-colors">
               <div className={`${card.tone}`}>{card.icon}</div>

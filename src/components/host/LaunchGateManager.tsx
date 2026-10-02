@@ -14,6 +14,7 @@ import { store } from '../../lib/store';
 import { LaunchGateChecklist, Collaboration } from '../../types/majal';
 import { MajalLoader } from '../brand/MajalLoader';
 import { StatusPill } from '../common/StatusPill';
+import { DnaRing } from '../dna/DnaKit';
 
 interface LaunchGateManagerProps {
   collaboration: Collaboration;
@@ -113,6 +114,7 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
         <div className="flex items-center gap-3">
           <div className="glass-card px-4 py-3 rounded-2xl border border-white/10 min-w-[130px] text-center">
             <span className="text-xs text-slate-400 block">الجاهزية</span>
+            <DnaRing className="mx-auto my-1.5" value={completedItems} max={itemsConfig.length} size={56} stroke={5} ariaLabel={`الجاهزية ${completedItems} من ${itemsConfig.length}`} />
             <span className="text-base font-black text-gold-300">{completedItems} / {itemsConfig.length}</span>
             <span className="text-xs text-slate-400 block mt-1">{readinessLabel}</span>
           </div>

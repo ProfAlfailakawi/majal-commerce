@@ -34,6 +34,13 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
   const grossMarginPercent = sellingPrice > 0 ? ((sellingPrice - totalCOGS) / sellingPrice) * 100 : 0;
   const hostNetMarginPercent = sellingPrice > 0 ? (hostNetContribution / sellingPrice) * 100 : 0;
 
+  // Display only: the four bar widths (with their minimum widths) are scaled so the bar always
+  // fills exactly 100%. The formulas above and every displayed value are untouched.
+  const rawBar = [Math.max(5, (totalCOGS / sellingPrice) * 100), royaltyRate, 5, Math.max(5, hostNetMarginPercent)];
+  const barSum = rawBar.reduce((a, b) => a + b, 0);
+  const barOk = rawBar.every(Number.isFinite) && barSum > 0;
+  const [barCogs, barRoyalty, barPlatform, barHost] = barOk ? rawBar.map(w => (w / barSum) * 100) : rawBar;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
       <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="unit-economics-title" className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl text-slate-100 flex flex-col max-h-[90dvh]">
@@ -148,26 +155,26 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
             {/* Visual Bar */}
             <div className="w-full h-5 rounded-full overflow-hidden flex bg-slate-900 border border-slate-700">
               <div
-                style={{ width: `${Math.max(5, (totalCOGS / sellingPrice) * 100)}%` }}
+                style={{ width: `${barCogs}%` }}
                 className="bg-slate-600 h-full flex items-center justify-center text-xs font-bold text-slate-100"
                 title="إجمالي التكلفة"
               >
                 التكلفة
               </div>
               <div
-                style={{ width: `${royaltyRate}%` }}
+                style={{ width: `${barRoyalty}%` }}
                 className="bg-gold-500 h-full flex items-center justify-center text-xs font-bold text-slate-950"
                 title="حقوق المبدع"
               >
                 {royaltyRate}%
               </div>
               <div
-                style={{ width: `5%` }}
+                style={{ width: `${barPlatform}%` }}
                 className="bg-slate-500 h-full"
                 title="عمولة المنصة"
               />
               <div
-                style={{ width: `${Math.max(5, hostNetMarginPercent)}%` }}
+                style={{ width: `${barHost}%` }}
                 className="bg-emerald-600 h-full flex items-center justify-center text-xs font-bold text-slate-100"
                 title="صافي المنشأة"
               >

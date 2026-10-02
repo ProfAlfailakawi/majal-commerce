@@ -19,7 +19,8 @@ import {
   LogIn,
   LogOut,
   FlaskConical,
-  RefreshCw
+  RefreshCw,
+  ArrowLeft
 } from 'lucide-react';
 import { SurfaceType, User, UserRole } from '../types/majal';
 import { MajalMark } from './brand/MajalMark';
@@ -345,7 +346,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         </span>
                         <span className="block text-slate-300 leading-6">{item.body}</span>
                         {item.occurrence_count > 1 && <span className="block mt-1 text-xs text-slate-400">تكرر {item.occurrence_count} مرات وتم دمجه هنا</span>}
-                        {'action_label' in item && item.action_label && <span className="block mt-2 text-xs font-bold text-gold-300">{item.action_label} ←</span>}
+                        {'action_label' in item && item.action_label && <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-gold-300">{item.action_label} <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" /></span>}
                       </button>
                     )) : <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5 text-center text-slate-400">لا توجد قرارات معلقة الآن.</div>}
                   </div>
