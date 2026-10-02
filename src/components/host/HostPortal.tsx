@@ -212,7 +212,7 @@ export const HostPortal: React.FC = () => {
         <div className="space-y-5">
           <div className="glass-panel rounded-3xl p-5 border border-white/10 flex items-center justify-between gap-4">
             <div><h3 className="font-black text-lg">تحديات الابتكار</h3><p className="text-xs text-slate-400 mt-1">حوّل احتياج المنشأة إلى ملخص واضح يستقبل حلول المبدعين.</p></div>
-            <button onClick={() => setShowPublisher(true)} className="px-4 py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center gap-2"><Plus className="w-4 h-4" /> تحدٍ جديد</button>
+            <button onClick={() => setShowPublisher(true)} className="px-4 py-2.5 shrink-0 whitespace-nowrap rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center gap-2"><Plus className="w-4 h-4" /> تحدٍ جديد</button>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             {store.challenges.filter(c => c.hostBusinessId === currentHostId).map(ch => (
