@@ -141,6 +141,70 @@ export const SuperAdminDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {activeTab === 'PERMISSIONS' && (
+        <section className="glass-panel rounded-3xl p-5 md:p-6 border border-white/10 space-y-5">
+          <div className="flex items-center gap-3"><div className="w-12 h-12 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-400/20 flex items-center justify-center text-fuchsia-300"><KeyRound className="w-6 h-6" /></div><div><h3 className="text-lg font-black">مصفوفة الصلاحيات</h3><p className="text-xs text-slate-400 mt-1">الصلاحيات العليا محسوبة حسب الدور والسياق، وليست قائمة واحدة مشتركة.</p></div></div>
+          <div className="space-y-3">
+            {roleRows.map(role => (
+              <div key={role} className="rounded-2xl p-4 bg-white/5 border border-white/10">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                  <div className="lg:w-40 shrink-0"><div className="font-black text-slate-100">{roleLabel(role)}</div></div>
+                  <div className="flex flex-wrap gap-2 lg:justify-end">
+                    {getRolePermissions(role).map(permission => <span key={permission} className="px-2.5 py-1 rounded-lg bg-slate-950/50 border border-white/10 text-xs text-slate-300" title={permission}>{permissionLabel(permission)}</span>)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="pt-5 border-t border-white/10">
+            <div className="flex items-center gap-2 mb-4"><Users className="w-5 h-5 text-sky-300" /><h4 className="font-black text-slate-100">إدارة الحسابات الفعلية</h4></div>
+            <div className="grid md:grid-cols-2 gap-3">
+              {store.users.filter(u => u.id !== store.activeUser.id).map(user => (
+                <div key={user.id} className="rounded-2xl p-4 bg-slate-950/40 border border-white/10 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar name={user.name} src={user.avatar} size={40} shape="squircle" />
+                    <div className="min-w-0"><div className="font-bold text-slate-100 break-words sm:truncate" title={user.name}>{user.name}</div><div className="text-xs text-slate-400">{user.email}</div></div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <select
+                      value={user.role}
+                      onChange={e => {
+                        const next = e.target.value as UserRole;
+                        if (next === user.role) return;
+                        // Privileged mutation — confirm before applying. If declined, the
+                        // controlled value reverts to user.role on the next render.
+                        if (!window.confirm(`تغيير دور «${user.name}» إلى «${roleLabel(next)}»؟ هذا يعدّل صلاحيات الوصول فورًا.`)) {
+                          setTick(t => t + 1);
+                          return;
+                        }
+                        store.changeUserRole(user.id, next);
+                      }}
+                      className="glass-input rounded-xl px-3 py-2 text-xs outline-none"
+                    >
+                      {roleRows.map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
+                    </select>
+                    <button
+                      onClick={() => {
+                        const suspending = user.status !== 'SUSPENDED';
+                        if (!window.confirm(suspending
+                          ? `تعليق حساب «${user.name}»؟ سيُمنع من تسجيل الدخول فورًا.`
+                          : `إعادة تفعيل حساب «${user.name}»؟`)) return;
+                        store.setUserStatus(user.id, suspending ? 'SUSPENDED' : 'ACTIVE');
+                      }}
+                      className={`px-3 py-2 rounded-xl text-xs font-black border ${user.status === 'SUSPENDED' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-rose-500/10 text-rose-300 border-rose-400/20'}`}
+                    >
+                      {user.status === 'SUSPENDED' ? 'إعادة التفعيل' : 'تعليق الحساب'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {activeTab === 'LIQUIDITY' && <MarketplaceLiquidity />}
       {activeTab === 'TRUST' && <TrustEngine />}
 
