@@ -249,6 +249,7 @@ export const HostPortal: React.FC = () => {
           </div>
           {finance.gmv > 0 && (
             <ShareDonut
+              formatValue={v => `${v.toFixed(3)} د.ك`}
               ariaLabel="توزيع إجمالي المبيعات بين صافي المنشأة وحقوق المبدعين ورسوم مجال"
               total={finance.gmv}
               icon={<CircleDollarSign className="w-6 h-6" />}
