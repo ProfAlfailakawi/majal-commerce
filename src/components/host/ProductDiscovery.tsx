@@ -139,15 +139,20 @@ export const ProductDiscovery: React.FC = () => {
                 <p className="text-slate-300 text-xs leading-relaxed">{p.shortDescription}</p>
 
                 {/* Match Score Breakdown: three thin bars, the explanation folded */}
-                <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 space-y-3">
-                  <MicroBars suffix="٪" bars={[
-                    { label: 'توافق المعدات', value: matchCalc.equipmentFit },
-                    { label: 'ملاءمة الهامش', value: matchCalc.marginFit },
-                    { label: 'مطابقة الجمهور', value: matchCalc.brandFit }
-                  ]} />
-                  <FoldedNote summary="تحليل التوافق التشغيلي المفسَّر">{matchCalc.explanationAr}</FoldedNote>
-                </div>
-
+                <details className="group bg-slate-950 rounded-xl border border-slate-800/80 text-xs">
+                  <summary className="cursor-pointer list-none flex items-center justify-between gap-2 px-3.5 py-2.5 text-slate-300 hover:text-slate-100 [&::-webkit-details-marker]:hidden">
+                    <span className="font-bold">عرض التفاصيل</span>
+                    <ChevronDown className="w-4 h-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+                  </summary>
+                  <div className="px-3.5 pb-3.5 space-y-3">
+                    <MicroBars suffix="٪" bars={[
+                      { label: 'توافق المعدات', value: matchCalc.equipmentFit },
+                      { label: 'ملاءمة الهامش', value: matchCalc.marginFit },
+                      { label: 'مطابقة الجمهور', value: matchCalc.brandFit }
+                    ]} />
+                    <FoldedNote summary="تحليل التوافق التشغيلي المفسَّر">{matchCalc.explanationAr}</FoldedNote>
+                  </div>
+                </details>
               </div>
 
               {/* Actions Footer */}

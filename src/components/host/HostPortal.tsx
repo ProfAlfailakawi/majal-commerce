@@ -184,7 +184,7 @@ export const HostPortal: React.FC = () => {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
               { label: 'التعاونات', value: myCollaborations.length, icon: <Sparkles className="w-4 h-4 text-fuchsia-300" /> },
-              { label: 'الفروع', value: host.branches.length, icon: <Building2 className="w-4 h-4 text-sky-300" /> },
+              { label: 'الفروع', value: host.branches.length, icon: <Building2 className="w-4 h-4 text-sky-300" />, ring: host.branches.length ? { pct: Math.round(host.branches.filter(b => b.isActive).length / host.branches.length * 100), aria: 'نسبة الفروع النشطة من فروع المنشأة' } : null },
               { label: canSeeFinance ? 'إجمالي المبيعات' : 'الإطلاقات', value: canSeeFinance ? `${finance.gmv.toFixed(3)} د.ك` : store.launches.filter(l => l.hostBusinessId === currentHostId && ['LIVE','PERMANENT'].includes(l.status)).length, icon: <Activity className="w-4 h-4 text-emerald-300" /> },
               { label: canSeeFinance ? 'صافي المنشأة' : 'المنتجات النشطة', value: canSeeFinance ? `${finance.hostNet.toFixed(3)} د.ك` : activeHostProducts.length, icon: <CircleDollarSign className="w-4 h-4 text-gold-300" />, ring: canSeeFinance ? (finance.gmv > 0 ? { pct: Math.round(finance.hostNet / finance.gmv * 100), aria: 'حصة المنشأة من إجمالي المبيعات' } : null) : (hostProducts.length ? { pct: Math.round(activeHostProducts.length / hostProducts.length * 100), aria: 'نسبة المنتجات النشطة من منتجات المنشأة' } : null) }
             ].map((item, idx) => (
@@ -249,6 +249,7 @@ export const HostPortal: React.FC = () => {
           </div>
           {finance.gmv > 0 && (
             <ShareDonut
+              formatValue={v => `${v.toFixed(3)} د.ك`}
               ariaLabel="توزيع إجمالي المبيعات بين صافي المنشأة وحقوق المبدعين ورسوم مجال"
               total={finance.gmv}
               icon={<CircleDollarSign className="w-6 h-6" />}

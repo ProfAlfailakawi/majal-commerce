@@ -72,7 +72,8 @@ export const CreatorEarnings: React.FC = () => {
       {totals.lifetime > 0 && (
         <div className="glass-card rounded-2xl border border-white/10 p-4 sm:p-5">
           <ShareDonut
-            ariaLabel="توزيع الحقوق حسب حالة التسوية"
+            formatValue={v => `${v.toFixed(3)} د.ك`}
+              ariaLabel="توزيع الحقوق حسب حالة التسوية"
             total={totals.lifetime}
             icon={<Wallet className="w-6 h-6" />}
             segments={[
