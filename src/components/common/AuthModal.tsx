@@ -321,7 +321,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
             </div>
           ) : needsMfa ? (
             <label className="block space-y-1.5">
-              <span className="text-xs font-bold text-slate-200">رمز المصادقة (MFA)</span>
+              <span className="text-xs font-bold text-slate-200">رمز المصادقة الثنائية</span>
               <input inputMode="numeric" pattern="[0-9]{6}" value={mfaCode} onChange={event => setMfaCode(event.target.value.replace(/\D/g, '').slice(0, 6))} autoComplete="one-time-code" required maxLength={6} dir="ltr" className="w-full rounded-xl bg-slate-950/55 border border-white/10 px-4 py-3 text-xl tracking-[0.4em] text-center text-slate-100 outline-none focus:border-gold-300/50 focus-visible:ring-2 focus-visible:ring-gold-300" />
             </label>
           ) : null}

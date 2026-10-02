@@ -24,6 +24,7 @@ import { DnaHubMap } from '../dna/DnaKit';
 import { MajalMark } from '../brand/MajalMark';
 import { shortRef } from '../../lib/displayRef';
 import { store } from '../../lib/store';
+import { arabicTerms } from '../../lib/arabicTerms';
 import { AdminAuditLogs } from './AdminAuditLogs';
 import { TrustEngine } from './TrustEngine';
 import { StatusPill } from '../common/StatusPill';
@@ -206,7 +207,7 @@ export const AdminDashboard: React.FC = () => {
                     </span>
                   </div>
                   <div className="text-xs text-slate-400 mt-1 leading-6">
-                    السجل التجاري: {host.commercialRegistrationNo} — الفروع: {host.branches.length} — النطاق السعري: {host.capabilities.priceBand}
+                    السجل التجاري: {host.commercialRegistrationNo} — الفروع: {host.branches.length} — النطاق السعري: {arabicTerms(host.capabilities.priceBand)}
                   </div>
                 </div>
                 <div className="text-xs text-slate-400">
@@ -234,7 +235,7 @@ export const AdminDashboard: React.FC = () => {
                       const reason = window.prompt(`سبب الإيقاف الاحترازي لـ«${product.publicName}» (يُسجَّل في التدقيق):`, '');
                       if (reason === null) return;
                       const trimmed = reason.trim();
-                      if (trimmed.length < 4) { window.alert('يرجى إدخال سبب واضح (٤ أحرف على الأقل).'); return; }
+                      if (trimmed.length < 4) { window.alert('يرجى إدخال سبب واضح (4 أحرف على الأقل).'); return; }
                       store.pauseProduct(product.id, trimmed);
                     }}
                     className="px-3 py-2 rounded-xl bg-rose-500/10 text-rose-300 border border-rose-400/20 text-xs font-black">إيقاف احترازي</button>
@@ -260,7 +261,7 @@ export const AdminDashboard: React.FC = () => {
                 </div>
                 <div className="sm:text-end flex sm:block items-center justify-between gap-2">
                   <div className="text-sm font-black text-gold-300">L{grant.disclosureLevel}</div>
-                  <div className="text-xs text-slate-400 flex items-center justify-end gap-2 mt-1"><span className="whitespace-nowrap">{new Date(grant.grantedAt || grant.requestedAt).toLocaleDateString('ar-KW')}</span><StatusPill status={grant.status} /></div>
+                  <div className="text-xs text-slate-400 flex items-center justify-end gap-2 mt-1"><span className="whitespace-nowrap">{new Date(grant.grantedAt || grant.requestedAt).toLocaleDateString('ar-KW-u-nu-latn')}</span><StatusPill status={grant.status} /></div>
                 </div>
               </div>
             ))}
@@ -277,7 +278,7 @@ export const AdminDashboard: React.FC = () => {
                   <div className="font-bold text-sm text-slate-100"><span title={contract.id}>{(() => { const col = store.collaborations.find(c => c.id === contract.collaborationId); const prod = store.products.find(p => p.id === col?.productId); const host = store.hosts.find(h => h.id === col?.hostBusinessId); return `عقد ${prod?.publicName || 'شراكة'}${host ? ` × ${host.commercialName}` : ''}`; })()} — {contract.versionNumber}</span></div>
                   <div className="mt-1.5"><StatusPill status={contract.status} prefix="الحالة" /></div>
                 </div>
-                <div className="text-xs text-slate-400">{new Date(contract.createdAt).toLocaleDateString('ar-KW')}</div>
+                <div className="text-xs text-slate-400">{new Date(contract.createdAt).toLocaleDateString('ar-KW-u-nu-latn')}</div>
               </div>
             ))}
           </div>
@@ -306,7 +307,7 @@ export const AdminDashboard: React.FC = () => {
               <div key={batch.id} className="rounded-2xl p-4 bg-white/5 border border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div>
                   <div className="font-black text-slate-100">{batch.creatorName}</div>
-                  <div className="text-xs text-slate-400 mt-1"><span title={batch.id}>دفعة {shortRef(batch.id, 'ت')}</span> — {new Date(batch.periodStart).toLocaleDateString('ar-KW')} إلى {new Date(batch.periodEnd).toLocaleDateString('ar-KW')}</div>
+                  <div className="text-xs text-slate-400 mt-1"><span title={batch.id}>دفعة {shortRef(batch.id, 'ت')}</span> — {new Date(batch.periodStart).toLocaleDateString('ar-KW-u-nu-latn')} إلى {new Date(batch.periodEnd).toLocaleDateString('ar-KW-u-nu-latn')}</div>
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="text-lg font-black text-gold-300 font-mono">{batch.totalAmountKwd.toFixed(3)} د.ك</div>

@@ -33,7 +33,7 @@ export const MajalPulse: React.FC = () => {
     { label: 'منشآت متحققة', value: pulse.verifiedHosts, detail: 'قادرة على الاحتضان', icon: <Building2 className="w-5 h-5" />, tone: 'text-gold-300' },
     { label: 'مطابقات قوية', value: pulse.strongMatches, detail: `${store.policy.strongMatchThreshold}% فأعلى`, icon: <Radar className="w-5 h-5" />, tone: 'text-sky-300' },
     { label: 'في المختبر', value: pulse.labs, detail: 'تذوق أو تطوير', icon: <FlaskConical className="w-5 h-5" />, tone: 'text-violet-300' },
-    { label: 'قريبة من الإطلاق', value: pulse.contractPipeline, detail: 'عقد / Pre-launch', icon: <FileSignature className="w-5 h-5" />, tone: 'text-fuchsia-300' },
+    { label: 'قريبة من الإطلاق', value: pulse.contractPipeline, detail: 'عقد / ما قبل الإطلاق', icon: <FileSignature className="w-5 h-5" />, tone: 'text-fuchsia-300' },
     { label: 'منتجات حية', value: pulse.liveProducts, detail: 'تباع الآن', icon: <TrendingUp className="w-5 h-5" />, tone: 'text-emerald-300' },
     { label: 'تحتاج تدخلًا', value: pulse.attention, detail: 'نزاع أو امتثال', icon: <CircleAlert className="w-5 h-5" />, tone: pulse.attention ? 'text-rose-300' : 'text-slate-400' },
     { label: 'قيمة اقتصادية', value: `${pulse.economicValue.toFixed(3)} د.ك`, detail: `حقوق مبدعين ${pulse.creatorValue.toFixed(3)} د.ك`, icon: <WalletCards className="w-5 h-5" />, tone: 'text-gold-300' }

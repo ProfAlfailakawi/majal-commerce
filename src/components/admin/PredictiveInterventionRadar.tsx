@@ -73,7 +73,7 @@ export const PredictiveInterventionRadar: React.FC<{ onNavigate: (target: RadarT
     }] : []),
     ...(unsettledAccruals.length ? [{
       id: 'settlements', severity: 'WATCH' as const, title: `${unsettledValue.toFixed(3)} د.ك حقوق متراكمة بانتظار دورة التسوية`,
-      evidence: `${unsettledAccruals.length} قيد استحقاق لم يصل بعد إلى حالة PAID.`,
+      evidence: `${unsettledAccruals.length} قيد استحقاق لم يصل بعد إلى حالة «مدفوع».`,
       nextAction: 'راجع العمر والاستثناءات قبل أن تتحول إلى تذكرة دعم.', target: 'AUDIT' as const,
       icon: <WalletCards className="w-5 h-5" />
     }] : [])
@@ -85,7 +85,7 @@ export const PredictiveInterventionRadar: React.FC<{ onNavigate: (target: RadarT
       <div className="relative z-10 space-y-5">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
           <div>
-            <div className="inline-flex items-center gap-2 text-sky-300 text-xs font-black"><Radar className="w-4 h-4" /> PRE-EMPTIVE RADAR</div>
+            <div className="inline-flex items-center gap-2 text-sky-300 text-xs font-black"><Radar className="w-4 h-4" /> رادار الاستباق</div>
             <h2 className="text-xl md:text-2xl font-black mt-2">رادار ما قبل الاختناق</h2>
             <p className="text-xs text-slate-400 mt-2 leading-6">لا ينتظر التنبيه بعد وقوع المشكلة؛ يجمع الإشارات التي قد توقف صفقة أو إطلاقًا أو تسوية، ويشرح سببها والخطوة التالية.</p>
           </div>

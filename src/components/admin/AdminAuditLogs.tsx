@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ShieldCheck, Search, Filter, Lock, FileText, CheckCircle2, CalendarDays, ChevronDown } from 'lucide-react';
 import { store } from '../../lib/store';
+import { arabicTerms } from '../../lib/arabicTerms';
 
 const ACTION_LABELS: Record<string, string> = {
   RECIPE_VIEWED: 'فتح خزنة الوصفة', ACCESS_REQUESTED: 'طلب إذن وصفة', ACCESS_GRANTED: 'منح إذن وصفة', ACCESS_REVOKED: 'سحب إذن وصفة',
@@ -30,7 +31,7 @@ export const AdminAuditLogs: React.FC = () => {
 
   const groups = Array.from(
     filteredLogs.reduce((map, l) => {
-      const day = new Date(l.timestamp).toLocaleDateString('ar-KW');
+      const day = new Date(l.timestamp).toLocaleDateString('ar-KW-u-nu-latn');
       (map.get(day) ?? map.set(day, []).get(day)!).push(l);
       return map;
     }, new Map<string, typeof filteredLogs>())
@@ -91,14 +92,14 @@ export const AdminAuditLogs: React.FC = () => {
                 <tbody className="divide-y divide-slate-800/60">
                   {rows.map(log => (
                       <tr key={log.id} className="hover:bg-slate-800/40 transition-colors">
-                        <td data-label="التاريخ والوقت" className="py-2.5 px-3 text-slate-400">{new Date(log.timestamp).toLocaleString('ar-KW')}</td>
+                        <td data-label="التاريخ والوقت" className="py-2.5 px-3 text-slate-400">{new Date(log.timestamp).toLocaleString('ar-KW-u-nu-latn')}</td>
                         <td data-label="نوع الحدث" className="py-2.5 px-3">
                           <span className="px-2 py-0.5 rounded text-xs font-bold bg-gold-500/20 text-gold-300 border border-gold-500/30">
                             <span title={log.action}>{ACTION_LABELS[log.action] || log.action}</span>
                           </span>
                         </td>
                         <td data-label="نوع الكيان" className="py-2.5 px-3 text-slate-300 font-bold">{ENTITY_LABELS[log.entityType] || log.entityType}</td>
-                        <td data-label="التفاصيل والوصف" className="py-2.5 px-3 text-slate-200">{log.details}</td>
+                        <td data-label="التفاصيل والوصف" className="py-2.5 px-3 text-slate-200">{arabicTerms(log.details)}</td>
                         <td data-label="عنوان IP والمدينة" className="py-2.5 px-3 text-slate-400 text-xs">{log.ipAddress}</td>
                       </tr>
                   ))}

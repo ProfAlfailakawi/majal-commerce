@@ -99,7 +99,7 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
     setTimeout(() => setShowWatermarkNotice(false), 4000);
   };
 
-  const watermarkText = `نسخة حساسة من مجال — مشاهدة بواسطة: ${store.activeUser.name} — ${product.id} — ${currentRecipe?.versionNumber || 'NO-VERSION'} — ${new Date().toLocaleDateString('ar-KW')}`;
+  const watermarkText = `نسخة حساسة من مجال — مشاهدة بواسطة: ${store.activeUser.name} — ${product.id} — ${currentRecipe?.versionNumber || 'NO-VERSION'} — ${new Date().toLocaleDateString('ar-KW-u-nu-latn')}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in">
@@ -216,7 +216,7 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
               <div className="p-4 rounded-xl bg-gold-500/10 border border-gold-500/30 flex items-center justify-between text-gold-300">
                 <div>
                   <span className="font-bold text-sm block">نسخة الوصفة التشغيلية الحالية — {currentRecipe?.versionNumber}</span>
-                  <span className="text-xs text-gold-400/80">تاريخ الإنشاء: {new Date(currentRecipe?.createdAt || '').toLocaleDateString('ar-KW')} | الكمية المعيارية للدفعة: {currentRecipe?.batchSize}</span>
+                  <span className="text-xs text-gold-400/80">تاريخ الإنشاء: {new Date(currentRecipe?.createdAt || '').toLocaleDateString('ar-KW-u-nu-latn')} | الكمية المعيارية للدفعة: {currentRecipe?.batchSize}</span>
                 </div>
                 <Award className="w-8 h-8 text-gold-400 opacity-80" />
               </div>
@@ -244,7 +244,7 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
                         <tr key={idx} className={ing.isSecretPart ? 'bg-gold-500/5' : ''}>
                           <td data-label="المكون" className="py-2 px-3 font-medium text-slate-200">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? 'مكوّن سري محجوب' : ing.name}</td>
                           <td data-label="الكمية" className="py-2 px-3 text-slate-300 font-bold">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? '•••' : ing.quantity}</td>
-                          <td data-label="الوحدة" className="py-2 px-3 text-slate-400">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? 'L3' : ing.unit}</td>
+                          <td data-label="الوحدة" className="py-2 px-3 text-slate-400">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? 'المستوى 3' : ing.unit}</td>
                           <td data-label="التكلفة التقديرية" className="py-2 px-3 text-gold-400 font-mono">{effectiveDisclosureLevel === 2 && ing.isSecretPart ? 'محجوب' : `${ing.estimatedCostKwd.toFixed(3)} د.ك`}</td>
                           <td data-label="خاصية السرية" className="py-2 px-3">
                             {ing.isSecretPart ? (

@@ -1560,7 +1560,7 @@ export class Store {
   }
 
   public updatePlatformPolicy(patch: Partial<Pick<PlatformPolicy, 'platformFeePercent' | 'recipeGrantDays' | 'maxOrderUnits' | 'complianceWarningDays' | 'strongMatchThreshold' | 'settlementCycleDays'>>) {
-    if (!IS_DEMO_MODE) return this.fail('سياسة المنصة الإنتاجية لا تتغير إلا عبر API السوبر أدمن مع Audit.');
+    if (!IS_DEMO_MODE) return this.fail('سياسة المنصة الإنتاجية لا تتغير إلا عبر API السوبر أدمن مع سجل التدقيق.');
     if (!hasPermission(this.activeUser, 'CHANGE_PLATFORM_POLICY')) return this.fail('تغيير سياسات المنصة محصور بالسوبر أدمن.');
     const next = { ...this.policy, ...patch };
     if (next.platformFeePercent < 0 || next.platformFeePercent > 30) return this.fail('عمولة المنصة يجب أن تكون بين 0% و30%.');

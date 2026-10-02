@@ -180,8 +180,8 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
                 {product && <StatusPill status={product.status} />}
               </div>
               <p className="text-xs text-slate-400 leading-5">
-                المنتج الآن {liveLaunch.status === 'PERMANENT' ? 'إطلاق دائم' : 'LIVE'} — سعر البيع {liveLaunch.sellingPriceKwd.toFixed(3)} د.ك
-                {liveLaunch.startDate ? ` — منذ ${new Date(liveLaunch.startDate).toLocaleDateString('ar-KW')}` : ''}
+                المنتج الآن {liveLaunch.status === 'PERMANENT' ? 'إطلاق دائم' : 'إطلاق حيّ'} — سعر البيع {liveLaunch.sellingPriceKwd.toFixed(3)} د.ك
+                {liveLaunch.startDate ? ` — منذ ${new Date(liveLaunch.startDate).toLocaleDateString('ar-KW-u-nu-latn')}` : ''}
               </p>
             </div>
             <div className="flex items-center gap-2 text-emerald-300 text-xs font-black shrink-0">
@@ -211,7 +211,7 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
           }`}
         >
           {isLaunching ? <MajalLoader size={16} label="جاري تفعيل الإطلاق…" /> : isAllReady ? <BadgeCheck className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-          <span>{isLaunching ? 'جاري التفعيل…' : canOperate ? 'تحويل المنتج إلى LIVE' : 'المشاهدة فقط حسب صلاحيتك'}</span>
+          <span>{isLaunching ? 'جاري التفعيل…' : canOperate ? 'تحويل المنتج إلى الإطلاق الحي' : 'المشاهدة فقط حسب صلاحيتك'}</span>
         </button>
       </div>
       )}

@@ -87,8 +87,8 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
         generalIngredients: ingredients,
         allergens,
         dietaryTags: ['حلال', 'طازج'],
-        servingSize: '٨-١٠ أشخاص',
-        shelfLife: '٣ أيام تبريد',
+        servingSize: '8-10 أشخاص',
+        shelfLife: '3 أيام تبريد',
         estimatedPrepTimeMinutes: 40,
         estimatedUnitCostKwd,
         targetSellingPriceKwd,
@@ -141,7 +141,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                 تسجيل منتج ووصفة جديدة في منصة مجال
               </h3>
               <p className="text-xs text-slate-400">
-                الخطوة {step} من ٣ — إضافة البيانات التجريبية وخزنة الوصفة
+                الخطوة {step} من 3 — إضافة البيانات التجريبية وخزنة الوصفة
               </p>
             </div>
           </div>
@@ -164,7 +164,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
           
           {step === 1 && (
             <div className="space-y-4 animate-in fade-in">
-              <h4 className="font-bold text-gold-400 text-sm">١. معلومات المنتج والقصة التسويقية</h4>
+              <h4 className="font-bold text-gold-400 text-sm">1. معلومات المنتج والقصة التسويقية</h4>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -229,7 +229,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
 
           {step === 2 && (
             <div className="space-y-4 animate-in fade-in">
-              <h4 className="font-bold text-gold-400 text-sm">٢. المكونات، مسببات الحساسية والأسعار التقديرية</h4>
+              <h4 className="font-bold text-gold-400 text-sm">2. المكونات، مسببات الحساسية والأسعار التقديرية</h4>
 
               <div>
                 <label className="block text-slate-300 font-bold mb-1">المكونات العامة (مفصولة بفواصل):</label>
@@ -290,7 +290,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
 
           {step === 3 && (
             <div className="space-y-4 animate-in fade-in">
-              <h4 className="font-bold text-gold-400 text-sm">٣. حماية الوصفة وخزنة الأسرار</h4>
+              <h4 className="font-bold text-gold-400 text-sm">3. حماية الوصفة وخزنة الأسرار</h4>
 
               <div className="p-3 bg-gold-500/10 border border-gold-500/30 rounded-xl flex items-start gap-2.5 text-gold-300">
                 <Lock className="w-5 h-5 text-gold-400 shrink-0 mt-0.5" />
@@ -306,7 +306,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                   aria-label="خطوات التحضير والطهي التشغيلي"
                   value={preparationStepsStr}
                   onChange={(e) => setPreparationStepsStr(e.target.value)}
-                  placeholder="الخطوة ١: خفق الصفار مع الزعفران والنقع&#10;الخطوة ٢: الخبز بفرن حراري..."
+                  placeholder="الخطوة 1: خفق الصفار مع الزعفران والنقع&#10;الخطوة 2: الخبز بفرن حراري..."
                   maxLength={2000}
                   required
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-gold-500 font-mono resize-none focus-visible:ring-2 focus-visible:ring-gold-300"

@@ -12,7 +12,7 @@ const STATUS: Record<TrustItem['status'], { label: string; tone: string; icon: R
   MISSING: { label: 'غير متوفر', tone: 'text-slate-300', icon: <AlertTriangle className="w-4 h-4" aria-hidden="true" /> }
 };
 
-const dateAr = (iso: string) => new Date(iso).toLocaleDateString('ar-KW', { year: 'numeric', month: 'long', day: 'numeric' });
+const dateAr = (iso: string) => new Date(iso).toLocaleDateString('ar-KW-u-nu-latn', { year: 'numeric', month: 'long', day: 'numeric' });
 
 /** Public Launch Gate checklist for a Drop: licence, allergens, halal, food-safety expiry. */
 export const DropTrustChecklist: React.FC<{ launchId: string }> = ({ launchId }) => {

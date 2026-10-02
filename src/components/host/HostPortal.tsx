@@ -240,11 +240,11 @@ export const HostPortal: React.FC = () => {
           <div className="flex items-center gap-3"><div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-center text-emerald-300"><CircleDollarSign className="w-6 h-6" /></div><div><h3 className="text-lg font-black">المالية والتسويات</h3><p className="text-xs text-slate-400 mt-1">هذه الشاشة تظهر فقط للأدوار المصرح لها ماليًا.</p></div></div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
-              ['GMV', finance.gmv], ['صافي المنشأة', finance.hostNet], ['حقوق المبدعين', finance.creatorRoyalties], ['رسوم مجال', finance.platformFees]
+              ['إجمالي المبيعات', finance.gmv], ['صافي المنشأة', finance.hostNet], ['حقوق المبدعين', finance.creatorRoyalties], ['رسوم مجال', finance.platformFees]
             ].map(([label, value], idx) => <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400 flex items-center gap-1.5">{idx > 0 && <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full ${['', 'bg-emerald-400', 'bg-gold-400', 'bg-sky-400'][idx]}`} />}{label as string}</div><div className="mt-2 text-xl font-black font-mono">{Number(value).toFixed(3)} د.ك</div></div>)}
           </div>
           {finance.gmv > 0 && (
-            <div role="img" aria-label="توزيع GMV بين صافي المنشأة وحقوق المبدعين ورسوم مجال" className="flex h-1 w-full overflow-hidden rounded-full bg-white/5 opacity-80">
+            <div role="img" aria-label="توزيع إجمالي المبيعات بين صافي المنشأة وحقوق المبدعين ورسوم مجال" className="flex h-1 w-full overflow-hidden rounded-full bg-white/5 opacity-80">
               <span className="bg-emerald-400/80" style={{ width: `${(finance.hostNet / finance.gmv) * 100}%` }} />
               <span className="bg-gold-400/80" style={{ width: `${(finance.creatorRoyalties / finance.gmv) * 100}%` }} />
               <span className="bg-sky-400/80" style={{ width: `${(finance.platformFees / finance.gmv) * 100}%` }} />

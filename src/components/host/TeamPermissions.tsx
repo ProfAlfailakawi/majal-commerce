@@ -10,7 +10,7 @@ import {
   Wrench
 } from 'lucide-react';
 import { store } from '../../lib/store';
-import { getRolePermissions, roleLabel } from '../../lib/permissions';
+import { getRolePermissions, permissionLabel, roleLabel } from '../../lib/permissions';
 import { Avatar } from '../common/Avatar';
 
 interface TeamPermissionsProps {
@@ -53,7 +53,7 @@ export const TeamPermissions: React.FC<TeamPermissionsProps> = ({ hostBusinessId
               </div>
               <div className="flex flex-wrap gap-2">
                 {permissions.slice(0, 7).map(permission => (
-                  <span key={permission} className="px-2.5 py-1 rounded-lg bg-slate-950/50 border border-white/10 text-xs text-slate-400">{permission}</span>
+                  <span key={permission} className="px-2.5 py-1 rounded-lg bg-slate-950/50 border border-white/10 text-xs text-slate-400">{permissionLabel(permission)}</span>
                 ))}
               </div>
               <div className="rounded-xl p-3 bg-emerald-500/5 border border-emerald-400/15 text-xs text-slate-400 leading-6 flex gap-2"><ShieldCheck className="w-4 h-4 shrink-0 text-emerald-300" /> صلاحيات هذا العضو لا تتجاوز نطاق منشأته.</div>

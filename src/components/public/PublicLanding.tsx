@@ -61,8 +61,8 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
   };
 
   const stats = [
-    { value: '٤', label: IS_DEMO_MODE ? 'تجارب أدوار' : 'أطراف تشغيل' },
-    { value: '٣', label: 'مستويات إفصاح' },
+    { value: '4', label: IS_DEMO_MODE ? 'تجارب أدوار' : 'أطراف تشغيل' },
+    { value: '3', label: 'مستويات إفصاح' },
     { value: 'مرخّص', label: 'إنتاج تجاري' },
     { value: 'واضح', label: 'من الفكرة للإطلاق' }
   ];

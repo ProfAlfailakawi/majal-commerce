@@ -200,7 +200,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-black whitespace-nowrap shrink-0 bg-amber-500/15 text-amber-300 border border-amber-400/35">
                 <FlaskConical className="w-3.5 h-3.5" aria-hidden="true" />
                 <span className="hidden lg:inline">بيئة تجريبية — بيانات مصطنعة</span>
-                <span className="lg:hidden">DEMO</span>
+                <span className="lg:hidden">تجريبي</span>
                 <button
                   type="button"
                   onClick={() => resetDemoData()}

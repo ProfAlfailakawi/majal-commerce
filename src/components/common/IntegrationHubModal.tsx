@@ -103,18 +103,18 @@ export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => voi
         })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'تعذرت محاكاة POS');
+      if (!res.ok) throw new Error(data.error || 'تعذرت محاكاة نقاط البيع');
       if (data.success && data.simulated) {
         setPosConnected(true);
         setSyncLog(prev => [
-          `[${new Date().toLocaleTimeString('ar-KW')}] اكتملت محاكاة اتصال ${posProvider} محلياً`,
-          `[${new Date().toLocaleTimeString('ar-KW')}] لا توجد مزامنة أو مستحقات أو Webhook حقيقي في هذا الوضع`
+          `[${new Date().toLocaleTimeString('ar-KW-u-nu-latn')}] اكتملت محاكاة اتصال ${posProvider} محلياً`,
+          `[${new Date().toLocaleTimeString('ar-KW-u-nu-latn')}] لا توجد مزامنة أو مستحقات أو إشعارات ويب حقيقية في هذا الوضع`
         ]);
       }
     } catch (e: any) {
       // A failed fetch must surface to the user, not become an unhandled rejection.
       setSyncLog(prev => [
-        `[${new Date().toLocaleTimeString('ar-KW')}] تعذّر اتصال ${posProvider}: ${e?.message || 'خطأ غير معروف'}`,
+        `[${new Date().toLocaleTimeString('ar-KW-u-nu-latn')}] تعذّر اتصال ${posProvider}: ${e?.message || 'خطأ غير معروف'}`,
         ...prev
       ]);
     }
@@ -132,7 +132,7 @@ export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => voi
             </div>
             <div>
               <h3 id="integration-hub-title" className="font-bold text-lg text-white">مختبر محاكاة التكاملات — محلي فقط</h3>
-              <p className="text-xs text-amber-300">لا دفع، لا توقيع قانوني، ولا مزامنة POS حقيقية في هذه الشاشة.</p>
+              <p className="text-xs text-amber-300">لا دفع، لا توقيع قانوني، ولا مزامنة نقاط بيع حقيقية في هذه الشاشة.</p>
             </div>
           </div>
           <button 
@@ -179,7 +179,7 @@ export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => voi
             }`}
           >
             <Server className="w-4 h-4" />
-            أنظمة نقاط البيع (Foodics / POS)
+            أنظمة نقاط البيع (Foodics)
           </button>
         </div>
 
@@ -248,7 +248,7 @@ export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => voi
                   </div>
                   <div className="text-xs space-y-1 text-emerald-200/80 font-mono">
                     <p>المبلغ: {paymentResult.amountKwd} د.ك | المزود: {paymentResult.provider}</p>
-                    <p className="flex items-center gap-2"><StatusPill status={paymentResult.status} prefix="الحالة" /><span>الوقت: {new Date(paymentResult.createdAt).toLocaleTimeString('ar-KW')}</span></p>
+                    <p className="flex items-center gap-2"><StatusPill status={paymentResult.status} prefix="الحالة" /><span>الوقت: {new Date(paymentResult.createdAt).toLocaleTimeString('ar-KW-u-nu-latn')}</span></p>
                   </div>
                 </div>
               )}
@@ -269,7 +269,7 @@ export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => voi
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-1">الرقم المدني (Civil ID):</label>
+                    <label className="block text-xs text-neutral-400 mb-1">الرقم المدني:</label>
                     <input 
                       type="text" 
                       value={civilId}
@@ -286,7 +286,7 @@ export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => voi
                       className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-amber-500"
                     >
                       <option value="CONTRACT">عقد ترخيص حقوق الطهي التجاري</option>
-                      <option value="NDA">اتفاقية عدم إفصاح وحماية أسرار الخلطة (L3)</option>
+                      <option value="NDA">اتفاقية عدم إفصاح وحماية أسرار الخلطة (المستوى 3)</option>
                     </select>
                   </div>
                 </div>
@@ -330,7 +330,7 @@ export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => voi
                       <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
                       <div>
                         <p className="font-bold">تم تسجيل تحقق PACI على الخادم؛ تثبيت التوقيع على العقد يتم من شاشة العقد نفسها.</p>
-                        <p className="text-xs text-emerald-400/80 font-mono mt-0.5">PACI_STATUS: VERIFIED</p>
+                        <p className="text-xs text-emerald-400/80 mt-0.5">حالة PACI: موثّق</p>
                       </div>
                     </div>
                   )}
@@ -345,10 +345,10 @@ export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => voi
               <div className="bg-neutral-800/40 border border-neutral-700/60 rounded-xl p-4">
                 <h4 className="font-semibold text-white mb-2 flex items-center gap-2">
                   <Server className="w-4 h-4 text-amber-400" />
-                  ربط أنظمة نقاط البيع للمطاعم (POS Integration)
+                  ربط أنظمة نقاط البيع للمطاعم 
                 </h4>
                 <p className="text-xs text-neutral-400 mb-4 leading-relaxed">
-                  اختبار واجهة الربط بصريًا قبل تهيئة مفاتيح المزود والتوقيع والتحقق من Webhooks.
+                  اختبار واجهة الربط بصريًا قبل تهيئة مفاتيح المزود والتوقيع والتحقق من إشعارات الويب.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">

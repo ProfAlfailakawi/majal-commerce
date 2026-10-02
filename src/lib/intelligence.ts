@@ -35,7 +35,7 @@ const guardrail = (code: string, label: string, enforcedBy: IntelligenceGuardrai
 const financialLegalGuardrails = [
   guardrail('NO_CONTRACT_EXECUTION', 'لا يوقع أو ينشئ أثرًا قانونيًا.', 'LEGAL_COUNSEL'),
   guardrail('NO_FINANCIAL_DECISION', 'لا يعتمد عرضًا أو تسوية أو سعرًا نيابة عن الأطراف.', 'FINANCE'),
-  guardrail('NO_PERMISSION_CHANGE', 'لا يمنح أو يرفع صلاحيات L1/L2/L3.', 'SYSTEM')
+  guardrail('NO_PERMISSION_CHANGE', 'لا يمنح أو يرفع صلاحيات المستويات 1 و2 و3.', 'SYSTEM')
 ];
 
 export function marketQueryForProduct(product: CreatorProduct, region = 'Kuwait'): string {
@@ -65,7 +65,7 @@ export function buildDealRoomCopilot(args: {
   const risks: { level: RiskLevel; text: string }[] = [];
   if (!latestOffer) risks.push({ level: 'MEDIUM', text: 'لا يوجد عرض تجاري قابل للمقارنة.' });
   if (latestOffer && latestOffer.creatorRoyaltyRatePercent + latestOffer.platformFeePercent >= 45) risks.push({ level: 'HIGH', text: 'مجموع النسب قد يضغط هامش المنشأة ويحتاج مراجعة مالية.' });
-  if (!args.gatePassed) risks.push({ level: 'MEDIUM', text: 'Launch Gate ليست مكتملة؛ لا يصلح اعتبار الصفقة جاهزة للإطلاق.' });
+  if (!args.gatePassed) risks.push({ level: 'MEDIUM', text: 'بوابة الإطلاق ليست مكتملة؛ لا يصلح اعتبار الصفقة جاهزة للإطلاق.' });
   if (args.collaboration.contract?.status !== 'FULLY_SIGNED') risks.push({ level: 'HIGH', text: 'العقد غير مكتمل التوقيع؛ أي تنفيذ تجاري يحتاج المسار القانوني الحالي.' });
 
   return {
