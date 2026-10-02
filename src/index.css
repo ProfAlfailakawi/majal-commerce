@@ -1003,3 +1003,24 @@ body:has([aria-modal='true']) .majal-ai-fab { opacity: 0; visibility: hidden; po
   --color-cyan-400: var(--color-gold-400);
   --color-cyan-500: var(--color-gold-500);
 }
+
+/* ── r29 · product-art title contrast ─────────────────────────────────────────
+   The scrim under a title on photo cards is a fixed dark ramp in every theme, and the
+   title/creator line on it keeps light text (in the light theme the text utilities remap
+   to ink, which sat on this dark ramp). */
+.majal-art-scrim { background-image: linear-gradient(to top, rgba(7, 13, 24, 0.9) 0%, rgba(7, 13, 24, 0.6) 34%, rgba(7, 13, 24, 0) 68%) !important; }
+.majal-art-title, .majal-art-title :is(h1, h2, h3, h4) { color: #ffffff !important; }
+.majal-art-title .text-emerald-300 { color: #6ee7b7 !important; }
+.majal-art-title .text-slate-300, .majal-art-title .text-slate-400 { color: #e2e8f0 !important; }
+
+/* ── r29 · scrollable tab strips ──────────────────────────────────────────────
+   Phones: tabs snap into place and the strip fades at its far (left, RTL) edge so a cut-off tab reads
+   as «more this way» instead of a clipped label. Pure CSS; scrolling itself is unchanged. */
+@media (max-width: 639px) {
+  [role='tablist'].overflow-x-auto {
+    scroll-snap-type: x proximity;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 28px);
+    mask-image: linear-gradient(to right, transparent 0, #000 28px);
+  }
+  [role='tablist'].overflow-x-auto > [role='tab'] { scroll-snap-align: center; }
+}
