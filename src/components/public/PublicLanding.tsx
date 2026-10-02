@@ -183,9 +183,9 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
       {/* One panel rather than four floating cards: these are facets of a single claim,
           and a hairline between them reads as a spec plate instead of four unrelated
           numbers competing for the same attention. */}
-      <div className="glass-card rounded-3xl border border-white/10 grid grid-cols-2 lg:grid-cols-4 divide-x divide-x-reverse divide-white/[0.07] overflow-hidden">
+      <div className="glass-card rounded-3xl border border-white/10 grid grid-cols-2 lg:grid-cols-4 divide-x divide-x-reverse divide-white/[0.07] max-lg:[&>*:nth-child(n+3)]:border-t max-lg:[&>*:nth-child(n+3)]:border-t-white/[0.07] overflow-hidden">
         {stats.map((st, i) => (
-          <div key={i} className="p-6 sm:p-7 text-center space-y-2">
+          <div key={i} className="p-5 sm:p-7 text-center space-y-1.5">
             <div className="text-2xl sm:text-3xl font-black majal-wordmark">{st.value}</div>
             <div className="text-xs text-slate-400 font-medium leading-6">{st.label}</div>
           </div>
@@ -200,9 +200,11 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
           { icon: <Coins className="w-5 h-5" />, title: 'مستحقات شفافة', body: 'المبدع يتابع مبيعاته ومستحقاته، والمنشأة تتابع الهوامش والإطلاقات، والأدمن يراقب دورة التسوية.' },
           { icon: <Store className="w-5 h-5" />, title: 'منظومة بلا تداخل', body: 'هوية المبدع مستقلة عن المنشأة والمورد، وكل وظيفة كويتية تمر عبر مراجعة الإدارة قبل أن تظهر للجمهور.' }
         ].map((item, idx) => (
-          <div key={idx} className="glass-card glass-card-hover rounded-2xl p-6 border border-white/10 space-y-4">
-            <div className="w-11 h-11 rounded-xl bg-gold-500/10 border border-gold-300/20 flex items-center justify-center text-gold-300">{item.icon}</div>
-            <h3 className="font-bold text-slate-100 text-base">{item.title}</h3>
+          <div key={idx} className="glass-card glass-card-hover rounded-2xl p-5 sm:p-6 border border-white/10 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 shrink-0 rounded-xl bg-gold-500/10 border border-gold-300/20 flex items-center justify-center text-gold-300">{item.icon}</div>
+              <h3 className="font-bold text-slate-100 text-base">{item.title}</h3>
+            </div>
             <p className="text-xs text-slate-300 leading-7">{item.body}</p>
           </div>
         ))}

@@ -161,7 +161,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
             const progress = capped ? Math.min(100, Math.round(launch.unitsSold / launch.quantityCapUnits! * 100)) : 0;
             return (
               <article key={launch.id} className="glass-card rounded-3xl border border-white/10 overflow-hidden hover:-translate-y-1 transition-transform">
-                <div className="relative h-52">
+                <div className="relative h-40 sm:h-52">
                   <img src={product?.mediaUrls[0]} alt={launch.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                   <div className="majal-art-scrim absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
                   <div className="absolute top-3 start-3 px-2.5 py-1 rounded-full bg-slate-950/75 border border-white/10 text-xs text-gold-300 font-black">{({ LIMITED_DROP: 'إطلاق محدود', TRIAL_PERIOD: 'فترة تجريبية', PERMANENT_MENU: 'قائمة دائمة', SEASONAL: 'موسمي' } as Record<string, string>)[launch.launchType] ?? launch.launchType}</div>

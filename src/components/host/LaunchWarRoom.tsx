@@ -88,7 +88,7 @@ const LaunchWarRoomBody: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => 
         <div className="flex items-center gap-2 text-xs font-bold text-emerald-300"><Activity className="w-4 h-4" /> عرض تشغيلي حي</div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 max-lg:[&>*:last-child:nth-child(odd)]:col-span-2">
         {[
           { label: canSeeFinance ? 'المبيعات الحالية' : 'المؤشر المالي', value: canSeeFinance ? `${metrics.gmv.toFixed(3)} د.ك` : 'محجوب', icon: <TrendingUp className="w-4 h-4 text-emerald-300" /> },
           { label: 'الوحدات المباعة', value: `${metrics.units}`, icon: <PackageOpen className="w-4 h-4 text-sky-300" /> },
@@ -133,7 +133,7 @@ const LaunchWarRoomBody: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => 
             centerLabel="وحدة"
             segments={[
               { key: 'creator', label: 'عبر المبدع', value: sourceUnits.CREATOR, strokeClass: 'stroke-emerald-400', dotClass: 'bg-emerald-400' },
-              { key: 'host', label: 'عبر المنشأة', value: sourceUnits.HOST, strokeClass: 'stroke-sky-400', dotClass: 'bg-sky-400' },
+              { key: 'host', label: 'عبر المنشأة', value: sourceUnits.HOST, strokeClass: 'stroke-slate-400', dotClass: 'bg-slate-400' },
               { key: 'majal', label: 'عبر مجال', value: sourceUnits.MAJAL, strokeClass: 'stroke-gold-400', dotClass: 'bg-gold-400' }
             ]}
           />

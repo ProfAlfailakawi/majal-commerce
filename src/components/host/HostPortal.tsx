@@ -188,7 +188,7 @@ export const HostPortal: React.FC = () => {
               { label: canSeeFinance ? 'إجمالي المبيعات' : 'الإطلاقات', value: canSeeFinance ? `${finance.gmv.toFixed(3)} د.ك` : store.launches.filter(l => l.hostBusinessId === currentHostId && ['LIVE','PERMANENT'].includes(l.status)).length, icon: <Activity className="w-4 h-4 text-emerald-300" /> },
               { label: canSeeFinance ? 'صافي المنشأة' : 'المنتجات النشطة', value: canSeeFinance ? `${finance.hostNet.toFixed(3)} د.ك` : activeHostProducts.length, icon: <CircleDollarSign className="w-4 h-4 text-gold-300" />, ring: canSeeFinance ? (finance.gmv > 0 ? { pct: Math.round(finance.hostNet / finance.gmv * 100), aria: 'حصة المنشأة من إجمالي المبيعات' } : null) : (hostProducts.length ? { pct: Math.round(activeHostProducts.length / hostProducts.length * 100), aria: 'نسبة المنتجات النشطة من منتجات المنشأة' } : null) }
             ].map((item, idx) => (
-              <div key={idx} className="glass-card rounded-2xl p-4 border border-white/10"><div className="flex items-center gap-2 text-xs text-slate-400">{item.icon}{item.label}</div><div className="mt-2 flex items-center justify-between gap-2"><div className="text-xl font-black text-slate-100 font-mono min-w-0">{item.value}</div>{'ring' in item && item.ring && <DnaRing value={item.ring.pct} size={40} stroke={4} label={`${item.ring.pct}%`} ariaLabel={`${item.ring.aria} ${item.ring.pct}%`} />}</div></div>
+              <div key={idx} className="glass-card rounded-2xl p-4 border border-white/10"><div className="flex items-center gap-2 text-xs text-slate-400">{item.icon}{item.label}</div><div className="mt-2 flex items-center justify-between gap-2"><div className="text-xl font-black text-slate-100 font-mono min-w-0">{item.value}</div>{'ring' in item && item.ring && <DnaRing value={item.ring.pct} size={48} stroke={4} label={`${item.ring.pct}%`} ariaLabel={`${item.ring.aria} ${item.ring.pct}%`} />}</div></div>
             ))}
           </div>
 
@@ -212,7 +212,7 @@ export const HostPortal: React.FC = () => {
         <div className="space-y-5">
           <div className="glass-panel rounded-3xl p-5 border border-white/10 flex items-center justify-between gap-4">
             <div><h3 className="font-black text-lg">تحديات الابتكار</h3><p className="text-xs text-slate-400 mt-1">حوّل احتياج المنشأة إلى ملخص واضح يستقبل حلول المبدعين.</p></div>
-            <button onClick={() => setShowPublisher(true)} className="px-4 py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center gap-2"><Plus className="w-4 h-4" /> تحدٍ جديد</button>
+            <button onClick={() => setShowPublisher(true)} className="px-4 py-2.5 shrink-0 whitespace-nowrap rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center gap-2"><Plus className="w-4 h-4" /> تحدٍ جديد</button>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             {store.challenges.filter(c => c.hostBusinessId === currentHostId).map(ch => (
@@ -256,7 +256,7 @@ export const HostPortal: React.FC = () => {
               segments={[
                 { key: 'host', label: 'صافي المنشأة', value: finance.hostNet, strokeClass: 'stroke-emerald-400', dotClass: 'bg-emerald-400' },
                 { key: 'creator', label: 'حقوق المبدعين', value: finance.creatorRoyalties, strokeClass: 'stroke-gold-400', dotClass: 'bg-gold-400' },
-                { key: 'platform', label: 'رسوم مجال', value: finance.platformFees, strokeClass: 'stroke-sky-400', dotClass: 'bg-sky-400' }
+                { key: 'platform', label: 'رسوم مجال', value: finance.platformFees, strokeClass: 'stroke-slate-400', dotClass: 'bg-slate-400' }
               ]}
             />
           )}

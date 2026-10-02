@@ -78,7 +78,7 @@ export const CreatorEarnings: React.FC = () => {
             icon={<Wallet className="w-6 h-6" />}
             segments={[
               { key: 'eligible', label: 'مؤهل للتسوية', value: totals.eligible, strokeClass: 'stroke-gold-400', dotClass: 'bg-gold-400' },
-              { key: 'locked', label: 'ضمن دفعة معتمدة', value: totals.locked, strokeClass: 'stroke-sky-400', dotClass: 'bg-sky-400' },
+              { key: 'locked', label: 'ضمن دفعة معتمدة', value: totals.locked, strokeClass: 'stroke-slate-400', dotClass: 'bg-slate-400' },
               { key: 'paid', label: 'مدفوع ومؤكد', value: totals.paid, strokeClass: 'stroke-emerald-400', dotClass: 'bg-emerald-400' }
             ]}
           />

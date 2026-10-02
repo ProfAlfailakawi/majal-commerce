@@ -127,7 +127,7 @@ export const CreatorPortal: React.FC = () => {
           <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
             {myProducts.map(product => (
               <article key={product.id} className={`glass-card rounded-3xl border border-white/10 overflow-hidden ${product.id === settlingProductId ? 'majal-settle-in' : ''}`}>
-                <img src={product.mediaUrls[0]} alt={product.publicName} loading="lazy" decoding="async" className="w-full h-48 object-cover" />
+                <img src={product.mediaUrls[0]} alt={product.publicName} loading="lazy" decoding="async" className="w-full h-36 sm:h-48 object-cover" />
                 <div className="p-5 space-y-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
