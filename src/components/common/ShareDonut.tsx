@@ -37,7 +37,7 @@ export const ShareDonut: React.FC<ShareDonutProps> = ({ segments, total, size = 
   let offset = 0;
   return (
     <div className={`flex flex-wrap items-center gap-x-6 gap-y-3 w-full ${legendBeside ? 'justify-start' : 'justify-center'}`}>
-      <div role="img" aria-label={ariaLabel} className="relative shrink-0" style={{ inlineSize: size, blockSize: size }}>
+      <div role="img" aria-label={centerValue !== undefined ? `${ariaLabel}، الإجمالي ${centerValue}${centerLabel ? ' ' + centerLabel : ''}` : ariaLabel} className="relative shrink-0" style={{ inlineSize: size, blockSize: size }}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true" className="-rotate-90 rtl:scale-x-[-1]">
           <circle cx={mid} cy={mid} r={r} fill="none" strokeWidth={stroke} className="stroke-white/10" />
           {sum > 0 && segments.map(seg => {
