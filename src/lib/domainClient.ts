@@ -56,5 +56,6 @@ export const moderationClient = {
   setUserStatus: (userId: string, status: string, reason: string) => request<{ user: { id: string; role: string; status: string }; changed: boolean }>(`/api/v1/moderation/users/${encodeURIComponent(userId)}/status`, { method: 'POST', body: JSON.stringify({ status, reason }) }),
   pauseProduct: (productId: string, reason: string) => request<{ product: { id: string; status: string }; pausedLaunches: number }>(`/api/v1/moderation/products/${encodeURIComponent(productId)}/pause`, { method: 'POST', body: JSON.stringify({ reason }) }),
   resumeProduct: (productId: string, reason: string) => request<{ product: { id: string; status: string }; note: string }>(`/api/v1/moderation/products/${encodeURIComponent(productId)}/resume`, { method: 'POST', body: JSON.stringify({ reason }) }),
+  listUsers: (after?: string) => request<{ users: Array<{ id: string; name: string; email: string; role: string; status: string }>; nextAfter: string | null }>(`/api/v1/moderation/users${after ? `?after=${encodeURIComponent(after)}` : ''}`),
   actions: (targetType?: 'USER' | 'PRODUCT') => request<{ actions: any[] }>(`/api/v1/moderation/actions${targetType ? `?targetType=${targetType}` : ''}`),
 };

@@ -3,6 +3,7 @@ import { Response, Router } from 'express';
 import { AuthConfig, AuthRole, AuthenticatedRequest, requireAuth, requireCsrf, requireRoles } from './auth';
 import { MajalDatabase, withTransaction } from './database';
 import { syncRoleClaim } from './firebase-mirror';
+import { ASSIGNABLE_ROLES } from '../src/lib/assignableRoles';
 
 /*
  * إجراءات الإشراف الإدارية.
@@ -19,10 +20,7 @@ const jsonError = (res: Response, status: number, message: string, code: string)
 const text = (value: unknown, min: number, max: number) =>
   typeof value === 'string' && value.trim().length >= min && value.trim().length <= max ? value.trim() : undefined;
 
-const ASSIGNABLE_ROLES: AuthRole[] = [
-  'CREATOR', 'HOST_OWNER', 'HOST_OPERATIONS', 'HOST_CHEF', 'HOST_FINANCE',
-  'HOST_MARKETING', 'HOST_SUPPORT', 'ADMIN', 'CONSUMER'
-];
+const USER_LIST_MAX = 50;
 const ASSIGNABLE_STATUSES = ['ACTIVE', 'SUSPENDED', 'INVITED'] as const;
 
 type UserRow = { id: string; name: string; email: string; role: string; status: string };
@@ -62,7 +60,7 @@ export function createModerationRouter(db: MajalDatabase, authConfig: AuthConfig
     const role = text(req.body?.role, 3, 40) as AuthRole | undefined;
     const reason = text(req.body?.reason, 3, 500);
     if (!userId) return jsonError(res, 400, 'معرّف المستخدم غير صالح.', 'INVALID_USER');
-    if (!role || !ASSIGNABLE_ROLES.includes(role)) return jsonError(res, 400, 'الدور المطلوب غير صالح.', 'INVALID_ROLE');
+    if (!role || !(ASSIGNABLE_ROLES as readonly string[]).includes(role)) return jsonError(res, 400, 'الدور المطلوب غير صالح.', 'INVALID_ROLE');
     if (!reason) return jsonError(res, 400, 'سبب تغيير الدور مطلوب للتدقيق.', 'REASON_REQUIRED');
     if (userId === req.auth!.user.id) return jsonError(res, 409, 'لا يمكن تغيير دورك الخاص.', 'SELF_ROLE_CHANGE');
 
@@ -154,6 +152,27 @@ export function createModerationRouter(db: MajalDatabase, authConfig: AuthConfig
     res.json({
       product: { id: product.id, status: 'AVAILABLE_FOR_MATCHING' },
       note: 'الإطلاقات الموقوفة تحتاج اجتياز بوابة الإطلاق من جديد قبل العودة للبيع.'
+    });
+  });
+
+  /*
+   * قائمة الحسابات القابلة للإدارة لتبويب «الصلاحيات». قراءة فقط، محصورة بالسوبر أدمن (نفس
+   * من يملك تغيير الأدوار)، بأقل الحقول (بلا هاتف ولا أسرار ولا بيانات مصادقة)، وبترقيم
+   * keyset على id وحد أقصى 50 للصفحة. الصورة غير مخزّنة في جدول users فلا تُرجع.
+   */
+  router.get('/users', requireRoles('SUPER_ADMIN'), async (req: AuthenticatedRequest, res) => {
+    const rawLimit = Number(req.query?.limit);
+    const limit = Number.isInteger(rawLimit) && rawLimit >= 1 ? Math.min(rawLimit, USER_LIST_MAX) : USER_LIST_MAX;
+    const after = typeof req.query?.after === 'string' ? text(req.query.after, 1, 120) : undefined;
+    if (req.query?.after !== undefined && !after) return jsonError(res, 400, 'مؤشر الصفحة غير صالح.', 'INVALID_CURSOR');
+    const rows = after
+      ? await db.prepare('SELECT id, name, email, role, status FROM users WHERE id > ? ORDER BY id ASC LIMIT ?').all<UserRow>(after, limit + 1)
+      : await db.prepare('SELECT id, name, email, role, status FROM users ORDER BY id ASC LIMIT ?').all<UserRow>(limit + 1);
+    const page = rows.slice(0, limit);
+    res.set('Cache-Control', 'no-store');
+    res.json({
+      users: page.map(row => ({ id: row.id, name: row.name, email: row.email, role: row.role, status: row.status })),
+      nextAfter: rows.length > limit ? page[page.length - 1].id : null
     });
   });
 

@@ -20,6 +20,7 @@ import {
 import { store } from '../../lib/store';
 import { getRolePermissions, roleLabel, permissionLabel } from '../../lib/permissions';
 import { UserRole } from '../../types/majal';
+import { roleChangeOptions } from '../../lib/assignableRoles';
 import { TrustEngine } from './TrustEngine';
 import { MarketplaceLiquidity } from './MarketplaceLiquidity';
 import { AdminAuditLogs } from './AdminAuditLogs';
@@ -54,6 +55,7 @@ export const SuperAdminDashboard: React.FC = () => {
     signed: store.contracts.filter(c => c.status === 'FULLY_SIGNED').length
   };
 
+  useEffect(() => { if (activeTab === 'PERMISSIONS' && !IS_DEMO_MODE) void store.loadManageableUsers(); }, [activeTab]);
   const roleRows: UserRole[] = ['SUPER_ADMIN','ADMIN','HOST_OWNER','HOST_OPERATIONS','HOST_CHEF','HOST_FINANCE','HOST_MARKETING','HOST_SUPPORT','CREATOR','CONSUMER'];
 
   const tabs = [
@@ -183,7 +185,7 @@ export const SuperAdminDashboard: React.FC = () => {
                       }}
                       className="glass-input rounded-xl px-3 py-2 text-xs outline-none"
                     >
-                      {roleRows.map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
+                      {roleChangeOptions(user.role).map(role => <option key={role} value={role} disabled={role === user.role && role === 'SUPER_ADMIN'}>{roleLabel(role)}</option>)}
                     </select>
                     <button
                       onClick={() => {

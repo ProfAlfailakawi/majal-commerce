@@ -289,6 +289,51 @@ test('role changes need SUPER_ADMIN, refuse self-service, and require a reason',
   }
 });
 
+test('the manageable-user list is SUPER_ADMIN only, minimal-field, and paginated', async () => {
+  const h = await harness();
+  try {
+    const get = (path: string, session?: Session) =>
+      fetch(`${h.baseUrl}/api/v1/moderation/users${path}`, { headers: session ? { cookie: session.cookie, 'x-csrf-token': session.csrf } : {} });
+
+    // Unauthenticated, ordinary users and plain ADMINs are refused.
+    assert.equal((await get('')).status, 401);
+    const consumer = await register(h.baseUrl, 'list-consumer@commerce.test', 'ListConsumer');
+    assert.equal((await get('', consumer)).status, 403);
+    const admin = await register(h.baseUrl, 'list-admin@commerce.test', 'ListAdmin');
+    await h.db.prepare("UPDATE users SET role='ADMIN' WHERE id=?").run(admin.userId);
+    assert.equal((await get('', admin)).status, 403);
+
+    const root = await register(h.baseUrl, 'list-root@commerce.test', 'ListRoot');
+    await h.db.prepare("UPDATE users SET role='SUPER_ADMIN' WHERE id=?").run(root.userId);
+    for (let i = 0; i < 4; i += 1) await register(h.baseUrl, `list-extra${i}@commerce.test`, `ListExtra${i}`);
+
+    const response = await get('', root);
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    const body = await response.json() as { users: Array<Record<string, unknown>>; nextAfter: string | null };
+    assert.equal(body.users.length, 7);
+    assert.equal(body.nextAfter, null);
+    // Only the allowed fields; never phone, password material, MFA secrets or lockout state.
+    for (const user of body.users) assert.deepEqual(Object.keys(user).sort(), ['email', 'id', 'name', 'role', 'status']);
+    assert.ok(!JSON.stringify(body).match(/password|salt|mfa|phone|token/i));
+
+    // The page size is capped and keyset pagination walks the whole set exactly once.
+    const first = await (await get('?limit=3', root)).json() as { users: Array<{ id: string }>; nextAfter: string | null };
+    assert.equal(first.users.length, 3);
+    assert.ok(first.nextAfter);
+    const second = await (await get(`?limit=3&after=${encodeURIComponent(first.nextAfter!)}`, root)).json() as { users: Array<{ id: string }>; nextAfter: string | null };
+    const third = await (await get(`?limit=3&after=${encodeURIComponent(second.nextAfter!)}`, root)).json() as { users: Array<{ id: string }>; nextAfter: string | null };
+    const ids = [...first.users, ...second.users, ...third.users].map(u => u.id);
+    assert.equal(new Set(ids).size, 7);
+    assert.equal(third.nextAfter, null);
+    const huge = await (await get('?limit=100000', root)).json() as { users: unknown[] };
+    assert.ok(huge.users.length <= 50);
+    assert.equal((await get('?after=', root)).status, 400);
+  } finally {
+    await h.close();
+  }
+});
+
 test('pausing a product actually stops its live launches from selling', async () => {
   const h = await harness();
   try {
