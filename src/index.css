@@ -1034,3 +1034,7 @@ body { padding-bottom: 4.5rem; }
   }
   [role='tablist'].overflow-x-auto > [role='tab'] { scroll-snap-align: center; }
 }
+
+/* r42 · brand tagline: shown at lg only; from xl the 80rem header container leaves no spare width. */
+.majal-brand-tagline { display: none; }
+@media (min-width: 1024px) and (max-width: 1279px) { .majal-brand-tagline { display: block; } }
