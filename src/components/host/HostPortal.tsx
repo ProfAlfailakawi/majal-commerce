@@ -1,3 +1,4 @@
+import { DnaRing } from '../dna/DnaKit';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
@@ -49,6 +50,8 @@ export const HostPortal: React.FC = () => {
   const host = store.hosts.find(h => h.id === currentHostId);
   const myCollaborations = store.collaborations.filter(c => c.hostBusinessId === currentHostId);
   const activeCol = myCollaborations[0];
+  const hostProducts = store.products.filter(p => myCollaborations.some(c => c.productId === p.id));
+  const activeHostProducts = hostProducts.filter(p => !['PAUSED','COMPLETED'].includes(p.status));
   const activeProduct = activeCol ? store.products.find(p => p.id === activeCol.productId) : undefined;
   const hostOrders = store.orders.filter(o => o.hostBusinessId === currentHostId);
 
@@ -183,9 +186,9 @@ export const HostPortal: React.FC = () => {
               { label: 'التعاونات', value: myCollaborations.length, icon: <Sparkles className="w-4 h-4 text-fuchsia-300" /> },
               { label: 'الفروع', value: host.branches.length, icon: <Building2 className="w-4 h-4 text-sky-300" /> },
               { label: canSeeFinance ? 'إجمالي المبيعات' : 'الإطلاقات', value: canSeeFinance ? `${finance.gmv.toFixed(3)} د.ك` : store.launches.filter(l => l.hostBusinessId === currentHostId && ['LIVE','PERMANENT'].includes(l.status)).length, icon: <Activity className="w-4 h-4 text-emerald-300" /> },
-              { label: canSeeFinance ? 'صافي المنشأة' : 'المنتجات النشطة', value: canSeeFinance ? `${finance.hostNet.toFixed(3)} د.ك` : store.products.filter(p => myCollaborations.some(c => c.productId === p.id) && !['PAUSED','COMPLETED'].includes(p.status)).length, icon: <CircleDollarSign className="w-4 h-4 text-gold-300" /> }
+              { label: canSeeFinance ? 'صافي المنشأة' : 'المنتجات النشطة', value: canSeeFinance ? `${finance.hostNet.toFixed(3)} د.ك` : activeHostProducts.length, icon: <CircleDollarSign className="w-4 h-4 text-gold-300" />, ring: canSeeFinance ? (finance.gmv > 0 ? { pct: Math.round(finance.hostNet / finance.gmv * 100), aria: 'حصة المنشأة من إجمالي المبيعات' } : null) : (hostProducts.length ? { pct: Math.round(activeHostProducts.length / hostProducts.length * 100), aria: 'نسبة المنتجات النشطة من منتجات المنشأة' } : null) }
             ].map((item, idx) => (
-              <div key={idx} className="glass-card rounded-2xl p-4 border border-white/10"><div className="flex items-center gap-2 text-xs text-slate-400">{item.icon}{item.label}</div><div className="mt-2 text-xl font-black text-slate-100 font-mono">{item.value}</div></div>
+              <div key={idx} className="glass-card rounded-2xl p-4 border border-white/10"><div className="flex items-center gap-2 text-xs text-slate-400">{item.icon}{item.label}</div><div className="mt-2 flex items-center justify-between gap-2"><div className="text-xl font-black text-slate-100 font-mono min-w-0">{item.value}</div>{'ring' in item && item.ring && <DnaRing value={item.ring.pct} size={40} stroke={4} label={`${item.ring.pct}%`} ariaLabel={`${item.ring.aria} ${item.ring.pct}%`} />}</div></div>
             ))}
           </div>
 
