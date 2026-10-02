@@ -968,7 +968,7 @@ header.glass-nav { padding-top: env(safe-area-inset-top, 0px); }
 body:has([aria-modal='true']) .majal-ai-fab { opacity: 0; visibility: hidden; pointer-events: none; }
 /* r42 · desktop: the pill rests as a 3rem circle (label opens on hover/focus) so it never parks
    over left-edge content; the page keeps a bottom gutter so the last rows clear it. */
-body { padding-bottom: 4.5rem; }
+body:has(.majal-ai-fab) { padding-bottom: 4.5rem; }
 @media (min-width: 640px) {
   .majal-ai-fab > button { padding: 0; width: 3rem; height: 3rem; justify-content: center; gap: 0; overflow: hidden; transition: width 0.2s ease, padding 0.2s ease, background-color 0.15s ease; }
   .majal-ai-fab > button > span, .majal-ai-fab > button > svg:last-child { display: none; }
