@@ -150,6 +150,8 @@ async function initializeApplication(app: express.Express) {
   app.use('/api/v1/ecosystem', createEcosystemRouter(db, authConfig));
   app.use('/api/v1/advanced', createAdvancedRouter(db, authConfig));
   app.use('/api/v1/orders', createOrdersRouter(db, authConfig, paymentRegistry));
+  // قائمة الحسابات الإدارية قراءة فقط ومحصورة بالسوبر أدمن؛ حدّ إضافي يمنع كشطها.
+  app.get('/api/v1/moderation/users', expressRateLimit(limitOptions(60, 5 * 60_000, 'moderation-users')));
   app.use('/api/v1/moderation', createModerationRouter(db, authConfig));
   // تقييمات الإطلاق عامة القراءة (كتالوج عام)، فلا تمرّ بحارس المصادقة.
   app.use('/api/v1/public', createPublicReviewsRouter(db));

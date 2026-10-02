@@ -687,6 +687,37 @@ export class Store {
     this.notify();
   }
 
+  /**
+   * يحمّل الحسابات القابلة للإدارة من الخادم (السوبر أدمن فقط، مرقّمة). في الوضع التجريبي لا
+   * يفعل شيئًا: القائمة المحلية هي المصدر. لا يُستبدل المستخدم الفعّال ولا تُمرَّر أي حقول سرية.
+   */
+  public async loadManageableUsers(): Promise<boolean> {
+    if (IS_DEMO_MODE) return true;
+    if (this.activeUser.role !== 'SUPER_ADMIN') return false;
+    const generation = this.authGeneration;
+    const userId = this.activeUser.id;
+    const loaded = await this.serverMutation(async () => {
+      const collected: User[] = [];
+      let after: string | undefined;
+      // سقف صفحات دفاعي: 20 × 50 حسابًا؛ ما بعده يحتاج بحثًا مخصصًا لا قائمة كاملة.
+      for (let page = 0; page < 20; page += 1) {
+        const result = await moderationClient.listUsers(after);
+        for (const row of result.users) {
+          collected.push({ id: row.id, name: row.name, email: row.email, phone: '', role: row.role as User['role'], status: row.status as User['status'] });
+        }
+        if (!result.nextAfter) break;
+        after = result.nextAfter;
+      }
+      return collected;
+    });
+    if (!loaded) return false;
+    // لا تُطبَّق نتيجة طلب بدأه حساب سابق على الحساب الحالي.
+    if (generation !== this.authGeneration || userId !== this.activeUser.id) return false;
+    this.users = [this.activeUser, ...loaded.filter(u => u.id !== userId)];
+    this.notify();
+    return true;
+  }
+
   public changeUserRole(userId: string, role: User['role'], reason = 'تغيير دور إداري من لوحة السوبر أدمن.') {
     // الدور صلاحية لا حالة عرض. المسار الإنتاجي خادمي: يتحقق من الصلاحية، يكتب السبب في
     // سجل التدقيق، ويبطل جلسات الحساب فوراً حتى لا يسري الدور القديم حتى انتهاء الجلسة.
