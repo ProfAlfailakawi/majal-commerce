@@ -180,7 +180,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between max-sm:flex-wrap max-sm:min-h-16 max-sm:py-2 sm:h-20 gap-2 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <button onClick={() => onSurfaceChange('PUBLIC')} className="flex items-center gap-2 sm:gap-3 text-start group focus:outline-none shrink-0 xl:shrink xl:min-w-0 focus-visible:ring-2 focus-visible:ring-gold-300" aria-label="العودة إلى صفحة مجال العامة">
+            <button onClick={() => onSurfaceChange('PUBLIC')} className="flex items-center gap-2 sm:gap-3 text-start group focus:outline-none shrink-0 focus-visible:ring-2 focus-visible:ring-gold-300" aria-label="العودة إلى صفحة مجال العامة">
               <span className="grid place-items-center w-11 h-11 rounded-2xl bg-white/[0.04] border border-gold-300/15 shrink-0 transition-all duration-200 group-hover:border-gold-300/35 group-hover:bg-gold-500/10">
                 <MajalMark size={26} />
               </span>
@@ -188,7 +188,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="text-xl sm:text-2xl font-black majal-wordmark block truncate leading-tight">
                   مجال
                 </span>
-                <span className="hidden lg:block text-xs text-slate-400 font-medium truncate">
+                <span className="hidden lg:block text-xs text-slate-400 font-medium whitespace-nowrap">
                   منصة الحاضن التجاري المرخّص
                 </span>
               </div>
@@ -325,7 +325,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 aria-expanded={showNotifications}
               >
                 <Bell className="w-4 h-4" />
-                {unreadCount > 0 && <span aria-hidden="true" className="absolute top-0.5 end-0.5 min-w-4 h-4 px-1 rounded-full bg-gold-500 text-slate-950 text-[10px] font-black leading-4 text-center tabular-nums">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+                {unreadCount > 0 && <span aria-hidden="true" className="absolute top-0.5 end-0.5 min-w-4 h-4 px-1 rounded-full bg-gold-500 text-slate-950 text-[11px] font-black leading-4 text-center tabular-nums">{unreadCount > 99 ? '99+' : unreadCount}</span>}
               </button>
 
               {showNotifications && (
