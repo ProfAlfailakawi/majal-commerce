@@ -966,7 +966,17 @@ header.glass-nav { padding-top: env(safe-area-inset-top, 0px); }
    aria-modal dialog is open. Display-only: the button and its click are untouched. */
 .majal-ai-fab { z-index: 30; transition: opacity 0.15s ease; }
 body:has([aria-modal='true']) .majal-ai-fab { opacity: 0; visibility: hidden; pointer-events: none; }
+/* r42 · desktop: the pill rests as a 3rem circle (label opens on hover/focus) so it never parks
+   over left-edge content; the page keeps a bottom gutter so the last rows clear it. */
+body:has(.majal-ai-fab) { padding-bottom: 4.5rem; }
+@media (min-width: 640px) {
+  .majal-ai-fab > button { padding: 0; width: 3rem; height: 3rem; justify-content: center; gap: 0; overflow: hidden; transition: width 0.2s ease, padding 0.2s ease, background-color 0.15s ease; }
+  .majal-ai-fab > button > span, .majal-ai-fab > button > svg:last-child { display: none; }
+  .majal-ai-fab > button:hover, .majal-ai-fab > button:focus-visible { width: auto; padding: 0 1rem; gap: 0.5rem; }
+  .majal-ai-fab > button:hover > span, .majal-ai-fab > button:focus-visible > span, .majal-ai-fab > button:hover > svg:last-child, .majal-ai-fab > button:focus-visible > svg:last-child { display: inline-block; }
+}
 @media (max-width: 639px) {
+  .majal-ai-fab { inset-inline-end: 0.75rem; }
   .majal-ai-fab > button { padding: 0; width: 3rem; height: 3rem; min-width: 3rem; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28); }
 }
 
@@ -1024,3 +1034,7 @@ body:has([aria-modal='true']) .majal-ai-fab { opacity: 0; visibility: hidden; po
   }
   [role='tablist'].overflow-x-auto > [role='tab'] { scroll-snap-align: center; }
 }
+
+/* r42 · brand tagline: shown at lg only; from xl the 80rem header container leaves no spare width. */
+.majal-brand-tagline { display: none; }
+@media (min-width: 1024px) and (max-width: 1279px) { .majal-brand-tagline { display: block; } }

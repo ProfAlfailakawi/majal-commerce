@@ -60,11 +60,11 @@ export const MajalPulse: React.FC = () => {
 
         <ol aria-label="مسار الصفقات من المبدعين إلى الإطلاق" className="rounded-2xl p-4 bg-slate-950/35 border border-white/10 space-y-2.5">
           {funnel.map(step => (
-            <li key={step.label} className="flex items-center gap-3 text-xs">
-              <span className={`flex items-center gap-1.5 w-40 shrink-0 font-bold text-slate-200`}><span className={step.tone} aria-hidden="true">{step.icon}</span>{step.label}</span>
-              <span className="hidden md:block w-40 shrink-0 text-slate-400">{step.detail}</span>
-              <span className="flex-1 h-3 rounded-full bg-white/5 overflow-hidden" aria-hidden="true"><span className={`block h-full rounded-full ${step.bar}`} style={{ width: `${(step.value / funnelMax) * 100}%` }} /></span>
-              <strong className={`w-10 text-end font-mono text-base ${step.tone}`}>{step.value}</strong>
+            <li key={step.label} className="flex flex-wrap md:flex-nowrap items-center gap-x-3 gap-y-1.5 text-xs">
+              <span className={`order-1 flex items-center gap-1.5 md:w-40 shrink-0 font-bold text-slate-200`}><span className={step.tone} aria-hidden="true">{step.icon}</span>{step.label}</span>
+              <span className="order-3 hidden md:block w-40 shrink-0 text-slate-400">{step.detail}</span>
+              <span className="order-4 basis-full md:basis-auto md:flex-1 h-3 rounded-full bg-white/5 overflow-hidden" aria-hidden="true"><span className={`block h-full rounded-full ${step.bar}`} style={{ width: `${(step.value / funnelMax) * 100}%` }} /></span>
+              <strong className={`order-2 min-w-10 text-start font-mono text-base ${step.tone}`}>{step.value}</strong>
             </li>
           ))}
         </ol>

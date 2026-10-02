@@ -188,7 +188,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="text-xl sm:text-2xl font-black majal-wordmark block truncate leading-tight">
                   مجال
                 </span>
-                <span className="hidden lg:block text-xs text-slate-400 font-medium truncate">
+                <span className="majal-brand-tagline text-xs text-slate-400 font-medium whitespace-nowrap">
                   منصة الحاضن التجاري المرخّص
                 </span>
               </div>
@@ -325,7 +325,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 aria-expanded={showNotifications}
               >
                 <Bell className="w-4 h-4" />
-                {unreadCount > 0 && <span aria-hidden="true" className="absolute top-0.5 end-0.5 min-w-4 h-4 px-1 rounded-full bg-gold-500 text-slate-950 text-[10px] font-black leading-4 text-center tabular-nums">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+                {unreadCount > 0 && <span aria-hidden="true" className="absolute top-0.5 end-0.5 min-w-4 h-4 px-1 rounded-full bg-gold-500 text-slate-950 text-[11px] font-black leading-4 text-center tabular-nums">{unreadCount > 99 ? '99+' : unreadCount}</span>}
               </button>
 
               {showNotifications && (
