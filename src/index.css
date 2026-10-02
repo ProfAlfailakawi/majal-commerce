@@ -969,3 +969,21 @@ body:has([aria-modal='true']) .majal-ai-fab { opacity: 0; visibility: hidden; po
 @media (max-width: 639px) {
   .majal-ai-fab > button { padding: 0; width: 3rem; height: 3rem; min-width: 3rem; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28); }
 }
+
+/* ── r29 · lighter top chrome ─────────────────────────────────────────────────
+   The guidance strip becomes a one-line bar (the reason stays in the DOM and in its
+   tooltip; it is only ellipsised) and hero cards give back ~30% of their padding. */
+.majal-guide { padding-top: 0.75rem; }
+.majal-guide > div { padding-block: 0.5rem; }
+.majal-guide-reason { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 46rem; }
+@media (max-width: 767px) {
+  .majal-guide { padding-top: 0.5rem; }
+  .majal-guide > div { gap: 0.5rem; }
+  .majal-guide > div > div:last-child { justify-content: space-between; gap: 0.5rem; }
+  .majal-guide > div > div:last-child > button:last-child { flex: 1; justify-content: center; }
+  .majal-guide-eyebrow, .majal-guide-reason { display: none; }
+  .majal-guide > div > div:first-child > span:first-child { width: 2rem; height: 2rem; border-radius: 0.6rem; }
+  .majal-guide > div > div:first-child > span:first-child svg { width: 1rem; height: 1rem; }
+  .majal-hero { padding: 1.1rem !important; }
+}
+@media (min-width: 768px) { .majal-hero { padding: 1.4rem 1.6rem !important; } }

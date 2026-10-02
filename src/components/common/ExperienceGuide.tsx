@@ -148,14 +148,14 @@ export const ExperienceGuide: React.FC<ExperienceGuideProps> = ({ activeSurface,
 
   return (
     <>
-      <section aria-label="التوجيه الذكي" className="relative z-20 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-5">
+      <section aria-label="التوجيه الذكي" className="majal-guide relative z-20 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-5">
         <div className="glass-card rounded-2xl border border-white/10 px-4 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xl">
           <div className="flex items-start sm:items-center gap-3 min-w-0">
             <span className="w-10 h-10 shrink-0 rounded-xl bg-gold-500/15 border border-gold-300/20 grid place-items-center text-gold-300"><Compass className="w-5 h-5" /></span>
             <div className="min-w-0">
-              <span className="block text-xs font-black tracking-wide text-gold-300 uppercase">{nextMove.eyebrow}</span>
+              <span className="majal-guide-eyebrow block text-xs font-black tracking-wide text-gold-300 uppercase">{nextMove.eyebrow}</span>
               <span className="block text-sm font-black text-slate-100 sm:truncate" title={nextMove.title}>{nextMove.title}</span>
-              {mode !== 'SIMPLE' && <span className="block text-xs text-slate-400 mt-1 leading-5">{nextMove.reason}</span>}
+              {mode !== 'SIMPLE' && <span className="majal-guide-reason block text-xs text-slate-400 mt-1 leading-5" title={nextMove.reason}>{nextMove.reason}</span>}
               {mode === 'EXPERT' && <span className="inline-flex mt-1 text-xs text-sky-300">إشارة السياق: {nextMove.signal} · السطح الحالي: {surfaceMeta[activeSurface].label}</span>}
             </div>
           </div>

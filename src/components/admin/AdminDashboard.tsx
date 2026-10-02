@@ -88,7 +88,7 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
-      <section className="glass-panel rounded-[28px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
+      <section className="majal-hero glass-panel rounded-[28px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
         <div className="absolute inset-y-0 start-0 w-64 bg-gradient-to-l from-gold-500/10 to-transparent pointer-events-none" />
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-3 max-w-3xl">
