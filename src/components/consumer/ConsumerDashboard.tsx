@@ -91,7 +91,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
-      <section className="glass-panel rounded-[34px] p-6 md:p-10 border border-white/10 relative overflow-hidden">
+      <section className="majal-hero glass-panel rounded-[34px] p-6 md:p-10 border border-white/10 relative overflow-hidden">
         <div className="majal-glow -top-80 -end-48 w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
         <div className="relative z-10 grid lg:grid-cols-[1.05fr_.95fr] gap-8 items-center">
           <div className="space-y-5">
@@ -120,9 +120,9 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
             <div className="rounded-[28px] overflow-hidden bg-slate-950/50 border border-white/10 shadow-2xl">
               <div className="relative h-72">
                 <img src={featuredProduct.mediaUrls[0]} alt={featuredProduct.publicName} decoding="async" fetchPriority="high" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
+                <div className="majal-art-scrim absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
                 <div className="absolute top-4 start-4 px-3 py-1.5 rounded-full bg-slate-950/75 backdrop-blur text-gold-300 border border-gold-300/20 text-xs font-black">{formatKwd(featured.sellingPriceKwd)}</div>
-                <div className="absolute bottom-5 start-5 end-5">
+                <div className="majal-art-title absolute bottom-5 start-5 end-5">
                   <div className="text-xs text-emerald-300 font-black mb-1">{featuredHost?.commercialName}</div>
                   <h2 className="text-xl md:text-2xl font-black text-white">{featuredProduct.publicName}</h2>
                 </div>
@@ -163,9 +163,9 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
               <article key={launch.id} className="glass-card rounded-3xl border border-white/10 overflow-hidden hover:-translate-y-1 transition-transform">
                 <div className="relative h-52">
                   <img src={product?.mediaUrls[0]} alt={launch.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
+                  <div className="majal-art-scrim absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
                   <div className="absolute top-3 start-3 px-2.5 py-1 rounded-full bg-slate-950/75 border border-white/10 text-xs text-gold-300 font-black">{({ LIMITED_DROP: 'إطلاق محدود', TRIAL_PERIOD: 'فترة تجريبية', PERMANENT_MENU: 'قائمة دائمة', SEASONAL: 'موسمي' } as Record<string, string>)[launch.launchType] ?? launch.launchType}</div>
-                  <div className="absolute bottom-4 start-4 end-4"><div className="text-xs text-emerald-300 font-black">{creator?.displayName} × {host?.commercialName}</div><h3 className="font-black text-white mt-1">{product?.publicName || launch.title}</h3></div>
+                  <div className="majal-art-title absolute bottom-4 start-4 end-4"><div className="text-xs text-emerald-300 font-black">{creator?.displayName} × {host?.commercialName}</div><h3 className="font-black text-white mt-1">{product?.publicName || launch.title}</h3></div>
                 </div>
                 <div className="p-5 space-y-4">
                   <p className="text-xs text-slate-400 leading-6 line-clamp-2">{product?.shortDescription}</p>

@@ -960,3 +960,67 @@ header.glass-nav { padding-top: env(safe-area-inset-top, 0px); }
     linear-gradient(180deg, #fbf8f1 0%, #f7f4ec 55%, #f1ece0 100%);
 }
 :root[data-theme='light'] .majal-onb .glass-card { background: rgba(255, 255, 255, 0.85); }
+
+/* ── r29 · AI assistant FAB ───────────────────────────────────────────────────
+   Sits below every modal backdrop (z-50+) and steps out of sight while any
+   aria-modal dialog is open. Display-only: the button and its click are untouched. */
+.majal-ai-fab { z-index: 30; transition: opacity 0.15s ease; }
+body:has([aria-modal='true']) .majal-ai-fab { opacity: 0; visibility: hidden; pointer-events: none; }
+@media (max-width: 639px) {
+  .majal-ai-fab > button { padding: 0; width: 3rem; height: 3rem; min-width: 3rem; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28); }
+}
+
+/* ── r29 · lighter top chrome ─────────────────────────────────────────────────
+   The guidance strip becomes a one-line bar (the reason stays in the DOM and in its
+   tooltip; it is only ellipsised) and hero cards give back ~30% of their padding. */
+.majal-guide { padding-top: 0.75rem; }
+.majal-guide > div { padding-block: 0.5rem; }
+.majal-guide-reason { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 46rem; }
+@media (max-width: 767px) {
+  .majal-guide { padding-top: 0.5rem; }
+  .majal-guide > div { gap: 0.5rem; }
+  .majal-guide > div > div:last-child { justify-content: space-between; gap: 0.5rem; }
+  .majal-guide > div > div:last-child > button:last-child { flex: 1; justify-content: center; }
+  .majal-guide-eyebrow, .majal-guide-reason { display: none; }
+  .majal-guide > div > div:first-child > span:first-child { width: 2rem; height: 2rem; border-radius: 0.6rem; }
+  .majal-guide > div > div:first-child > span:first-child svg { width: 1rem; height: 1rem; }
+  .majal-hero { padding: 1.1rem !important; }
+}
+@media (min-width: 768px) { .majal-hero { padding: 1.4rem 1.6rem !important; } }
+
+/* ── r29 · one accent in dark mode ────────────────────────────────────────────
+   The light theme already folds sky into gold (see :root[data-theme='light']). The host
+   portal (owner, ops, chef, finance, marketing, support) kept cyan in dark mode, so the
+   same product read gold everywhere except there. Scoped to the portal root, dark/contrast
+   only; success/warning/danger hues are untouched. */
+:root:not([data-theme='light']) [data-accent='gold'] {
+  --color-sky-100: var(--color-gold-100);
+  --color-sky-200: var(--color-gold-200);
+  --color-sky-300: var(--color-gold-300);
+  --color-sky-400: var(--color-gold-400);
+  --color-sky-500: var(--color-gold-500);
+  --color-cyan-300: var(--color-gold-300);
+  --color-cyan-400: var(--color-gold-400);
+  --color-cyan-500: var(--color-gold-500);
+}
+
+/* ── r29 · product-art title contrast ─────────────────────────────────────────
+   The scrim under a title on photo cards is a fixed dark ramp in every theme, and the
+   title/creator line on it keeps light text (in the light theme the text utilities remap
+   to ink, which sat on this dark ramp). */
+.majal-art-scrim { background-image: linear-gradient(to top, rgba(7, 13, 24, 0.9) 0%, rgba(7, 13, 24, 0.6) 34%, rgba(7, 13, 24, 0) 68%) !important; }
+.majal-art-title, .majal-art-title :is(h1, h2, h3, h4) { color: #ffffff !important; }
+.majal-art-title .text-emerald-300 { color: #6ee7b7 !important; }
+.majal-art-title .text-slate-300, .majal-art-title .text-slate-400 { color: #e2e8f0 !important; }
+
+/* ── r29 · scrollable tab strips ──────────────────────────────────────────────
+   Phones: tabs snap into place and the strip fades at its far (left, RTL) edge so a cut-off tab reads
+   as «more this way» instead of a clipped label. Pure CSS; scrolling itself is unchanged. */
+@media (max-width: 639px) {
+  [role='tablist'].overflow-x-auto {
+    scroll-snap-type: x proximity;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 28px);
+    mask-image: linear-gradient(to right, transparent 0, #000 28px);
+  }
+  [role='tablist'].overflow-x-auto > [role='tab'] { scroll-snap-align: center; }
+}

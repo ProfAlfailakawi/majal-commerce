@@ -193,15 +193,15 @@ export default function App() {
         </main>
       </div>
 
-      {AI_ASSISTANT_ENABLED && <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] end-4 sm:bottom-6 sm:end-6 z-40">
+      {AI_ASSISTANT_ENABLED && <div className="majal-ai-fab fixed bottom-[max(1rem,env(safe-area-inset-bottom))] end-4 sm:bottom-6 sm:end-6 z-40">
         <button
           onClick={() => setShowAiDrawer(true)}
-          className="max-sm:min-h-12 max-sm:min-w-12 px-4 py-3 bg-gold-400 hover:bg-gold-300 text-slate-950 font-black rounded-full shadow-lg shadow-black/30 transition-colors flex items-center gap-2 text-xs border border-gold-200/30"
+          className="max-sm:min-h-12 max-sm:min-w-12 max-sm:justify-center max-sm:px-3 px-4 py-3 bg-gold-400 hover:bg-gold-300 text-slate-950 font-black rounded-full shadow-lg shadow-black/30 transition-colors flex items-center gap-2 text-xs border border-gold-200/30"
           aria-label="فتح مساعد مجال الذكي"
         >
           <Bot className="w-5 h-5 text-slate-950" />
           <span className="hidden sm:inline">مساعد مجال الذكي</span>
-          <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+          <Sparkles className="hidden sm:block w-3.5 h-3.5 text-slate-950" />
         </button>
       </div>}
 

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Activity,
   BadgeCheck,
+  ChevronDown,
   Building2,
   Crown,
   Database,
@@ -23,6 +24,7 @@ import { UserRole } from '../../types/majal';
 import { roleChangeOptions } from '../../lib/assignableRoles';
 import { TrustEngine } from './TrustEngine';
 import { MarketplaceLiquidity } from './MarketplaceLiquidity';
+import { PermissionMatrix } from './PermissionMatrix';
 import { AdminAuditLogs } from './AdminAuditLogs';
 import { MajalPulse } from './MajalPulse';
 import { PlatformPolicyCenter } from './PlatformPolicyCenter';
@@ -69,7 +71,7 @@ export const SuperAdminDashboard: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
-      <section className="glass-panel rounded-[32px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
+      <section className="majal-hero glass-panel rounded-[32px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
         <div className="majal-glow -top-[19rem] -end-[17rem] w-[44rem] h-[44rem]" style={{ '--glow': 'rgba(232,121,249,0.10)' } as React.CSSProperties} />
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
           <div className="space-y-3 max-w-3xl">
@@ -147,6 +149,10 @@ export const SuperAdminDashboard: React.FC = () => {
       {activeTab === 'PERMISSIONS' && (
         <section className="glass-panel rounded-3xl p-5 md:p-6 border border-white/10 space-y-5">
           <div className="flex items-center gap-3"><div className="w-12 h-12 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-400/20 flex items-center justify-center text-fuchsia-300"><KeyRound className="w-6 h-6" /></div><div><h3 className="text-lg font-black">مصفوفة الصلاحيات</h3><p className="text-xs text-slate-400 mt-1">الصلاحيات العليا محسوبة حسب الدور والسياق، وليست قائمة واحدة مشتركة.</p></div></div>
+          <PermissionMatrix roles={roleRows} />
+          <details className="group rounded-2xl border border-white/10 bg-white/[0.03]">
+            <summary className="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden px-4 py-3 text-xs font-black text-slate-300 flex items-center justify-between">تفاصيل<ChevronDown className="w-4 h-4 text-slate-500 group-open:rotate-180 transition-transform" aria-hidden="true" /></summary>
+            <div className="p-3 pt-0">
           <div className="space-y-3">
             {roleRows.map(role => (
               <div key={role} className="rounded-2xl p-4 bg-white/5 border border-white/10">
@@ -159,6 +165,8 @@ export const SuperAdminDashboard: React.FC = () => {
               </div>
             ))}
           </div>
+            </div>
+          </details>
 
           <div className="pt-5 border-t border-white/10">
             <div className="flex items-center gap-2 mb-4"><Users className="w-5 h-5 text-sky-300" /><h4 className="font-black text-slate-100">إدارة الحسابات الفعلية</h4></div>

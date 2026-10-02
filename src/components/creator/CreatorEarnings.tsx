@@ -44,6 +44,7 @@ export const CreatorEarnings: React.FC = () => {
     return ['متراكم', 'bg-white/5 text-slate-400 border-white/10'];
   };
 
+  const maxGross = Math.max(...creatorAccruals.map(x => x.grossSaleKwd), 0);
   return (
     <div className="space-y-6 text-slate-100">
       <section className="glass-panel rounded-3xl p-6 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -91,7 +92,9 @@ export const CreatorEarnings: React.FC = () => {
             <tbody className="divide-y divide-white/5">
               {creatorAccruals.map(a => {
                 const [label, cls] = statusLabel(a.settlementStatus);
-                return <tr key={a.id} className="hover:bg-white/3"><td data-label="الطلب" className="py-3 px-3 text-slate-200" title={a.orderId}>{shortRef(a.orderId, 'ط')}</td><td data-label="التاريخ" className="py-3 px-3 text-slate-400">{new Date(a.createdAt).toLocaleString('ar-KW-u-nu-latn')}</td><td data-label="المبيعات" className="py-3 px-3 font-bold">{a.grossSaleKwd.toFixed(3)} د.ك</td><td data-label="النسبة" className="py-3 px-3 text-gold-300 font-bold">{a.royaltyRatePercent}%</td><td data-label="حق المبدع" className="py-3 px-3 text-gold-300 font-black">{a.accruedAmountKwd.toFixed(3)} د.ك</td><td data-label="الحالة" className="py-3 px-3"><span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${cls}`}>{label}</span></td></tr>;
+                const barW = maxGross > 0 ? Math.max(8, (a.grossSaleKwd / maxGross) * 100) : 0;
+                const shareW = a.grossSaleKwd > 0 ? Math.min(100, (a.accruedAmountKwd / a.grossSaleKwd) * 100) : 0;
+                return <tr key={a.id} className="hover:bg-white/3"><td data-label="الطلب" className="py-3 px-3 text-slate-200" title={a.orderId}>{shortRef(a.orderId, 'ط')}</td><td data-label="التاريخ" className="py-3 px-3 text-slate-400">{new Date(a.createdAt).toLocaleString('ar-KW-u-nu-latn')}</td><td data-label="المبيعات" className="py-3 px-3 font-bold">{a.grossSaleKwd.toFixed(3)} د.ك</td><td data-label="النسبة" className="py-3 px-3 text-gold-300 font-bold">{a.royaltyRatePercent}%</td><td data-label="حق المبدع" className="py-3 px-3 text-gold-300 font-black"><div>{a.accruedAmountKwd.toFixed(3)} د.ك<span aria-hidden="true" className="block mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden" style={{ width: `${barW}%`, minWidth: 24 }}><span className="block h-full rounded-full bg-gold-400" style={{ width: `${shareW}%`, minWidth: 2 }} /></span></div></td><td data-label="الحالة" className="py-3 px-3"><span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${cls}`}>{label}</span></td></tr>;
               })}
             </tbody>
           </table>

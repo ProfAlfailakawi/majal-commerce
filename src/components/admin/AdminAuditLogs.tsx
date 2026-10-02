@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Search, Filter, Lock, FileText, CheckCircle2, CalendarDays, ChevronDown } from 'lucide-react';
+import { ShieldCheck, Search, Filter, Lock, FileText, CheckCircle2, CalendarDays, ChevronDown, MapPin } from 'lucide-react';
 import { store } from '../../lib/store';
 import { arabicTerms } from '../../lib/arabicTerms';
 
@@ -100,7 +100,7 @@ export const AdminAuditLogs: React.FC = () => {
                         </td>
                         <td data-label="نوع الكيان" className="py-2.5 px-3 text-slate-300 font-bold">{ENTITY_LABELS[log.entityType] || log.entityType}</td>
                         <td data-label="التفاصيل والوصف" className="py-2.5 px-3 text-slate-200">{arabicTerms(log.details)}</td>
-                        <td data-label="عنوان IP والمدينة" className="py-2.5 px-3 text-slate-400 text-xs">{log.ipAddress}</td>
+                        <td data-label="عنوان IP والمدينة" className="py-2.5 px-3 text-slate-400 text-xs"><details className="group"><summary className="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden inline-flex items-center gap-1 text-slate-400 hover:text-slate-200" title="عنوان IP والمدينة"><MapPin className="w-3.5 h-3.5" aria-hidden="true" /><ChevronDown className="w-3 h-3 group-open:rotate-180 transition-transform" aria-hidden="true" /></summary><span className="block mt-1">{log.ipAddress}</span></details></td>
                       </tr>
                   ))}
                 </tbody>
