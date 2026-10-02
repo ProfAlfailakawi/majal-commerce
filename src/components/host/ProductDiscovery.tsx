@@ -175,7 +175,7 @@ export const ProductDiscovery: React.FC = () => {
                       className="px-3 py-2 bg-gold-500 hover:bg-gold-400 text-slate-950 font-black rounded-xl transition-colors flex items-center gap-1.5 shadow-md"
                     >
                       <Lock className="w-3.5 h-3.5" />
-                      <span>طلب L2</span>
+                      <span>طلب المستوى 2</span>
                     </button>
                     {['HOST_OWNER', 'HOST_CHEF'].includes(store.activeUser.role) && (
                       <button
@@ -183,7 +183,7 @@ export const ProductDiscovery: React.FC = () => {
                         className="px-3 py-2 bg-fuchsia-500/15 hover:bg-fuchsia-500/25 text-fuchsia-200 border border-fuchsia-400/20 font-black rounded-xl transition-colors flex items-center gap-1.5"
                       >
                         <Lock className="w-3.5 h-3.5" />
-                        <span>طلب L3</span>
+                        <span>طلب المستوى 3</span>
                       </button>
                     )}
                   </div>

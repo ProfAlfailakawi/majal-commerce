@@ -96,7 +96,7 @@ export const ContractModal: React.FC<ContractModalProps> = ({
   const hostSigned = fullySigned || !!hostRecord || !!contract.hostSignedAt;
   const creatorAuditRef = creatorRecord ? creatorRecord.signatureEvidenceSha256 : contract.creatorSignedAt ? contract.creatorSignerIp : undefined;
   const hostAuditRef = hostRecord ? hostRecord.signatureEvidenceSha256 : contract.hostSignedAt ? contract.hostSignerIp : undefined;
-  const signedTitle = (name: string, at?: string) => (at ? `${name} — ${new Date(at).toLocaleString('ar-KW')}` : name);
+  const signedTitle = (name: string, at?: string) => (at ? `${name} — ${new Date(at).toLocaleString('ar-KW-u-nu-latn')}` : name);
 
   const paciBadge = paciStatus ? statusLabel(paciStatus) : undefined;
   const pathDone = [true, creatorSigned, hostSigned, fullySigned];
@@ -244,7 +244,7 @@ export const ContractModal: React.FC<ContractModalProps> = ({
               {creatorSigned ? (
                 <div className="text-xs">
                   <p className="font-bold text-slate-100">{contract.creatorLegalName}</p>
-                  {creatorSignedAt && <p className="text-slate-400 text-xs">تاريخ التوقيع: {new Date(creatorSignedAt).toLocaleString('ar-KW')}</p>}
+                  {creatorSignedAt && <p className="text-slate-400 text-xs">تاريخ التوقيع: {new Date(creatorSignedAt).toLocaleString('ar-KW-u-nu-latn')}</p>}
                   {creatorAuditRef && <p className="text-slate-400 text-xs font-mono break-all">Session Audit Ref: {creatorAuditRef}</p>}
                 </div>
               ) : (
@@ -261,7 +261,7 @@ export const ContractModal: React.FC<ContractModalProps> = ({
               {hostSigned ? (
                 <div className="text-xs">
                   <p className="font-bold text-slate-100">{contract.hostCommercialName}</p>
-                  {hostSignedAt && <p className="text-slate-400 text-xs">تاريخ التوقيع: {new Date(hostSignedAt).toLocaleString('ar-KW')}</p>}
+                  {hostSignedAt && <p className="text-slate-400 text-xs">تاريخ التوقيع: {new Date(hostSignedAt).toLocaleString('ar-KW-u-nu-latn')}</p>}
                   {hostAuditRef && <p className="text-slate-400 text-xs font-mono break-all">Session Audit Ref: {hostAuditRef}</p>}
                 </div>
               ) : (

@@ -12,7 +12,7 @@ const STAGES: { key: Exclude<StatementLine['stage'], 'REVERSED'>; label: string 
   { key: 'PAID', label: 'مدفوع' }
 ];
 const rank = { PENDING: 0, APPROVED: 1, PAID: 2, REVERSED: -1 } as const;
-const day = (iso: string | null) => iso ? new Date(iso).toLocaleDateString('ar-KW') : '—';
+const day = (iso: string | null) => iso ? new Date(iso).toLocaleDateString('ar-KW-u-nu-latn') : '—';
 
 const Timeline: React.FC<{ line: StatementLine }> = ({ line }) => {
   if (line.stage === 'REVERSED') return <span className="text-rose-300 font-bold">ملغى (استرجاع)</span>;

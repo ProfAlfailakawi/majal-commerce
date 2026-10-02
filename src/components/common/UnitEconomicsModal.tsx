@@ -46,10 +46,10 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
             </div>
             <div>
               <h3 id="unit-economics-title" className="font-bold text-base text-slate-100">
-                حاسبة الجدوى والاقتصاديات التجارية Unit Economics
+                حاسبة الجدوى والاقتصاديات التجارية
               </h3>
               <p className="text-xs text-slate-400">
-                حساب التكلفة المباشرة COGS، نسبة المبدع، عمولة المنصة، وصافي هامش المنشأة (د.ك KWD)
+                حساب تكلفة البضاعة المباشرة، نسبة المبدع، عمولة المنصة، وصافي هامش المنشأة (د.ك)
               </p>
             </div>
           </div>
@@ -78,7 +78,7 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
 
             <div>
               <label className="block text-slate-300 font-bold mb-1">
-                نسبة حقوق المبدع Creator Royalty (٪)
+                نسبة حقوق المبدع (٪)
               </label>
               <input
                 type="number"
@@ -130,7 +130,7 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
 
             <div>
               <label className="block text-slate-400 font-medium mb-1">
-                عمولة التشغيل والمنصة (ثابتة ٥٪)
+                عمولة التشغيل والمنصة (ثابتة 5٪)
               </label>
               <div className="w-full bg-slate-800/50 border border-slate-800 rounded-lg p-2 text-slate-400 font-mono">
                 {platformFeeKwd.toFixed(3)} د.ك (5.0%)
@@ -152,7 +152,7 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
                 className="bg-slate-600 h-full flex items-center justify-center text-xs font-bold text-slate-100"
                 title="إجمالي التكلفة"
               >
-                COGS
+                التكلفة
               </div>
               <div
                 style={{ width: `${royaltyRate}%` }}

@@ -22,7 +22,7 @@ export interface JourneyStage {
  */
 export const journeyStages: JourneyStage[] = [
   {
-    index: '١',
+    index: '1',
     title: 'ابتكار',
     actor: 'المبدع',
     body: 'يسجّل المبدع منتجه وقصته ووصفته داخل إصدار محفوظ لا يقبل التعديل بعد إنشائه.',
@@ -30,7 +30,7 @@ export const journeyStages: JourneyStage[] = [
     icon: <Lightbulb className="w-5 h-5" />
   },
   {
-    index: '٢',
+    index: '2',
     title: 'حماية',
     actor: 'خزنة الوصفات',
     body: 'تُقفل الأسرار خلف ثلاثة مستويات إفصاح ومنح زمنية، وكل عملية عرض أو تصدير تدخل سجل التدقيق.',
@@ -38,7 +38,7 @@ export const journeyStages: JourneyStage[] = [
     icon: <ShieldCheck className="w-5 h-5" />
   },
   {
-    index: '٣',
+    index: '3',
     title: 'مطابقة',
     actor: 'مجال',
     body: 'تُرتَّب المنشآت حسب القدرة التشغيلية والهامش والامتثال، لا حسب الأقرب أو الأعلى صوتًا.',
@@ -46,7 +46,7 @@ export const journeyStages: JourneyStage[] = [
     icon: <GitCompareArrows className="w-5 h-5" />
   },
   {
-    index: '٤',
+    index: '4',
     title: 'مختبر',
     actor: 'المنشأة المرخّصة',
     body: 'دفعات اختبار حقيقية بالكمية والتكلفة والوقت والهدر، ومقارنة مباشرة بين آخر دفعتين.',
@@ -54,7 +54,7 @@ export const journeyStages: JourneyStage[] = [
     icon: <FlaskConical className="w-5 h-5" />
   },
   {
-    index: '٥',
+    index: '5',
     title: 'اتفاق',
     actor: 'الطرفان',
     body: 'تفاوض موثّق وعرض مقابل وعقد موقّع يحدد النموذج والمدة والحصرية قبل أي إنتاج تجاري.',
@@ -62,7 +62,7 @@ export const journeyStages: JourneyStage[] = [
     icon: <FileSignature className="w-5 h-5" />
   },
   {
-    index: '٦',
+    index: '6',
     title: 'إطلاق',
     actor: 'السوق',
     body: 'بوابة الإطلاق مشتقة من السجلات لا من زر: تحقّق ومستندات وعقد وفروع، ثم مبيعات ومستحقات.',

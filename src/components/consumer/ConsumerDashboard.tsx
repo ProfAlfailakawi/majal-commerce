@@ -183,7 +183,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
         {[
           { icon: <BadgeCheck className="w-5 h-5 text-emerald-300" />, title: 'هوية المبدع ظاهرة', text: 'تتعرف على صاحب المنتج وقصته بدل منتج مجهول المصدر داخل المنصة.' },
           { icon: <Store className="w-5 h-5 text-sky-300" />, title: 'منشأة مرخّصة', text: 'الإنتاج والبيع التجاري يتمان من خلال الشريك المرخّص.' },
-          { icon: <TrendingUp className="w-5 h-5 text-gold-300" />, title: 'صوتك له قيمة', text: 'التقييم وKeep It يساعدان في قرار استمرار المنتج فعليًا.' }
+          { icon: <TrendingUp className="w-5 h-5 text-gold-300" />, title: 'صوتك له قيمة', text: 'التقييم وتصويت «خلوه» يساعدان في قرار استمرار المنتج فعليًا.' }
         ].map((item, idx) => <div key={idx} className="glass-card rounded-2xl p-5 border border-white/10"><div>{item.icon}</div><h3 className="font-black mt-4">{item.title}</h3><p className="text-xs text-slate-400 leading-6 mt-2">{item.text}</p></div>)}
       </section>
 

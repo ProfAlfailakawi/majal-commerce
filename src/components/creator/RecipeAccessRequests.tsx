@@ -68,7 +68,7 @@ export const RecipeAccessRequests: React.FC<RecipeAccessRequestsProps> = ({ crea
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <span className="px-3 py-1.5 rounded-xl bg-emerald-500/8 border border-emerald-400/15 text-emerald-300 text-xs font-black flex items-center gap-2">{grant.expiresAt ? <DaysArc from={grant.grantedAt || grant.requestedAt} until={grant.expiresAt} /> : <Clock3 className="w-4 h-4" />} حتى {grant.expiresAt ? new Date(grant.expiresAt).toLocaleDateString('ar-KW') : 'غير محدد'}</span>
+                  <span className="px-3 py-1.5 rounded-xl bg-emerald-500/8 border border-emerald-400/15 text-emerald-300 text-xs font-black flex items-center gap-2">{grant.expiresAt ? <DaysArc from={grant.grantedAt || grant.requestedAt} until={grant.expiresAt} /> : <Clock3 className="w-4 h-4" />} حتى {grant.expiresAt ? new Date(grant.expiresAt).toLocaleDateString('ar-KW-u-nu-latn') : 'غير محدد'}</span>
                   <button onClick={async () => { await Promise.resolve(store.revokeRecipeAccess(grant.id)); }} className="px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-400/20 text-rose-300 text-xs font-black">سحب الإذن</button>
                 </div>
               )}

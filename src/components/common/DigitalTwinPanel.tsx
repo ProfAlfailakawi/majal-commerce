@@ -135,7 +135,7 @@ export const DigitalTwinPanel: React.FC<DigitalTwinPanelProps> = ({ product, hos
               {!canSeeRecipeDerived ? (
                 <div className="rounded-xl p-4 bg-fuchsia-500/5 border border-fuchsia-400/15 text-xs text-slate-300 leading-6 flex gap-2">
                   <LockKeyhole className="w-4 h-4 text-fuchsia-300 shrink-0 mt-1" />
-                  تفاصيل التكلفة والعائد وسجل تغييرات الوصفة محجوبة حتى يمنح المبدع إذن L2 صالحًا لهذه المنشأة.
+                  تفاصيل التكلفة والعائد وسجل تغييرات الوصفة محجوبة حتى يمنح المبدع إذن المستوى 2 صالحًا لهذه المنشأة.
                 </div>
               ) : compareMode ? (
                 <div className="grid md:grid-cols-2 gap-3 text-xs">

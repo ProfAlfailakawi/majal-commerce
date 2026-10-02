@@ -147,7 +147,7 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
                 <div key={decision.id} className="rounded-xl p-3 bg-white/5 border border-white/10 text-xs leading-6 text-slate-300">
                   <div className="flex items-center justify-between gap-3 mb-2">
                     <div className={`flex items-center gap-2 font-black ${meta.cls}`}>{meta.icon}{meta.label}</div>
-                    <span className="text-xs text-slate-400">{new Date(decision.createdAt).toLocaleString('ar-KW')}</span>
+                    <span className="text-xs text-slate-400">{new Date(decision.createdAt).toLocaleString('ar-KW-u-nu-latn')}</span>
                   </div>
                   <div>{decision.text}</div>
                   <div className="mt-2 text-xs text-slate-400">{decision.authorName} — {roleLabel(decision.authorRole)}</div>

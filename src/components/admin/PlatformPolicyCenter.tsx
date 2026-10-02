@@ -58,7 +58,7 @@ export const PlatformPolicyCenter: React.FC = () => {
           </div>
         </div>
         <div className="text-xs text-slate-400 leading-5">
-          آخر تحديث: {new Date(store.policy.updatedAt).toLocaleString('ar-KW')}<br />
+          آخر تحديث: {new Date(store.policy.updatedAt).toLocaleString('ar-KW-u-nu-latn')}<br />
           بواسطة: {store.policy.updatedBy === 'system-default' ? 'الإعداد الافتراضي للنظام' : store.policy.updatedBy}
         </div>
       </div>

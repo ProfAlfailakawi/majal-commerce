@@ -10,6 +10,9 @@ interface LabWorkspaceProps {
   collaboration: Collaboration;
 }
 
+/** Display-only Arabic names for a lab batch decision; the stored value is unchanged. */
+const BATCH_DECISION_LABELS: Record<string, string> = { APPROVE_NEXT: 'تجربة أخرى', PRODUCTION_CANDIDATE: 'مرشح إنتاج', REJECT: 'مرفوض' };
+
 export const LabWorkspace: React.FC<LabWorkspaceProps> = ({ collaboration }) => {
   const [, setTick] = useState(0);
   useEffect(() => store.subscribe(() => setTick(t => t + 1)), []);
@@ -104,7 +107,7 @@ export const LabWorkspace: React.FC<LabWorkspaceProps> = ({ collaboration }) => 
           icon={<FlaskConical className="w-6 h-6" />}
           title="ما فيه دفعات محفوظة"
           body="سجّل أول دفعة اختبار بالكمية والتكلفة والوقت والهدر، عشان تقدر تقارن الدفعات اللاحقة عليها."
-        /> : batches.map(b => <div key={b.id} className="p-4 rounded-2xl bg-slate-950/40 border border-white/10 space-y-3"><div className="flex items-center justify-between gap-3 flex-wrap"><span className="font-black text-gold-300">{new Date(b.batchDate).toLocaleString('ar-KW')} — {b.recipeVersion}</span><span className={`px-2.5 py-1 rounded-full text-xs font-black border ${b.decision === 'PRODUCTION_CANDIDATE' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : b.decision === 'REJECT' ? 'bg-rose-500/10 text-rose-300 border-rose-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'}`}>{b.decision}</span></div><div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-slate-400"><div>تكلفة <strong className="text-slate-100">{b.measuredCostKwd.toFixed(3)}</strong></div><div>إنتاجية <strong className="text-slate-100">{b.yieldQuantity}</strong></div><div>زمن <strong className="text-slate-100">{b.prepTimeMinutes}د</strong></div><div>هدر <strong className="text-slate-100">{b.wastePercentage}%</strong></div></div><p className="text-slate-400 leading-6">{b.tastingResult}</p>{b.proposedChanges && <div className="flex gap-2 text-xs text-sky-300"><AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />{b.proposedChanges}</div>}</div>)}</div>
+        /> : batches.map(b => <div key={b.id} className="p-4 rounded-2xl bg-slate-950/40 border border-white/10 space-y-3"><div className="flex items-center justify-between gap-3 flex-wrap"><span className="font-black text-gold-300">{new Date(b.batchDate).toLocaleString('ar-KW-u-nu-latn')} — {b.recipeVersion}</span><span className={`px-2.5 py-1 rounded-full text-xs font-black border ${b.decision === 'PRODUCTION_CANDIDATE' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : b.decision === 'REJECT' ? 'bg-rose-500/10 text-rose-300 border-rose-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'}`}>{BATCH_DECISION_LABELS[b.decision] ?? b.decision}</span></div><div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-slate-400"><div>تكلفة <strong className="text-slate-100">{b.measuredCostKwd.toFixed(3)}</strong></div><div>إنتاجية <strong className="text-slate-100">{b.yieldQuantity}</strong></div><div>زمن <strong className="text-slate-100">{b.prepTimeMinutes}د</strong></div><div>هدر <strong className="text-slate-100">{b.wastePercentage}%</strong></div></div><p className="text-slate-400 leading-6">{b.tastingResult}</p>{b.proposedChanges && <div className="flex gap-2 text-xs text-sky-300"><AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />{b.proposedChanges}</div>}</div>)}</div>
       </section>
 
       {showCalculator && <UnitEconomicsModal isOpen={showCalculator} onClose={() => setShowCalculator(false)} />}
