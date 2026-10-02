@@ -987,3 +987,19 @@ body:has([aria-modal='true']) .majal-ai-fab { opacity: 0; visibility: hidden; po
   .majal-hero { padding: 1.1rem !important; }
 }
 @media (min-width: 768px) { .majal-hero { padding: 1.4rem 1.6rem !important; } }
+
+/* ── r29 · one accent in dark mode ────────────────────────────────────────────
+   The light theme already folds sky into gold (see :root[data-theme='light']). The host
+   portal (owner, ops, chef, finance, marketing, support) kept cyan in dark mode, so the
+   same product read gold everywhere except there. Scoped to the portal root, dark/contrast
+   only; success/warning/danger hues are untouched. */
+:root:not([data-theme='light']) [data-accent='gold'] {
+  --color-sky-100: var(--color-gold-100);
+  --color-sky-200: var(--color-gold-200);
+  --color-sky-300: var(--color-gold-300);
+  --color-sky-400: var(--color-gold-400);
+  --color-sky-500: var(--color-gold-500);
+  --color-cyan-300: var(--color-gold-300);
+  --color-cyan-400: var(--color-gold-400);
+  --color-cyan-500: var(--color-gold-500);
+}

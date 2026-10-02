@@ -152,7 +152,7 @@ export const HostPortal: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
+    <div data-accent="gold" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
       <section className="majal-hero glass-panel rounded-[30px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
         <div className="majal-glow -top-[18rem] -start-[17rem] w-[42rem] h-[42rem]" style={{ '--glow': 'rgba(56,189,248,0.08)' } as React.CSSProperties} />
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
