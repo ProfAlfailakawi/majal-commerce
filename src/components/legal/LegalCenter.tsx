@@ -1,5 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { FileText, Scale, ShieldCheck, RotateCcw, Mail, ChevronLeft } from 'lucide-react';
+import {
+  FileText, Scale, ShieldCheck, RotateCcw, Mail, ChevronLeft,
+  Building2, KeyRound, Lightbulb, Wallet, ShieldAlert, Gavel, Database, Target, Share2, Trash2, Lock,
+  Undo2, Utensils, Send, Hourglass, LockKeyhole, ScrollText, Rocket, Banknote, type LucideIcon
+} from 'lucide-react';
 import type { LegalDocumentId } from '../../lib/legalRoutes';
 
 export type { LegalDocumentId } from '../../lib/legalRoutes';
@@ -210,6 +214,14 @@ const documents: LegalDocument[] = [
   }
 ];
 
+/** Visual cue per section (same order as the sections above); the legal text itself is untouched. */
+const sectionIcons: Record<LegalDocumentId, LucideIcon[]> = {
+  TERMS: [Building2, KeyRound, Lightbulb, Wallet, ShieldAlert, Gavel],
+  PRIVACY: [Database, Target, Share2, Trash2, Lock],
+  REFUND: [Undo2, Utensils, Send, Hourglass, ShieldAlert],
+  COMPLIANCE: [LockKeyhole, ScrollText, Rocket, Banknote]
+};
+
 interface LegalCenterProps {
   initialDocument?: LegalDocumentId;
   onBack: () => void;
@@ -271,14 +283,20 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
           <p className="text-xs sm:text-sm text-slate-400 leading-7">{doc.summary}</p>
         </header>
 
-        {doc.sections.map(section => (
+        {doc.sections.map((section, sectionIndex) => {
+          const SectionIcon = sectionIcons[doc.id]?.[sectionIndex];
+          return (
           <section key={section.heading} className="space-y-3">
-            <h3 className="text-sm font-black text-gold-300">{section.heading}</h3>
+            <h3 className="text-sm font-black text-gold-300 flex items-center gap-2">
+              {SectionIcon && <span aria-hidden="true" className="w-7 h-7 shrink-0 rounded-lg bg-gold-500/10 border border-gold-400/20 flex items-center justify-center"><SectionIcon className="w-4 h-4" /></span>}
+              {section.heading}
+            </h3>
             {section.body.map((paragraph, index) => (
               <p key={index} className="text-xs sm:text-[13px] text-slate-300 leading-8">{paragraph}</p>
             ))}
           </section>
-        ))}
+          );
+        })}
 
         <footer className="pt-5 border-t border-white/10 flex flex-wrap items-center gap-3 text-xs text-slate-400">
           <Mail className="w-4 h-4 text-gold-300" />

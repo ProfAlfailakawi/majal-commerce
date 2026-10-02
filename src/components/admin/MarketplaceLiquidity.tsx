@@ -6,11 +6,11 @@ import {
   CircleGauge,
   Scale,
   SearchCheck,
-  Sparkles,
-  Target
+  Sparkles
 } from 'lucide-react';
 import { store } from '../../lib/store';
 import { EmptyState } from '../common/EmptyState';
+import { FoldedNote } from '../common/MatchMeter';
 
 export const MarketplaceLiquidity: React.FC = () => {
   const matchableProducts = store.products.filter(p => ['APPROVED_FOR_MARKETPLACE','AVAILABLE_FOR_MATCHING','IN_DISCUSSION','TESTING','COMMERCIAL_NEGOTIATION','CONTRACTING','LAUNCH_GATE','READY_TO_LAUNCH','LIVE_DROP','LIVE_TRIAL','LIVE_PERMANENT'].includes(p.status));
@@ -64,7 +64,7 @@ export const MarketplaceLiquidity: React.FC = () => {
         ))}
       </div>
 
-      <div className="rounded-2xl p-4 bg-fuchsia-500/5 border border-fuchsia-400/15 text-xs text-slate-300 leading-6 flex gap-2"><Target className="w-4 h-4 shrink-0 mt-1 text-fuchsia-300" /> هذا المؤشر عددي ومبدئي؛ جودة المطابقة والقدرة التشغيلية تظل أهم من مجرد مساواة عدد المنتجات بعدد التحديات.</div>
+      <FoldedNote summary="تنبيه: المؤشر عددي ومبدئي">هذا المؤشر عددي ومبدئي؛ جودة المطابقة والقدرة التشغيلية تظل أهم من مجرد مساواة عدد المنتجات بعدد التحديات.</FoldedNote>
     </section>
   );
 };

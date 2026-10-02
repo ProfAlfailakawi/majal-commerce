@@ -5,13 +5,12 @@ import {
   Flame,
   Heart,
   PackageOpen,
-  Repeat2,
+  Infinity as InfinityIcon,
   ShoppingBag,
   Sparkles,
   Star,
   Store,
   TrendingUp,
-  Users,
   X
 } from 'lucide-react';
 import { SurfaceType, Launch } from '../../types/majal';
@@ -23,6 +22,7 @@ import { DropCheckout } from './DropCheckout';
 import { formatKwd } from '../../lib/money';
 import { commerceClient } from '../../lib/commerceClient';
 import { IS_DEMO_MODE } from '../../lib/runtime';
+import { DnaRing } from '../dna/DnaKit';
 
 interface ConsumerDashboardProps {
   onSurfaceChange: (surface: SurfaceType) => void;
@@ -130,9 +130,9 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
               <div className="p-5 space-y-4">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                   <div className="rounded-xl p-3 bg-white/5"><Star className="w-4 h-4 text-gold-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.rating.toFixed(1)}</div><div className="text-xs text-slate-400">الطعم</div></div>
-                  <div className="rounded-xl p-3 bg-white/5"><Repeat2 className="w-4 h-4 text-emerald-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.repeat}%</div><div className="text-xs text-slate-400">يكرر</div></div>
-                  <div className="rounded-xl p-3 bg-white/5"><Users className="w-4 h-4 text-sky-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.keep}%</div><div className="text-xs text-slate-400">نسبة التكرار</div></div>
-                  <div className="rounded-xl p-3 bg-white/5"><PackageOpen className="w-4 h-4 text-rose-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.remaining ?? '∞'}</div><div className="text-xs text-slate-400">{metrics.remaining === null ? 'بلا سقف' : 'متبقي'}</div></div>
+                  <div className="rounded-xl p-3 bg-white/5"><DnaRing className="mx-auto" value={metrics.repeat} size={44} stroke={4} tone="accent" label={`${metrics.repeat}%`} ariaLabel={`يكرر ${metrics.repeat}%`} /><div className="text-xs text-slate-400">يكرر</div></div>
+                  <div className="rounded-xl p-3 bg-white/5"><DnaRing className="mx-auto" value={metrics.keep} size={44} stroke={4} tone="info" label={`${metrics.keep}%`} ariaLabel={`نسبة التكرار ${metrics.keep}%`} /><div className="text-xs text-slate-400">نسبة التكرار</div></div>
+                  <div className="rounded-xl p-3 bg-white/5"><PackageOpen className="w-4 h-4 text-gold-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.remaining ?? <InfinityIcon className="w-4 h-4 mx-auto" aria-hidden="true" />}</div><div className="text-xs text-slate-400">{metrics.remaining === null ? 'بلا سقف' : 'متبقي'}</div></div>
                 </div>
                 <div className="flex gap-2">
                   <button type="button" onClick={() => setSelectedLaunch(featured)} className="flex-1 py-3 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center justify-center gap-2"><ShoppingBag className="w-4 h-4" /> اطلب التجربة</button>

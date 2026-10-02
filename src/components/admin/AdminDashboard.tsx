@@ -18,7 +18,8 @@ import {
   Wallet,
   ClipboardCheck,
   ChevronDown,
-  PauseCircle
+  PauseCircle,
+  Wrench
 } from 'lucide-react';
 import { DnaHubMap } from '../dna/DnaKit';
 import { MajalMark } from '../brand/MajalMark';
@@ -178,7 +179,7 @@ export const AdminDashboard: React.FC = () => {
                   <ChevronDown className="w-4 h-4 text-slate-400 transition-transform group-open:rotate-180" aria-hidden="true" />
                 </summary>
                 <ul className="px-4 pb-3 divide-y divide-dashed divide-slate-700/60">
-                  {group.items.map(item => (
+                  {group.items.map((item, i) => (
                     <li key={item} className="py-2.5 text-xs text-slate-300 leading-6">{item}</li>
                   ))}
                 </ul>
@@ -210,8 +211,10 @@ export const AdminDashboard: React.FC = () => {
                     السجل التجاري: {host.commercialRegistrationNo} — الفروع: {host.branches.length} — النطاق السعري: {arabicTerms(host.capabilities.priceBand)}
                   </div>
                 </div>
-                <div className="text-xs text-slate-400">
-                  {host.capabilities.equipment.slice(0, 3).join(' • ')}
+                <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-400">
+                  {host.capabilities.equipment.slice(0, 3).map((item, i) => (
+                    <span key={`${item}-${i}`} className="inline-flex items-center gap-1 rounded-full bg-white/5 border border-white/10 px-2 py-0.5"><Wrench className="w-3 h-3" aria-hidden="true" />{item}</span>
+                  ))}
                 </div>
               </div>
             ))}

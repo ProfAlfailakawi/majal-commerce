@@ -3,7 +3,6 @@ import {
   Radar,
   Zap,
   ChevronLeft,
-  ShieldCheck,
   Sparkles,
   Globe,
   ExternalLink
@@ -173,10 +172,7 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId, o
         </div>
       )}
 
-      <div className="rounded-2xl p-4 bg-sky-500/5 border border-sky-400/15 text-xs text-slate-300 leading-6 flex gap-2">
-        <ShieldCheck className="w-4 h-4 shrink-0 mt-1 text-sky-300" />
-        رادار الفرص لا يكشف الوصفة السرية. المطابقة تعتمد على البيانات التجارية والتشغيلية المتاحة فقط، ويظل كشف التفاصيل الحساسة خاضعًا لأذونات خزنة الوصفات.
-      </div>
+      <FoldedNote summary="تنبيه: سرية الوصفة في الرادار">رادار الفرص لا يكشف الوصفة السرية. المطابقة تعتمد على البيانات التجارية والتشغيلية المتاحة فقط، ويظل كشف التفاصيل الحساسة خاضعًا لأذونات خزنة الوصفات.</FoldedNote>
     </section>
   );
 };

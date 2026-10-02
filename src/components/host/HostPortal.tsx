@@ -10,7 +10,6 @@ import {
   Radar,
   Rocket,
   Settings2,
-  ShieldCheck,
   Sparkles
 } from 'lucide-react';
 import { store } from '../../lib/store';
@@ -28,6 +27,8 @@ import { DigitalTwinPanel } from '../common/DigitalTwinPanel';
 import { LaunchWarRoom } from './LaunchWarRoom';
 import { TeamPermissions } from './TeamPermissions';
 import { StatusPill } from '../common/StatusPill';
+import { ShareDonut } from '../common/ShareDonut';
+import { FoldedNote } from '../common/MatchMeter';
 import { SurfaceTabs } from '../common/SurfaceTabs';
 import { EmptyState } from '../common/EmptyState';
 import { Avatar } from '../common/Avatar';
@@ -244,13 +245,18 @@ export const HostPortal: React.FC = () => {
             ].map(([label, value], idx) => <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400 flex items-center gap-1.5">{idx > 0 && <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full ${['', 'bg-emerald-400', 'bg-gold-400', 'bg-sky-400'][idx]}`} />}{label as string}</div><div className="mt-2 text-xl font-black font-mono">{Number(value).toFixed(3)} د.ك</div></div>)}
           </div>
           {finance.gmv > 0 && (
-            <div role="img" aria-label="توزيع إجمالي المبيعات بين صافي المنشأة وحقوق المبدعين ورسوم مجال" className="flex h-1 w-full overflow-hidden rounded-full bg-white/5 opacity-80">
-              <span className="bg-emerald-400/80" style={{ width: `${(finance.hostNet / finance.gmv) * 100}%` }} />
-              <span className="bg-gold-400/80" style={{ width: `${(finance.creatorRoyalties / finance.gmv) * 100}%` }} />
-              <span className="bg-sky-400/80" style={{ width: `${(finance.platformFees / finance.gmv) * 100}%` }} />
-            </div>
+            <ShareDonut
+              ariaLabel="توزيع إجمالي المبيعات بين صافي المنشأة وحقوق المبدعين ورسوم مجال"
+              total={finance.gmv}
+              icon={<CircleDollarSign className="w-6 h-6" />}
+              segments={[
+                { key: 'host', label: 'صافي المنشأة', value: finance.hostNet, strokeClass: 'stroke-emerald-400', dotClass: 'bg-emerald-400' },
+                { key: 'creator', label: 'حقوق المبدعين', value: finance.creatorRoyalties, strokeClass: 'stroke-gold-400', dotClass: 'bg-gold-400' },
+                { key: 'platform', label: 'رسوم مجال', value: finance.platformFees, strokeClass: 'stroke-sky-400', dotClass: 'bg-sky-400' }
+              ]}
+            />
           )}
-          <div className="rounded-2xl p-4 bg-sky-500/5 border border-sky-400/15 text-xs text-slate-300 leading-6 flex gap-2"><ShieldCheck className="w-4 h-4 shrink-0 mt-1 text-sky-300" /> فصل الصلاحيات المالية يمنع الشيف والتسويق من تعديل أو اعتماد قواعد التسوية والعقود المالية.</div>
+          <FoldedNote summary="تنبيه: فصل الصلاحيات المالية">فصل الصلاحيات المالية يمنع الشيف والتسويق من تعديل أو اعتماد قواعد التسوية والعقود المالية.</FoldedNote>
         </section>
       )}
 

@@ -3,6 +3,7 @@ import { Wallet, ArrowDownRight, CheckCircle2, FileSpreadsheet, ShieldCheck, Clo
 import { shortRef } from '../../lib/displayRef';
 import { store } from '../../lib/store';
 import { EmptyState } from '../common/EmptyState';
+import { ShareDonut } from '../common/ShareDonut';
 import { PayoutStatement } from './PayoutStatement';
 
 export const CreatorEarnings: React.FC = () => {
@@ -68,10 +69,17 @@ export const CreatorEarnings: React.FC = () => {
       </div>
 
       {totals.lifetime > 0 && (
-        <div role="img" aria-label="توزيع الحقوق حسب حالة التسوية" className="flex h-1 w-full overflow-hidden rounded-full bg-white/5 opacity-80">
-          <span className="bg-gold-400/80" style={{ width: `${(totals.eligible / totals.lifetime) * 100}%` }} />
-          <span className="bg-sky-400/80" style={{ width: `${(totals.locked / totals.lifetime) * 100}%` }} />
-          <span className="bg-emerald-400/80" style={{ width: `${(totals.paid / totals.lifetime) * 100}%` }} />
+        <div className="glass-card rounded-2xl border border-white/10 p-4 sm:p-5">
+          <ShareDonut
+            ariaLabel="توزيع الحقوق حسب حالة التسوية"
+            total={totals.lifetime}
+            icon={<Wallet className="w-6 h-6" />}
+            segments={[
+              { key: 'eligible', label: 'مؤهل للتسوية', value: totals.eligible, strokeClass: 'stroke-gold-400', dotClass: 'bg-gold-400' },
+              { key: 'locked', label: 'ضمن دفعة معتمدة', value: totals.locked, strokeClass: 'stroke-sky-400', dotClass: 'bg-sky-400' },
+              { key: 'paid', label: 'مدفوع ومؤكد', value: totals.paid, strokeClass: 'stroke-emerald-400', dotClass: 'bg-emerald-400' }
+            ]}
+          />
         </div>
       )}
 

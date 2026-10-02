@@ -26,9 +26,20 @@ import { AdminAuditLogs } from './AdminAuditLogs';
 import { MajalPulse } from './MajalPulse';
 import { PlatformPolicyCenter } from './PlatformPolicyCenter';
 import { PredictiveInterventionRadar } from './PredictiveInterventionRadar';
+import { IS_DEMO_MODE } from '../../lib/runtime';
 import { completedOrderTotals } from '../../lib/money';
 import { SurfaceTabs } from '../common/SurfaceTabs';
 import { Avatar } from '../common/Avatar';
+
+/** Icon + two-word label + optional state. The long sentence stays available as a tooltip. */
+const InfoChip: React.FC<{ icon: React.ReactNode; label: string; status?: string; hint?: string }> = ({ icon, label, status, hint }) => (
+  <div title={hint} className="flex items-center gap-2.5 rounded-xl p-3 bg-white/5 border border-white/10 min-w-0">
+    <span className="shrink-0" aria-hidden="true">{icon}</span>
+    <span className="font-black text-sm text-slate-100 truncate">{label}</span>
+    {status && <span className="ms-auto shrink-0 text-xs text-slate-400">{status}</span>}
+    {hint && <span className="sr-only">{hint}</span>}
+  </div>
+);
 
 export const SuperAdminDashboard: React.FC = () => {
   const [, setTick] = useState(0);
@@ -107,106 +118,42 @@ export const SuperAdminDashboard: React.FC = () => {
           <div className="grid xl:grid-cols-[1.1fr_.9fr] gap-6">
             <section className="glass-panel rounded-3xl p-6 border border-white/10 space-y-4">
               <div className="flex items-center gap-2"><Activity className="w-5 h-5 text-emerald-300" /><h2 className="text-lg font-black">النبض التنفيذي</h2></div>
-              {[
-                ['حركة السوق', 'المنصة تملك عرضًا من المبدعين وطلبات من المنشآت ويمكن قياس التوازن في مركز سيولة السوق.'],
-                ['حماية الحقوق', 'كل إذن وصفة وسجل عقد وتغيير حساس يدخل في سجل التدقيق.'],
-                ['الفصل التشغيلي', 'صلاحيات المالية، الشيف، التسويق، الأدمن والسوبر أدمن منفصلة.'],
-                ['التوسع', 'نواة المنصة مصممة لتبدأ بالطعام ثم تضيف قطاعات جديدة بنفس محرك الشراكة.']
-              ].map(([title, body], idx) => <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="font-black text-slate-100">{title}</div><div className="text-xs text-slate-400 mt-2 leading-6">{body}</div></div>)}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <InfoChip icon={<Network className="w-4 h-4 text-sky-300" />} label="حركة السوق" status={`${store.creators.length} مبدع / ${store.hosts.length} منشأة`} />
+                <InfoChip icon={<KeyRound className="w-4 h-4 text-gold-300" />} label="حماية الحقوق" status={`${store.recipeGrants.length} إذن وصفة`} />
+                <InfoChip icon={<Users className="w-4 h-4 text-fuchsia-300" />} label="الفصل التشغيلي" status={`${roleRows.length} أدوار`} />
+                <InfoChip icon={<Sparkles className="w-4 h-4 text-emerald-300" />} label="التوسع" />
+              </div>
             </section>
 
             <section className="glass-panel rounded-3xl p-6 border border-white/10 space-y-4">
               <div className="flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-gold-300" /><h2 className="text-lg font-black">حواجز الحوكمة</h2></div>
-              {[
-                'لا يمكن للأدمن منح نفسه صلاحية سوبر أدمن.',
-                'الوصفة الكاملة لا تُعرض للسوبر أدمن افتراضيًا لمجرد امتلاكه الإدارة.',
-                'تغيير السياسات الحساسة يجب أن يسجل في سجل التدقيق.',
-                'تعطيل منتج أو منشأة يحتاج سببًا موثقًا وقابلًا للمراجعة.',
-                'التسويات المالية منفصلة عن حسابات التسويق والطبخ.'
-              ].map((body, idx) => <div key={idx} className="rounded-xl p-3 bg-slate-950/45 border border-white/10 text-xs text-slate-400 leading-6 flex gap-2"><BadgeCheck className="w-4 h-4 shrink-0 mt-1 text-emerald-300" />{body}</div>)}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  ['منع رفع الصلاحية', 'لا يمكن للأدمن منح نفسه صلاحية سوبر أدمن.'],
+                  ['حماية الوصفة', 'الوصفة الكاملة لا تُعرض للسوبر أدمن افتراضيًا لمجرد امتلاكه الإدارة.'],
+                  ['تدقيق السياسات', 'تغيير السياسات الحساسة يجب أن يسجل في سجل التدقيق.'],
+                  ['تعطيل موثّق', 'تعطيل منتج أو منشأة يحتاج سببًا موثقًا وقابلًا للمراجعة.'],
+                  ['فصل التسويات', 'التسويات المالية منفصلة عن حسابات التسويق والطبخ.']
+                ].map(([label, rule]) => <InfoChip key={label} icon={<BadgeCheck className="w-4 h-4 text-emerald-300" />} label={label} hint={rule} />)}
+              </div>
             </section>
           </div>
         </div>
       )}
-
-      {activeTab === 'PERMISSIONS' && (
-        <section className="glass-panel rounded-3xl p-5 md:p-6 border border-white/10 space-y-5">
-          <div className="flex items-center gap-3"><div className="w-12 h-12 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-400/20 flex items-center justify-center text-fuchsia-300"><KeyRound className="w-6 h-6" /></div><div><h3 className="text-lg font-black">مصفوفة الصلاحيات</h3><p className="text-xs text-slate-400 mt-1">الصلاحيات العليا محسوبة حسب الدور والسياق، وليست قائمة واحدة مشتركة.</p></div></div>
-          <div className="space-y-3">
-            {roleRows.map(role => (
-              <div key={role} className="rounded-2xl p-4 bg-white/5 border border-white/10">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-                  <div className="lg:w-40 shrink-0"><div className="font-black text-slate-100">{roleLabel(role)}</div></div>
-                  <div className="flex flex-wrap gap-2 lg:justify-end">
-                    {getRolePermissions(role).map(permission => <span key={permission} className="px-2.5 py-1 rounded-lg bg-slate-950/50 border border-white/10 text-xs text-slate-300" title={permission}>{permissionLabel(permission)}</span>)}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="pt-5 border-t border-white/10">
-            <div className="flex items-center gap-2 mb-4"><Users className="w-5 h-5 text-sky-300" /><h4 className="font-black text-slate-100">إدارة الحسابات الفعلية</h4></div>
-            <div className="grid md:grid-cols-2 gap-3">
-              {store.users.filter(u => u.id !== store.activeUser.id).map(user => (
-                <div key={user.id} className="rounded-2xl p-4 bg-slate-950/40 border border-white/10 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <Avatar name={user.name} src={user.avatar} size={40} shape="squircle" />
-                    <div className="min-w-0"><div className="font-bold text-slate-100 break-words sm:truncate" title={user.name}>{user.name}</div><div className="text-xs text-slate-400">{user.email}</div></div>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <select
-                      value={user.role}
-                      onChange={e => {
-                        const next = e.target.value as UserRole;
-                        if (next === user.role) return;
-                        // Privileged mutation — confirm before applying. If declined, the
-                        // controlled value reverts to user.role on the next render.
-                        if (!window.confirm(`تغيير دور «${user.name}» إلى «${roleLabel(next)}»؟ هذا يعدّل صلاحيات الوصول فورًا.`)) {
-                          setTick(t => t + 1);
-                          return;
-                        }
-                        store.changeUserRole(user.id, next);
-                      }}
-                      className="glass-input rounded-xl px-3 py-2 text-xs outline-none"
-                    >
-                      {roleRows.map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
-                    </select>
-                    <button
-                      onClick={() => {
-                        const suspending = user.status !== 'SUSPENDED';
-                        if (!window.confirm(suspending
-                          ? `تعليق حساب «${user.name}»؟ سيُمنع من تسجيل الدخول فورًا.`
-                          : `إعادة تفعيل حساب «${user.name}»؟`)) return;
-                        store.setUserStatus(user.id, suspending ? 'SUSPENDED' : 'ACTIVE');
-                      }}
-                      className={`px-3 py-2 rounded-xl text-xs font-black border ${user.status === 'SUSPENDED' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-rose-500/10 text-rose-300 border-rose-400/20'}`}
-                    >
-                      {user.status === 'SUSPENDED' ? 'إعادة التفعيل' : 'تعليق الحساب'}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {activeTab === 'LIQUIDITY' && <MarketplaceLiquidity />}
       {activeTab === 'TRUST' && <TrustEngine />}
 
       {activeTab === 'SYSTEM' && (
         <div className="space-y-6">
           <PlatformPolicyCenter />
-          <div className="grid lg:grid-cols-3 gap-4">
-            {[
-              { icon: <Server className="w-5 h-5 text-emerald-300" />, title: 'طبقة التطبيق', body: 'واجهة معيارية تفصل تجارب الأطراف، مع حواجز حماية داخل طبقة الحالة وليس مجرد إخفاء أزرار.' },
-              { icon: <Database className="w-5 h-5 text-sky-300" />, title: 'مسار بيانات الإنتاج', body: 'المصادقة والجلسات وصندوق القرارات وسجلات التكامل أصبحت خادمية ودائمة. عمليات المجال الحساسة تبقى مقفلة إنتاجيًا حتى نقلها بالكامل إلى واجهة برمجية وقاعدة بيانات وتخزين مشفّر.' },
-              { icon: <FileKey2 className="w-5 h-5 text-fuchsia-300" />, title: 'النطاقات الحساسة', body: 'الوصفات والعقود والأذونات تعامل كبيانات حساسة؛ الوصول الكامل سياقي ومؤقت، وليس نتيجة رتبة إدارية فقط.' },
-              { icon: <Settings2 className="w-5 h-5 text-gold-300" />, title: 'طبقة السياسات', body: 'القيم التشغيلية العليا أصبحت سياسة فعلية قابلة للتحكم من السوبر أدمن وتنعكس مباشرة على منطق المتجر.' },
-              { icon: <ShieldCheck className="w-5 h-5 text-emerald-300" />, title: 'طبقة الامتثال', body: 'بوابة الإطلاق وحالة المستندات والنزاعات وأذونات الوصفة سجلات صريحة ومشتقة من بيانات حقيقية.' },
-              { icon: <Activity className="w-5 h-5 text-rose-300" />, title: 'الرصد والمراقبة', body: 'العمليات الحرجة—الوصول، التوقيع، المختبر، الإطلاق، الطلب، التقييم، السياسة والتسوية—تُصدر أحداث تدقيق واضحة.' }
-            ].map((card, idx) => <section key={idx} className="glass-card rounded-3xl p-5 border border-white/10"><div>{card.icon}</div><h3 className="font-black mt-4">{card.title}</h3><p className="text-xs text-slate-400 leading-6 mt-2">{card.body}</p></section>)}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <InfoChip icon={<Server className="w-4 h-4 text-emerald-300" />} label="طبقة التطبيق" hint="واجهة معيارية تفصل تجارب الأطراف، مع حواجز حماية داخل طبقة الحالة وليس مجرد إخفاء أزرار." />
+            <InfoChip icon={<Database className="w-4 h-4 text-sky-300" />} label="مسار البيانات" status={IS_DEMO_MODE ? 'وضع تجريبي' : undefined} hint="المصادقة والجلسات وصندوق القرارات وسجلات التكامل أصبحت خادمية ودائمة. عمليات المجال الحساسة تبقى مقفلة إنتاجيًا حتى نقلها بالكامل إلى واجهة برمجية وقاعدة بيانات وتخزين مشفّر." />
+            <InfoChip icon={<FileKey2 className="w-4 h-4 text-fuchsia-300" />} label="النطاقات الحساسة" hint="الوصفات والعقود والأذونات تعامل كبيانات حساسة؛ الوصول الكامل سياقي ومؤقت، وليس نتيجة رتبة إدارية فقط." />
+            <InfoChip icon={<Settings2 className="w-4 h-4 text-gold-300" />} label="طبقة السياسات" hint="القيم التشغيلية العليا أصبحت سياسة فعلية قابلة للتحكم من السوبر أدمن وتنعكس مباشرة على منطق المتجر." />
+            <InfoChip icon={<ShieldCheck className="w-4 h-4 text-emerald-300" />} label="طبقة الامتثال" hint="بوابة الإطلاق وحالة المستندات والنزاعات وأذونات الوصفة سجلات صريحة ومشتقة من بيانات حقيقية." />
+            <InfoChip icon={<Activity className="w-4 h-4 text-rose-300" />} label="الرصد والمراقبة" hint="العمليات الحرجة—الوصول، التوقيع، المختبر، الإطلاق، الطلب، التقييم، السياسة والتسوية—تُصدر أحداث تدقيق واضحة." />
           </div>
         </div>
       )}
