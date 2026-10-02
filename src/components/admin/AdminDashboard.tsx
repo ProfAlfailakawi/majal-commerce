@@ -22,6 +22,7 @@ import {
   Wrench
 } from 'lucide-react';
 import { DnaHubMap } from '../dna/DnaKit';
+import { SegBar, MiniRing } from '../common/Viz';
 import { MajalMark } from '../brand/MajalMark';
 import { shortRef } from '../../lib/displayRef';
 import { store } from '../../lib/store';
@@ -298,6 +299,20 @@ export const AdminDashboard: React.FC = () => {
             </div>
             <div className="text-xs text-slate-400">{store.settlements.length} دفعات مسجلة</div>
           </div>
+          {store.settlements.length > 0 && (() => {
+            const total = store.settlements.reduce((a, b) => a + b.totalAmountKwd, 0);
+            const paid = store.settlements.filter(b => b.status === 'PAID').reduce((a, b) => a + b.totalAmountKwd, 0);
+            return (
+              <div className="flex flex-wrap items-center gap-4 rounded-2xl p-4 bg-white/[0.03] border border-white/10">
+                <MiniRing value={total ? paid / total : 0} size={64} stroke={7} className="text-emerald-400">{total ? Math.round((paid / total) * 100) : 0}%</MiniRing>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/20 text-emerald-300 font-bold">مدفوع {paid.toFixed(3)} د.ك</span>
+                  <span className="px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-400/20 text-amber-300 font-bold">بانتظار الدفع {(total - paid).toFixed(3)} د.ك</span>
+                  <span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-300 font-bold">الإجمالي {total.toFixed(3)} د.ك</span>
+                </div>
+              </div>
+            );
+          })()}
           <div className="space-y-3">
             {store.settlements.length === 0 ? (
               <EmptyState
@@ -306,19 +321,32 @@ export const AdminDashboard: React.FC = () => {
                 title="ما فيه دفعات تسوية"
                 body="الدفعات تظهر هنا بعد احتساب أول دورة مستحقات مؤهلة."
               />
-            ) : store.settlements.map(batch => (
-              <div key={batch.id} className="rounded-2xl p-4 bg-white/5 border border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                <div>
-                  <div className="font-black text-slate-100">{batch.creatorName}</div>
-                  <div className="text-xs text-slate-400 mt-1"><span title={batch.id}>دفعة {shortRef(batch.id, 'ت')}</span> — {new Date(batch.periodStart).toLocaleDateString('ar-KW-u-nu-latn')} إلى {new Date(batch.periodEnd).toLocaleDateString('ar-KW-u-nu-latn')}</div>
+            ) : store.settlements.map(batch => {
+              const paidBatch = batch.status === 'PAID';
+              const steps = [{ label: 'معتمد', done: true }, { label: 'مدفوع', done: paidBatch }, { label: 'مؤكد', done: paidBatch }];
+              return (
+              <div key={batch.id} className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="font-black text-slate-100">{batch.creatorName}</div>
+                    <details className="group mt-1 text-xs text-slate-400">
+                      <summary className="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden inline-flex items-center gap-1 text-slate-400 hover:text-slate-200">تفاصيل<ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform" aria-hidden="true" /></summary>
+                      <div className="mt-1.5"><span title={batch.id}>دفعة {shortRef(batch.id, 'ت')}</span> — {new Date(batch.periodStart).toLocaleDateString('ar-KW-u-nu-latn')} إلى {new Date(batch.periodEnd).toLocaleDateString('ar-KW-u-nu-latn')}</div>
+                    </details>
+                  </div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="text-lg font-black text-gold-300 font-mono">{batch.totalAmountKwd.toFixed(3)} د.ك</div>
+                    <span className={`px-3 py-1.5 rounded-full text-xs font-black border ${paidBatch ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'}`}>{paidBatch ? 'مدفوع ومؤكد' : 'معتمد — بانتظار الدفع'}</span>
+                    {batch.status === 'APPROVED' && <button disabled title="يُفعّل بعد ربط مزود الدفع" className="px-3 py-2 rounded-xl bg-slate-700 text-slate-400 text-xs font-black cursor-not-allowed">بانتظار ربط الدفع</button>}
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="text-lg font-black text-gold-300 font-mono">{batch.totalAmountKwd.toFixed(3)} د.ك</div>
-                  <span className={`px-3 py-1.5 rounded-full text-xs font-black border ${batch.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-amber-500/10 text-amber-300 border-amber-400/20'}`}>{batch.status === 'PAID' ? 'مدفوع ومؤكد' : 'معتمد — بانتظار الدفع'}</span>
-                  {batch.status === 'APPROVED' && <button disabled title="يُفعّل بعد ربط مزود الدفع" className="px-3 py-2 rounded-xl bg-slate-700 text-slate-400 text-xs font-black cursor-not-allowed">بانتظار ربط الدفع</button>}
+                <div aria-hidden="true" className="max-w-sm">
+                  <SegBar height={4} segs={steps.map(st => ({ value: 1, className: st.done ? (paidBatch ? 'bg-emerald-400' : 'bg-amber-400') : 'bg-white/10' }))} />
+                  <div className="mt-1 grid grid-cols-3 text-xs text-slate-500">{steps.map(st => <span key={st.label} className={st.done ? 'text-slate-300' : ''}>{st.label}</span>)}</div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}
