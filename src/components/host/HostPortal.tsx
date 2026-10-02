@@ -256,7 +256,7 @@ export const HostPortal: React.FC = () => {
               segments={[
                 { key: 'host', label: 'صافي المنشأة', value: finance.hostNet, strokeClass: 'stroke-emerald-400', dotClass: 'bg-emerald-400' },
                 { key: 'creator', label: 'حقوق المبدعين', value: finance.creatorRoyalties, strokeClass: 'stroke-gold-400', dotClass: 'bg-gold-400' },
-                { key: 'platform', label: 'رسوم مجال', value: finance.platformFees, strokeClass: 'stroke-sky-400', dotClass: 'bg-sky-400' }
+                { key: 'platform', label: 'رسوم مجال', value: finance.platformFees, strokeClass: 'stroke-slate-400', dotClass: 'bg-slate-400' }
               ]}
             />
           )}
