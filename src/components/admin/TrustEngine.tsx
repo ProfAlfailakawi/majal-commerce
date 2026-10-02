@@ -49,10 +49,10 @@ export const TrustEngine: React.FC = () => {
         <span className={`px-3 py-1.5 rounded-full text-xs font-bold border ${postureClass}`}>مستوى المخاطر: {({ LOW: 'منخفض', MEDIUM: 'متوسط', HIGH: 'مرتفع' } as Record<string, string>)[overallRisk] ?? overallRisk}</span>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-4">
-        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><ShieldAlert className="w-5 h-5 text-rose-300" /><div className="mt-3 text-xs text-slate-400">نزاعات تحتاج متابعة</div><div className="mt-1 text-2xl font-black text-slate-100">{unresolved.length}</div></div>
-        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><AlertTriangle className="w-5 h-5 text-amber-300" /><div className="mt-3 text-xs text-slate-400">مستندات منتهية/مرفوضة</div><div className="mt-1 text-2xl font-black text-slate-100">{problematicDocs.length}</div></div>
-        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><Eye className="w-5 h-5 text-sky-300" /><div className="mt-3 text-xs text-slate-400">طلبات/أذونات وصفات نشطة</div><div className="mt-1 text-2xl font-black text-slate-100">{store.recipeGrants.filter(g => ['REQUESTED','APPROVED'].includes(g.status)).length}</div></div>
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="rounded-2xl p-3 sm:p-4 bg-white/5 border border-white/10"><ShieldAlert className="w-5 h-5 text-rose-300" /><div className="mt-3 text-xs text-slate-400">نزاعات تحتاج متابعة</div><div className="mt-1 text-2xl font-black text-slate-100">{unresolved.length}</div></div>
+        <div className="rounded-2xl p-3 sm:p-4 bg-white/5 border border-white/10"><AlertTriangle className="w-5 h-5 text-amber-300" /><div className="mt-3 text-xs text-slate-400">مستندات منتهية/مرفوضة</div><div className="mt-1 text-2xl font-black text-slate-100">{problematicDocs.length}</div></div>
+        <div className="rounded-2xl p-3 sm:p-4 bg-white/5 border border-white/10"><Eye className="w-5 h-5 text-sky-300" /><div className="mt-3 text-xs text-slate-400">طلبات/أذونات وصفات نشطة</div><div className="mt-1 text-2xl font-black text-slate-100">{store.recipeGrants.filter(g => ['REQUESTED','APPROVED'].includes(g.status)).length}</div></div>
       </div>
 
       <div className="grid lg:grid-cols-[1fr_1fr] gap-4">

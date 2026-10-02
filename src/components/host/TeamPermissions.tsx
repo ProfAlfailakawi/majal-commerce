@@ -72,7 +72,7 @@ export const TeamPermissions: React.FC<TeamPermissionsProps> = ({ hostBusinessId
                   <span className="ps-2 text-xs font-mono tabular-nums text-slate-300">{permissions.length}/{totalPermissions}</span>
                 </div>
                 <details className="group mt-2">
-                  <summary className="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200">تفاصيل<ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform" aria-hidden="true" /></summary>
+                  <summary className="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden inline-flex items-center gap-1 max-sm:min-h-11 text-xs text-slate-400 hover:text-slate-200">تفاصيل<ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform" aria-hidden="true" /></summary>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {permissions.slice(0, 7).map(permission => (
                       <span key={permission} className="px-2.5 py-1 rounded-lg bg-slate-950/50 border border-white/10 text-xs text-slate-400">{permissionLabel(permission)}</span>

@@ -330,7 +330,7 @@ export const AdminDashboard: React.FC = () => {
                   <div className="min-w-0">
                     <div className="font-black text-slate-100">{batch.creatorName}</div>
                     <details className="group mt-1 text-xs text-slate-400">
-                      <summary className="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden inline-flex items-center gap-1 text-slate-400 hover:text-slate-200">تفاصيل<ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform" aria-hidden="true" /></summary>
+                      <summary className="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden inline-flex items-center gap-1 max-sm:min-h-11 text-slate-400 hover:text-slate-200">تفاصيل<ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform" aria-hidden="true" /></summary>
                       <div className="mt-1.5"><span title={batch.id}>دفعة {shortRef(batch.id, 'ت')}</span> — {new Date(batch.periodStart).toLocaleDateString('ar-KW-u-nu-latn')} إلى {new Date(batch.periodEnd).toLocaleDateString('ar-KW-u-nu-latn')}</div>
                     </details>
                   </div>

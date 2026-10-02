@@ -151,7 +151,7 @@ export const SuperAdminDashboard: React.FC = () => {
           <div className="flex items-center gap-3"><div className="w-12 h-12 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-400/20 flex items-center justify-center text-fuchsia-300"><KeyRound className="w-6 h-6" /></div><div><h3 className="text-lg font-black">مصفوفة الصلاحيات</h3><p className="text-xs text-slate-400 mt-1">الصلاحيات العليا محسوبة حسب الدور والسياق، وليست قائمة واحدة مشتركة.</p></div></div>
           <PermissionMatrix roles={roleRows} />
           <details className="group rounded-2xl border border-white/10 bg-white/[0.03]">
-            <summary className="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden px-4 py-3 text-xs font-black text-slate-300 flex items-center justify-between">تفاصيل<ChevronDown className="w-4 h-4 text-slate-500 group-open:rotate-180 transition-transform" aria-hidden="true" /></summary>
+            <summary className="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden max-sm:min-h-11 px-4 py-3 text-xs font-black text-slate-300 flex items-center justify-between">تفاصيل<ChevronDown className="w-4 h-4 text-slate-500 group-open:rotate-180 transition-transform" aria-hidden="true" /></summary>
             <div className="p-3 pt-0">
           <div className="space-y-3">
             {roleRows.map(role => (
@@ -177,7 +177,7 @@ export const SuperAdminDashboard: React.FC = () => {
                     <Avatar name={user.name} src={user.avatar} size={40} shape="squircle" />
                     <div className="min-w-0"><div className="font-bold text-slate-100 break-words sm:truncate" title={user.name}>{user.name}</div><div className="text-xs text-slate-400">{user.email}</div></div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:flex sm:flex-wrap">
                     <select
                       value={user.role}
                       onChange={e => {
@@ -191,7 +191,7 @@ export const SuperAdminDashboard: React.FC = () => {
                         }
                         store.changeUserRole(user.id, next);
                       }}
-                      className="glass-input rounded-xl px-3 py-2 text-xs outline-none"
+                      className="glass-input min-w-0 rounded-xl px-3 py-2 text-xs outline-none"
                     >
                       {roleChangeOptions(user.role).map(role => <option key={role} value={role} disabled={role === user.role && role === 'SUPER_ADMIN'}>{roleLabel(role)}</option>)}
                     </select>

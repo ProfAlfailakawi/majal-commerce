@@ -39,10 +39,10 @@ export const MarketplaceLiquidity: React.FC = () => {
         <div className="flex gap-2 text-xs flex-wrap"><span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-300">متوسط المطابقة: <strong className="text-sky-300">{avgMatch}%</strong></span><span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-300">تحديات مفتوحة: <strong className="text-gold-300">{openChallenges.length}</strong></span></div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-4">
-        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><Sparkles className="w-5 h-5 text-emerald-300" /><div className="mt-3 text-xs text-slate-400">منتجات قابلة للمطابقة</div><div className="text-2xl font-black mt-1">{matchableProducts.length}</div></div>
-        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><Building2 className="w-5 h-5 text-sky-300" /><div className="mt-3 text-xs text-slate-400">منشآت متحققة</div><div className="text-2xl font-black mt-1">{store.hosts.filter(h => h.verificationStatus === 'VERIFIED').length}</div></div>
-        <div className="rounded-2xl p-4 bg-white/5 border border-white/10"><SearchCheck className="w-5 h-5 text-gold-300" /><div className="mt-3 text-xs text-slate-400">إشارات المطابقة</div><div className="text-2xl font-black mt-1">{store.matches.length}</div></div>
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="rounded-2xl p-3 sm:p-4 bg-white/5 border border-white/10"><Sparkles className="w-5 h-5 text-emerald-300" /><div className="mt-3 text-xs text-slate-400">منتجات قابلة للمطابقة</div><div className="text-2xl font-black mt-1">{matchableProducts.length}</div></div>
+        <div className="rounded-2xl p-3 sm:p-4 bg-white/5 border border-white/10"><Building2 className="w-5 h-5 text-sky-300" /><div className="mt-3 text-xs text-slate-400">منشآت متحققة</div><div className="text-2xl font-black mt-1">{store.hosts.filter(h => h.verificationStatus === 'VERIFIED').length}</div></div>
+        <div className="rounded-2xl p-3 sm:p-4 bg-white/5 border border-white/10"><SearchCheck className="w-5 h-5 text-gold-300" /><div className="mt-3 text-xs text-slate-400">إشارات المطابقة</div><div className="text-2xl font-black mt-1">{store.matches.length}</div></div>
       </div>
 
       <div className="grid gap-3">
@@ -54,7 +54,7 @@ export const MarketplaceLiquidity: React.FC = () => {
           /> : categories.map((row, idx) => (
           <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div><div className="font-black text-slate-100">{row.category}</div><div className="text-xs text-slate-400 mt-1">مقارنة مباشرة بين العرض القابل للمطابقة والطلب المفتوح</div></div>
-            <div aria-hidden="true" className="hidden md:flex flex-1 max-w-xs items-center gap-0.5">
+            <div aria-hidden="true" className="flex md:flex-1 md:max-w-xs items-center gap-0.5">
               <div className="flex-1 flex justify-end"><span className="h-2 rounded-s-full bg-emerald-400/70" style={{ width: `${(row.supply / liquidityScale) * 100}%` }} /></div>
               <span className="w-px h-4 bg-white/20" />
               <div className="flex-1 flex justify-start"><span className="h-2 rounded-e-full bg-sky-400/70" style={{ width: `${(row.demand / liquidityScale) * 100}%` }} /></div>

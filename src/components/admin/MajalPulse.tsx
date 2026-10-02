@@ -69,9 +69,9 @@ export const MajalPulse: React.FC = () => {
           ))}
         </ol>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {cards.map((card, index) => (
-            <div key={index} className="rounded-2xl p-4 bg-slate-950/35 border border-white/10 hover:border-white/20 transition-colors">
+            <div key={index} className="max-sm:last:col-span-2 rounded-2xl p-4 bg-slate-950/35 border border-white/10 hover:border-white/20 transition-colors">
               <div className={`${card.tone}`}>{card.icon}</div>
               <div className={`mt-3 text-xl md:text-2xl font-black ${card.tone} font-mono`}>{card.value}</div>
               <div className="text-xs font-bold text-slate-200 mt-1">{card.label}</div>

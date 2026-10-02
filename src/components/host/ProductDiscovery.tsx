@@ -140,7 +140,7 @@ export const ProductDiscovery: React.FC = () => {
 
                 {/* Match Score Breakdown: three thin bars, the explanation folded */}
                 <details className="group bg-slate-950 rounded-xl border border-slate-800/80 text-xs">
-                  <summary className="cursor-pointer list-none flex items-center justify-between gap-2 px-3.5 py-2.5 text-slate-300 hover:text-slate-100 [&::-webkit-details-marker]:hidden">
+                  <summary className="cursor-pointer list-none flex items-center justify-between gap-2 max-sm:min-h-11 px-3.5 py-2.5 text-slate-300 hover:text-slate-100 [&::-webkit-details-marker]:hidden">
                     <span className="font-bold">عرض التفاصيل</span>
                     <ChevronDown className="w-4 h-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
                   </summary>
