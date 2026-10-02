@@ -126,8 +126,11 @@ const LaunchWarRoomBody: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => 
         {trackedSourceUnits > 0 && (
           <ShareDonut
             ariaLabel="توزيع الوحدات المنسوبة حسب مصدر الاكتساب"
-            size={96}
+            size={112}
             stroke={12}
+            legendBeside
+            centerValue={trackedSourceUnits}
+            centerLabel="وحدة"
             segments={[
               { key: 'creator', label: 'عبر المبدع', value: sourceUnits.CREATOR, strokeClass: 'stroke-emerald-400', dotClass: 'bg-emerald-400' },
               { key: 'host', label: 'عبر المنشأة', value: sourceUnits.HOST, strokeClass: 'stroke-sky-400', dotClass: 'bg-sky-400' },
