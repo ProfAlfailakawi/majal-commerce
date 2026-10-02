@@ -960,3 +960,12 @@ header.glass-nav { padding-top: env(safe-area-inset-top, 0px); }
     linear-gradient(180deg, #fbf8f1 0%, #f7f4ec 55%, #f1ece0 100%);
 }
 :root[data-theme='light'] .majal-onb .glass-card { background: rgba(255, 255, 255, 0.85); }
+
+/* ── r29 · AI assistant FAB ───────────────────────────────────────────────────
+   Sits below every modal backdrop (z-50+) and steps out of sight while any
+   aria-modal dialog is open. Display-only: the button and its click are untouched. */
+.majal-ai-fab { z-index: 30; transition: opacity 0.15s ease; }
+body:has([aria-modal='true']) .majal-ai-fab { opacity: 0; visibility: hidden; pointer-events: none; }
+@media (max-width: 639px) {
+  .majal-ai-fab > button { padding: 0; width: 3rem; height: 3rem; min-width: 3rem; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28); }
+}
