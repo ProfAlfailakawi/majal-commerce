@@ -61,5 +61,5 @@ html:root {
 @media (max-width: 520px) {
   .journey-dna .dna-steps[data-size='lg'] { --node: 38px; --icon: 16px; }
   .journey-dna .journey-dna-title { font-size: 12px; }
-  .journey-dna .journey-dna-actor { font-size: 10px; }
+  .journey-dna .journey-dna-actor { font-size: 11px; }
 }

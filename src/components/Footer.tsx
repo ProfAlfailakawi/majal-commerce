@@ -53,10 +53,10 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
               <span>منصة كويتية — فكرتك وبياناتك محمية</span>
             </div>
 
-            <div className="flex flex-wrap gap-2 pt-1">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 pt-1">
               <button
                 onClick={onReplayOnboarding}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl glass-card border border-white/10 text-xs font-bold text-slate-300 hover:text-gold-300 hover:border-gold-300/25 transition-colors"
+                className="inline-flex items-center justify-center gap-2 col-span-2 sm:col-auto px-3 py-2 rounded-xl glass-card border border-white/10 text-xs font-bold text-slate-300 hover:text-gold-300 hover:border-gold-300/25 transition-colors"
               >
                 <PlayCircle className="w-3.5 h-3.5" />
                 <span>أعد جولة التعريف</span>
@@ -65,7 +65,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
                 href="/presentation/majal-deck.html"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl glass-card border border-gold-400/20 text-xs font-bold text-gold-300 hover:text-gold-200 hover:border-gold-300/40 transition-colors"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl glass-card border border-gold-400/20 text-xs font-bold text-gold-300 hover:text-gold-200 hover:border-gold-300/40 transition-colors"
               >
                 <FileText className="w-3.5 h-3.5 text-gold-400" />
                 <span>العرض التفاعلي</span>
@@ -74,7 +74,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
                 href="/presentation/majal-deck.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl glass-card border border-white/10 text-xs font-bold text-slate-300 hover:text-gold-300 hover:border-gold-300/25 transition-colors"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl glass-card border border-white/10 text-xs font-bold text-slate-300 hover:text-gold-300 hover:border-gold-300/25 transition-colors"
               >
                 <FileText className="w-3.5 h-3.5" />
                 <span>عرض PDF</span>
@@ -84,9 +84,9 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
 
           <div className="space-y-2">
             <h4 className="font-bold text-slate-200 text-sm mb-3 border-b border-slate-800 pb-1">أسطح النظام</h4>
-            <ul className="space-y-2">
+            <ul className="flex flex-wrap gap-2">
               {visibleSurfaces.map(surface => (
-                <li key={surface.id}><button onClick={() => onSurfaceChange(surface.id)} className="py-1.5 -my-1.5 inline-flex items-center hover:text-gold-300 transition-colors">{surface.label}</button></li>
+                <li key={surface.id}><button onClick={() => onSurfaceChange(surface.id)} className="inline-flex items-center px-3 py-2 rounded-xl glass-card border border-white/10 text-xs font-bold text-slate-300 hover:text-gold-300 hover:border-gold-300/25 transition-colors">{surface.label}</button></li>
               ))}
             </ul>
           </div>

@@ -37,7 +37,7 @@ export const MicroBars: React.FC<{ bars: MatchBar[]; suffix?: string }> = ({ bar
 /** The explanation sentence stays in the page, folded behind a native disclosure. */
 export const FoldedNote: React.FC<{ summary: string; children: React.ReactNode }> = ({ summary, children }) => (
   <details className="group rounded-xl bg-slate-950/45 border border-white/10 text-xs">
-    <summary className="cursor-pointer list-none flex items-center gap-1.5 px-3 py-2 text-slate-400 hover:text-slate-200 [&::-webkit-details-marker]:hidden">
+    <summary className="cursor-pointer list-none flex items-center gap-1.5 max-sm:min-h-11 px-3 py-2 text-slate-400 hover:text-slate-200 [&::-webkit-details-marker]:hidden">
       <Info className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> <span>{summary}</span>
     </summary>
     <p className="px-3 pb-3 leading-6 text-slate-400">{children}</p>

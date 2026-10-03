@@ -88,7 +88,7 @@ export const CreatorEarnings: React.FC = () => {
       <section className="glass-panel rounded-3xl border border-white/10 p-6 space-y-4">
         <div className="flex items-center justify-between border-b border-white/10 pb-3"><h3 className="font-black">تفاصيل الحقوق حسب الطلب</h3><span className="text-xs text-slate-400">{creatorAccruals.length} سجلات</span></div>
         <div className="overflow-x-auto text-xs">
-          <table className="mobile-cards w-full text-start md:min-w-[760px]">
+          <table className="mobile-cards mc-compact w-full text-start md:min-w-[760px]">
             <thead><tr className="border-b border-white/10 text-slate-400"><th className="py-3 px-3">الطلب</th><th className="py-3 px-3">التاريخ</th><th className="py-3 px-3">المبيعات</th><th className="py-3 px-3">النسبة</th><th className="py-3 px-3">حق المبدع</th><th className="py-3 px-3">الحالة</th></tr></thead>
             <tbody className="divide-y divide-white/5">
               {creatorAccruals.map(a => {
