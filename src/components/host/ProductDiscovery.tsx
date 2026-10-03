@@ -156,7 +156,7 @@ export const ProductDiscovery: React.FC = () => {
               </div>
 
               {/* Actions Footer */}
-              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between text-xs mt-4">
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between max-sm:flex-col max-sm:items-stretch max-sm:gap-3 text-xs mt-4">
                 <div className="text-slate-400">
                   سعر البيع المستهدف: <strong className="text-gold-400 font-mono">{p.targetSellingPriceKwd.toFixed(3)} د.ك</strong>
                 </div>
@@ -164,7 +164,7 @@ export const ProductDiscovery: React.FC = () => {
                 {hasApprovedGrant ? (
                   <button
                     onClick={() => setSelectedProductForVault({ product: p, level: effectiveLevel })}
-                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl transition-colors flex items-center gap-1.5"
+                    className="px-4 py-2 max-sm:min-h-11 max-sm:justify-center bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl transition-colors flex items-center gap-1.5"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     <span>فتح الخزنة — مستوى {effectiveLevel}</span>
@@ -177,7 +177,7 @@ export const ProductDiscovery: React.FC = () => {
                   <div className="flex items-center gap-2 flex-wrap justify-end">
                     <button
                       onClick={() => handleRequestAccess(p, 2)}
-                      className="px-3 py-2 bg-gold-500 hover:bg-gold-400 text-slate-950 font-black rounded-xl transition-colors flex items-center gap-1.5 shadow-md"
+                      className="px-3 py-2 max-sm:min-h-11 bg-gold-500 hover:bg-gold-400 text-slate-950 font-black rounded-xl transition-colors flex items-center gap-1.5 shadow-md"
                     >
                       <Lock className="w-3.5 h-3.5" />
                       <span>طلب المستوى 2</span>
@@ -185,7 +185,7 @@ export const ProductDiscovery: React.FC = () => {
                     {['HOST_OWNER', 'HOST_CHEF'].includes(store.activeUser.role) && (
                       <button
                         onClick={() => handleRequestAccess(p, 3)}
-                        className="px-3 py-2 bg-fuchsia-500/15 hover:bg-fuchsia-500/25 text-fuchsia-200 border border-fuchsia-400/20 font-black rounded-xl transition-colors flex items-center gap-1.5"
+                        className="px-3 py-2 max-sm:min-h-11 bg-fuchsia-500/15 hover:bg-fuchsia-500/25 text-fuchsia-200 border border-fuchsia-400/20 font-black rounded-xl transition-colors flex items-center gap-1.5"
                       >
                         <Lock className="w-3.5 h-3.5" />
                         <span>طلب المستوى 3</span>

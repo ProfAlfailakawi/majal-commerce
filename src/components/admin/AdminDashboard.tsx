@@ -35,6 +35,8 @@ import { completedOrderTotals } from '../../lib/money';
 import { SurfaceTabs } from '../common/SurfaceTabs';
 import { EcosystemApprovals } from './EcosystemApprovals';
 
+const GRANTS_VISIBLE = 8;
+
 export const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'APPROVALS' | 'COMPLIANCE' | 'ACCESS' | 'SETTLEMENTS' | 'RISK' | 'AUDIT'>('OVERVIEW');
   const [notice, setNotice] = useState<string | null>(null);
@@ -86,6 +88,19 @@ export const AdminDashboard: React.FC = () => {
     setActiveTab('SETTLEMENTS');
     setTimeout(() => setNotice(null), 4500);
   };
+
+  const renderGrant = (grant: (typeof store.recipeGrants)[number]) => (
+              <div key={grant.id} className="rounded-2xl p-4 bg-white/5 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="font-bold text-sm text-slate-100" title={grant.id}>إذن وصفة — {store.products.find(p => p.id === grant.productId)?.publicName || 'منتج'} <span className="text-slate-400 font-normal">· {store.hosts.find(h => h.id === grant.hostBusinessId)?.commercialName || 'منشأة'}</span></div>
+                  <div className="text-xs text-slate-400 mt-1">{grant.purpose}</div>
+                </div>
+                <div className="sm:text-end flex sm:block items-center justify-between gap-2">
+                  <div className="text-sm font-black text-gold-300">L{grant.disclosureLevel}</div>
+                  <div className="text-xs text-slate-400 flex items-center justify-end gap-2 mt-1"><span className="whitespace-nowrap">{new Date(grant.grantedAt || grant.requestedAt).toLocaleDateString('ar-KW-u-nu-latn')}</span><StatusPill status={grant.status} /></div>
+                </div>
+              </div>
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
@@ -257,18 +272,17 @@ export const AdminDashboard: React.FC = () => {
               <Lock className="w-5 h-5 text-gold-300" />
               <h2 className="text-lg font-black">سجل أذونات خزنة الوصفات</h2>
             </div>
-            {store.recipeGrants.map(grant => (
-              <div key={grant.id} className="rounded-2xl p-4 bg-white/5 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <div className="font-bold text-sm text-slate-100" title={grant.id}>إذن وصفة — {store.products.find(p => p.id === grant.productId)?.publicName || 'منتج'} <span className="text-slate-400 font-normal">· {store.hosts.find(h => h.id === grant.hostBusinessId)?.commercialName || 'منشأة'}</span></div>
-                  <div className="text-xs text-slate-400 mt-1">{grant.purpose}</div>
-                </div>
-                <div className="sm:text-end flex sm:block items-center justify-between gap-2">
-                  <div className="text-sm font-black text-gold-300">L{grant.disclosureLevel}</div>
-                  <div className="text-xs text-slate-400 flex items-center justify-end gap-2 mt-1"><span className="whitespace-nowrap">{new Date(grant.grantedAt || grant.requestedAt).toLocaleDateString('ar-KW-u-nu-latn')}</span><StatusPill status={grant.status} /></div>
-                </div>
-              </div>
-            ))}
+            {store.recipeGrants.slice(0, GRANTS_VISIBLE).map(renderGrant)}
+            {store.recipeGrants.length > GRANTS_VISIBLE && (
+              <details className="group rounded-2xl border border-white/10 bg-white/[0.03]">
+                <summary className="flex items-center gap-2 min-h-11 px-4 py-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-sm font-bold text-slate-200">
+                  <Lock className="w-4 h-4 text-gold-300" aria-hidden="true" />
+                  <span className="flex-1">عرض المزيد ({store.recipeGrants.length - GRANTS_VISIBLE})</span>
+                  <ChevronDown className="w-4 h-4 text-slate-400 transition-transform group-open:rotate-180" aria-hidden="true" />
+                </summary>
+                <div className="space-y-4 p-3 pt-1">{store.recipeGrants.slice(GRANTS_VISIBLE).map(renderGrant)}</div>
+              </details>
+            )}
           </div>
 
           <div className="glass-panel rounded-3xl p-6 border border-white/10 space-y-4">
@@ -303,9 +317,9 @@ export const AdminDashboard: React.FC = () => {
             const total = store.settlements.reduce((a, b) => a + b.totalAmountKwd, 0);
             const paid = store.settlements.filter(b => b.status === 'PAID').reduce((a, b) => a + b.totalAmountKwd, 0);
             return (
-              <div className="flex flex-wrap items-center gap-4 rounded-2xl p-4 bg-white/[0.03] border border-white/10">
-                <MiniRing value={total ? paid / total : 0} size={64} stroke={7} className="text-emerald-400">{total ? Math.round((paid / total) * 100) : 0}%</MiniRing>
-                <div className="flex flex-wrap gap-2 text-xs">
+              <div className="flex items-center gap-4 rounded-2xl p-4 bg-white/[0.03] border border-white/10">
+                <MiniRing value={total ? paid / total : 0} size={64} stroke={7} className="shrink-0 text-emerald-400">{total ? Math.round((paid / total) * 100) : 0}%</MiniRing>
+                <div className="flex flex-wrap gap-2 text-xs min-w-0 flex-1">
                   <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/20 text-emerald-300 font-bold">مدفوع {paid.toFixed(3)} د.ك</span>
                   <span className="px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-400/20 text-amber-300 font-bold">بانتظار الدفع {(total - paid).toFixed(3)} د.ك</span>
                   <span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-300 font-bold">الإجمالي {total.toFixed(3)} د.ك</span>
