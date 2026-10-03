@@ -75,7 +75,7 @@ export const TrustEngine: React.FC = () => {
           ))}
         </div>
 
-        <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3">
+        <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3 lg:self-start">
           <div className="font-bold text-slate-100 flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-emerald-300" /> قواعد الكشف المطبقة</div>
           {[
             'خصم عند وجود نزاعات غير مغلقة مرتبطة بالمنشأة.',

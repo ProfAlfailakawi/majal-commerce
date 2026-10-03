@@ -936,10 +936,18 @@ textarea:disabled {
   table.mobile-cards.mc-compact td { grid-template-columns: 1fr; gap: 0.1rem; border-top: 0 !important; }
   table.mobile-cards.mc-compact td:nth-child(1) { grid-area: 1 / 1; }
   table.mobile-cards.mc-compact td:nth-child(6) { grid-area: 1 / 2; }
-  table.mobile-cards.mc-compact td:nth-child(2) { grid-area: 2 / 1 / 3 / 3; }
+  table.mobile-cards.mc-compact td:nth-child(2) { grid-area: 2 / 1; }
+  table.mobile-cards.mc-compact td:nth-child(4) { grid-area: 2 / 2; }
   table.mobile-cards.mc-compact td:nth-child(3) { grid-area: 3 / 1; }
-  table.mobile-cards.mc-compact td:nth-child(4) { grid-area: 3 / 2; }
-  table.mobile-cards.mc-compact td:nth-child(5) { grid-area: 4 / 1 / 5 / 3; }
+  table.mobile-cards.mc-compact td:nth-child(5) { grid-area: 3 / 2; }
+  /* Five-column audit ledger: date + event, entity + IP, then the description across the row. */
+  table.mobile-cards.mc-audit tr { display: grid; grid-template-columns: 1fr 1fr; column-gap: 0.75rem; }
+  table.mobile-cards.mc-audit td { grid-template-columns: 1fr; gap: 0.1rem; border-top: 0 !important; }
+  table.mobile-cards.mc-audit td:nth-child(1) { grid-area: 1 / 1; }
+  table.mobile-cards.mc-audit td:nth-child(2) { grid-area: 1 / 2; }
+  table.mobile-cards.mc-audit td:nth-child(3) { grid-area: 2 / 1; }
+  table.mobile-cards.mc-audit td:nth-child(5) { grid-area: 2 / 2; }
+  table.mobile-cards.mc-audit td:nth-child(4) { grid-area: 3 / 1 / 4 / 3; }
 }
 
 /* Icon-only and compact square controls get the full 44px width on touch phones too. */

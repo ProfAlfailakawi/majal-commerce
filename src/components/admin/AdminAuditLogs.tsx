@@ -79,7 +79,7 @@ export const AdminAuditLogs: React.FC = () => {
               <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
             </summary>
             <div className="overflow-x-auto px-2 pb-2">
-              <table className="mobile-cards w-full text-start">
+              <table className="mobile-cards mc-audit w-full text-start">
                 <thead>
                   <tr className="border-b border-slate-800 text-slate-400">
                     <th className="py-2.5 px-3 font-semibold">التاريخ والوقت</th>

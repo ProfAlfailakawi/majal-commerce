@@ -529,6 +529,9 @@
   .dna-headrow { flex-wrap: wrap; }
   .dna-headact { inline-size: 100%; }
   .dna-headact > .dna-btnp { flex: 1 1 auto; }
+  /* Icon-only actions (a lone close button) stay on the tile's row at the far end instead of taking a row of their own. */
+  .dna-headtxt { flex: 1 1 0; }
+  .dna-headact:not(:has(.dna-btnp)) { inline-size: auto; }
 }
 
 /* ---------- ring ---------- */

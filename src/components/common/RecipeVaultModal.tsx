@@ -121,11 +121,11 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
               <Lock className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-x-2 gap-y-1 flex-wrap">
                 <h3 id="recipe-vault-title" className="font-black text-lg text-slate-100">
                   خزنة الوصفة السرية
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-gold-500/20 text-gold-400 border border-gold-500/30">
+                <span className="px-2 py-0.5 rounded-full text-xs font-bold whitespace-nowrap bg-gold-500/20 text-gold-400 border border-gold-500/30">
                   مستوى الإفصاح الفعلي: {effectiveDisclosureLevel}
                 </span>
               </div>
