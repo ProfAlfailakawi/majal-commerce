@@ -964,6 +964,13 @@ header.glass-nav { padding-top: env(safe-area-inset-top, 0px); }
 .cap-toggle:checked ~ .cap-btn .cap-more,
 .cap-toggle:not(:checked) ~ .cap-btn .cap-less { display: none; }
 .cap-toggle:focus-visible ~ .cap-btn { outline: 2px solid var(--color-gold-300); outline-offset: 2px; }
+/* Payout statement on phones: the first 6 rows, the rest one tap away (nothing removed from the DOM; print shows every row). */
+@media screen and (max-width: 767px) {
+  .payout-cap-toggle:not(:checked) ~ .overflow-x-auto tbody > tr:nth-child(n+7) { display: none; }
+}
+.payout-cap-toggle:checked ~ .payout-cap-btn .payout-cap-more,
+.payout-cap-toggle:not(:checked) ~ .payout-cap-btn .payout-cap-less { display: none; }
+.payout-cap-toggle:focus-visible ~ .payout-cap-btn { outline: 2px solid var(--color-gold-300); outline-offset: 2px; }
 
 /* ── Onboarding ground ────────────────────────────────────────────────────────
    The overlay used to hard-code a navy gradient while its text followed the theme, so
