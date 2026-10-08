@@ -987,6 +987,10 @@ header.glass-nav { padding-top: env(safe-area-inset-top, 0px); }
    aria-modal dialog is open. Display-only: the button and its click are untouched. */
 .majal-ai-fab { z-index: 30; transition: opacity 0.15s ease; }
 body:has([aria-modal='true']) .majal-ai-fab { opacity: 0; visibility: hidden; pointer-events: none; }
+/* phones: the open role menu spans the screen, so the button steps aside instead of sitting on its rows */
+@media (max-width: 639px) {
+  body:has([role='menu'][aria-label='تبديل هوية العرض المحلية']) .majal-ai-fab { opacity: 0; visibility: hidden; pointer-events: none; }
+}
 /* r42 · desktop: the pill rests as a 3rem circle (label opens on hover/focus) so it never parks
    over left-edge content; the page keeps a bottom gutter so the last rows clear it. */
 body:has(.majal-ai-fab) { padding-bottom: 4.5rem; }

@@ -71,12 +71,12 @@ export const AdminAuditLogs: React.FC = () => {
               <CalendarDays className="w-4 h-4 text-gold-300 shrink-0" aria-hidden="true" />
               <span className="font-black text-slate-100 text-sm">{day}</span>
               <span className="px-2 py-0.5 rounded-full text-xs font-black bg-gold-500/15 text-gold-300 border border-gold-500/30 tabular-nums">{rows.length}</span>
-              <span className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
+              <span className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0 max-sm:order-last max-sm:basis-full">
                 {actionCounts(rows).slice(0, 4).map(([action, n]) => (
                   <span key={action} className="px-2 py-0.5 rounded-full text-xs text-slate-300 bg-white/5 border border-white/10 whitespace-nowrap">{ACTION_LABELS[action] || action} <b className="tabular-nums text-slate-100">{n}</b></span>
                 ))}
               </span>
-              <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+              <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 max-sm:ms-auto transition-transform group-open:rotate-180" aria-hidden="true" />
             </summary>
             <div className="overflow-x-auto px-2 pb-2">
               <table className="mobile-cards mc-audit w-full text-start">

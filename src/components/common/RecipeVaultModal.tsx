@@ -141,15 +141,15 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
         </div>
 
         {/* Versions selector bar */}
-        <div className="px-6 py-2.5 bg-slate-950 border-b border-slate-800 flex items-center justify-between text-xs z-20">
-          <div className="flex items-center gap-2">
+        <div className="px-6 py-2.5 bg-slate-950 border-b border-slate-800 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-xs z-20">
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
             <History className="w-4 h-4 text-gold-400" />
             <span className="text-slate-400 font-medium">سجل النسخ والاعتمادات:</span>
             {productRecipes.map(r => (
               <button
                 key={r.id}
                 onClick={() => setSelectedVersionNum(r.versionNumber)}
-                className={`px-2.5 py-1 rounded-lg font-bold transition-colors ${
+                className={`px-2.5 py-1 rounded-lg font-bold whitespace-nowrap transition-colors ${
                   selectedVersionNum === r.versionNumber
                     ? 'bg-gold-500 text-slate-950 shadow-sm'
                     : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
@@ -163,7 +163,7 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
           {effectiveDisclosureLevel >= 3 && (
             <button
               onClick={handleExportControlledCopy}
-              className="flex items-center gap-1.5 px-3 py-1 bg-slate-800 hover:bg-slate-700 text-gold-300 rounded-lg border border-slate-700 font-semibold transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1 whitespace-nowrap bg-slate-800 hover:bg-slate-700 text-gold-300 rounded-lg border border-slate-700 font-semibold transition-colors"
             >
               <Download className="w-3.5 h-3.5" />
               <span>تصدير نسخة مراقبة</span>
