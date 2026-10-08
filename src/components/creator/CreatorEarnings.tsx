@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Wallet, ArrowDownRight, CheckCircle2, FileSpreadsheet, ShieldCheck, Clock3 } from 'lucide-react';
+import { Wallet, ArrowDownRight, CheckCircle2, FileSpreadsheet, ShieldCheck, Clock3, ChevronDown } from 'lucide-react';
 import { shortRef } from '../../lib/displayRef';
 import { store } from '../../lib/store';
 import { EmptyState } from '../common/EmptyState';
 import { ShareDonut } from '../common/ShareDonut';
+import { CapGrid } from '../common/CapGrid';
 import { PayoutStatement } from './PayoutStatement';
 
 export const CreatorEarnings: React.FC = () => {
@@ -87,7 +88,37 @@ export const CreatorEarnings: React.FC = () => {
 
       <section className="glass-panel rounded-3xl border border-white/10 p-6 space-y-4">
         <div className="flex items-center justify-between border-b border-white/10 pb-3"><h3 className="font-black">تفاصيل الحقوق حسب الطلب</h3><span className="text-xs text-slate-400">{creatorAccruals.length} سجلات</span></div>
-        <div className="overflow-x-auto text-xs">
+        <div className="md:hidden"><CapGrid className="grid grid-cols-1 gap-2.5 text-xs">
+          {creatorAccruals.map(a => {
+            const [label, cls] = statusLabel(a.settlementStatus);
+            const barW = maxGross > 0 ? Math.max(8, (a.grossSaleKwd / maxGross) * 100) : 0;
+            const shareW = a.grossSaleKwd > 0 ? Math.min(100, (a.accruedAmountKwd / a.grossSaleKwd) * 100) : 0;
+            return (
+              <details key={a.id} className="group rounded-2xl border border-white/10 bg-white/[0.03]">
+                <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer p-3.5 min-h-[44px] space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-slate-200 text-sm" title={a.orderId}>{shortRef(a.orderId, 'ط')}</span>
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${cls}`}>{label}</span>
+                  </div>
+                  <div className="flex items-end justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[11px] text-slate-400">حق المبدع</div>
+                      <div className="text-lg font-black text-gold-300"><bdi dir="ltr">{a.accruedAmountKwd.toFixed(3)}</bdi> <span className="text-xs">د.ك</span></div>
+                    </div>
+                    <span className="flex items-center gap-1 text-[11px] font-bold text-slate-400 min-h-[44px]">عرض التفاصيل<ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180" aria-hidden="true" /></span>
+                  </div>
+                  <span aria-hidden="true" className="block h-1.5 rounded-full bg-white/10 overflow-hidden" style={{ width: `${barW}%`, minWidth: 24 }}><span className="block h-full rounded-full bg-gold-400" style={{ width: `${shareW}%`, minWidth: 2 }} /></span>
+                </summary>
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-2.5 border-t border-white/10 p-3.5 pt-3">
+                  <div className="col-span-2"><dt className="text-[11px] text-slate-400">التاريخ</dt><dd className="text-slate-300">{new Date(a.createdAt).toLocaleString('ar-KW-u-nu-latn')}</dd></div>
+                  <div><dt className="text-[11px] text-slate-400">المبيعات</dt><dd className="font-bold"><bdi dir="ltr">{a.grossSaleKwd.toFixed(3)}</bdi> د.ك</dd></div>
+                  <div><dt className="text-[11px] text-slate-400">النسبة</dt><dd className="text-gold-300 font-bold"><bdi dir="ltr">{a.royaltyRatePercent}%</bdi></dd></div>
+                </dl>
+              </details>
+            );
+          })}
+        </CapGrid></div>
+        <div className="hidden md:block overflow-x-auto text-xs">
           <table className="mobile-cards mc-compact w-full text-start md:min-w-[760px]">
             <thead><tr className="border-b border-white/10 text-slate-400"><th className="py-3 px-3">الطلب</th><th className="py-3 px-3">التاريخ</th><th className="py-3 px-3">المبيعات</th><th className="py-3 px-3">النسبة</th><th className="py-3 px-3">حق المبدع</th><th className="py-3 px-3">الحالة</th></tr></thead>
             <tbody className="divide-y divide-white/5">
