@@ -379,6 +379,9 @@
 .dna-stepi[data-state='returned'] .dna-lbl { color: var(--dna-warn); font-weight: 650; }
 .dna-stepi[data-state='blocked'] .dna-lbl { color: var(--dna-danger); font-weight: 650; }
 .dna-steps[data-size='sm'] .dna-lbl { font-size: 11.5px; }
+@media (max-width: 359px) {
+  .dna-steps:not([data-size='xs']) .dna-lbl { font-size: 11px; font-weight: 600; letter-spacing: 0; }
+}
 /* xs: inline dots for table rows (labels always screen-reader only) */
 .dna-steps[data-size='xs'] {
   --node: 11px;
@@ -909,6 +912,7 @@ button.dna-hubn:focus-visible .dna-hubt { transform: translateY(-2px); }
   line-height: 1.3;
   color: var(--dna-ink);
 }
+.dna-hub[data-tight='true'] .dna-hubl { font-size: 11px; line-height: 1.2; white-space: normal; text-wrap: balance; }
 .dna-hubp {
   position: absolute;
   z-index: 2;
