@@ -579,7 +579,8 @@ export function DnaHubMap({
   const narrow = w > 0 && w < 520;
   const tile = narrow ? 44 : 54;
   const hub = narrow ? 66 : 84;
-  const minRx = narrow ? hub / 2 + tile / 2 + 26 : hub / 2 + tile + 12;
+  // outer rows sit at 0.8 × rx, so keep that product clear of the connector endpoints (hub/2+5 … tile/2+7)
+  const minRx = narrow ? (hub / 2 + tile / 2 + 14) / 0.8 : hub / 2 + tile + 12;
   const nodeW = narrow ? Math.min(92, Math.max(76, w - 2 * minRx)) : 116;
   const rowGap = tile + (narrow ? 32 : 36);
   const n = nodes.length;
