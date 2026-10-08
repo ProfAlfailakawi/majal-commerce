@@ -320,9 +320,9 @@ export const AdminDashboard: React.FC = () => {
               <div className="flex items-center gap-4 rounded-2xl p-4 bg-white/[0.03] border border-white/10">
                 <MiniRing value={total ? paid / total : 0} size={64} stroke={7} className="shrink-0 text-emerald-400">{total ? Math.round((paid / total) * 100) : 0}%</MiniRing>
                 <div className="flex flex-wrap gap-2 text-xs min-w-0 flex-1">
-                  <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/20 text-emerald-300 font-bold">مدفوع {paid.toFixed(3)} د.ك</span>
-                  <span className="px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-400/20 text-amber-300 font-bold">بانتظار الدفع {(total - paid).toFixed(3)} د.ك</span>
-                  <span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-300 font-bold">الإجمالي {total.toFixed(3)} د.ك</span>
+                  <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/20 text-emerald-300 font-bold">مدفوع <span className="whitespace-nowrap">{paid.toFixed(3)} د.ك</span></span>
+                  <span className="px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-400/20 text-amber-300 font-bold">بانتظار الدفع <span className="whitespace-nowrap">{(total - paid).toFixed(3)} د.ك</span></span>
+                  <span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-300 font-bold">الإجمالي <span className="whitespace-nowrap">{total.toFixed(3)} د.ك</span></span>
                 </div>
               </div>
             );

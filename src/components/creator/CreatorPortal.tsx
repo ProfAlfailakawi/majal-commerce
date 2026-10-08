@@ -90,7 +90,7 @@ export const CreatorPortal: React.FC = () => {
       <section className="majal-hero glass-panel rounded-[30px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
         <div className="majal-glow -top-[19rem] -end-[17rem] w-[42rem] h-[42rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 max-[374px]:flex-col max-[374px]:items-start">
             <Avatar name={profile.displayName} src={profile.avatarUrl} size={80} shape="squircle" className="shadow-xl" />
             <div>
               <div className="flex items-center gap-2 flex-wrap">

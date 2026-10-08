@@ -39,7 +39,7 @@ interface Seg { label: string; fils: number; bar: string; dot: string }
 /** One proportional bar with its legend; every figure stays printed beside its swatch. */
 const SplitBar: React.FC<{ title: string; total: number; totalLabel: string; segs: Seg[] }> = ({ title, total, totalLabel, segs }) => (
   <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3">
-    <div className="flex items-baseline justify-between gap-3">
+    <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
       <span className="text-xs font-bold text-slate-300">{title}</span>
       <span className="text-xs text-slate-300 whitespace-nowrap">{totalLabel} <b className="text-gold-300 text-base font-black tabular-nums whitespace-nowrap">{formatFils(total)}</b></span>
     </div>
