@@ -132,7 +132,9 @@ export const PayoutStatement: React.FC = () => {
         <>
           <EarningsSplit totals={data.totals} />
           {data.lines.length === 0 ? <p className="text-xs text-slate-300">لا توجد طلبات مدفوعة بعد.</p> : (
-            <div className="overflow-x-auto">
+            <div className="payout-cap-wrap">
+              {data.lines.length > 6 && <input id="payout-cap-toggle" type="checkbox" className="payout-cap-toggle sr-only" />}
+              <div className="overflow-x-auto">
               <table className="mobile-cards w-full text-xs text-start">
                 <caption className="sr-only">تفصيل المستحقات لكل طلب</caption>
                 <thead className="text-slate-300">
@@ -153,6 +155,13 @@ export const PayoutStatement: React.FC = () => {
                   ))}
                 </tbody>
               </table>
+              </div>
+              {data.lines.length > 6 && (
+                <label htmlFor="payout-cap-toggle" className="payout-cap-btn mt-4 mx-auto flex w-fit min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-gold-300 hover:bg-white/10 md:hidden print:hidden">
+                  <span className="payout-cap-more">عرض الكل ({data.lines.length})</span>
+                  <span className="payout-cap-less">عرض أقل</span>
+                </label>
+              )}
             </div>
           )}
         </>
