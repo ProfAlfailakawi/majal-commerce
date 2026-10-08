@@ -579,7 +579,8 @@ export function DnaHubMap({
   const narrow = w > 0 && w < 520;
   const tile = narrow ? 44 : 54;
   const hub = narrow ? 66 : 84;
-  const nodeW = narrow ? 92 : 116;
+  const minRx = narrow ? hub / 2 + tile / 2 + 26 : hub / 2 + tile + 12;
+  const nodeW = narrow ? Math.min(92, Math.max(76, w - 2 * minRx)) : 116;
   const rowGap = tile + (narrow ? 32 : 36);
   const n = nodes.length;
   const startCount = Math.ceil(n / 2);
@@ -593,7 +594,7 @@ export function DnaHubMap({
   const mx = w / 2;
   const my = topPad + inner / 2;
   const maxOffset = ((rows - 1) / 2) * rowGap || 1;
-  const rx = Math.max(hub / 2 + tile + 12, w / 2 - nodeW / 2 - (narrow ? 8 : 26));
+  const rx = Math.max(minRx, w / 2 - nodeW / 2 - (narrow ? 8 : 26));
   const startSide = box.rtl ? 1 : -1;
 
   const column = (count: number, side: number) =>
@@ -625,6 +626,7 @@ export function DnaHubMap({
       className={cx('dna', 'dna-hub', className)}
       data-animate={animate ? 'true' : 'false'}
       data-dir={box.rtl ? 'rtl' : 'ltr'}
+      data-tight={narrow && nodeW < 92 ? 'true' : undefined}
       role="group"
       aria-label={ariaLabel}
       style={{ blockSize: w ? height : minHeight ?? 360, ['--tile' as string]: `${tile}px` } as React.CSSProperties}

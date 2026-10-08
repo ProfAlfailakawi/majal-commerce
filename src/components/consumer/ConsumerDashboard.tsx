@@ -126,14 +126,14 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
             <p className="text-sm text-slate-400 max-w-2xl leading-7">كل منتج هنا مرّ بمبدع، منشأة مرخّصة، اختبار، اتفاق، وإطلاق. جرّبه، قيّمه، وقرر مع الجمهور هل يستحق البقاء.</p>
 
             {featuredCreator && (
-              <div className="flex items-center gap-3 rounded-2xl p-3 bg-white/5 border border-white/10 w-full sm:w-fit">
+              <div className="flex flex-wrap items-center gap-3 rounded-2xl p-3 bg-white/5 border border-white/10 w-full sm:w-fit">
                 <Avatar name={featuredCreator.displayName} src={featuredCreator.avatarUrl} size={44} shape="squircle" />
-                <div className="min-w-0"><div className="text-xs font-black text-slate-100">{featuredCreator.displayName}</div><div className="text-xs text-slate-400 mt-1">{featuredCreator.specialty}</div></div>
+                <div className="min-w-0 flex-1 basis-24"><div className="text-xs font-black text-slate-100">{featuredCreator.displayName}</div><div className="text-xs text-slate-400 mt-1">{featuredCreator.specialty}</div></div>
                 <button
                   type="button"
                   aria-pressed={followedCreators.includes(featuredCreator.id)}
                   onClick={() => void toggleFollow(featuredCreator.id)}
-                  className={`ms-auto sm:ms-3 shrink-0 whitespace-nowrap px-3 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 ${followedCreators.includes(featuredCreator.id) ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-400/20' : 'bg-gold-500 text-slate-950'}`}
+                  className={`ms-auto sm:ms-3 shrink-0 whitespace-nowrap px-3 py-2 max-sm:min-h-11 rounded-xl text-xs font-black flex items-center gap-1.5 ${followedCreators.includes(featuredCreator.id) ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-400/20' : 'bg-gold-500 text-slate-950'}`}
                 >
                   <Heart className="w-3.5 h-3.5" /> {followedCreators.includes(featuredCreator.id) ? 'تتابعه' : 'تابع المبدع'}
                 </button>
