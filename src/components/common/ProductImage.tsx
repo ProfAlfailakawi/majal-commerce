@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MajalMark } from '../brand/MajalMark';
 
 interface ProductImageProps {
@@ -18,6 +18,8 @@ interface ProductImageProps {
  */
 export const ProductImage: React.FC<ProductImageProps> = ({ src, alt, className = '', loading, fetchPriority, markSize = 56 }) => {
   const [failed, setFailed] = useState(false);
+  // A new source deserves a fresh attempt; a failure belongs to the previous one.
+  useEffect(() => { setFailed(false); }, [src]);
   if (!src || failed) {
     return (
       <div role="img" aria-label={alt} className={`majal-plate grid place-items-center overflow-hidden ${className}`}>
