@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   BadgeCheck,
   ChevronDown,
@@ -34,9 +34,20 @@ interface ConsumerDashboardProps {
 const LAUNCHES_VISIBLE = 6;
 
 type ReviewSummary = { count: number; taste: number; keepItPercent: number };
-/** One public summary per launch, fetched once for the launches on screen and cached for the session. */
-const summaryCache = new Map<string, ReviewSummary | null>();
-const summaryPending = new Set<string>();
+/** One public summary request per launch, shared by every mount so leaving and returning
+    before it settles still lands the result in the current instance. Real data only: a failed
+    request resolves to null and the chips simply do not appear. */
+const summaryPromises = new Map<string, Promise<ReviewSummary | null>>();
+const loadSummary = (id: string) => {
+  let pending = summaryPromises.get(id);
+  if (!pending) {
+    pending = domainClient.launchReviews(id)
+      .then(r => ({ count: r.summary.count, taste: r.summary.taste, keepItPercent: r.summary.keepItPercent }) as ReviewSummary | null)
+      .catch(() => { summaryPromises.delete(id); return null; });
+    summaryPromises.set(id, pending);
+  }
+  return pending;
+};
 
 export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
   const [, setTick] = useState(0);
@@ -80,19 +91,13 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
   // real source there (the same one DropCheckout reads). Demo reads the local store instead.
   const [serverSummaries, setServerSummaries] = useState<Record<string, ReviewSummary | null>>({});
   const summaryIds = launches.slice(0, LAUNCHES_VISIBLE).map(l => l.id).join(',');
-  const mounted = useRef(true);
-  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   useEffect(() => {
     if (IS_DEMO_MODE || !summaryIds) return;
+    let live = true;
     summaryIds.split(',').forEach(id => {
-      if (summaryCache.has(id)) { setServerSummaries(prev => ({ ...prev, [id]: summaryCache.get(id) ?? null })); return; }
-      if (summaryPending.has(id)) return;
-      summaryPending.add(id);
-      domainClient.launchReviews(id)
-        .then(r => { const v = { count: r.summary.count, taste: r.summary.taste, keepItPercent: r.summary.keepItPercent }; summaryCache.set(id, v); if (mounted.current) setServerSummaries(prev => ({ ...prev, [id]: v })); })
-        .catch(() => undefined)
-        .finally(() => summaryPending.delete(id));
+      void loadSummary(id).then(v => { if (live && v) setServerSummaries(prev => ({ ...prev, [id]: v })); });
     });
+    return () => { live = false; };
   }, [summaryIds]);
   const summaryFor = (launchId: string): (ReviewSummary & { repeat: number | null }) | null => {
     if (IS_DEMO_MODE) {
