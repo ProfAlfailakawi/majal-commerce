@@ -11,7 +11,7 @@ import { JourneyStepper } from './JourneyStepper';
  *
  * Copy comes from src/data/journey.tsx, shared with the first-run onboarding.
  */
-export const JourneyInfographic: React.FC = () => (
+export const JourneyInfographic: React.FC<{ hold?: boolean }> = ({ hold = false }) => (
   <section aria-labelledby="journey-heading" className="space-y-10">
     <div className="text-center space-y-3">
       <span className="inline-block text-xs font-black text-gold-300">رحلة مجال</span>
@@ -22,7 +22,7 @@ export const JourneyInfographic: React.FC = () => (
     </div>
 
     <div className="glass-card rounded-3xl p-5 sm:p-8">
-      <JourneyStepper detail="body" animate />
+      <JourneyStepper detail="body" animate hold={hold} />
     </div>
   </section>
 );
