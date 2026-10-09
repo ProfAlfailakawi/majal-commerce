@@ -8,7 +8,10 @@ import {
   Coins,
   ShieldCheck,
   Users,
-  LayoutPanelTop
+  LayoutPanelTop,
+  BadgeCheck,
+  Eye,
+  Route
 } from 'lucide-react';
 import { SurfaceType, UserRole } from '../../types/majal';
 import { store } from '../../lib/store';
@@ -60,15 +63,16 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
     onSurfaceChange(surface);
   };
 
+  // No invented numbers: each tile states a fact about the model, not a metric.
   const stats = [
-    { value: '4', label: IS_DEMO_MODE ? 'تجارب أدوار' : 'أطراف تشغيل' },
-    { value: '3', label: 'مستويات إفصاح' },
-    { value: 'مرخّص', label: 'إنتاج تجاري' },
-    { value: 'واضح', label: 'من الفكرة للإطلاق' }
+    { icon: <Users className="w-5 h-5" />, title: IS_DEMO_MODE ? 'تجارب الأدوار' : 'أطراف التشغيل', sub: 'مبدع · منشأة · مورد · سوق' },
+    { icon: <Eye className="w-5 h-5" />, title: 'إفصاح بثلاثة مستويات', sub: 'كل طرف يرى ما يخصه' },
+    { icon: <BadgeCheck className="w-5 h-5" />, title: 'إنتاج مرخّص', sub: 'عبر منشأة مرخّصة فقط' },
+    { icon: <Route className="w-5 h-5" />, title: 'مسار واضح', sub: 'من الفكرة إلى الإطلاق' }
   ];
 
   return (
-    <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16 ${overture.hold ? 'majal-overture-hold' : ''}`}>
+    <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-6 space-y-16 ${overture.hold ? 'majal-overture-hold' : ''}`}>
       {overture.mounted && <Overture onReveal={releaseHold} onDone={dismissOverture} />}
       <div className="glass-panel majal-grain rounded-[32px] p-8 sm:p-12 relative overflow-hidden text-center sm:text-start border border-white/10 elev-3">
         <div className="majal-glow -top-[18rem] -end-[18rem] w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
@@ -183,29 +187,33 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
       {/* One panel rather than four floating cards: these are facets of a single claim,
           and a hairline between them reads as a spec plate instead of four unrelated
           numbers competing for the same attention. */}
-      <div className="glass-card rounded-3xl border border-white/10 grid grid-cols-2 lg:grid-cols-4 divide-x divide-x-reverse divide-white/[0.07] max-lg:[&>*:nth-child(n+3)]:border-t max-lg:[&>*:nth-child(n+3)]:border-t-white/[0.07] overflow-hidden">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {stats.map((st, i) => (
-          <div key={i} className="p-5 sm:p-7 text-center space-y-1.5">
-            <div className="text-2xl sm:text-3xl font-black majal-wordmark">{st.value}</div>
-            <div className="text-xs text-slate-400 font-medium leading-6">{st.label}</div>
+          <div key={i} className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 text-center sm:text-start rounded-2xl border border-gold-300/15 bg-gold-500/[0.04] px-3 sm:px-4 py-3.5">
+            <span className="w-10 h-10 shrink-0 rounded-xl grid place-items-center bg-gold-500/12 border border-gold-300/25 text-gold-300">{st.icon}</span>
+            <div className="min-w-0">
+              <div className="text-sm font-black text-slate-100 leading-6">{st.title}</div>
+              <div className="text-xs text-slate-400 leading-5">{st.sub}</div>
+            </div>
           </div>
         ))}
       </div>
 
       <JourneyInfographic hold={overture.mounted} />
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-5 gap-5">
         {[
-          { icon: <Users className="w-5 h-5" />, title: 'فصل الأدوار', body: 'كل طرف يرى ما يخصه فقط، حتى داخل المنشأة نفسها توجد صلاحيات مختلفة للمالك، الشيف، المالية، والتسويق.' },
-          { icon: <Coins className="w-5 h-5" />, title: 'مستحقات شفافة', body: 'المبدع يتابع مبيعاته ومستحقاته، والمنشأة تتابع الهوامش والإطلاقات، والأدمن يراقب دورة التسوية.' },
-          { icon: <Store className="w-5 h-5" />, title: 'منظومة بلا تداخل', body: 'هوية المبدع مستقلة عن المنشأة والمورد، وكل وظيفة كويتية تمر عبر مراجعة الإدارة قبل أن تظهر للجمهور.' }
+          { icon: <Users className="w-5 h-5" />, title: 'فصل الأدوار', body: 'كل طرف يرى ما يخصه فقط، حتى داخل المنشأة نفسها توجد صلاحيات مختلفة للمالك، الشيف، المالية، والتسويق.', cls: 'md:col-span-3 glass-panel border border-gold-300/20 p-6 sm:p-8 rounded-[28px] elev-2' },
+          { icon: <Coins className="w-5 h-5" />, title: 'مستحقات شفافة', body: 'المبدع يتابع مبيعاته ومستحقاته، والمنشأة تتابع الهوامش والإطلاقات، والأدمن يراقب دورة التسوية.', cls: 'md:col-span-2 border-s-2 border-s-gold-400/70 border border-white/10 bg-white/[0.03] p-5 sm:p-6 rounded-2xl' },
+          { icon: <Store className="w-5 h-5" />, title: 'منظومة بلا تداخل', body: 'هوية المبدع مستقلة عن المنشأة والمورد، وكل وظيفة كويتية تمر عبر مراجعة الإدارة قبل أن تظهر للجمهور.', cls: 'md:col-span-5 md:flex md:items-center md:gap-6 border border-dashed border-gold-300/25 p-5 sm:p-6 rounded-3xl' }
         ].map((item, idx) => (
-          <div key={idx} className="glass-card glass-card-hover rounded-2xl p-5 sm:p-6 border border-white/10 space-y-3">
-            <div className="flex items-center gap-3">
+          <div key={idx} className={`relative overflow-hidden space-y-3 md:space-y-0 ${item.cls}`}>
+            {idx === 0 && <span aria-hidden="true" className="absolute inset-x-8 top-0 h-px bg-gradient-to-l from-transparent via-gold-300/60 to-transparent" />}
+            <div className="flex items-center gap-3 md:shrink-0 md:min-w-[14rem]">
               <div className="w-11 h-11 shrink-0 rounded-xl bg-gold-500/10 border border-gold-300/20 flex items-center justify-center text-gold-300">{item.icon}</div>
               <h3 className="font-bold text-slate-100 text-base">{item.title}</h3>
             </div>
-            <p className="text-xs text-slate-300 leading-7">{item.body}</p>
+            <p className={`text-xs text-slate-300 leading-7 ${idx === 2 ? "" : "md:mt-3"}`}>{item.body}</p>
           </div>
         ))}
       </div>
