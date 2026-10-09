@@ -1078,3 +1078,8 @@ body:has(.majal-ai-fab) { padding-bottom: 4.5rem; }
     linear-gradient(135deg, #e8c880 0%, #c7a55b 55%, #a98741 100%);
 }
 :root[data-theme='contrast'] .majal-plate { background: #000; border: 1px solid #fff; }
+/* Over the gold plate the cool slate scrim turns muddy grey; a warm deep-gold scrim keeps the title legible. */
+.majal-plate + .majal-art-scrim { background-image: linear-gradient(to top, rgba(52, 36, 8, 0.82), rgba(52, 36, 8, 0.25) 55%, transparent); }
+:root[data-theme='contrast'] .majal-plate + .majal-art-scrim { background-image: linear-gradient(to top, #000, transparent); }
+/* High contrast: menus must be fully opaque so nothing behind them shows through. */
+:root[data-theme='contrast'] [role='menu'] { background-color: #05070c; }
