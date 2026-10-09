@@ -24,7 +24,7 @@ function whenBootReady(cb: () => void): () => void {
  * the next lights) once, when the stepper scrolls into view. `lit` is how many stations
  * are lit; null means fully complete (reduced motion, no IntersectionObserver, finished).
  */
-function useSequentialReveal(enabled: boolean, count: number) {
+function useSequentialReveal(enabled: boolean, count: number, hold: boolean) {
   const ref = useRef<HTMLDivElement>(null);
   const [lit, setLit] = useState<number | null>(null);
   const [armed, setArmed] = useState(false);
@@ -35,7 +35,8 @@ function useSequentialReveal(enabled: boolean, count: number) {
     setArmed(true);
   }, [enabled]);
   useEffect(() => {
-    if (!armed || !ref.current) return;
+    /* While an intro overlay is up the stepper is already armed (all pending); only the start waits. */
+    if (!armed || hold || !ref.current) return;
     let timer: number | undefined;
     let cancelReady: (() => void) | undefined;
     const io = new IntersectionObserver(([entry]) => {
@@ -52,7 +53,7 @@ function useSequentialReveal(enabled: boolean, count: number) {
     }, { threshold: 0.6 });
     io.observe(ref.current);
     return () => { io.disconnect(); cancelReady?.(); window.clearInterval(timer); };
-  }, [armed, count]);
+  }, [armed, count, hold]);
   return { ref, lit };
 }
 
@@ -61,8 +62,8 @@ function useSequentialReveal(enabled: boolean, count: number) {
  * the message; each station's explanation stays available as the node's tooltip and in
  * the «تفاصيل المحطات» disclosure, so no copy from src/data/journey.tsx is lost.
  */
-export const JourneyStepper: React.FC<{ detail?: 'body' | 'brief'; className?: string; animate?: boolean }> = ({ detail = 'body', className, animate = false }) => {
-  const { ref, lit } = useSequentialReveal(animate, journeyStages.length);
+export const JourneyStepper: React.FC<{ detail?: 'body' | 'brief'; className?: string; animate?: boolean; hold?: boolean }> = ({ detail = 'body', className, animate = false, hold = false }) => {
+  const { ref, lit } = useSequentialReveal(animate, journeyStages.length, hold);
   return (
   <div ref={ref} className={`journey-dna space-y-5 ${className ?? ''}`} data-reveal={lit === null ? undefined : lit}>
     <DnaStepper

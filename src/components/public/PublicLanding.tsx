@@ -192,7 +192,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
         ))}
       </div>
 
-      <JourneyInfographic play={!overture.mounted} />
+      <JourneyInfographic hold={overture.mounted} />
 
       <div className="grid md:grid-cols-3 gap-6">
         {[
