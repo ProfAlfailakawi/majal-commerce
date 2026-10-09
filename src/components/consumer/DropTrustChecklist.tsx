@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Clock3, ShieldCheck, XCircle } from 'lucide-react';
+import { DnaRing } from '../dna/DnaKit';
 import { commerceClient, TrustChecklist, TrustItem } from '../../lib/commerceClient';
 import { IS_DEMO_MODE } from '../../lib/runtime';
 
@@ -29,7 +30,13 @@ export const DropTrustChecklist: React.FC<{ launchId: string }> = ({ launchId })
   if (!data) return <div className="text-xs text-slate-300" role="status">جارٍ تحميل قائمة الامتثال…</div>;
   return (
     <section aria-labelledby={`trust-${launchId}`} className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3">
-      <h4 id={`trust-${launchId}`} className="text-xs font-black text-slate-100 flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-emerald-300" aria-hidden="true" /> قائمة بوابة الإطلاق</h4>
+      <div className="flex items-center gap-3">
+        <DnaRing value={data.items.length ? data.items.filter(i => i.status === 'PASS').length : null} max={Math.max(1, data.items.length)} size={48} stroke={4} tone="accent" label={`${data.items.filter(i => i.status === 'PASS').length}/${data.items.length}`} ariaLabel={`${data.items.filter(i => i.status === 'PASS').length} من ${data.items.length} بنود متحقق منها`} />
+        <div>
+          <h4 id={`trust-${launchId}`} className="text-xs font-black text-slate-100 flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-emerald-300" aria-hidden="true" /> قائمة بوابة الإطلاق</h4>
+          <div className="text-xs text-slate-300 mt-0.5">{data.items.filter(i => i.status === 'PASS').length} من {data.items.length} بنود مُتحقق منها</div>
+        </div>
+      </div>
       <ul className="space-y-2">
         {data.items.map(item => {
           const s = STATUS[item.status];

@@ -184,7 +184,7 @@ export const DigitalTwinPanel: React.FC<DigitalTwinPanelProps> = ({ product, hos
                 [<LockKeyhole className="w-4 h-4 text-fuchsia-300" />, 'أذونات الوصفة', `${twin.grants.length} إذن`],
                 [<PackageCheck className="w-4 h-4 text-sky-300" />, 'الإطلاق', twin.launch?.status ? statusLabel(twin.launch.status) : 'غير مباشر'],
                 [<ShieldCheck className="w-4 h-4 text-emerald-300" />, 'بوابة الإطلاق', twin.launch?.gateChecklist.allRequirementsPassed ? 'مكتمل' : 'يحتاج مراجعة'],
-                [<Store className="w-4 h-4 text-gold-300" />, 'نسبة التكرار', `${twin.keepVotes}%`]
+                [<Store className="w-4 h-4 text-gold-300" />, 'خلّوه — يبقى في المنيو', `${twin.keepVotes}%`]
               ].map(([icon, label, value], idx) => (
                 <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-white/10">
                   <div className="flex items-center gap-2">{icon as React.ReactNode}<span className="text-slate-400">{label as string}</span></div>

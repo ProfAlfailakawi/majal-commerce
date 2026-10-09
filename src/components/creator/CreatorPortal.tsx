@@ -26,6 +26,7 @@ import { RecipeAccessRequests } from './RecipeAccessRequests';
 import { StatusPill } from '../common/StatusPill';
 import { EmptyState } from '../common/EmptyState';
 import { SurfaceTabs } from '../common/SurfaceTabs';
+import { ProductImage } from '../common/ProductImage';
 import { Avatar } from '../common/Avatar';
 
 export const CreatorPortal: React.FC = () => {
@@ -115,7 +116,7 @@ export const CreatorPortal: React.FC = () => {
         <div className="space-y-6">
           <CreatorPassport creatorId={currentCreatorId} />
           <RecipeAccessRequests creatorId={currentCreatorId} />
-          <OpportunityRadar creatorId={currentCreatorId} onOpenProduct={() => setActiveTab('PRODUCTS')} />
+          <OpportunityRadar compact creatorId={currentCreatorId} onOpenProduct={() => setActiveTab('PRODUCTS')} onOpenAll={() => setActiveTab('RADAR')} />
           {myProducts[0] && <DigitalTwinPanel product={myProducts[0]} />}
         </div>
       )}
@@ -127,7 +128,7 @@ export const CreatorPortal: React.FC = () => {
           <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
             {myProducts.map(product => (
               <article key={product.id} className={`glass-card rounded-3xl border border-white/10 overflow-hidden ${product.id === settlingProductId ? 'majal-settle-in' : ''}`}>
-                <img src={product.mediaUrls[0]} alt={product.publicName} loading="lazy" decoding="async" className="w-full h-36 sm:h-48 object-cover" />
+                <ProductImage src={product.mediaUrls[0]} alt={product.publicName} loading="lazy" markSize={72} className="w-full h-36 sm:h-48 object-cover" />
                 <div className="p-5 space-y-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
