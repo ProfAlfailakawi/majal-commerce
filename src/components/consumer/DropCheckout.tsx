@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { BadgeCheck, Bell, CheckCircle2, CreditCard, ShoppingBag, Star, Store, Truck } from 'lucide-react';
+import { BadgeCheck, Bell, CheckCircle2, CreditCard, PackageX, ShoppingBag, Star, Store, Truck } from 'lucide-react';
 import { Launch } from '../../types/majal';
 import { shortRef } from '../../lib/displayRef';
 import { store } from '../../lib/store';
@@ -188,14 +188,18 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
   return (
     <div className="space-y-4">
       {reviews && reviews.count > 0 && (
-        <div className="flex items-center gap-3 text-xs text-slate-200">
-          <span className="inline-flex items-center gap-1 font-black"><Star className="w-4 h-4 text-gold-300" aria-hidden="true" />{reviews.taste.toFixed(1)}</span>
-          <span className="inline-flex items-center gap-1"><BadgeCheck className="w-4 h-4 text-emerald-300" aria-hidden="true" />{reviews.count} تقييم من مشترين موثّقين</span>
-          <span>{reviews.keepItPercent}% يبونه يستمر</span>
+        <div className="flex items-center gap-4 rounded-2xl p-3 bg-white/5 border border-white/10 text-xs text-slate-200">
+          <DnaRing value={reviews.keepItPercent} size={56} stroke={5} tone="info" label={`${reviews.keepItPercent}%`} ariaLabel={`خلّوه ${reviews.keepItPercent}%`} />
+          <div className="space-y-1.5 min-w-0">
+            <div className="flex items-center gap-1 font-black text-sm"><Star className="w-4 h-4 text-gold-300" aria-hidden="true" />{reviews.taste.toFixed(1)} <span className="font-medium text-slate-300 text-xs">للطعم</span></div>
+            <div className="flex items-center gap-1"><BadgeCheck className="w-4 h-4 text-emerald-300 shrink-0" aria-hidden="true" />{reviews.count} تقييم من مشترين موثّقين</div>
+            <div className="text-slate-300"><bdi dir="ltr">{reviews.keepItPercent}%</bdi> يبونه يستمر</div>
+          </div>
         </div>
       )}
       {remaining !== null && (
-        <div className={`rounded-xl px-3 py-2 text-xs font-black ${remaining <= 5 ? 'bg-rose-500/10 text-rose-300 border border-rose-400/20' : 'bg-white/5 text-slate-200 border border-white/10'}`} aria-live="polite">
+        <div className={`rounded-xl px-3 py-2 text-xs font-black flex items-center gap-2 ${soldOut ? 'py-3 bg-rose-500/10 text-rose-300 border border-dashed border-rose-400/40' : remaining <= 5 ? 'bg-rose-500/10 text-rose-300 border border-rose-400/20' : 'bg-white/5 text-slate-200 border border-white/10'}`} aria-live="polite">
+          {soldOut && <PackageX className="w-5 h-5 shrink-0" aria-hidden="true" />}
           {soldOut ? 'نفدت الكمية المتاحة حاليًا' : `متبقي ${remaining} ${branch?.remainingUnits != null ? 'في هذا الفرع' : 'في هذا الإصدار'}`}
         </div>
       )}
@@ -224,12 +228,15 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
         <fieldset>
           <legend className="text-xs text-slate-300 mb-1.5">طريقة الاستلام</legend>
           <div className="grid grid-cols-2 gap-2">
-            {([['PICKUP', 'استلام من الفرع', Store], ['DELIVERY', 'توصيل', Truck]] as const).map(([value, label, Icon]) => {
+            {([['PICKUP', 'استلام من الفرع', Store, 'جاهز لك في الفرع'], ['DELIVERY', 'توصيل', Truck, 'يصلك لمنطقتك']] as const).map(([value, label, Icon, hint]) => {
               const disabled = value === 'DELIVERY' && !branch?.deliveryZones.length;
               return (
-                <label key={value} className={`flex items-center justify-center gap-2 rounded-xl p-3 border text-xs font-black cursor-pointer has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-gold-300 ${fulfillment === value ? 'bg-gold-500/15 border-gold-300/40 text-gold-300' : 'bg-white/5 border-white/10 text-slate-200'} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                <label key={value} className={`relative flex flex-col items-center justify-center gap-1.5 rounded-2xl p-4 min-h-24 border text-xs font-black cursor-pointer text-center transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-gold-300 ${fulfillment === value ? 'bg-gold-500/15 border-gold-300/50 text-gold-300 shadow-[inset_0_0_0_1px_rgba(199,165,91,0.35)]' : 'bg-white/5 border-white/10 text-slate-200'} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
                   <input type="radio" name="fulfillment" value={value} checked={fulfillment === value} disabled={disabled} onChange={() => setFulfillment(value)} className="sr-only" />
-                  <Icon className="w-4 h-4" aria-hidden="true" /> {label}
+                  <Icon className="w-6 h-6" aria-hidden="true" />
+                  <span>{label}</span>
+                  <span className="text-[0.7rem] font-medium text-slate-400">{hint}</span>
+                  {fulfillment === value && <CheckCircle2 className="absolute top-2 end-2 w-4 h-4" aria-hidden="true" />}
                 </label>
               );
             })}
@@ -261,6 +268,7 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
             <button type="button" aria-label="زيادة الكمية" onClick={() => setUnits(Math.min(maxUnits, units + 1))} className="w-9 h-9 rounded-lg bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">+</button>
           </div>
         </div>
+        <div className="max-sm:sticky max-sm:-bottom-6 max-sm:z-10 max-sm:-mx-6 max-sm:px-6 max-sm:pt-3 max-sm:pb-9 max-sm:bg-[var(--majal-bg)] max-sm:border-t max-sm:border-white/10 space-y-4">
         <dl className="rounded-xl p-4 bg-slate-950/40 border border-white/10 space-y-1.5 text-xs">
           <div className="flex justify-between"><dt className="text-slate-300">{units} × {formatFils(unitPriceFils)}</dt><dd>{formatFils(unitPriceFils * units)}</dd></div>
           {fulfillment === 'DELIVERY' && <div className="flex justify-between"><dt className="text-slate-300">رسوم التوصيل</dt><dd>{zone ? formatFils(zone.feeFils) : '—'}</dd></div>}
@@ -277,6 +285,7 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
             <ShoppingBag className="w-4 h-4" aria-hidden="true" /> {busy ? 'جارٍ الحجز…' : `احجز وادفع — ${formatFils(totalFils)}`}
           </button>
         )}
+        </div>
         <p className="text-xs text-slate-300 text-center">يُحجز طلبك {options?.holdMinutes ?? 15} دقيقة بانتظار الدفع، ثم تتحرر الكمية تلقائيًا.</p>
       </form>
     </div>

@@ -1070,3 +1070,11 @@ body:has(.majal-ai-fab) { padding-bottom: 4.5rem; }
 /* r42 · brand tagline: shown at lg only; from xl the 80rem header container leaves no spare width. */
 .majal-brand-tagline { display: none; }
 @media (min-width: 1024px) and (max-width: 1279px) { .majal-brand-tagline { display: block; } }
+
+/* Branded fallback for product imagery (see ProductImage). Gold-on-cream in every theme. */
+.majal-plate {
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 248, 228, 0.75), transparent 55%),
+    linear-gradient(135deg, #e8c880 0%, #c7a55b 55%, #a98741 100%);
+}
+:root[data-theme='contrast'] .majal-plate { background: #000; border: 1px solid #fff; }

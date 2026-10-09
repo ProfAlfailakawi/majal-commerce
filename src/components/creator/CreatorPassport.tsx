@@ -57,12 +57,22 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
         </div>
       </div>
 
+      {launches.length > 0 && (
+        <div className="relative overflow-hidden flex items-center gap-3 rounded-2xl px-4 py-3 border border-gold-300/30 bg-gradient-to-l from-gold-500/15 via-gold-500/5 to-transparent">
+          <span aria-hidden="true" className="shrink-0 w-10 h-10 rounded-full grid place-items-center bg-gold-500 text-slate-950 shadow-[0_0_0_6px_rgba(199,165,91,0.15)]"><Crown className="w-5 h-5" /></span>
+          <div className="min-w-0">
+            <div className="text-sm font-black text-gold-300">{launches.length >= 2 ? 'علامة جاهزة — أكثر من إطلاق حيّ' : 'أول إطلاق لك صار حيًّا'}</div>
+            <div className="text-xs text-slate-400 mt-0.5">{launches.length} إطلاق باسمك داخل «مجال».</div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { label: 'منتجات مسجلة', value: products.length, icon: <PackageCheck className="w-4 h-4 text-gold-300" /> },
           { label: 'تعاونات تجارية', value: collaborations.length, icon: <Building2 className="w-4 h-4 text-gold-300" /> },
           { label: 'مبيعات مسجلة', value: `${stats.revenue.toFixed(3)} د.ك`, icon: <TrendingUp className="w-4 h-4 text-gold-300" /> },
-          { label: 'نسبة التكرار', value: `${stats.keepRate}%`, icon: <Repeat2 className="w-4 h-4 text-gold-300" /> }
+          { label: 'خلّوه — يبقى في المنيو', value: reviews.length ? `${stats.keepRate}%` : '—', icon: <Repeat2 className="w-4 h-4 text-gold-300" /> }
         ].map((item, idx) => (
           <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10">
             <div className="flex items-center gap-2 text-xs text-slate-400">{item.icon}{item.label}</div>
@@ -84,6 +94,19 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
             <div>
               <div className="text-xs font-bold text-slate-200">جودة المنتج</div>
               <div className="text-xs text-slate-400 mt-1">{reviews.length ? `${stats.avgRating.toFixed(1)} / 5 · ${reviews.length} تقييم` : 'لا تقييمات بعد'}</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 pt-3 border-t border-white/10">
+            <DnaRing
+              value={reviews.length ? stats.keepRate : null}
+              size={48}
+              stroke={4}
+              tone="info"
+              ariaLabel={reviews.length ? `خلّوه ${stats.keepRate}%` : 'خلّوه: لا أصوات بعد'}
+            />
+            <div>
+              <div className="text-xs font-bold text-slate-200">خلّوه</div>
+              <div className="text-xs text-slate-400 mt-1">{reviews.length ? `${stats.keepRate}% من المقيّمين يريدونه في المنيو` : 'لا أصوات بعد'}</div>
             </div>
           </div>
         </div>

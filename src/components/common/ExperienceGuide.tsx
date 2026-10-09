@@ -148,8 +148,8 @@ export const ExperienceGuide: React.FC<ExperienceGuideProps> = ({ activeSurface,
 
   return (
     <>
-      <section aria-label="التوجيه الذكي" className="majal-guide relative z-20 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-5">
-        <div className="glass-card rounded-2xl border border-white/10 px-4 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xl">
+      <section aria-label="التوجيه الذكي" className="majal-guide relative z-20 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-3">
+        <div className="rounded-2xl border border-gold-300/15 bg-gold-500/[0.05] px-3.5 py-2.5 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-start sm:items-center gap-3 min-w-0">
             <span className="w-10 h-10 shrink-0 rounded-xl bg-gold-500/15 border border-gold-300/20 grid place-items-center text-gold-300"><Compass className="w-5 h-5" /></span>
             <div className="min-w-0">

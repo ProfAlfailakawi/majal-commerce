@@ -18,6 +18,7 @@ import { SurfaceType, Launch } from '../../types/majal';
 import { store } from '../../lib/store';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { Avatar } from '../common/Avatar';
+import { ProductImage } from '../common/ProductImage';
 import { KuwaitiJobs } from '../jobs/KuwaitiJobs';
 import { DropCheckout } from './DropCheckout';
 import { formatKwd } from '../../lib/money';
@@ -98,16 +99,26 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
     const host = store.hosts.find(h => h.id === launch.hostBusinessId);
     const capped = !!launch.quantityCapUnits;
     const progress = capped ? Math.min(100, Math.round(launch.unitsSold / launch.quantityCapUnits! * 100)) : 0;
+    // Public-safe trust chips: real aggregates only, and only once at least one review exists.
+    const launchReviews = store.reviews.filter(r => r.launchId === launch.id);
+    const launchRating = launchReviews.length ? launchReviews.reduce((sum, r) => sum + r.tasteRating, 0) / launchReviews.length : 0;
+    const launchKeep = launchReviews.length ? Math.round(launchReviews.filter(r => r.keepItVote).length / launchReviews.length * 100) : 0;
     return (
       <article key={launch.id} className="glass-card rounded-3xl border border-white/10 overflow-hidden hover:-translate-y-1 transition-transform">
         <div className="relative h-40 sm:h-52">
-          <img src={product?.mediaUrls[0]} alt={launch.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+          <ProductImage src={product?.mediaUrls[0]} alt={launch.title} loading="lazy" className="w-full h-full object-cover" />
           <div className="majal-art-scrim absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
           <div className="absolute top-3 start-3 px-2.5 py-1 rounded-full bg-slate-950/75 border border-white/10 text-xs text-gold-300 font-black">{({ LIMITED_DROP: 'إطلاق محدود', TRIAL_PERIOD: 'فترة تجريبية', PERMANENT_MENU: 'قائمة دائمة', SEASONAL: 'موسمي' } as Record<string, string>)[launch.launchType] ?? launch.launchType}</div>
           <div className="majal-art-title absolute bottom-4 start-4 end-4"><div className="text-xs text-emerald-300 font-black">{creator?.displayName} × {host?.commercialName}</div><h3 className="font-black text-white mt-1">{product?.publicName || launch.title}</h3></div>
         </div>
         <div className="p-5 space-y-4">
           <p className="text-xs text-slate-400 leading-6 line-clamp-2">{product?.shortDescription}</p>
+          {launchReviews.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gold-500/10 border border-gold-300/25 text-xs font-black text-gold-300"><Star className="w-3 h-3" aria-hidden="true" />{launchRating.toFixed(1)} <span className="font-medium text-slate-400">({launchReviews.length} تقييم)</span></span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/25 text-xs font-black text-emerald-300"><Heart className="w-3 h-3" aria-hidden="true" />خلّوه <bdi dir="ltr">{launchKeep}%</bdi></span>
+            </div>
+          )}
           <div><div className="flex justify-between text-xs text-slate-400 mb-1"><span>{launch.unitsSold} مبيعة</span><span>{capped ? `${progress}%` : 'مستمر'}</span></div><div className="h-2 bg-white/5 rounded-full overflow-hidden">{capped ? <div className="h-full bg-gradient-to-l from-gold-500 to-emerald-400 rounded-full" style={{ width: `${progress}%` }} /> : <div className="h-full w-full bg-gradient-to-l from-emerald-500/30 to-emerald-400/30 rounded-full" />}</div></div>
           <div className="flex items-center justify-between"><div><div className="text-xs text-slate-400">السعر</div><div className="font-black text-gold-300">{formatKwd(launch.sellingPriceKwd)}</div></div><button type="button" onClick={() => setSelectedLaunch(launch)} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black text-slate-100">شاهد واطلب</button></div>
         </div>
@@ -145,7 +156,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
           {featured && featuredProduct && (
             <div className="rounded-[28px] overflow-hidden bg-slate-950/50 border border-white/10 shadow-2xl">
               <div className="relative h-72">
-                <img src={featuredProduct.mediaUrls[0]} alt={featuredProduct.publicName} decoding="async" fetchPriority="high" className="w-full h-full object-cover" />
+                <ProductImage src={featuredProduct.mediaUrls[0]} alt={featuredProduct.publicName} fetchPriority="high" markSize={96} className="w-full h-full object-cover" />
                 <div className="majal-art-scrim absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
                 <div className="absolute top-4 start-4 px-3 py-1.5 rounded-full bg-slate-950/75 backdrop-blur text-gold-300 border border-gold-300/20 text-xs font-black">{formatKwd(featured.sellingPriceKwd)}</div>
                 <div className="majal-art-title absolute bottom-5 start-5 end-5">
@@ -157,7 +168,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                   <div className="rounded-xl p-3 bg-white/5"><Star className="w-4 h-4 text-gold-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.rating.toFixed(1)}</div><div className="text-xs text-slate-400">الطعم</div></div>
                   <div className="rounded-xl p-3 bg-white/5"><DnaRing className="mx-auto" value={metrics.repeat} size={44} stroke={4} tone="accent" label={`${metrics.repeat}%`} ariaLabel={`يكرر ${metrics.repeat}%`} /><div className="text-xs text-slate-400">يكرر</div></div>
-                  <div className="rounded-xl p-3 bg-white/5"><DnaRing className="mx-auto" value={metrics.keep} size={44} stroke={4} tone="info" label={`${metrics.keep}%`} ariaLabel={`نسبة التكرار ${metrics.keep}%`} /><div className="text-xs text-slate-400">نسبة التكرار</div></div>
+                  <div className="rounded-xl p-3 bg-white/5"><DnaRing className="mx-auto" value={metrics.keep} size={44} stroke={4} tone="info" label={`${metrics.keep}%`} ariaLabel={`خلّوه ${metrics.keep}%`} /><div className="text-xs text-slate-400">خلّوه</div></div>
                   <div className="rounded-xl p-3 bg-white/5"><PackageOpen className="w-4 h-4 text-gold-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.remaining ?? <InfinityIcon className="w-4 h-4 mx-auto" aria-hidden="true" />}</div><div className="text-xs text-slate-400">{metrics.remaining === null ? 'بلا سقف' : 'متبقي'}</div></div>
                 </div>
                 <div className="flex gap-2">

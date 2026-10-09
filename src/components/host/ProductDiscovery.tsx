@@ -9,6 +9,7 @@ import { ScoreRing, MicroBars, FoldedNote } from '../common/MatchMeter';
 import { CapGrid } from '../common/CapGrid';
 import { EmptyState } from '../common/EmptyState';
 import { Building2 } from 'lucide-react';
+import { ProductImage } from '../common/ProductImage';
 
 export const ProductDiscovery: React.FC = () => {
   const currentHostId = store.activeUser.hostBusinessId || '';
@@ -125,7 +126,7 @@ export const ProductDiscovery: React.FC = () => {
                 {/* Header Row */}
                 <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <img src={p.mediaUrls[0]} alt={p.publicName} loading="lazy" decoding="async" className="w-14 h-14 rounded-xl object-cover ring-1 ring-slate-700 shrink-0" />
+                    <ProductImage src={p.mediaUrls[0]} alt={p.publicName} loading="lazy" markSize={28} className="w-14 h-14 rounded-xl object-cover ring-1 ring-slate-700 shrink-0" />
                     <div className="min-w-0">
                       <h3 className="font-black text-slate-100 text-base line-clamp-2 sm:line-clamp-none sm:truncate" title={p.publicName}>{p.publicName}</h3>
                       <span className="text-xs text-slate-400 block break-words sm:truncate" title={creator?.displayName}>بواسطة: <strong className="text-gold-400">{creator?.displayName}</strong></span>

@@ -15,6 +15,7 @@ import { LaunchGateChecklist, Collaboration } from '../../types/majal';
 import { MajalLoader } from '../brand/MajalLoader';
 import { StatusPill } from '../common/StatusPill';
 import { DnaRing } from '../dna/DnaKit';
+import { ProductImage } from '../common/ProductImage';
 
 interface LaunchGateManagerProps {
   collaboration: Collaboration;
@@ -174,7 +175,7 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
         <div key={liveLaunch.id} className="pt-4 border-t border-white/10">
           <div className="majal-settle-in rounded-2xl border border-emerald-400/25 bg-emerald-500/8 p-4 flex flex-col sm:flex-row sm:items-center gap-4">
             {product?.mediaUrls[0] && (
-              <img src={product.mediaUrls[0]} alt={product.publicName} loading="lazy" decoding="async" className="w-16 h-16 rounded-2xl object-cover ring-1 ring-emerald-400/30 shrink-0" />
+              <ProductImage src={product.mediaUrls[0]} alt={product.publicName} loading="lazy" markSize={30} className="w-16 h-16 rounded-2xl object-cover ring-1 ring-emerald-400/30 shrink-0" />
             )}
             <div className="flex-1 space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
