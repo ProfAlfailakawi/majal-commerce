@@ -80,7 +80,7 @@ function deriveNextMove(activeSurface: SurfaceType) {
 
   const liveLaunches = store.launches.filter(item => item.status === 'LIVE' || item.status === 'PERMANENT').length;
   return activeSurface === 'CONSUMER'
-    ? { eyebrow: 'اكتشاف بدون ضجيج', title: liveLaunches ? `استكشف ${liveLaunches} إطلاق متاح` : 'كن أول من يعرف الإطلاق القادم', reason: liveLaunches ? 'المنتجات الحية فقط؛ لا بطاقات وهمية ولا وعود غير متاحة.' : 'لا يوجد إطلاق حي الآن، لذلك لن نطلب منك البحث في سوق فارغ.', action: 'استكشف السوق', surface: 'CONSUMER' as SurfaceType, signal: liveLaunches }
+    ? { eyebrow: 'اكتشاف بدون ضجيج', title: liveLaunches ? (liveLaunches === 1 ? 'استكشف إطلاقًا واحدًا متاحًا' : liveLaunches === 2 ? 'استكشف إطلاقين متاحين' : liveLaunches <= 10 ? `استكشف ${liveLaunches} إطلاقات متاحة` : `استكشف ${liveLaunches} إطلاقًا متاحًا`) : 'كن أول من يعرف الإطلاق القادم', reason: liveLaunches ? 'المنتجات الحية فقط؛ لا بطاقات وهمية ولا وعود غير متاحة.' : 'لا يوجد إطلاق حي الآن، لذلك لن نطلب منك البحث في سوق فارغ.', action: 'استكشف السوق', surface: 'CONSUMER' as SurfaceType, signal: liveLaunches }
     : { eyebrow: 'أقصر طريق للفهم', title: 'شاهد الرحلة من الابتكار إلى السوق', reason: 'ابدأ بصرياً، ثم انتقل للمساحة التي تخصك عندما تكون جاهزاً.', action: 'ابدأ من السوق', surface: 'CONSUMER' as SurfaceType, signal: 6 };
 }
 

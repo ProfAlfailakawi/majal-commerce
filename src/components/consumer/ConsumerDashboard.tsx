@@ -15,6 +15,7 @@ import {
   X
 } from 'lucide-react';
 import { SurfaceType, Launch } from '../../types/majal';
+import { arCount, AR } from '../../lib/arPlural';
 import { store } from '../../lib/store';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { Avatar } from '../common/Avatar';
@@ -150,7 +151,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
           <p className="text-xs text-slate-400 leading-6 line-clamp-2">{product?.shortDescription}</p>
           {launchSummary && launchSummary.count > 0 && (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gold-500/10 border border-gold-300/25 text-xs font-black text-gold-300"><Star className="w-3 h-3" aria-hidden="true" />{launchSummary.taste.toFixed(1)} <span className="font-medium text-slate-400">({launchSummary.count} تقييم)</span></span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gold-500/10 border border-gold-300/25 text-xs font-black text-gold-300"><Star className="w-3 h-3" aria-hidden="true" />{launchSummary.taste.toFixed(1)} <span className="font-medium text-slate-400">({arCount(launchSummary.count, AR.review)})</span></span>
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/25 text-xs font-black text-emerald-300"><Heart className="w-3 h-3" aria-hidden="true" />خلّوه <bdi dir="ltr">{launchSummary.keepItPercent}%</bdi></span>
             </div>
           )}
@@ -223,7 +224,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
       </section>
 
       <section className="space-y-5">
-        <div className="flex items-center justify-between gap-4"><div><h2 className="text-2xl font-black">الإطلاقات الحالية</h2><p className="text-xs text-slate-400 mt-1">منتجات محدودة، تجريبية، موسمية أو مرشحة للدخول الدائم.</p></div><div className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-400">{launches.length} إطلاق</div></div>
+        <div className="flex items-center justify-between gap-4"><div><h2 className="text-2xl font-black">الإطلاقات الحالية</h2><p className="text-xs text-slate-400 mt-1">منتجات محدودة، تجريبية، موسمية أو مرشحة للدخول الدائم.</p></div><div className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-400">{arCount(launches.length, AR.launch)}</div></div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {launches.slice(0, LAUNCHES_VISIBLE).map(renderLaunchCard)}
           {!launches.length && <div className="md:col-span-2 lg:col-span-3 rounded-3xl p-8 border border-dashed border-white/15 bg-white/[0.02] text-center"><Sparkles className="w-7 h-7 text-gold-300 mx-auto" /><div className="font-black mt-3">لا توجد إطلاقات متاحة حاليًا</div><div className="text-xs text-slate-400 mt-2">لن يظهر زر الطلب قبل اكتمال الجاهزية وربط الدفع.</div></div>}

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BadgeCheck, Bell, CheckCircle2, CreditCard, PackageX, ShoppingBag, Star, Store, Truck } from 'lucide-react';
 import { Launch } from '../../types/majal';
 import { shortRef } from '../../lib/displayRef';
+import { arCount, AR } from '../../lib/arPlural';
 import { store } from '../../lib/store';
 import { IS_DEMO_MODE } from '../../lib/runtime';
 import { formatFils, kwdToFils } from '../../lib/money';
@@ -192,7 +193,7 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
           <DnaRing value={reviews.keepItPercent} size={56} stroke={5} tone="info" label={`${reviews.keepItPercent}%`} ariaLabel={`خلّوه ${reviews.keepItPercent}%`} />
           <div className="space-y-1.5 min-w-0">
             <div className="flex items-center gap-1 font-black text-sm"><Star className="w-4 h-4 text-gold-300" aria-hidden="true" />{reviews.taste.toFixed(1)} <span className="font-medium text-slate-300 text-xs">للطعم</span></div>
-            <div className="flex items-center gap-1"><BadgeCheck className="w-4 h-4 text-emerald-300 shrink-0" aria-hidden="true" />{reviews.count} تقييم من مشترين موثّقين</div>
+            <div className="flex items-center gap-1"><BadgeCheck className="w-4 h-4 text-emerald-300 shrink-0" aria-hidden="true" />{arCount(reviews.count, AR.review)} من مشترين موثّقين</div>
             <div className="text-slate-300"><bdi dir="ltr">{reviews.keepItPercent}%</bdi> يبونه يستمر</div>
           </div>
         </div>
@@ -235,7 +236,7 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
                   <input type="radio" name="fulfillment" value={value} checked={fulfillment === value} disabled={disabled} onChange={() => setFulfillment(value)} className="sr-only" />
                   <Icon className="w-6 h-6" aria-hidden="true" />
                   <span>{label}</span>
-                  <span className="text-[0.7rem] font-medium text-slate-400">{hint}</span>
+                  <span className="text-xs font-medium text-slate-400">{hint}</span>
                   {fulfillment === value && <CheckCircle2 className="absolute top-2 end-2 w-4 h-4" aria-hidden="true" />}
                 </label>
               );
