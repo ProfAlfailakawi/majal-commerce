@@ -5,6 +5,20 @@ import { journeyStages } from '../../data/journey';
 
 const STEP_MS = 750;
 
+/** Runs `cb` once the boot splash (#majal-splash) has faded out; returns a cancel function. */
+function whenBootReady(cb: () => void): () => void {
+  const root = document.documentElement;
+  if (root.classList.contains('majal-ready')) { cb(); return () => {}; }
+  let t: number | undefined;
+  const mo = new MutationObserver(() => {
+    if (!root.classList.contains('majal-ready')) return;
+    mo.disconnect();
+    t = window.setTimeout(cb, 560);
+  });
+  mo.observe(root, { attributes: true, attributeFilter: ['class'] });
+  return () => { mo.disconnect(); window.clearTimeout(t); };
+}
+
 /**
  * Visual-only reveal: the stations light up one after another (each gate "opens", then
  * the next lights) once, when the stepper scrolls into view. `lit` is how many stations
@@ -23,17 +37,21 @@ function useSequentialReveal(enabled: boolean, count: number) {
   useEffect(() => {
     if (!armed || !ref.current) return;
     let timer: number | undefined;
+    let cancelReady: (() => void) | undefined;
     const io = new IntersectionObserver(([entry]) => {
-      if (!entry?.isIntersecting) return;
+      /* isIntersecting turns true on any overlap; wait for the real 60% before starting. */
+      if (!entry?.isIntersecting || entry.intersectionRatio < 0.6) return;
       io.disconnect();
-      let n = 0;
-      timer = window.setInterval(() => {
-        n += 1;
-        if (n >= count + 1) { window.clearInterval(timer); setLit(null); setArmed(false); } else setLit(n);
-      }, STEP_MS);
+      cancelReady = whenBootReady(() => {
+        let n = 0;
+        timer = window.setInterval(() => {
+          n += 1;
+          if (n >= count + 1) { window.clearInterval(timer); setLit(null); setArmed(false); } else setLit(n);
+        }, STEP_MS);
+      });
     }, { threshold: 0.6 });
     io.observe(ref.current);
-    return () => { io.disconnect(); window.clearInterval(timer); };
+    return () => { io.disconnect(); cancelReady?.(); window.clearInterval(timer); };
   }, [armed, count]);
   return { ref, lit };
 }
