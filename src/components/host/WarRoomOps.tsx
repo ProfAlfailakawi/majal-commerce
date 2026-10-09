@@ -74,7 +74,7 @@ export const WarRoomOps: React.FC = () => {
               const key = `${l.launchId}:${b.branchId}`;
               return (
                 <div key={b.branchId} className="rounded-xl p-3 bg-white/5 border border-white/10 text-xs space-y-2">
-                  <div className="flex justify-between"><span className="font-bold text-slate-100">{b.name}</span><span className="text-slate-300">{b.configured ? `${b.reservedUnits}/${b.capacityUnits} (${b.utilizationPct}%)` : 'بلا سقف محدد'}</span></div>
+                  <div className="flex justify-between"><span className="font-bold text-slate-100">{b.name}</span><span className="text-slate-300">{b.configured ? <bdi dir="ltr">{`${b.reservedUnits}/${b.capacityUnits} (${b.utilizationPct}%)`}</bdi> : 'بلا سقف محدد'}</span></div>
                   {b.configured && <div className="h-2 bg-white/5 rounded-full overflow-hidden" role="progressbar" aria-valuenow={b.utilizationPct} aria-valuemin={0} aria-valuemax={100} aria-label={`استهلاك طاقة ${b.name}`}><div className={`h-full ${LEVEL_TONE[b.level ?? 'OK']}`} style={{ width: `${Math.min(100, b.utilizationPct ?? 0)}%` }} /></div>}
                   {canEdit && (
                     <div className="flex flex-wrap items-end gap-2">

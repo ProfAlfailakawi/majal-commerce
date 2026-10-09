@@ -491,7 +491,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
 
           <div className="flex items-center justify-between gap-3">
             <span className="text-xs text-slate-400 font-bold tabular-nums">
-              {stepIndex + 1} / {STEPS.length}
+              <bdi dir="ltr">{stepIndex + 1} / {STEPS.length}</bdi>
             </span>
 
             <div className="flex items-center gap-2">

@@ -96,7 +96,7 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
             />
             <div>
               <div className="text-xs font-bold text-slate-200">جودة المنتج</div>
-              <div className="text-xs text-slate-400 mt-1">{reviews.length ? `${stats.avgRating.toFixed(1)} / 5 · ${arCount(reviews.length, AR.review)}` : 'لا تقييمات بعد'}</div>
+              <div className="text-xs text-slate-400 mt-1">{reviews.length ? <><bdi dir="ltr">{stats.avgRating.toFixed(1)} / 5</bdi> · {arCount(reviews.length, AR.review)}</> : 'لا تقييمات بعد'}</div>
             </div>
           </div>
           <div className="flex items-center gap-4 pt-3 border-t border-white/10">
