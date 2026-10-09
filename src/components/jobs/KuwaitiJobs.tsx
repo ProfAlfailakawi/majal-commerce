@@ -1,3 +1,4 @@
+import { arCount, AR } from '../../lib/arPlural';
 import { Avatar } from '../common/Avatar';
 import React, { FormEvent, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -76,7 +77,7 @@ export const KuwaitiJobs: React.FC = () => {
             <p className="text-xs text-slate-300 mt-1 leading-6">تظهر هنا فقط الوظائف التي وافقت عليها إدارة مجال. مخصصة لتوظيف الكويتيين لدى المنشآت والموردين في المنظومة.</p>
           </div>
         </div>
-        <span className="text-xs text-gold-300 font-black whitespace-nowrap">{jobs.length} فرصة</span>
+        <span className="text-xs text-gold-300 font-black whitespace-nowrap">{arCount(jobs.length, AR.opportunity)}</span>
       </div>
 
       {loading ? (

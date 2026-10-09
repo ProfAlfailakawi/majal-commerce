@@ -11,6 +11,7 @@ import {
   Sparkles,
   TrendingUp
 } from 'lucide-react';
+import { arCount, AR } from '../../lib/arPlural';
 import { store } from '../../lib/store';
 import { Avatar } from '../common/Avatar';
 import { DnaRing, DnaStepper } from '../dna/DnaKit';
@@ -95,7 +96,7 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
             />
             <div>
               <div className="text-xs font-bold text-slate-200">جودة المنتج</div>
-              <div className="text-xs text-slate-400 mt-1">{reviews.length ? `${stats.avgRating.toFixed(1)} / 5 · ${reviews.length} تقييم` : 'لا تقييمات بعد'}</div>
+              <div className="text-xs text-slate-400 mt-1">{reviews.length ? `${stats.avgRating.toFixed(1)} / 5 · ${arCount(reviews.length, AR.review)}` : 'لا تقييمات بعد'}</div>
             </div>
           </div>
           <div className="flex items-center gap-4 pt-3 border-t border-white/10">

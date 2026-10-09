@@ -4,6 +4,7 @@ import {
   Building2, KeyRound, Lightbulb, Wallet, ShieldAlert, Gavel, Database, Target, Share2, Trash2, Lock,
   Undo2, Utensils, Send, Hourglass, LockKeyhole, ScrollText, Rocket, Banknote, type LucideIcon
 } from 'lucide-react';
+import { arCount, AR } from '../../lib/arPlural';
 import type { LegalDocumentId } from '../../lib/legalRoutes';
 
 export type { LegalDocumentId } from '../../lib/legalRoutes';
@@ -297,7 +298,7 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
         <header className="space-y-3 pb-5 border-b border-white/10">
           <h2 ref={headingRef} tabIndex={-1} className="text-xl sm:text-2xl font-black text-slate-100 outline-none focus-visible:ring-2 focus-visible:ring-gold-300">{doc.title}</h2>
           <p className="text-xs sm:text-sm text-slate-400 leading-7">{doc.summary}</p>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-slate-300"><Clock3 className="w-3.5 h-3.5" aria-hidden="true" />{readingMinutes === 1 ? 'قراءة نحو دقيقة' : readingMinutes === 2 ? 'قراءة نحو دقيقتين' : `قراءة نحو ${readingMinutes} ${readingMinutes <= 10 ? 'دقائق' : 'دقيقة'}`}</span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-slate-300"><Clock3 className="w-3.5 h-3.5" aria-hidden="true" />قراءة نحو {arCount(readingMinutes, AR.minute)}</span>
         </header>
 
         {doc.sections.map((section, sectionIndex) => {

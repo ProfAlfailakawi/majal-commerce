@@ -50,7 +50,7 @@ export const ProductDiscovery: React.FC = () => {
     <div className="space-y-6 text-slate-100">
       
       {/* Header */}
-      <div className="bg-slate-900/90 p-6 rounded-2xl border border-slate-800 space-y-4">
+      <div className="glass-panel p-6 rounded-2xl border border-white/10 space-y-4">
         <div>
           <h2 className="text-xl font-black text-slate-100 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-gold-400" />
@@ -70,7 +70,7 @@ export const ProductDiscovery: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="البحث باسم المنتج، المكونات، أو المبدع..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl ps-9 pe-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
+              className="w-full glass-input rounded-xl ps-9 pe-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
             />
           </div>
 
@@ -78,7 +78,7 @@ export const ProductDiscovery: React.FC = () => {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-200 focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
+              className="w-full glass-input rounded-xl p-2 text-xs text-slate-200 focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
             >
               <option value="ALL">جميع الفئات</option>
               {PRODUCT_CATEGORIES.map(item => (
@@ -87,7 +87,7 @@ export const ProductDiscovery: React.FC = () => {
             </select>
           </div>
 
-          <div className="flex items-center gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-300">
+          <div className="flex items-center gap-2 glass-input p-2 rounded-xl text-xs text-slate-300">
             <span className="shrink-0 whitespace-nowrap">حد أدنى للمطابقة:</span>
             <input
               type="range"
@@ -119,12 +119,12 @@ export const ProductDiscovery: React.FC = () => {
           const effectiveLevel: DisclosureLevel = hasApprovedGrant ? Math.min(grant!.disclosureLevel, maxRoleLevel) as DisclosureLevel : 1;
 
           return (
-            <div key={p.id} className="bg-slate-900/90 rounded-2xl border border-slate-800 p-6 space-y-4 shadow-xl flex flex-col justify-between">
+            <div key={p.id} className="glass-panel rounded-2xl border border-white/10 p-6 space-y-4 shadow-xl flex flex-col justify-between">
               
               <div className="space-y-3">
                 
                 {/* Header Row */}
-                <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-3">
+                <div className="flex items-start justify-between gap-2 border-b border-white/10 pb-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <ProductImage src={p.mediaUrls[0]} alt={p.publicName} loading="lazy" markSize={28} className="w-14 h-14 rounded-xl object-cover ring-1 ring-slate-700 shrink-0" />
                     <div className="min-w-0">
@@ -140,7 +140,7 @@ export const ProductDiscovery: React.FC = () => {
                 <p className="text-slate-300 text-xs leading-relaxed">{p.shortDescription}</p>
 
                 {/* Match Score Breakdown: three thin bars, the explanation folded */}
-                <details className="group bg-slate-950 rounded-xl border border-slate-800/80 text-xs">
+                <details className="group bg-slate-950/40 rounded-xl border border-white/10 text-xs">
                   <summary className="cursor-pointer list-none flex items-center justify-between gap-2 max-sm:min-h-11 px-3.5 py-2.5 text-slate-300 hover:text-slate-100 [&::-webkit-details-marker]:hidden">
                     <span className="font-bold">عرض التفاصيل</span>
                     <ChevronDown className="w-4 h-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
@@ -157,7 +157,7 @@ export const ProductDiscovery: React.FC = () => {
               </div>
 
               {/* Actions Footer */}
-              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between max-sm:flex-col max-sm:items-stretch max-sm:gap-3 text-xs mt-4">
+              <div className="p-3 bg-slate-950/40 rounded-xl border border-white/10 flex items-center justify-between max-sm:flex-col max-sm:items-stretch max-sm:gap-3 text-xs mt-4">
                 <div className="text-slate-400">
                   سعر البيع المستهدف: <strong className="text-gold-400 font-mono">{p.targetSellingPriceKwd.toFixed(3)} د.ك</strong>
                 </div>

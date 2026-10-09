@@ -178,7 +178,7 @@ export default function App() {
 
         <ExperienceGuide activeSurface={activeSurface} onSurfaceChange={handleSurfaceChange} />
 
-        <main id="main-content" tabIndex={-1} className="animate-in fade-in duration-300 flex-1 pb-24 sm:pb-10 outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
+        <main id="main-content" tabIndex={-1} className="animate-in fade-in duration-300 flex-1 pb-[4.5rem] sm:pb-10 outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
           <Suspense fallback={<SurfaceFallback />}>
             {legalDocument ? <LegalCenter initialDocument={legalDocument} onBack={closeLegal} /> : <>
               {activeSurface === 'PUBLIC' && <PublicLanding onSurfaceChange={handleSurfaceChange} />}

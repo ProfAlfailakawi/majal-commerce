@@ -40,11 +40,11 @@ export const OfferBuilder: React.FC<OfferBuilderProps> = ({ collaboration }) => 
   };
 
   return (
-    <div className="bg-slate-900/90 rounded-2xl border border-slate-800 p-6 space-y-6 text-slate-100">
+    <div className="glass-panel rounded-2xl border border-white/10 p-6 space-y-6 text-slate-100">
       
-      <div className="border-b border-slate-800 pb-4">
+      <div className="border-b border-white/10 pb-4">
         <h3 className="text-lg font-black text-slate-100 flex items-center gap-2">
-          <FileText className="w-5 h-5 text-amber-400" />
+          <FileText className="w-5 h-5 text-gold-400" />
           <span>منشئ ومعد العروض التجارية الهيكلية</span>
         </h3>
         <p className="text-xs text-slate-400">
@@ -61,7 +61,7 @@ export const OfferBuilder: React.FC<OfferBuilderProps> = ({ collaboration }) => 
             min="0.25"
             value={sellingPriceKwd}
             onChange={(e) => setSellingPriceKwd(parseFloat(e.target.value) || 0)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-amber-400 font-bold"
+            className="w-full glass-input rounded-xl p-2.5 text-gold-400 font-bold"
           />
         </div>
 
@@ -74,7 +74,7 @@ export const OfferBuilder: React.FC<OfferBuilderProps> = ({ collaboration }) => 
             max="80"
             value={royaltyRatePercent}
             onChange={(e) => setRoyaltyRatePercent(parseFloat(e.target.value) || 0)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-amber-300 font-bold"
+            className="w-full glass-input rounded-xl p-2.5 text-gold-300 font-bold"
           />
         </div>
 
@@ -86,7 +86,7 @@ export const OfferBuilder: React.FC<OfferBuilderProps> = ({ collaboration }) => 
             max="60"
             value={termMonths}
             onChange={(e) => setTermMonths(parseInt(e.target.value) || 12)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-100 font-bold"
+            className="w-full glass-input rounded-xl p-2.5 text-slate-100 font-bold"
           />
         </div>
 
@@ -97,7 +97,7 @@ export const OfferBuilder: React.FC<OfferBuilderProps> = ({ collaboration }) => 
             min="0"
             value={minUnits}
             onChange={(e) => setMinUnits(parseInt(e.target.value) || 500)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-100 font-bold"
+            className="w-full glass-input rounded-xl p-2.5 text-slate-100 font-bold"
           />
         </div>
       </div>
@@ -109,7 +109,7 @@ export const OfferBuilder: React.FC<OfferBuilderProps> = ({ collaboration }) => 
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="شروط التسويق المشترك، التغطية الإعلامية، مواعيد التوريد..."
-          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-100 text-xs resize-none"
+          className="w-full glass-input rounded-xl p-2.5 text-slate-100 text-xs resize-none"
         />
       </div>
 
@@ -123,13 +123,13 @@ export const OfferBuilder: React.FC<OfferBuilderProps> = ({ collaboration }) => 
 
       <div className="flex items-center justify-between pt-2">
         <div className="text-xs text-slate-400 font-mono">
-          مستحق المبدع للقطعة: <strong className="text-amber-400">{(sellingPriceKwd * (royaltyRatePercent / 100)).toFixed(3)} د.ك</strong>
+          مستحق المبدع للقطعة: <strong className="text-gold-400">{(sellingPriceKwd * (royaltyRatePercent / 100)).toFixed(3)} د.ك</strong>
         </div>
 
         <button
           onClick={handleSendOffer}
           disabled={!isValid}
-          className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-black rounded-xl text-xs transition-colors flex items-center gap-1.5 shadow-lg"
+          className="px-6 py-2.5 bg-gold-500 hover:bg-gold-400 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-black rounded-xl text-xs transition-colors flex items-center gap-1.5 shadow-lg"
         >
           <Send className="w-4 h-4" />
           <span>إرسال العرض التجاري للمبدع</span>

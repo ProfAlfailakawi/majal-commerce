@@ -102,17 +102,17 @@ export const CreatorEarnings: React.FC = () => {
                   </div>
                   <div className="flex items-end justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <div className="text-[11px] text-slate-400">حق المبدع</div>
+                      <div className="text-xs text-slate-400">حق المبدع</div>
                       <div className="text-lg font-black text-gold-300"><bdi dir="ltr">{a.accruedAmountKwd.toFixed(3)}</bdi> <span className="text-xs">د.ك</span></div>
                     </div>
-                    <span className="flex items-center gap-1 text-[11px] font-bold text-slate-400 min-h-[44px]">عرض التفاصيل<ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180" aria-hidden="true" /></span>
+                    <span className="flex items-center gap-1 text-xs font-bold text-slate-400 min-h-[44px]">عرض التفاصيل<ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180" aria-hidden="true" /></span>
                   </div>
                   <span aria-hidden="true" className="block h-1.5 rounded-full bg-white/10 overflow-hidden" style={{ width: `${barW}%`, minWidth: 24 }}><span className="block h-full rounded-full bg-gold-400" style={{ width: `${shareW}%`, minWidth: 2 }} /></span>
                 </summary>
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-2.5 border-t border-white/10 p-3.5 pt-3">
-                  <div className="col-span-2"><dt className="text-[11px] text-slate-400">التاريخ</dt><dd className="text-slate-300">{new Date(a.createdAt).toLocaleString('ar-KW-u-nu-latn')}</dd></div>
-                  <div><dt className="text-[11px] text-slate-400">المبيعات</dt><dd className="font-bold"><bdi dir="ltr">{a.grossSaleKwd.toFixed(3)}</bdi> د.ك</dd></div>
-                  <div><dt className="text-[11px] text-slate-400">النسبة</dt><dd className="text-gold-300 font-bold"><bdi dir="ltr">{a.royaltyRatePercent}%</bdi></dd></div>
+                  <div className="col-span-2"><dt className="text-xs text-slate-400">التاريخ</dt><dd className="text-slate-300">{new Date(a.createdAt).toLocaleString('ar-KW-u-nu-latn')}</dd></div>
+                  <div><dt className="text-xs text-slate-400">المبيعات</dt><dd className="font-bold"><bdi dir="ltr">{a.grossSaleKwd.toFixed(3)}</bdi> د.ك</dd></div>
+                  <div><dt className="text-xs text-slate-400">النسبة</dt><dd className="text-gold-300 font-bold"><bdi dir="ltr">{a.royaltyRatePercent}%</bdi></dd></div>
                 </dl>
               </details>
             );
