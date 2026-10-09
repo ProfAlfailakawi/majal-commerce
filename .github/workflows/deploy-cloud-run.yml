@@ -121,14 +121,37 @@ jobs:
           # والمستودع يحمل `Dockerfile`، وهو ما يُبنى منه فعلًا. فتُمسح صورة
           # الأساس المخزَّنة مرةً، ويبقى البناء على ملف المستودع وحده — وهو
           # المصدر الذي تمرّ عليه الفحوص قبل النشر.
-          gcloud run deploy "$CLOUD_RUN_SERVICE" \
-            --source . \
-            --clear-base-image \
-            --project "$GCP_PROJECT_ID" \
-            --region "$GCP_REGION" \
-            --platform managed \
-            --allow-unauthenticated \
-            --quiet
+          #
+          # إعادة محاولة محدودة لتعارض عابر فقط: البناء من المصدر يستغرق دقائق، وإن
+          # عُدّلت الخدمة من جهة أخرى أثناءه رفض Cloud Run النشر بـ
+          # `ABORTED ... Conflict ... version was specified but current version is`.
+          # هذا ليس عطبًا في الشيفرة، فنعيد حتى ٣ محاولات (انتظار ٢٠ ثم ٤٠ ثانية)،
+          # ولا نعيد إلا حين يحوي الخرج الكلمتين معًا؛ أي فشلٍ آخر يتوقف فورًا
+          # بالخرج ورمز الخروج الأصليين.
+          LOG="$(mktemp)"
+          ATTEMPT=1
+          MAX_ATTEMPTS=3
+          while true; do
+            RC=0
+            gcloud run deploy "$CLOUD_RUN_SERVICE" \
+              --source . \
+              --clear-base-image \
+              --project "$GCP_PROJECT_ID" \
+              --region "$GCP_REGION" \
+              --platform managed \
+              --allow-unauthenticated \
+              --quiet >"$LOG" 2>&1 || RC=$?
+            cat "$LOG"
+            [[ "$RC" -eq 0 ]] && break
+            if [[ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]] && grep -q 'ABORTED' "$LOG" && grep -q 'Conflict' "$LOG"; then
+              DELAY=$((20 * ATTEMPT))
+              echo "::warning title=تعارض عابر في Cloud Run::المحاولة $ATTEMPT من $MAX_ATTEMPTS تعارضت؛ إعادة بعد ${DELAY}ث."
+              sleep "$DELAY"
+              ATTEMPT=$((ATTEMPT + 1))
+              continue
+            fi
+            exit "$RC"
+          done
 
       - name: التحقق أن الخدمة تردّ بعد النشر
         if: steps.identity.outputs.configured == 'true'
