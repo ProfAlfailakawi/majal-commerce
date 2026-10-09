@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Clock3, FileText, Scale, ShieldCheck, RotateCcw, Mail, ChevronLeft,
+  Clock3, FileText, Scale, ShieldCheck, RotateCcw, Mail, ChevronLeft, ChevronDown,
   Building2, KeyRound, Lightbulb, Wallet, ShieldAlert, Gavel, Database, Target, Share2, Trash2, Lock,
   Undo2, Utensils, Send, Hourglass, LockKeyhole, ScrollText, Rocket, Banknote, type LucideIcon
 } from 'lucide-react';
@@ -287,6 +287,17 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
         ))}
       </div>
 
+      <details className="lg:hidden rounded-2xl border border-white/10 glass-card group mb-4">
+        <summary className="flex items-center justify-between gap-2 min-h-11 px-4 py-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-xs font-black text-gold-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
+          <span>في هذا المستند</span>
+          <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180" aria-hidden="true" />
+        </summary>
+        <div className="px-2 pb-2 space-y-0.5">
+          {doc.sections.map((section, index) => (
+            <button key={section.heading} type="button" onClick={(event) => { (event.currentTarget.closest('details') as HTMLDetailsElement | null)?.removeAttribute('open'); window.requestAnimationFrame(() => jumpTo(index)); }} className="w-full text-start text-xs leading-6 text-slate-300 py-2 px-3 rounded-lg hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">{section.heading}</button>
+          ))}
+        </div>
+      </details>
       <div className="lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-6 lg:items-start">
       <nav aria-label="فهرس المستند" className="hidden lg:block sticky top-28 rounded-2xl border border-white/10 glass-card p-4 space-y-1">
         <div className="text-xs font-black text-gold-300 pb-2">في هذا المستند</div>

@@ -374,7 +374,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
 
               {showRoleDropdown && (
-                <div role="menu" aria-label="تبديل هوية العرض المحلية" className="fixed inset-x-3 top-[4.5rem] sm:absolute sm:inset-x-auto sm:top-auto sm:end-0 mt-2 sm:w-80 max-w-[calc(100vw-1.5rem)] bg-ink-700 sm:bg-ink-700/96 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 text-xs text-slate-200 max-h-[calc(100dvh-6rem)] sm:max-h-[70dvh] overflow-y-auto overscroll-contain">
+                <div role="menu" aria-label="تبديل هوية العرض المحلية" className="fixed inset-x-3 top-[4.5rem] sm:absolute sm:inset-x-auto sm:top-auto sm:end-0 mt-2 sm:w-80 max-w-[calc(100vw-1.5rem)] bg-ink-700 sm:bg-ink-700 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 text-xs text-slate-200 max-h-[calc(100dvh-6rem)] sm:max-h-[70dvh] overflow-y-auto overscroll-contain">
                   <div className="px-2 py-2 text-xs text-slate-400 font-bold border-b border-white/10 mb-1">
                     تبديل أدوار العرض — مبدع / مالك منشأة / أدمن / سوبر أدمن
                   </div>

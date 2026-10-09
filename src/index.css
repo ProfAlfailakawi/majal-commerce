@@ -1078,3 +1078,12 @@ body:has(.majal-ai-fab) { padding-bottom: 4.5rem; }
     linear-gradient(135deg, #e8c880 0%, #c7a55b 55%, #a98741 100%);
 }
 :root[data-theme='contrast'] .majal-plate { background: #000; border: 1px solid #fff; }
+/* Over the gold plate the cool slate scrim turns muddy grey; a warm deep-gold scrim keeps the title legible. */
+.majal-plate + .majal-art-scrim { background-image: linear-gradient(to top, rgba(52, 36, 8, 0.82), rgba(52, 36, 8, 0.25) 55%, transparent); }
+:root[data-theme='contrast'] .majal-plate + .majal-art-scrim { background-image: linear-gradient(to top, #000, transparent); }
+/* High contrast: menus must be fully opaque so nothing behind them shows through. */
+:root[data-theme='contrast'] [role='menu'] { background-color: #05070c; }
+/* High contrast: the plate is black, so the watermark flips to light. */
+:root[data-theme='contrast'] .majal-plate svg { filter: invert(1); }
+/* High contrast: a busy button keeps full-contrast text; the waiting state is a dashed outline, not dimmed text. */
+:root[data-theme='contrast'] button[aria-busy='true']:disabled { opacity: 1; background-image: none; background-color: #000; color: #ffd98a; border: 2px dashed #ffd98a; }
