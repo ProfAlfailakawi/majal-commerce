@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   BadgeCheck,
   ChevronDown,
@@ -23,6 +23,7 @@ import { KuwaitiJobs } from '../jobs/KuwaitiJobs';
 import { DropCheckout } from './DropCheckout';
 import { formatKwd } from '../../lib/money';
 import { commerceClient } from '../../lib/commerceClient';
+import { domainClient } from '../../lib/domainClient';
 import { IS_DEMO_MODE } from '../../lib/runtime';
 import { DnaRing } from '../dna/DnaKit';
 
@@ -31,6 +32,11 @@ interface ConsumerDashboardProps {
 }
 
 const LAUNCHES_VISIBLE = 6;
+
+type ReviewSummary = { count: number; taste: number; keepItPercent: number };
+/** One public summary per launch, fetched once for the launches on screen and cached for the session. */
+const summaryCache = new Map<string, ReviewSummary | null>();
+const summaryPending = new Set<string>();
 
 export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
   const [, setTick] = useState(0);
@@ -70,21 +76,47 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
     return src === 'CREATOR' || src === 'HOST' ? src : 'MAJAL';
   })();
 
+  // Server sessions do not hold reviews in the store; the public summary endpoint is the
+  // real source there (the same one DropCheckout reads). Demo reads the local store instead.
+  const [serverSummaries, setServerSummaries] = useState<Record<string, ReviewSummary | null>>({});
+  const summaryIds = launches.slice(0, LAUNCHES_VISIBLE).map(l => l.id).join(',');
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useEffect(() => {
+    if (IS_DEMO_MODE || !summaryIds) return;
+    summaryIds.split(',').forEach(id => {
+      if (summaryCache.has(id)) { setServerSummaries(prev => ({ ...prev, [id]: summaryCache.get(id) ?? null })); return; }
+      if (summaryPending.has(id)) return;
+      summaryPending.add(id);
+      domainClient.launchReviews(id)
+        .then(r => { const v = { count: r.summary.count, taste: r.summary.taste, keepItPercent: r.summary.keepItPercent }; summaryCache.set(id, v); if (mounted.current) setServerSummaries(prev => ({ ...prev, [id]: v })); })
+        .catch(() => undefined)
+        .finally(() => summaryPending.delete(id));
+    });
+  }, [summaryIds]);
+  const summaryFor = (launchId: string): (ReviewSummary & { repeat: number | null }) | null => {
+    if (IS_DEMO_MODE) {
+      const rs = store.reviews.filter(r => r.launchId === launchId);
+      if (!rs.length) return null;
+      return { count: rs.length, taste: rs.reduce((sum, r) => sum + r.tasteRating, 0) / rs.length, keepItPercent: Math.round(rs.filter(r => r.keepItVote).length / rs.length * 100), repeat: Math.round(rs.filter(r => r.wouldBuyAgain).length / rs.length * 100) };
+    }
+    const v = serverSummaries[launchId];
+    return v && v.count > 0 ? { ...v, repeat: null } : null;
+  };
+
   const featured = launches[0];
   const featuredProduct = featured ? store.products.find(p => p.id === featured.productId) : undefined;
   const featuredCreator = featured ? store.creators.find(c => c.id === featured.creatorId) : undefined;
   const featuredHost = featured ? store.hosts.find(h => h.id === featured.hostBusinessId) : undefined;
 
-  const metrics = useMemo(() => {
-    if (!featured) return { keep: 0, repeat: 0, rating: 0, remaining: null as number | null };
-    const reviews = store.reviews.filter(r => r.launchId === featured.id);
-    const keep = reviews.length ? Math.round(reviews.filter(r => r.keepItVote).length / reviews.length * 100) : 0;
-    const repeat = reviews.length ? Math.round(reviews.filter(r => r.wouldBuyAgain).length / reviews.length * 100) : 0;
-    const rating = reviews.length ? reviews.reduce((s, r) => s + r.tasteRating, 0) / reviews.length : 0;
+  const featuredSummary = featured ? summaryFor(featured.id) : null;
+  const metrics = {
+    keep: featuredSummary ? featuredSummary.keepItPercent : null,
+    repeat: featuredSummary ? featuredSummary.repeat : null,
+    rating: featuredSummary ? featuredSummary.taste : null,
     // Uncapped (permanent/ongoing) launches have no "remaining" — don't paint them as sold out.
-    const remaining = featured.quantityCapUnits ? Math.max(0, featured.quantityCapUnits - featured.unitsSold) : null;
-    return { keep, repeat, rating, remaining };
-  }, [featured, store.reviews.length]);
+    remaining: featured && featured.quantityCapUnits ? Math.max(0, featured.quantityCapUnits - featured.unitsSold) : null as number | null
+  };
 
   const handleKeepVote = () => {
     if (!featured) return;
@@ -100,9 +132,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
     const capped = !!launch.quantityCapUnits;
     const progress = capped ? Math.min(100, Math.round(launch.unitsSold / launch.quantityCapUnits! * 100)) : 0;
     // Public-safe trust chips: real aggregates only, and only once at least one review exists.
-    const launchReviews = store.reviews.filter(r => r.launchId === launch.id);
-    const launchRating = launchReviews.length ? launchReviews.reduce((sum, r) => sum + r.tasteRating, 0) / launchReviews.length : 0;
-    const launchKeep = launchReviews.length ? Math.round(launchReviews.filter(r => r.keepItVote).length / launchReviews.length * 100) : 0;
+    const launchSummary = summaryFor(launch.id);
     return (
       <article key={launch.id} className="glass-card rounded-3xl border border-white/10 overflow-hidden hover:-translate-y-1 transition-transform">
         <div className="relative h-40 sm:h-52">
@@ -113,10 +143,10 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
         </div>
         <div className="p-5 space-y-4">
           <p className="text-xs text-slate-400 leading-6 line-clamp-2">{product?.shortDescription}</p>
-          {launchReviews.length > 0 && (
+          {launchSummary && launchSummary.count > 0 && (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gold-500/10 border border-gold-300/25 text-xs font-black text-gold-300"><Star className="w-3 h-3" aria-hidden="true" />{launchRating.toFixed(1)} <span className="font-medium text-slate-400">({launchReviews.length} تقييم)</span></span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/25 text-xs font-black text-emerald-300"><Heart className="w-3 h-3" aria-hidden="true" />خلّوه <bdi dir="ltr">{launchKeep}%</bdi></span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gold-500/10 border border-gold-300/25 text-xs font-black text-gold-300"><Star className="w-3 h-3" aria-hidden="true" />{launchSummary.taste.toFixed(1)} <span className="font-medium text-slate-400">({launchSummary.count} تقييم)</span></span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/25 text-xs font-black text-emerald-300"><Heart className="w-3 h-3" aria-hidden="true" />خلّوه <bdi dir="ltr">{launchSummary.keepItPercent}%</bdi></span>
             </div>
           )}
           <div><div className="flex justify-between text-xs text-slate-400 mb-1"><span>{launch.unitsSold} مبيعة</span><span>{capped ? `${progress}%` : 'مستمر'}</span></div><div className="h-2 bg-white/5 rounded-full overflow-hidden">{capped ? <div className="h-full bg-gradient-to-l from-gold-500 to-emerald-400 rounded-full" style={{ width: `${progress}%` }} /> : <div className="h-full w-full bg-gradient-to-l from-emerald-500/30 to-emerald-400/30 rounded-full" />}</div></div>
@@ -166,9 +196,9 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
               </div>
               <div className="p-5 space-y-4">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-                  <div className="rounded-xl p-3 bg-white/5"><Star className="w-4 h-4 text-gold-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.rating.toFixed(1)}</div><div className="text-xs text-slate-400">الطعم</div></div>
-                  <div className="rounded-xl p-3 bg-white/5"><DnaRing className="mx-auto" value={metrics.repeat} size={44} stroke={4} tone="accent" label={`${metrics.repeat}%`} ariaLabel={`يكرر ${metrics.repeat}%`} /><div className="text-xs text-slate-400">يكرر</div></div>
-                  <div className="rounded-xl p-3 bg-white/5"><DnaRing className="mx-auto" value={metrics.keep} size={44} stroke={4} tone="info" label={`${metrics.keep}%`} ariaLabel={`خلّوه ${metrics.keep}%`} /><div className="text-xs text-slate-400">خلّوه</div></div>
+                  <div className="rounded-xl p-3 bg-white/5"><Star className="w-4 h-4 text-gold-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.rating === null ? '—' : metrics.rating.toFixed(1)}</div><div className="text-xs text-slate-400">الطعم</div></div>
+                  {!(featuredSummary && featuredSummary.repeat === null) && <div className="rounded-xl p-3 bg-white/5"><DnaRing className="mx-auto" value={metrics.repeat} size={44} stroke={4} tone="accent" label={metrics.repeat === null ? '—' : `${metrics.repeat}%`} ariaLabel={metrics.repeat === null ? 'يكرر: لا بيانات بعد' : `يكرر ${metrics.repeat}%`} /><div className="text-xs text-slate-400">يكرر</div></div>}
+                  <div className="rounded-xl p-3 bg-white/5"><DnaRing className="mx-auto" value={metrics.keep} size={44} stroke={4} tone="info" label={metrics.keep === null ? '—' : `${metrics.keep}%`} ariaLabel={metrics.keep === null ? 'خلّوه: لا أصوات بعد' : `خلّوه ${metrics.keep}%`} /><div className="text-xs text-slate-400">خلّوه</div></div>
                   <div className="rounded-xl p-3 bg-white/5"><PackageOpen className="w-4 h-4 text-gold-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.remaining ?? <InfinityIcon className="w-4 h-4 mx-auto" aria-hidden="true" />}</div><div className="text-xs text-slate-400">{metrics.remaining === null ? 'بلا سقف' : 'متبقي'}</div></div>
                 </div>
                 <div className="flex gap-2">

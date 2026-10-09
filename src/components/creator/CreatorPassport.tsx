@@ -24,6 +24,8 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
   const products = store.products.filter(p => p.creatorId === creatorId);
   const collaborations = store.collaborations.filter(c => c.creatorId === creatorId);
   const launches = store.launches.filter(l => l.creatorId === creatorId);
+  // Only launches that are really on sale count as «live»; SCHEDULED/PAUSED/COMPLETED must not.
+  const liveLaunches = launches.filter(l => l.status === 'LIVE' || l.status === 'PERMANENT');
   const orders = store.orders.filter(o => o.creatorId === creatorId);
   const reviews = store.reviews.filter(r => r.creatorId === creatorId);
 
@@ -57,12 +59,12 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
         </div>
       </div>
 
-      {launches.length > 0 && (
+      {liveLaunches.length > 0 && (
         <div className="relative overflow-hidden flex items-center gap-3 rounded-2xl px-4 py-3 border border-gold-300/30 bg-gradient-to-l from-gold-500/15 via-gold-500/5 to-transparent">
           <span aria-hidden="true" className="shrink-0 w-10 h-10 rounded-full grid place-items-center bg-gold-500 text-slate-950 shadow-[0_0_0_6px_rgba(199,165,91,0.15)]"><Crown className="w-5 h-5" /></span>
           <div className="min-w-0">
-            <div className="text-sm font-black text-gold-300">{launches.length >= 2 ? 'علامة جاهزة — أكثر من إطلاق حيّ' : 'أول إطلاق لك صار حيًّا'}</div>
-            <div className="text-xs text-slate-400 mt-0.5">{launches.length} إطلاق باسمك داخل «مجال».</div>
+            <div className="text-sm font-black text-gold-300">{liveLaunches.length >= 2 ? 'أكثر من إطلاق حيّ باسمك' : 'أول إطلاق لك صار حيًّا'}</div>
+            <div className="text-xs text-slate-400 mt-0.5">{liveLaunches.length} {liveLaunches.length === 1 ? 'إطلاق حيّ' : liveLaunches.length === 2 ? 'إطلاقان حيّان' : 'إطلاقات حيّة'} باسمك داخل «مجال».</div>
           </div>
         </div>
       )}
