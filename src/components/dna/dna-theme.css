@@ -63,3 +63,16 @@ html:root {
   .journey-dna .journey-dna-title { font-size: 12px; }
   .journey-dna .journey-dna-actor { font-size: 11px; }
 }
+
+/* Landing reveal: unlit stations keep their labels legible; the newest lit one pulses once. */
+.journey-dna[data-reveal] .dna-stepi[data-state='pending'] .dna-lbl { color: var(--dna-ink); opacity: 0.6; }
+.journey-dna[data-reveal] .dna-stepi .dna-lbl { transition: opacity 0.4s var(--dna-ease); }
+.journey-dna[data-reveal='1'] .dna-stepi:nth-child(1) .dna-node { animation: dna-halo 1.5s var(--dna-ease) 1; }
+.journey-dna[data-reveal='2'] .dna-stepi:nth-child(2) .dna-node { animation: dna-halo 1.5s var(--dna-ease) 1; }
+.journey-dna[data-reveal='3'] .dna-stepi:nth-child(3) .dna-node { animation: dna-halo 1.5s var(--dna-ease) 1; }
+.journey-dna[data-reveal='4'] .dna-stepi:nth-child(4) .dna-node { animation: dna-halo 1.5s var(--dna-ease) 1; }
+.journey-dna[data-reveal='5'] .dna-stepi:nth-child(5) .dna-node { animation: dna-halo 1.5s var(--dna-ease) 1; }
+.journey-dna[data-reveal='6'] .dna-stepi:nth-child(6) .dna-node { animation: dna-halo 1.5s var(--dna-ease) 1; }
+@media (prefers-reduced-motion: reduce) {
+  .journey-dna[data-reveal] .dna-node { animation: none !important; }
+}

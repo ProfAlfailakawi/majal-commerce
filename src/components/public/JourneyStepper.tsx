@@ -1,22 +1,59 @@
-import React from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { DnaStepper } from '../dna/DnaKit';
 import { journeyStages } from '../../data/journey';
+
+const STEP_MS = 750;
+
+/**
+ * Visual-only reveal: the stations light up one after another (each gate "opens", then
+ * the next lights) once, when the stepper scrolls into view. `lit` is how many stations
+ * are lit; null means fully complete (reduced motion, no IntersectionObserver, finished).
+ */
+function useSequentialReveal(enabled: boolean, count: number) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [lit, setLit] = useState<number | null>(null);
+  const [armed, setArmed] = useState(false);
+  useLayoutEffect(() => {
+    if (!enabled || typeof IntersectionObserver === 'undefined') return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    setLit(0);
+    setArmed(true);
+  }, [enabled]);
+  useEffect(() => {
+    if (!armed || !ref.current) return;
+    let timer: number | undefined;
+    const io = new IntersectionObserver(([entry]) => {
+      if (!entry?.isIntersecting) return;
+      io.disconnect();
+      let n = 0;
+      timer = window.setInterval(() => {
+        n += 1;
+        if (n >= count + 1) { window.clearInterval(timer); setLit(null); setArmed(false); } else setLit(n);
+      }, STEP_MS);
+    }, { threshold: 0.6 });
+    io.observe(ref.current);
+    return () => { io.disconnect(); window.clearInterval(timer); };
+  }, [armed, count]);
+  return { ref, lit };
+}
 
 /**
  * The six MAJAL stations as one connected stepper in the single accent. The order is
  * the message; each station's explanation stays available as the node's tooltip and in
  * the «تفاصيل المحطات» disclosure, so no copy from src/data/journey.tsx is lost.
  */
-export const JourneyStepper: React.FC<{ detail?: 'body' | 'brief'; className?: string }> = ({ detail = 'body', className }) => (
-  <div className={`journey-dna space-y-5 ${className ?? ''}`}>
+export const JourneyStepper: React.FC<{ detail?: 'body' | 'brief'; className?: string; animate?: boolean }> = ({ detail = 'body', className, animate = false }) => {
+  const { ref, lit } = useSequentialReveal(animate, journeyStages.length);
+  return (
+  <div ref={ref} className={`journey-dna space-y-5 ${className ?? ''}`} data-reveal={lit === null ? undefined : lit}>
     <DnaStepper
       size="lg"
       ariaLabel="محطات رحلة مجال"
-      stateText={{ done: '' }}
-      steps={journeyStages.map(stage => ({
+      stateText={{ done: '', pending: '' }}
+      steps={journeyStages.map((stage, i) => ({
         key: stage.index,
-        state: 'done' as const,
+        state: (lit === null || i < lit ? 'done' : 'pending') as 'done' | 'pending',
         icon: stage.icon,
         title: stage[detail],
         label: (
@@ -44,4 +81,5 @@ export const JourneyStepper: React.FC<{ detail?: 'body' | 'brief'; className?: s
       </ol>
     </details>
   </div>
-);
+  );
+};
