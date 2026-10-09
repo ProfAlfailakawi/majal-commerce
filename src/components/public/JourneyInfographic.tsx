@@ -22,7 +22,7 @@ export const JourneyInfographic: React.FC = () => (
     </div>
 
     <div className="glass-card rounded-3xl p-5 sm:p-8">
-      <JourneyStepper detail="body" />
+      <JourneyStepper detail="body" animate />
     </div>
   </section>
 );
