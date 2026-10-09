@@ -1,3 +1,4 @@
+import { Avatar } from '../common/Avatar';
 import React, { FormEvent, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { BriefcaseBusiness, CheckCircle2, MapPin, ShieldCheck, UserCheck, X } from 'lucide-react';
@@ -8,7 +9,7 @@ import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 
 const employmentLabel: Record<string, string> = { FULL_TIME: 'دوام كامل', PART_TIME: 'دوام جزئي', CONTRACT: 'عقد', INTERNSHIP: 'تدريب' };
 
-const fieldClass = 'w-full glass-input rounded-xl px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300';
+const fieldClass = 'w-full glass-input rounded-xl px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300';
 
 export const KuwaitiJobs: React.FC = () => {
   const [jobs, setJobs] = useState<KuwaitiJobPost[]>([]);
@@ -64,8 +65,8 @@ export const KuwaitiJobs: React.FC = () => {
     <section className="glass-panel rounded-[28px] p-5 md:p-6 border border-white/10 space-y-5" aria-labelledby="kuwaiti-jobs-title">
       <div className="flex items-start justify-between gap-4">
         <div className="flex gap-3">
-          <span className="w-11 h-11 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 grid place-items-center shrink-0">
-            <BriefcaseBusiness className="w-5 h-5 text-emerald-300" aria-hidden="true" />
+          <span className="w-11 h-11 rounded-2xl bg-gold-500/10 border border-gold-300/25 grid place-items-center shrink-0">
+            <BriefcaseBusiness className="w-5 h-5 text-gold-300" aria-hidden="true" />
           </span>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -75,7 +76,7 @@ export const KuwaitiJobs: React.FC = () => {
             <p className="text-xs text-slate-300 mt-1 leading-6">تظهر هنا فقط الوظائف التي وافقت عليها إدارة مجال. مخصصة لتوظيف الكويتيين لدى المنشآت والموردين في المنظومة.</p>
           </div>
         </div>
-        <span className="text-xs text-emerald-300 font-black whitespace-nowrap">{jobs.length} فرصة</span>
+        <span className="text-xs text-gold-300 font-black whitespace-nowrap">{jobs.length} فرصة</span>
       </div>
 
       {loading ? (
@@ -85,11 +86,14 @@ export const KuwaitiJobs: React.FC = () => {
           {jobs.slice(0, 6).map(job => (
             <article key={job.id} className="rounded-2xl p-4 bg-white/[0.03] border border-white/10">
               <div className="flex justify-between gap-3">
-                <div>
-                  <div className="text-xs text-emerald-300 font-black">{job.employerName}</div>
-                  <h3 className="font-black mt-1">{job.title}</h3>
+                <div className="flex gap-3 min-w-0">
+                  <Avatar name={job.employerName} size={40} shape="squircle" />
+                  <div className="min-w-0">
+                    <div className="text-xs text-gold-300 font-black">{job.employerName}</div>
+                    <h3 className="font-black mt-1">{job.title}</h3>
+                  </div>
                 </div>
-                <ShieldCheck className="w-4 h-4 text-emerald-300 shrink-0" aria-hidden="true" />
+                <ShieldCheck className="w-4 h-4 text-gold-300 shrink-0" aria-hidden="true" />
               </div>
               <div className="mt-3 flex gap-2 flex-wrap text-xs text-slate-300">
                 <span className="flex items-center gap-1"><MapPin className="w-3 h-3" aria-hidden="true" />{job.location}</span>
@@ -100,7 +104,7 @@ export const KuwaitiJobs: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelected(job)}
-                className="mt-4 w-full py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-400/20 text-emerald-300 text-xs font-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                className="mt-4 w-full py-2.5 rounded-xl bg-gold-500/10 border border-gold-300/25 text-gold-300 text-xs font-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
               >
                 عرض والتقديم
               </button>
@@ -121,13 +125,13 @@ export const KuwaitiJobs: React.FC = () => {
               type="button"
               onClick={close}
               aria-label="إغلاق"
-              className="absolute top-4 end-4 p-2 rounded-full text-slate-300 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+              className="absolute top-4 end-4 p-2 rounded-full text-slate-300 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
             >
               <X className="w-4 h-4" aria-hidden="true" />
             </button>
 
             <div className="pe-10">
-              <div className="text-xs text-emerald-300 font-black">{selected.employerName}</div>
+              <div className="text-xs text-gold-300 font-black">{selected.employerName}</div>
               <h3 id="job-detail-title" className="text-xl font-black mt-1">{selected.title}</h3>
               <p className="text-xs text-slate-300 mt-2">{selected.location} · {employmentLabel[selected.employmentType]}</p>
             </div>
@@ -182,7 +186,7 @@ export const KuwaitiJobs: React.FC = () => {
                     checked={declare}
                     onChange={event => setDeclare(event.target.checked)}
                     required
-                    className="mt-1 focus-visible:ring-2 focus-visible:ring-emerald-300"
+                    className="mt-1 focus-visible:ring-2 focus-visible:ring-gold-300"
                   />
                   <label htmlFor="job-declare">أقر أنني كويتي وأفهم أن هذا إقرار مني وليس تحققًا حكوميًا من المنصة.</label>
                 </div>
@@ -190,7 +194,7 @@ export const KuwaitiJobs: React.FC = () => {
                 <button
                   type="submit"
                   disabled={!declare || busy}
-                  className="w-full py-3 rounded-xl bg-emerald-400 text-slate-950 font-black text-sm disabled:opacity-40 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                  className="w-full py-3 rounded-xl bg-gold-500 text-slate-950 font-black text-sm disabled:opacity-40 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
                 >
                   <UserCheck className="w-4 h-4" aria-hidden="true" />
                   {busy ? 'جارٍ الإرسال…' : 'تقديم الطلب'}

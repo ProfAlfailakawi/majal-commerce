@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { EmptyState } from '../common/EmptyState';
 import { Boxes, ChevronLeft, PackageCheck, Truck } from 'lucide-react';
 import { fetchPublicEcosystem } from '../../lib/ecosystemClient';
 import { SupplierOffering, SupplierProfile } from '../../types/majal';
@@ -11,6 +12,7 @@ export const SupplierDirectory: React.FC = () => {
   const [suppliers, setSuppliers] = useState<SupplierProfile[]>([]);
   const [offerings, setOfferings] = useState<SupplierOffering[]>([]);
   const [expanded, setExpanded] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -19,13 +21,17 @@ export const SupplierDirectory: React.FC = () => {
         if (!alive) return;
         setSuppliers(data.suppliers);
         setOfferings(data.offerings);
+        setLoaded(true);
       })
       .catch(() => undefined);
     return () => { alive = false; };
   }, []);
 
   const offeringCount = useMemo(() => offerings.filter(item => item.status === 'ACTIVE').length, [offerings]);
-  if (suppliers.length === 0) return null;
+  if (suppliers.length === 0) {
+    // Nothing to render until the first response lands; after that, say why it is empty.
+    return loaded ? <EmptyState variant="inline" icon={<Truck className="w-6 h-6" />} title="لا يوجد موردون معتمدون بعد" body="يظهر دليل الموردين هنا فور اعتماد أول مورد من الإدارة." /> : null;
+  }
 
   const visible = expanded ? suppliers : suppliers.slice(0, 3);
   return (

@@ -15,6 +15,9 @@ import { intelligenceClient, type GroundedMarketSignal } from '../../lib/intelli
 interface OpportunityRadarProps {
   creatorId: string;
   onOpenProduct?: (productId: string) => void;
+  /** Home shows the top three only; the Radar tab shows the full ranking. */
+  compact?: boolean;
+  onOpenAll?: () => void;
 }
 
 // SECURITY: citation URIs originate from the AI grounding layer (Google Search metadata),
@@ -30,7 +33,7 @@ function safeHttpUrl(value: unknown): string | undefined {
   }
 }
 
-export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId, onOpenProduct }) => {
+export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId, onOpenProduct, compact = false, onOpenAll }) => {
   // Real-time ranking: subscribe to the store so the radar re-ranks the instant its
   // inputs change — a host clearing verification, a product entering matching, or a
   // freshly persisted/re-scored match row. Without this, the memo below computed once
@@ -90,7 +93,7 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId, o
     <section className="glass-panel rounded-3xl border border-white/10 p-5 md:p-6 space-y-5">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-center text-emerald-300"><Radar className="w-6 h-6" /></div>
+          <div className="w-12 h-12 rounded-2xl bg-gold-500/10 border border-gold-300/25 flex items-center justify-center text-gold-300"><Radar className="w-6 h-6" /></div>
           <div>
             <h3 className="text-lg font-black text-slate-100">رادار الفرص</h3>
             <p className="text-xs text-slate-400 mt-1">أفضل فرص التعاون الآن بناءً على المعدات، الهامش، الفئة، السعر والقدرة التشغيلية.</p>
@@ -103,7 +106,7 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId, o
 
       {hasOpportunities ? (
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {opportunities.map(({ product, matchScore, host, key }) => (
+          {(compact ? opportunities.slice(0, 3) : opportunities).map(({ product, matchScore, host, key }) => (
             <div key={key} className="rounded-2xl p-5 bg-white/5 border border-white/10 hover:border-gold-300/25 transition-colors space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -142,6 +145,12 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId, o
             سجّل منتجًا متاحًا للمطابقة، أو انتظر انضمام منشأة مرخّصة جديدة. الرادار يحسب الفرص حيًّا فور توفر منتج متاح ومنشأة متحققة، ولا يعرض بطاقات وهمية.
           </p>
         </div>
+      )}
+
+      {compact && opportunities.length > 3 && onOpenAll && (
+        <button type="button" onClick={onOpenAll} className="w-full py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black text-gold-300 flex items-center justify-center gap-2 hover:bg-white/10">
+          عرض كل الفرص ({opportunities.length}) في تبويب الرادار <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+        </button>
       )}
 
       {(signals.length > 0 || signalNote) && (

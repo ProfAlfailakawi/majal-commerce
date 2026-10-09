@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  FileText, Scale, ShieldCheck, RotateCcw, Mail, ChevronLeft,
+  Clock3, FileText, Scale, ShieldCheck, RotateCcw, Mail, ChevronLeft,
   Building2, KeyRound, Lightbulb, Wallet, ShieldAlert, Gavel, Database, Target, Share2, Trash2, Lock,
   Undo2, Utensils, Send, Hourglass, LockKeyhole, ScrollText, Rocket, Banknote, type LucideIcon
 } from 'lucide-react';
@@ -242,9 +242,18 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
   }, [active]);
 
   const doc = useMemo(() => documents.find(item => item.id === active) ?? documents[0], [active]);
+  // Reading time is derived from the text itself (about 160 Arabic words per minute).
+  const readingMinutes = useMemo(() => {
+    const words = [doc.summary, ...doc.sections.flatMap(section => [section.heading, ...section.body])].join(' ').split(/\s+/).filter(Boolean).length;
+    return Math.max(1, Math.round(words / 160));
+  }, [doc]);
+  const jumpTo = (index: number) => {
+    const target = document.getElementById(`legal-${doc.id}-${index}`);
+    target?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-2">
           <span className="text-xs font-black text-gold-300">مجال القانوني</span>
@@ -277,16 +286,24 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
         ))}
       </div>
 
+      <div className="lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-6 lg:items-start">
+      <nav aria-label="فهرس المستند" className="hidden lg:block sticky top-28 rounded-2xl border border-white/10 glass-card p-4 space-y-1">
+        <div className="text-xs font-black text-gold-300 pb-2">في هذا المستند</div>
+        {doc.sections.map((section, index) => (
+          <button key={section.heading} type="button" onClick={() => jumpTo(index)} className="w-full text-start text-xs leading-6 text-slate-300 hover:text-gold-300 py-1.5 px-2 rounded-lg hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">{section.heading}</button>
+        ))}
+      </nav>
       <article className="glass-panel rounded-[28px] border border-white/10 p-6 sm:p-9 space-y-7">
         <header className="space-y-3 pb-5 border-b border-white/10">
           <h2 ref={headingRef} tabIndex={-1} className="text-xl sm:text-2xl font-black text-slate-100 outline-none focus-visible:ring-2 focus-visible:ring-gold-300">{doc.title}</h2>
           <p className="text-xs sm:text-sm text-slate-400 leading-7">{doc.summary}</p>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-slate-300"><Clock3 className="w-3.5 h-3.5" aria-hidden="true" />{readingMinutes === 1 ? 'قراءة نحو دقيقة' : readingMinutes === 2 ? 'قراءة نحو دقيقتين' : `قراءة نحو ${readingMinutes} ${readingMinutes <= 10 ? 'دقائق' : 'دقيقة'}`}</span>
         </header>
 
         {doc.sections.map((section, sectionIndex) => {
           const SectionIcon = sectionIcons[doc.id]?.[sectionIndex];
           return (
-          <section key={section.heading} className="space-y-3">
+          <section key={section.heading} id={`legal-${doc.id}-${sectionIndex}`} className="space-y-3 scroll-mt-28">
             <h3 className="text-sm font-black text-gold-300 flex items-center gap-2">
               {SectionIcon && <span aria-hidden="true" className="w-7 h-7 shrink-0 rounded-lg bg-gold-500/10 border border-gold-400/20 flex items-center justify-center"><SectionIcon className="w-4 h-4" /></span>}
               {section.heading}
@@ -304,6 +321,7 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
           <a href={`mailto:${SUPPORT_EMAIL}`} dir="ltr" className="text-gold-300 font-bold hover:underline">{SUPPORT_EMAIL}</a>
         </footer>
       </article>
+      </div>
     </div>
   );
 };
