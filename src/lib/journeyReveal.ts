@@ -48,9 +48,11 @@ export function alreadyPlayed(playKey?: string): boolean {
   }
 }
 
-export function markPlayed(playKey?: string): void {
+/** `persist: false` remembers the key for this page load only (a hard reload plays the intro again). */
+export function markPlayed(playKey?: string, persist = true): void {
   if (!playKey) return;
   played.add(playKey);
+  if (!persist) return;
   try {
     if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(PLAYED_PREFIX + playKey, '1');
   } catch {
@@ -61,4 +63,139 @@ export function markPlayed(playKey?: string): void {
 /** Test helper. */
 export function resetPlayedForTests(): void {
   played.clear();
+}
+
+/* ------------------------------------------------------------------------------------------
+ * Framework-free controller behind useJourneyReveal. The React hook is a thin adapter, so the
+ * rules (arm / play once / re-arm on a new key / hold / ready / dwell fallback) are unit-tested
+ * in node with fake timers and a fake observer.
+ * ---------------------------------------------------------------------------------------- */
+
+export interface VisibilityInfo {
+  isIntersecting: boolean;
+  /** Visible share of the stepper (already reduced by any clipping ancestor). */
+  ratio: number;
+  elementHeight: number;
+  /** Height the stepper could ever be shown in: the viewport, or a smaller clipping container. */
+  viewportHeight: number;
+}
+
+export interface RevealDeps {
+  reducedMotion: () => boolean;
+  canObserve: () => boolean;
+  /** Start observing the stepper; returns a stop function. */
+  observe: (cb: (v: VisibilityInfo) => void) => () => void;
+  setInterval: (fn: () => void, ms: number) => unknown;
+  clearInterval: (id: unknown) => void;
+  setTimeout: (fn: () => void, ms: number) => unknown;
+  clearTimeout: (id: unknown) => void;
+}
+
+export interface RevealConfig {
+  /** Stations that are really lit (revealTarget). Read live, so data arriving mid-intro is honoured. */
+  target: number;
+  stepMs: number;
+  threshold: number;
+  enabled: boolean;
+  /** False while the data is still a placeholder: nothing arms and nothing is marked as played. */
+  ready: boolean;
+  /** Armed (all pending) but the start waits. */
+  hold: boolean;
+  playKey?: string;
+  /** false: remembered for this page load only. */
+  persist: boolean;
+  /** Optional extra gate before the first tick; returns a cancel function. */
+  gate?: (go: () => void) => () => void;
+}
+
+/** A stepper that cannot reach its threshold (clipped by a container) still plays after this dwell. */
+export const DWELL_MS = 1200;
+
+export class JourneyRevealController {
+  /** Stations shown so far; null means settled: render the real states. */
+  lit: number | null = null;
+  cfg: RevealConfig;
+  private armed = false;
+  private started = false;
+  private key: string | undefined;
+  private stopObserve: (() => void) | undefined;
+  private cancelGate: (() => void) | undefined;
+  private interval: unknown;
+  private dwell: unknown;
+  private playing = false;
+
+  constructor(private deps: RevealDeps, private emit: () => void, cfg: RevealConfig) {
+    this.cfg = cfg;
+    this.key = cfg.playKey;
+  }
+
+  /** Call from a layout effect whenever an arming-relevant input changed. */
+  configure(): void {
+    const c = this.cfg;
+    if (this.key !== c.playKey) {
+      /* A reused stepper now shows another entity: forget the previous reveal and decide afresh. */
+      this.detach();
+      this.key = c.playKey;
+      this.started = false;
+      this.armed = false;
+      if (this.lit !== null) { this.lit = null; this.emit(); }
+    }
+    if (!this.started && c.enabled && c.ready && c.target > 0 && this.deps.canObserve() && !this.deps.reducedMotion() && !alreadyPlayed(c.playKey)) {
+      this.started = true;
+      this.armed = true;
+      this.lit = 0;
+      this.emit();
+    }
+    this.detach();
+    if (this.armed && !c.hold) this.attach();
+  }
+
+  /** Cleanup: stops observing and ticking but keeps the armed state (StrictMode remounts re-attach). */
+  detach(): void {
+    this.stopObserve?.(); this.stopObserve = undefined;
+    this.cancelGate?.(); this.cancelGate = undefined;
+    this.clearDwell();
+    if (this.interval !== undefined) { this.deps.clearInterval(this.interval); this.interval = undefined; }
+    this.playing = false;
+  }
+
+  private clearDwell() {
+    if (this.dwell !== undefined) { this.deps.clearTimeout(this.dwell); this.dwell = undefined; }
+  }
+
+  private attach() {
+    this.stopObserve = this.deps.observe(v => this.onVisible(v));
+  }
+
+  private onVisible(v: VisibilityInfo) {
+    if (this.playing) return;
+    const need = effectiveThreshold(this.cfg.threshold, v.elementHeight, v.viewportHeight);
+    if (v.isIntersecting && v.ratio >= need - 0.01) { this.go(); return; }
+    if (v.isIntersecting) {
+      /* Never reaches the threshold (clipped by a container): any continuous visibility is enough after a dwell. */
+      if (this.dwell === undefined) this.dwell = this.deps.setTimeout(() => { this.dwell = undefined; this.go(); }, DWELL_MS);
+    } else this.clearDwell();
+  }
+
+  private go() {
+    if (this.playing) return;
+    this.playing = true;
+    this.clearDwell();
+    this.stopObserve?.(); this.stopObserve = undefined;
+    const gate = this.cfg.gate;
+    if (gate) this.cancelGate = gate(() => this.start()); else this.start();
+  }
+
+  private start() {
+    markPlayed(this.cfg.playKey, this.cfg.persist);
+    let n = this.lit ?? 0;
+    this.interval = this.deps.setInterval(() => {
+      n += 1;
+      if (n > this.cfg.target) {
+        this.deps.clearInterval(this.interval); this.interval = undefined;
+        this.lit = null; this.armed = false; this.playing = false;
+      } else this.lit = n;
+      this.emit();
+    }, this.cfg.stepMs);
+  }
 }

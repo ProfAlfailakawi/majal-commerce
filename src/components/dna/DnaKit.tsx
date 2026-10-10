@@ -132,6 +132,10 @@ export interface DnaStepperProps {
   reveal?: boolean;
   /** With `reveal`: the same key plays the intro only once, even across remounts. */
   playKey?: string;
+  /** With `reveal`: false while the data is still a placeholder; nothing arms or counts as played until true. */
+  ready?: boolean;
+  /** With `reveal` + `playKey`: false remembers the key for this page load only (a hard reload plays again). */
+  persist?: boolean;
   /** With `reveal`: keep the stepper armed (all pending) but wait to start. */
   hold?: boolean;
   /** With `reveal`: ms per station (default clamp(4000 / N, 350, 750)). */
@@ -142,7 +146,7 @@ export interface DnaStepperProps {
   revealGate?: (go: () => void) => () => void;
 }
 
-export function DnaStepper({ steps, size = 'md', showLabels = true, ariaLabel, stateText, className, reveal = false, playKey, hold, stepMs, threshold, revealGate }: DnaStepperProps) {
+export function DnaStepper({ steps, size = 'md', showLabels = true, ariaLabel, stateText, className, reveal = false, playKey, ready, persist, hold, stepMs, threshold, revealGate }: DnaStepperProps) {
   const text = { ...DEFAULT_STATE_TEXT, ...stateText };
   const labels = showLabels && size !== 'xs';
   const { ref, lit } = useJourneyReveal({
@@ -151,8 +155,10 @@ export function DnaStepper({ steps, size = 'md', showLabels = true, ariaLabel, s
     stepMs,
     threshold,
     enabled: reveal,
+    ready,
     hold,
     playKey,
+    persist,
     gate: revealGate,
   });
   /* During the intro the visuals follow `shown`; screen readers always get the real state. */

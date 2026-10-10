@@ -28,7 +28,7 @@ const Timeline: React.FC<{ line: StatementLine }> = ({ line }) => {
       label: (
         <>
           <span className="block">{STAGES.find(s => s.key === key)!.label}</span>
-          {done && dates[key] && <span className="block text-[11px] font-normal tabular-nums">{day(dates[key])}</span>}
+          {done && dates[key] && <span className="block text-[11px] font-normal tabular-nums"><bdi>{day(dates[key])}</bdi></span>}
         </>
       ),
     };
