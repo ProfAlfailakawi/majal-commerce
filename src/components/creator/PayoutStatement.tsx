@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FileSpreadsheet, Printer, Receipt, Undo2 } from 'lucide-react';
 import { DnaStepper, DnaStep } from '../dna/DnaKit';
+import { payoutStationDone, visiblePayoutStations } from '../../lib/payoutStages';
 import { commerceClient, CreatorStatement, StatementLine } from '../../lib/commerceClient';
 import { formatFils } from '../../lib/money';
 import { IS_DEMO_MODE } from '../../lib/runtime';
@@ -12,23 +13,26 @@ const STAGES: { key: Exclude<StatementLine['stage'], 'REVERSED'>; label: string 
   { key: 'APPROVED', label: 'معتمد' },
   { key: 'PAID', label: 'مدفوع' }
 ];
-const rank = { PENDING: 0, APPROVED: 1, PAID: 2, REVERSED: -1 } as const;
 const day = (iso: string | null) => iso ? new Date(iso).toLocaleDateString('ar-KW-u-nu-latn') : '—';
 
-/* Static (table rows): no intro. A reversed line keeps the stages it really reached, then a returned step. */
+/* Static (table rows): no intro. A reversed line shows only pending then the reversal: the server does not
+   say whether it had been approved or paid first, so those stations are left out rather than shown as skipped. */
 const Timeline: React.FC<{ line: StatementLine }> = ({ line }) => {
-  const dates = [line.timeline.pendingAt, line.timeline.approvedAt, line.timeline.paidAt];
+  const dates = { PENDING: line.timeline.pendingAt, APPROVED: line.timeline.approvedAt, PAID: line.timeline.paidAt };
   const reversed = line.stage === 'REVERSED';
-  const steps: DnaStep[] = STAGES.map((stage, i) => ({
-    key: stage.key,
-    state: reversed ? (dates[i] ? 'done' : 'pending') : rank[line.stage] >= i ? 'done' : 'pending',
-    label: (
-      <>
-        <span className="block">{stage.label}</span>
-        {dates[i] && (reversed || rank[line.stage] >= i) && <span className="block text-[11px] font-normal tabular-nums">{day(dates[i])}</span>}
-      </>
-    ),
-  }));
+  const steps: DnaStep[] = visiblePayoutStations(line.stage).map(key => {
+    const done = payoutStationDone(line.stage, key);
+    return {
+      key,
+      state: done ? 'done' : 'pending',
+      label: (
+        <>
+          <span className="block">{STAGES.find(s => s.key === key)!.label}</span>
+          {done && dates[key] && <span className="block text-[11px] font-normal tabular-nums">{day(dates[key])}</span>}
+        </>
+      ),
+    };
+  });
   if (reversed) steps.push({ key: 'REVERSED', state: 'returned', icon: <Undo2 />, label: 'ملغى (استرجاع)' });
   return (
     <DnaStepper

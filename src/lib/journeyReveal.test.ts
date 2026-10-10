@@ -44,3 +44,14 @@ test('collaboration phases: contiguous, complete and honest about unknown positi
   assert.deepEqual(phaseStates('SIGNED'), ['done', 'done', 'done', 'current', 'pending', 'pending']);
   assert.deepEqual(phaseStates('ENDED'), ['done', 'done', 'done', 'done', 'done', 'done']);
 });
+
+test('payout stepper: a reversed line (even if it was locked/paid) never claims approval or payment as skipped', async () => {
+  const { visiblePayoutStations, payoutStationDone } = await import('./payoutStages');
+  assert.deepEqual(visiblePayoutStations('REVERSED'), ['PENDING']);
+  assert.equal(payoutStationDone('REVERSED', 'PENDING'), true);
+  assert.equal(payoutStationDone('REVERSED', 'APPROVED'), false);
+  assert.deepEqual(visiblePayoutStations('APPROVED'), ['PENDING', 'APPROVED', 'PAID']);
+  assert.equal(payoutStationDone('APPROVED', 'APPROVED'), true);
+  assert.equal(payoutStationDone('APPROVED', 'PAID'), false);
+  assert.equal(payoutStationDone('PAID', 'PAID'), true);
+});
