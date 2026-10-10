@@ -169,6 +169,9 @@ export const ContractModal: React.FC<ContractModalProps> = ({
             <DnaStepper
               size="md"
               ariaLabel="مسار توقيع العقد"
+              reveal
+              playKey={`contract:${contract.id}`}
+              stepMs={450}
               steps={signingSteps}
             />
           </DnaStatusHeader>

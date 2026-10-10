@@ -6,6 +6,8 @@
  */
 import * as React from 'react';
 import './dna.css';
+import { useJourneyReveal } from './useJourneyReveal';
+import { revealTarget, shownState } from '../../lib/journeyReveal';
 
 export type DnaTone =
   | 'accent'
@@ -121,16 +123,53 @@ export interface DnaStepperProps {
   ariaLabel?: string;
   stateText?: Partial<Record<DnaStepState, string>>;
   className?: string;
+  /**
+   * Opt-in intro: once, when the stepper scrolls into view, the already-true lit stations
+   * light one after another (circle fills, connector draws, newest gets one halo). The
+   * `state` of each step stays the truth: the intro never lights a pending/returned/blocked
+   * station and never goes past the real current one. Off by default (static states).
+   */
+  reveal?: boolean;
+  /** With `reveal`: the same key plays the intro only once, even across remounts. */
+  playKey?: string;
+  /** With `reveal`: keep the stepper armed (all pending) but wait to start. */
+  hold?: boolean;
+  /** With `reveal`: ms per station (default clamp(4000 / N, 350, 750)). */
+  stepMs?: number;
+  /** With `reveal`: visible share required before it starts (default 0.5). */
+  threshold?: number;
+  /** With `reveal`: extra gate before the first tick; returns a cancel function. */
+  revealGate?: (go: () => void) => () => void;
 }
 
-export function DnaStepper({ steps, size = 'md', showLabels = true, ariaLabel, stateText, className }: DnaStepperProps) {
+export function DnaStepper({ steps, size = 'md', showLabels = true, ariaLabel, stateText, className, reveal = false, playKey, hold, stepMs, threshold, revealGate }: DnaStepperProps) {
   const text = { ...DEFAULT_STATE_TEXT, ...stateText };
   const labels = showLabels && size !== 'xs';
+  const { ref, lit } = useJourneyReveal({
+    target: revealTarget(steps.map(s => s.state)),
+    count: steps.length,
+    stepMs,
+    threshold,
+    enabled: reveal,
+    hold,
+    playKey,
+    gate: revealGate,
+  });
+  /* During the intro the visuals follow `shown`; screen readers always get the real state. */
+  const shown = steps.map((s, i) => shownState(s.state, i, lit));
   return (
-    <ol className={cx('dna', 'dna-steps', className)} data-size={size} aria-label={ariaLabel}>
-      {steps.map((step, i) => {
-        const prev = i > 0 ? steps[i - 1] : null;
-        const link = !prev ? 'none' : step.state === 'returned' ? 'returned' : prev.state === 'done' ? 'done' : 'pending';
+    <ol
+      ref={reveal ? (ref as React.Ref<HTMLOListElement>) : undefined}
+      className={cx('dna', 'dna-steps', className)}
+      data-size={size}
+      data-journey={reveal ? '' : undefined}
+      data-reveal={reveal ? (lit ?? 'done') : undefined}
+      aria-label={ariaLabel}
+    >
+      {steps.map((rawStep, i) => {
+        const step = { ...rawStep, state: shown[i] };
+        const prev = i > 0 ? shown[i - 1] : null;
+        const link = !prev ? 'none' : step.state === 'returned' ? 'returned' : prev === 'done' ? 'done' : 'pending';
         const stamped = Boolean(step.stamp) && step.state === 'done';
         return (
           <li
@@ -139,7 +178,8 @@ export function DnaStepper({ steps, size = 'md', showLabels = true, ariaLabel, s
             data-state={step.state}
             data-link={link}
             data-stamp={stamped ? 'true' : undefined}
-            aria-current={step.state === 'current' ? 'step' : undefined}
+            data-just={lit !== null && i === lit - 1 ? '' : undefined}
+            aria-current={rawStep.state === 'current' ? 'step' : undefined}
             title={step.title ?? (size === 'xs' && typeof step.label === 'string' ? step.label : undefined)}
           >
             <span className="dna-node" aria-hidden="true">
@@ -160,7 +200,7 @@ export function DnaStepper({ steps, size = 'md', showLabels = true, ariaLabel, s
               {step.badge != null && step.badge !== false && <span className="dna-bdg">{step.badge}</span>}
             </span>
             <span className={labels ? 'dna-lbl' : 'dna-sr'}>{step.label}</span>
-            <span className="dna-sr">{text[step.state]}</span>
+            <span className="dna-sr">{text[rawStep.state]}</span>
           </li>
         );
       })}

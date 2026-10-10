@@ -26,6 +26,7 @@ import {
   INITIAL_USERS, INITIAL_RECIPE_VERSIONS, INITIAL_CHALLENGES, INITIAL_OFFERS, INITIAL_CONTRACTS,
   INITIAL_RECIPE_GRANTS, INITIAL_COMPLIANCE,
 } from './seedData';
+import { STAGE_ORDER } from '../lib/collaborationPhases';
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 const day = 86_400_000;
@@ -658,7 +659,6 @@ function demoDisputes(orders: Order[]): DisputeCase[] {
 /* The workbench: recipe versions, lab batches, deal-room decisions and host
  * challenges. Without them every deal room read «لا توجد نسخة», every lab
  * showed «ما فيه دفعات محفوظة» and only one host had a challenge board. */
-const STAGE_ORDER: Collaboration['stage'][] = ['INTEREST', 'ACCESS_REQUESTED', 'ACCESS_GRANTED', 'TASTING_PLANNED', 'TASTING_COMPLETED', 'LAB_ACTIVE', 'OFFER_SENT', 'COUNTERED', 'COMMERCIAL_AGREED', 'CONTRACT_DRAFTED', 'SIGNED', 'PRE_LAUNCH', 'LIVE', 'REVIEW', 'RENEWED', 'ENDED'];
 const reached = (stage: Collaboration['stage'], target: Collaboration['stage']) =>
   STAGE_ORDER.indexOf(stage) >= STAGE_ORDER.indexOf(target);
 
