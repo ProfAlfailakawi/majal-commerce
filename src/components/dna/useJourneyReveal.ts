@@ -35,9 +35,18 @@ export function useJourneyReveal({ target, count, stepMs, threshold = 0.5, enabl
   const ms = stepMs ?? defaultStepMs(count);
   /* Arm at most once per mount, but also when data arrives after the first render (target 0 -> >0). */
   const startedRef = useRef(false);
+  const keyRef = useRef(playKey);
   const hasTarget = target > 0;
 
   useLayoutEffect(() => {
+    /* A reused stepper now shows another entity: drop the previous reveal state (the effect below
+       cleans up the old observer/timer because playKey is one of its deps) and decide afresh. */
+    if (keyRef.current !== playKey) {
+      keyRef.current = playKey;
+      startedRef.current = false;
+      setLit(null);
+      setArmed(false);
+    }
     if (!enabled || !hasTarget || startedRef.current || typeof IntersectionObserver === 'undefined') return;
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
     if (alreadyPlayed(playKey)) return;
