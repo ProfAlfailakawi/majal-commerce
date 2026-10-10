@@ -55,3 +55,12 @@ test('payout stepper: a reversed line (even if it was locked/paid) never claims 
   assert.equal(payoutStationDone('APPROVED', 'PAID'), false);
   assert.equal(payoutStationDone('PAID', 'PAID'), true);
 });
+
+test('effectiveThreshold caps the requirement for steppers taller than the viewport', async () => {
+  const { effectiveThreshold } = await import('./journeyReveal');
+  assert.equal(effectiveThreshold(0.6, 100, 800), 0.6);
+  assert.equal(effectiveThreshold(0.5, 1600, 800), 0.45);
+  assert.equal(effectiveThreshold(0.5, 10000, 800), 0.15);
+  assert.equal(effectiveThreshold(0.5, 0, 800), 0.5);
+  assert.equal(effectiveThreshold(0.6, 300, 0), 0.6);
+});

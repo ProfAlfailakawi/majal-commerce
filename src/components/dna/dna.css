@@ -430,7 +430,7 @@
 /* Reveal mode (DnaStepper reveal): generic for any N, no continuous motion. The newest lit
    station gets ONE halo, a current station pulses once and then stays as a static ring. */
 .dna-steps[data-journey][data-reveal]:not([data-reveal='done']) .dna-stepi[data-state='pending'] .dna-lbl { opacity: 0.6; }
-.dna-steps[data-journey] .dna-stepi[data-state='current'] .dna-node { animation: dna-halo 1.5s var(--dna-ease) 1; }
+.dna-steps[data-journey] .dna-stepi[data-state='current'] .dna-node { animation: none; } /* static ring; the one halo comes from data-just */
 .dna-steps[data-journey] .dna-stepi[data-just] .dna-node { animation: dna-halo 1.5s var(--dna-ease) 1; }
 
 /* Calm: decision/admin surfaces keep the current ring static (no continuous pulse). */

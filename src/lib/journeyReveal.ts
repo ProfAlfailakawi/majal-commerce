@@ -23,6 +23,16 @@ export function defaultStepMs(count: number): number {
   return Math.min(750, Math.max(350, Math.round(4000 / n)));
 }
 
+/**
+ * Visible share the stepper must reach before the intro starts. A stepper taller than the
+ * viewport can never be 50% visible, so the requirement is capped at what a ~90% tall
+ * viewport can show (never below 15%); otherwise the stations would stay hidden forever.
+ */
+export function effectiveThreshold(threshold: number, elementHeight: number, viewportHeight: number): number {
+  if (!(elementHeight > 0) || !(viewportHeight > 0)) return threshold;
+  return Math.min(threshold, Math.max(0.15, (0.9 * viewportHeight) / elementHeight));
+}
+
 /** During the intro a station shows its real state only once the reveal has reached it. */
 export function shownState(real: JourneyState, index: number, lit: number | null): JourneyState {
   return lit === null || index < lit ? real : 'pending';

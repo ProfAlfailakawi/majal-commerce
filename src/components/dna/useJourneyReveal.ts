@@ -1,5 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { alreadyPlayed, defaultStepMs, markPlayed } from '../../lib/journeyReveal';
+import { alreadyPlayed, defaultStepMs, effectiveThreshold, markPlayed } from '../../lib/journeyReveal';
+
+/* Fine-grained thresholds so the callback re-evaluates as the visible share changes. */
+const STEPS = Array.from({ length: 21 }, (_, i) => i / 20);
 
 export interface JourneyRevealOptions {
   /** How many stations are really lit (see revealTarget). The intro never goes past it. */
@@ -30,14 +33,18 @@ export function useJourneyReveal({ target, count, stepMs, threshold = 0.5, enabl
   const targetRef = useRef(target);
   targetRef.current = target;
   const ms = stepMs ?? defaultStepMs(count);
+  /* Arm at most once per mount, but also when data arrives after the first render (target 0 -> >0). */
+  const startedRef = useRef(false);
+  const hasTarget = target > 0;
 
   useLayoutEffect(() => {
-    if (!enabled || targetRef.current <= 0 || typeof IntersectionObserver === 'undefined') return;
+    if (!enabled || !hasTarget || startedRef.current || typeof IntersectionObserver === 'undefined') return;
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
     if (alreadyPlayed(playKey)) return;
+    startedRef.current = true;
     setLit(0);
     setArmed(true);
-  }, [enabled, playKey]);
+  }, [enabled, hasTarget, playKey]);
 
   useEffect(() => {
     if (!armed || hold || !ref.current) return;
@@ -58,11 +65,13 @@ export function useJourneyReveal({ target, count, stepMs, threshold = 0.5, enabl
       }, ms);
     };
     const io = new IntersectionObserver(([entry]) => {
-      /* isIntersecting turns true on any overlap; wait for the real share before starting. */
-      if (!entry?.isIntersecting || entry.intersectionRatio < threshold) return;
+      /* isIntersecting turns true on any overlap; wait for a real share, capped to what the viewport can show. */
+      if (!entry?.isIntersecting) return;
+      const need = effectiveThreshold(threshold, entry.boundingClientRect.height, entry.rootBounds?.height ?? window.innerHeight);
+      if (entry.intersectionRatio < need - 0.01) return;
       io.disconnect();
       if (gate) cancelGate = gate(start); else start();
-    }, { threshold });
+    }, { threshold: STEPS });
     io.observe(ref.current);
     return () => { io.disconnect(); cancelGate?.(); window.clearInterval(timer); };
   }, [armed, hold, ms, threshold, playKey, gate]);
