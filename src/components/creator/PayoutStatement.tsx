@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, Circle, FileSpreadsheet, Printer, Receipt } from 'lucide-react';
+import { FileSpreadsheet, Printer, Receipt, Undo2 } from 'lucide-react';
+import { DnaStepper, DnaStep } from '../dna/DnaKit';
+import { payoutStationDone, visiblePayoutStations } from '../../lib/payoutStages';
 import { commerceClient, CreatorStatement, StatementLine } from '../../lib/commerceClient';
 import { formatFils } from '../../lib/money';
 import { IS_DEMO_MODE } from '../../lib/runtime';
@@ -11,24 +13,35 @@ const STAGES: { key: Exclude<StatementLine['stage'], 'REVERSED'>; label: string 
   { key: 'APPROVED', label: 'معتمد' },
   { key: 'PAID', label: 'مدفوع' }
 ];
-const rank = { PENDING: 0, APPROVED: 1, PAID: 2, REVERSED: -1 } as const;
 const day = (iso: string | null) => iso ? new Date(iso).toLocaleDateString('ar-KW-u-nu-latn') : '—';
 
+/* Static (table rows): no intro. A reversed line shows only pending then the reversal: the server does not
+   say whether it had been approved or paid first, so those stations are left out rather than shown as skipped. */
 const Timeline: React.FC<{ line: StatementLine }> = ({ line }) => {
-  if (line.stage === 'REVERSED') return <span className="text-rose-300 font-bold">ملغى (استرجاع)</span>;
-  const dates = [line.timeline.pendingAt, line.timeline.approvedAt, line.timeline.paidAt];
+  const dates = { PENDING: line.timeline.pendingAt, APPROVED: line.timeline.approvedAt, PAID: line.timeline.paidAt };
+  const reversed = line.stage === 'REVERSED';
+  const steps: DnaStep[] = visiblePayoutStations(line.stage).map(key => {
+    const done = payoutStationDone(line.stage, key);
+    return {
+      key,
+      state: done ? 'done' : 'pending',
+      label: (
+        <>
+          <span className="block">{STAGES.find(s => s.key === key)!.label}</span>
+          {done && dates[key] && <span className="block text-[11px] font-normal tabular-nums">{day(dates[key])}</span>}
+        </>
+      ),
+    };
+  });
+  if (reversed) steps.push({ key: 'REVERSED', state: 'returned', icon: <Undo2 />, label: 'ملغى (استرجاع)' });
   return (
-    <ol className="flex flex-wrap items-center gap-x-3 gap-y-1" aria-label="مراحل الصرف">
-      {STAGES.map((stage, i) => {
-        const done = rank[line.stage] >= i;
-        return (
-          <li key={stage.key} className={`flex items-center gap-1 whitespace-nowrap ${done ? 'text-emerald-300' : 'text-slate-300'}`}>
-            {done ? <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> : <Circle className="w-3.5 h-3.5" aria-hidden="true" />}
-            <span>{stage.label}{done && dates[i] ? ` · ${day(dates[i])}` : ''}</span>
-          </li>
-        );
-      })}
-    </ol>
+    <DnaStepper
+      size="sm"
+      className="max-w-sm"
+      ariaLabel="مراحل الصرف"
+      stateText={{ done: 'تمّت', pending: 'لم تبدأ', returned: 'ملغى (استرجاع)' }}
+      steps={steps}
+    />
   );
 };
 

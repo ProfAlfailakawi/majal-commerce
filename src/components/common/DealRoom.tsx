@@ -21,6 +21,8 @@ import { Bot } from 'lucide-react';
 import { StatusPill } from './StatusPill';
 import { statusLabel } from '../../lib/statusLabels';
 import { EmptyState } from './EmptyState';
+import { DnaStepper, DnaStep } from '../dna/DnaKit';
+import { STAGE_PHASES, phaseStates } from '../../lib/collaborationPhases';
 
 interface DealRoomProps {
   collaboration: Collaboration;
@@ -54,6 +56,16 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
     { title: 'توقيع العقد', done: collaboration.contract?.status === 'FULLY_SIGNED', owner: 'المبدع + مالك المنشأة', detail: collaboration.contract?.status ? statusLabel(collaboration.contract.status) : 'لم ينشأ' },
     { title: 'اجتياز بوابة الإطلاق', done: !!gate?.allRequirementsPassed, owner: 'التشغيل + النظام', detail: gate ? `${Object.entries(gate).filter(([k,v]) => k !== 'allRequirementsPassed' && v).length}/11` : 'غير مهيأ' }
   ];
+
+  /* Journey of the deal from the same booleans as the cards below. Current = first step not
+     done; later steps stay as they really are, so out-of-order data is never smoothed over. */
+  const firstOpen = tasks.findIndex(t => !t.done);
+  const dealSteps: DnaStep[] = tasks.map((t, i) => ({
+    key: String(i),
+    label: t.title,
+    state: t.done ? 'done' : i === firstOpen ? 'current' : 'pending'
+  }));
+  const phases = phaseStates(collaboration.stage);
 
   const categoryMeta: Record<DealDecision['category'], { label: string; icon: React.ReactNode; cls: string }> = {
     DECISION: { label: 'قرار', icon: <ShieldCheck className="w-4 h-4" />, cls: 'text-gold-300' },
@@ -105,12 +117,29 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
             <p className="text-xs text-slate-400 mt-1">{creator?.displayName || 'مبدع'} × {host?.commercialName || 'منشأة'} — {product?.publicName || 'منتج'}</p>
           </div>
         </div>
-        <StatusPill status={collaboration.stage} prefix="المرحلة" size="md" />
+        <div className="flex flex-wrap items-center gap-3">
+          {phases && (
+            <DnaStepper
+              size="xs"
+              className="dna-calm"
+              ariaLabel="مرحلة الصفقة"
+              steps={STAGE_PHASES.map((p, i) => ({ key: p.key, label: p.label, state: phases[i] }))}
+            />
+          )}
+          <StatusPill status={collaboration.stage} prefix="المرحلة" size="md" />
+        </div>
       </div>
 
       <div className="grid xl:grid-cols-[.9fr_1.1fr] gap-5">
         <div className="space-y-3">
           <div className="font-bold text-sm text-slate-100 flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-300" /> خط سير الصفقة</div>
+          <DnaStepper
+            size="sm"
+            ariaLabel="خط سير الصفقة"
+            reveal
+            playKey={`dealroom:${collaboration.id}`}
+            steps={dealSteps}
+          />
           {tasks.map((task, idx) => (
             <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10 gap-3">
               <div className="flex items-center gap-3 min-w-0">

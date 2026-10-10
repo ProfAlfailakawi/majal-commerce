@@ -5,6 +5,9 @@ import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { PRODUCT_CATEGORIES } from '../../data/catalog';
 import { MajalLoader } from '../brand/MajalLoader';
 import { CreatorProduct } from '../../types/majal';
+import { DnaStepper } from '../dna/DnaKit';
+
+const WIZARD_STEPS = ['المنتج والقصة', 'المكوّنات والأسعار', 'حماية الوصفة'];
 
 interface ProductSubmissionWizardProps {
   isOpen: boolean;
@@ -150,11 +153,17 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
           </button>
         </div>
 
-        {/* Stepper progress bar */}
-        <div className="w-full h-1 bg-white/10">
-          <div
-            className="h-full bg-gold-500 transition-all duration-300"
-            style={{ width: `${(step / 3) * 100}%` }}
+        {/* Stepper: the real wizard step; changes animate only when the step changes (no timed intro). */}
+        <div className="px-6 pt-4 pb-1">
+          <DnaStepper
+            size="sm"
+            className="dna-calm"
+            ariaLabel="خطوات تسجيل المنتج"
+            steps={WIZARD_STEPS.map((label, i) => ({
+              key: label,
+              label,
+              state: i + 1 < step ? 'done' : i + 1 === step ? 'current' : 'pending'
+            }))}
           />
         </div>
 
