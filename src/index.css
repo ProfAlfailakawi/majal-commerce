@@ -1087,3 +1087,43 @@ body:has(.majal-ai-fab) { padding-bottom: 4.5rem; }
 :root[data-theme='contrast'] .majal-plate svg { filter: invert(1); }
 /* High contrast: a busy button keeps full-contrast text; the waiting state is a dashed outline, not dimmed text. */
 :root[data-theme='contrast'] button[aria-busy='true']:disabled { opacity: 1; background-image: none; background-color: #000; color: #ffd98a; border: 2px dashed #ffd98a; }
+
+/* ============================================================
+   Stat tiles — soft gold-to-ink gradient, lifted edge, display
+   numerals. Entrance is transform + opacity only, once, and only
+   when the visitor has not asked for reduced motion.
+   ============================================================ */
+.majal-stat {
+  background-image: linear-gradient(155deg, rgba(199, 165, 91, 0.13) 0%, rgba(255, 255, 255, 0.04) 48%, rgba(255, 255, 255, 0.015) 100%);
+  box-shadow: var(--elev-1);
+}
+.majal-numeral {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-size: clamp(1.25rem, 0.9rem + 1.6vw, 1.875rem);
+  white-space: nowrap;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+:root[data-theme='light'] .majal-stat {
+  background-image: linear-gradient(155deg, rgba(199, 165, 91, 0.2) 0%, rgba(255, 255, 255, 0.85) 55%, #ffffff 100%);
+  border-color: rgba(138, 104, 36, 0.22);
+  box-shadow: var(--elev-1), var(--edge-hi);
+}
+:root[data-theme='contrast'] .majal-stat { background-image: none; box-shadow: none; }
+@keyframes majal-stat-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .majal-stat { animation: majal-stat-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .majal-stat:nth-child(2) { animation-delay: 60ms; }
+  .majal-stat:nth-child(3) { animation-delay: 120ms; }
+  .majal-stat:nth-child(4) { animation-delay: 180ms; }
+}
+.majal-icon-tile {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.75rem; height: 1.75rem; flex: none; border-radius: 0.6rem;
+  background: linear-gradient(145deg, rgba(232, 200, 128, 0.22), rgba(199, 165, 91, 0.06));
+  border: 1px solid rgba(199, 165, 91, 0.28);
+}
+:root[data-theme='light'] .majal-icon-tile { background: linear-gradient(145deg, rgba(199, 165, 91, 0.3), rgba(199, 165, 91, 0.08)); }

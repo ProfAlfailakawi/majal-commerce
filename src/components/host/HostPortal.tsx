@@ -253,7 +253,7 @@ export const HostPortal: React.FC = () => {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
               ['إجمالي المبيعات', finance.gmv], ['صافي المنشأة', finance.hostNet], ['حقوق المبدعين', finance.creatorRoyalties], ['رسوم مجال', finance.platformFees]
-            ].map(([label, value], idx) => <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400 flex items-center gap-1.5">{idx > 0 && <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full ${['', 'bg-emerald-400', 'bg-gold-400', 'bg-sky-400'][idx]}`} />}{label as string}</div><div className="mt-2 text-xl font-black font-mono">{Number(value).toFixed(3)} د.ك</div></div>)}
+            ].map(([label, value], idx) => <div key={idx} className="majal-stat rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400 flex items-center gap-1.5">{idx > 0 && <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full ${['', 'bg-emerald-400', 'bg-gold-400', 'bg-sky-400'][idx]}`} />}{label as string}</div><div className="majal-numeral mt-2 text-xl font-black font-mono">{Number(value).toFixed(3)} د.ك</div></div>)}
           </div>
           {finance.gmv > 0 && (
             <ShareDonut

@@ -77,9 +77,9 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
           { label: 'مبيعات مسجلة', value: `${stats.revenue.toFixed(3)} د.ك`, icon: <TrendingUp className="w-4 h-4 text-gold-300" /> },
           { label: 'خلّوه — يبقى في المنيو', value: reviews.length ? `${stats.keepRate}%` : '—', icon: <Repeat2 className="w-4 h-4 text-gold-300" /> }
         ].map((item, idx) => (
-          <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10">
-            <div className="flex items-center gap-2 text-xs text-slate-400">{item.icon}{item.label}</div>
-            <div className="mt-2 text-xl font-black text-slate-100 font-mono">{item.value}</div>
+          <div key={idx} className="majal-stat rounded-2xl p-4 bg-white/5 border border-white/10">
+            <div className="flex items-center gap-2 text-xs text-slate-400"><span className="majal-icon-tile" aria-hidden="true">{item.icon}</span>{item.label}</div>
+            <div className="majal-numeral mt-2 text-xl font-black text-slate-100 font-mono">{item.value}</div>
           </div>
         ))}
       </div>
