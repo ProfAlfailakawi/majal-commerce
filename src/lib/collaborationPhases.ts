@@ -28,3 +28,9 @@ export function phaseStates(stage: Stage): PhaseState[] | null {
   const closed = stage === 'RENEWED' || stage === 'ENDED';
   return STAGE_PHASES.map((_, i) => (closed || i < at ? 'done' : i === at ? 'current' : 'pending'));
 }
+
+/** Visible name of the phase the collaboration is in; a closed one (renewed / ended) reports its last phase. */
+export function currentPhaseLabel(stage: Stage): string | null {
+  const at = STAGE_PHASES.findIndex(p => p.stages.includes(stage));
+  return at < 0 ? null : STAGE_PHASES[at].label;
+}

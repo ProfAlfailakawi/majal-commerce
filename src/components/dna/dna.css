@@ -282,6 +282,12 @@
   pointer-events: none;
 }
 .dna-stepi + .dna-stepi:dir(rtl)::after { transform-origin: right center; }
+.dna-stepi + .dna-stepi:dir(ltr)::after { transform-origin: left center; } /* an LTR island inside an RTL page fills from the left */
+/* Engines without :dir(): follow the nearest dir attribute (the closest one wins by source order). */
+@supports not selector(:dir(rtl)) {
+  [dir='rtl'] .dna-stepi + .dna-stepi::after { transform-origin: right center; }
+  [dir='ltr'] .dna-stepi + .dna-stepi::after { transform-origin: left center; }
+}
 .dna-stepi[data-link='done']::after { transform: scaleX(1); }
 .dna-stepi[data-link='returned']::before {
   background: repeating-linear-gradient(90deg, var(--dna-warn) 0 5px, transparent 5px 9px);

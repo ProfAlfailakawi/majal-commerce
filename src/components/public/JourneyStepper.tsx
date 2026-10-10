@@ -34,6 +34,8 @@ export const JourneyStepper: React.FC<{ detail?: 'body' | 'brief'; className?: s
       ariaLabel="محطات رحلة مجال"
       stateText={{ done: 'محطة من الرحلة' }}
       reveal={animate}
+      playKey="landing-journey"
+      persist={false}
       hold={hold}
       stepMs={STEP_MS}
       threshold={REVEAL_THRESHOLD}

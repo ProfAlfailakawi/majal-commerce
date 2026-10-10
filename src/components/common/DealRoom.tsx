@@ -22,7 +22,7 @@ import { StatusPill } from './StatusPill';
 import { statusLabel } from '../../lib/statusLabels';
 import { EmptyState } from './EmptyState';
 import { DnaStepper, DnaStep } from '../dna/DnaKit';
-import { STAGE_PHASES, phaseStates } from '../../lib/collaborationPhases';
+import { STAGE_PHASES, currentPhaseLabel, phaseStates } from '../../lib/collaborationPhases';
 
 interface DealRoomProps {
   collaboration: Collaboration;
@@ -66,6 +66,10 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
     state: t.done ? 'done' : i === firstOpen ? 'current' : 'pending'
   }));
   const phases = phaseStates(collaboration.stage);
+  const phaseLabel = currentPhaseLabel(collaboration.stage);
+  /* The three parties are resolved from the same snapshot as the tasks: until they are there the
+     states are placeholders, so the intro waits instead of being spent on them. */
+  const dealLoaded = !!product && !!creator && !!host;
 
   const categoryMeta: Record<DealDecision['category'], { label: string; icon: React.ReactNode; cls: string }> = {
     DECISION: { label: 'قرار', icon: <ShieldCheck className="w-4 h-4" />, cls: 'text-gold-300' },
@@ -119,12 +123,15 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {phases && (
-            <DnaStepper
-              size="xs"
-              className="dna-calm"
-              ariaLabel="مرحلة الصفقة"
-              steps={STAGE_PHASES.map((p, i) => ({ key: p.key, label: p.label, state: phases[i] }))}
-            />
+            <div className="flex items-center gap-2 min-w-0">
+              <DnaStepper
+                size="xs"
+                className="dna-calm"
+                ariaLabel="مرحلة الصفقة"
+                steps={STAGE_PHASES.map((p, i) => ({ key: p.key, label: p.label, state: phases[i] }))}
+              />
+              {phaseLabel && <span className="text-xs font-bold text-slate-300 whitespace-nowrap" data-phase-label>{phaseLabel}</span>}
+            </div>
           )}
           <StatusPill status={collaboration.stage} prefix="المرحلة" size="md" />
         </div>
@@ -138,6 +145,7 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
             ariaLabel="خط سير الصفقة"
             reveal
             playKey={`dealroom:${collaboration.id}`}
+            ready={dealLoaded}
             steps={dealSteps}
           />
           {tasks.map((task, idx) => (
