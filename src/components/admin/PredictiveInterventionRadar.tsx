@@ -86,10 +86,10 @@ export const PredictiveInterventionRadar: React.FC<{ onNavigate: (target: RadarT
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
           <div>
             <div className="inline-flex items-center gap-2 text-sky-300 text-xs font-black"><Radar className="w-4 h-4" /> رادار الاستباق</div>
-            <h2 className="text-xl md:text-2xl font-black mt-2">رادار ما قبل الاختناق</h2>
+            <h2 className="text-xl md:text-2xl font-black mt-2">مؤشرات التعثر المبكر</h2>
             <p className="text-xs text-slate-400 mt-2 leading-6">لا ينتظر التنبيه بعد وقوع المشكلة؛ يجمع الإشارات التي قد توقف صفقة أو إطلاقًا أو تسوية، ويشرح سببها والخطوة التالية.</p>
           </div>
-          <div className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-400">قواعد قابلة للتفسير — بلا ادعاء تنبؤ غامض</div>
+          <div className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-400">مبنية على قواعد واضحة، لا على تخمين</div>
         </div>
 
         {signals.length ? (

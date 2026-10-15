@@ -83,7 +83,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
           </div>
 
           <div className="space-y-2">
-            <h4 className="font-bold text-slate-200 text-sm mb-3 border-b border-slate-800 pb-1">أسطح النظام</h4>
+            <h4 className="font-bold text-slate-200 text-sm mb-3 border-b border-slate-800 pb-1">أقسام المنصة</h4>
             <ul className="flex flex-wrap gap-2">
               {visibleSurfaces.map(surface => (
                 <li key={surface.id}><button onClick={() => onSurfaceChange(surface.id)} className="inline-flex items-center px-3 py-2 rounded-xl glass-card border border-white/10 text-xs font-bold text-slate-300 hover:text-gold-300 hover:border-gold-300/25 transition-colors">{surface.label}</button></li>

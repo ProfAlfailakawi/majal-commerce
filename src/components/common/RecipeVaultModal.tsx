@@ -126,7 +126,7 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
                   خزنة الوصفة السرية
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-xs font-bold whitespace-nowrap bg-gold-500/20 text-gold-400 border border-gold-500/30">
-                  مستوى الإفصاح الفعلي: {effectiveDisclosureLevel}
+                  درجة الاطلاع المتاحة: {effectiveDisclosureLevel} من 3
                 </span>
               </div>
               <p className="text-xs text-slate-400">
