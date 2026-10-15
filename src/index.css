@@ -1131,3 +1131,26 @@ body:has(.majal-ai-fab) { padding-bottom: 4.5rem; }
 
 /* Stat rows reserve the ring's height so tiles with and without a ring read as one even set. */
 .majal-stat-row { min-block-size: 3rem; align-content: center; }
+
+/* ---------------------------------------------------------------------------
+   Entrance utilities. Components use `animate-in fade-in slide-in-from-top-2`
+   (tailwindcss-animate vocabulary) but that plugin is not installed, so these
+   classes did nothing. Minimal equivalents built on the motion tokens above.
+   Collapsed to an instant, final-state render under prefers-reduced-motion.
+   --------------------------------------------------------------------------- */
+@keyframes majal-enter {
+  from { opacity: var(--enter-opacity, 1); transform: translate3d(var(--enter-x, 0), var(--enter-y, 0), 0); }
+  to { opacity: 1; transform: none; }
+}
+.animate-in {
+  animation: majal-enter var(--enter-dur, var(--dur-base)) var(--ease-out) both;
+}
+.fade-in { --enter-opacity: 0; }
+.slide-in-from-top { --enter-y: -1rem; }
+.slide-in-from-top-2 { --enter-y: -0.5rem; }
+.duration-200.animate-in { --enter-dur: 200ms; }
+.duration-300.animate-in { --enter-dur: 300ms; }
+.duration-500.animate-in { --enter-dur: 500ms; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-in { animation: none !important; }
+}
