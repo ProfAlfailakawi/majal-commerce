@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { drawOptions, useDrawIn } from '../dna/useDrawIn';
 
 export interface ShareSegment {
@@ -36,6 +36,7 @@ interface ShareDonutProps {
  */
 export const ShareDonut: React.FC<ShareDonutProps> = ({ segments, total, size = 112, stroke = 14, ariaLabel, icon, centerValue, centerLabel, legendBeside, formatValue, draw }) => {
   const drawProps = useDrawIn(drawOptions(draw));
+  const maskId = useId();
   const sum = total && total > 0 ? total : segments.reduce((acc, s) => acc + Math.max(0, s.value), 0);
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
@@ -44,8 +45,16 @@ export const ShareDonut: React.FC<ShareDonutProps> = ({ segments, total, size = 
   return (
     <div className={`flex flex-wrap items-center gap-x-6 gap-y-3 w-full ${legendBeside ? 'justify-start' : 'justify-center'} ${formatValue ? 'gap-x-10 max-w-xl mx-auto rounded-2xl border border-white/10 bg-white/[0.03] p-5' : ''}`}>
       <div ref={drawProps.ref as React.Ref<HTMLDivElement>} data-draw={drawProps['data-draw']} role="img" aria-label={centerValue !== undefined ? `${ariaLabel}، الإجمالي ${centerValue}${centerLabel ? ' ' + centerLabel : ''}` : ariaLabel} className="relative shrink-0" style={{ inlineSize: size, blockSize: size }}>
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true" className="-rotate-90 rtl:scale-x-[-1]">
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true" className="-rotate-90">
+          <defs>
+            {/* One sweep over the whole ring (a single transition on the shared curve) instead of one eased
+                transition per slice, which read as stop-and-go. At rest the mask is a full circle. */}
+            <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width={size} height={size}>
+              <circle cx={mid} cy={mid} r={r} fill="none" stroke="white" strokeWidth={stroke + 2} strokeDasharray={`${c + 2} ${c + 2}`} className="dna-draw-arc" style={{ ['--draw-dur' as string]: '900ms' } as React.CSSProperties} />
+            </mask>
+          </defs>
           <circle cx={mid} cy={mid} r={r} fill="none" strokeWidth={stroke} className="stroke-white/10" />
+          <g mask={`url(#${maskId})`}>
           {sum > 0 && segments.map(seg => {
             const len = (Math.max(0, seg.value) / sum) * c;
             const node = len > 0 ? (
@@ -58,13 +67,13 @@ export const ShareDonut: React.FC<ShareDonutProps> = ({ segments, total, size = 
                 strokeWidth={stroke}
                 strokeDasharray={`${Math.max(0, len - 1.5)} ${c}`}
                 strokeDashoffset={-offset}
-                className={`${seg.strokeClass} dna-draw-arc`}
-                style={{ ['--draw-delay' as string]: `${Math.round((offset / c) * 700)}ms`, ['--draw-dur' as string]: `${Math.max(120, Math.round((len / c) * 700))}ms` } as React.CSSProperties}
+                className={seg.strokeClass}
               />
             ) : null;
             offset += len;
             return node;
           })}
+          </g>
         </svg>
         {centerValue !== undefined && <div className="absolute inset-0 flex flex-col items-center justify-center leading-tight text-center" aria-hidden="true"><span className="text-lg font-black font-mono text-slate-100">{centerValue}</span>{centerLabel && <span className="text-[11px] text-slate-400">{centerLabel}</span>}</div>}
         {icon && <div className="absolute inset-0 flex items-center justify-center text-slate-400" aria-hidden="true">{icon}</div>}
