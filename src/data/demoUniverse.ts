@@ -98,9 +98,11 @@ const PRODUCTS: ReadonlyArray<readonly [string, string, string, number, number]>
 
 /* Only the dish illustrations that ship in /public are referenced; no new asset is invented. */
 const DISH_BY_CATEGORY: Record<string, string> = {
-  'حلويات': '/dishes/qurs-ageili.svg', 'مخبوزات': '/dishes/qurs-ageili.svg', 'مشروبات': '/dishes/sobia.svg',
-  'وجبات': '/dishes/machboos.svg', 'صلصات': '/dishes/machboos.svg', 'مقبلات': '/dishes/machboos.svg',
+  'حلويات': '/dishes/qurs-ageili.svg', 'مخبوزات': '/dishes/bakery.svg', 'مشروبات': '/dishes/sobia.svg',
+  'وجبات': '/dishes/meal.svg', 'صلصات': '/dishes/sauce.svg', 'مقبلات': '/dishes/starter.svg',
 };
+// Neutral per-category illustrations are used unless the product is the dish itself.
+const dishFor = (name: string, category: string) => name.includes('مجبوس') ? '/dishes/machboos.svg' : (DISH_BY_CATEGORY[category] || '/dishes/placeholder.svg');
 
 const PRODUCT_STATUSES: CreatorProduct['status'][] = [
   'AVAILABLE_FOR_MATCHING', 'IN_DISCUSSION', 'TESTING', 'COMMERCIAL_NEGOTIATION',
@@ -240,7 +242,7 @@ function demoProducts(creators: CreatorProfile[]): CreatorProduct[] {
         category,
         shortDescription,
         story: creator.story,
-        mediaUrls: [DISH_BY_CATEGORY[category] || '/dishes/qurs-ageili.svg'],
+        mediaUrls: [dishFor(name, category)],
         // The last item of every catalogue stays open for matching, so each
         // creator's opportunity radar has hosts to rank.
         status: n === count - 1 ? 'AVAILABLE_FOR_MATCHING' : pick(PRODUCT_STATUSES, index),
