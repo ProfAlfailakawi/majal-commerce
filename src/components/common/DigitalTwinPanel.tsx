@@ -131,7 +131,7 @@ export const DigitalTwinPanel: React.FC<DigitalTwinPanelProps> = ({ product, hos
           </div>
 
           <div className="grid lg:grid-cols-[1.15fr_.85fr] gap-4">
-            <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-4">
+            <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-4 lg:self-start">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 font-bold text-slate-100">
                   <GitCompareArrows className="w-5 h-5 text-sky-300" />
