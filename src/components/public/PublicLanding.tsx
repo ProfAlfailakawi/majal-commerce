@@ -74,7 +74,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
   return (
     <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-6 space-y-16 ${overture.hold ? 'majal-overture-hold' : ''}`}>
       {overture.mounted && <Overture onReveal={releaseHold} onDone={dismissOverture} />}
-      <div className="glass-panel majal-grain rounded-[32px] p-8 sm:p-12 relative overflow-hidden text-center sm:text-start border border-white/10 elev-3">
+      <div className="glass-panel majal-grain rounded-[28px] p-8 sm:p-12 relative overflow-hidden text-center sm:text-start border border-white/10 elev-3">
         <div className="majal-glow -top-[18rem] -end-[18rem] w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
         <div className="majal-glow -bottom-[18rem] -start-[18rem] w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(75,106,163,0.10)' } as React.CSSProperties} />
 

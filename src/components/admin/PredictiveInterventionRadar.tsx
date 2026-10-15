@@ -80,7 +80,7 @@ export const PredictiveInterventionRadar: React.FC<{ onNavigate: (target: RadarT
   ];
 
   return (
-    <section className="glass-panel rounded-[30px] p-5 md:p-6 border border-white/10 relative overflow-hidden">
+    <section className="glass-panel rounded-[28px] p-5 md:p-6 border border-white/10 relative overflow-hidden">
       <div className="majal-glow -top-[18rem] -start-16 w-[42rem] h-[42rem]" style={{ '--glow': 'rgba(56,189,248,0.08)' } as React.CSSProperties} />
       <div className="relative z-10 space-y-5">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">

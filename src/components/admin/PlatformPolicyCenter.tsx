@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Settings2, Save, ShieldCheck, Gauge, Clock3, ShoppingCart, Percent, KeyRound, Radar, ScanSearch, Undo2 } from 'lucide-react';
+import { Settings2, Save, ShieldCheck, Gauge, Clock3, ShoppingCart, Percent, KeyRound, Radar, ScanSearch, Undo2, ArrowLeft } from 'lucide-react';
 import { store } from '../../lib/store';
 
 export const PlatformPolicyCenter: React.FC = () => {
@@ -88,7 +88,7 @@ export const PlatformPolicyCenter: React.FC = () => {
       {changes.length > 0 && <div className="rounded-2xl p-4 bg-sky-500/5 border border-sky-400/20 space-y-3" aria-live="polite">
         <div className="flex items-center gap-2 text-sky-200 font-black text-sm"><ScanSearch className="w-4 h-4" /><span>معاينة أثر القرار قبل اعتماده</span></div>
         <div className="flex flex-wrap gap-2">
-          {changes.map(item => <span key={item.key} className="px-2.5 py-1 rounded-lg bg-slate-950/40 border border-white/10 text-xs text-slate-300">{item.label}: {store.policy[item.key]} ← {draft[item.key]}</span>)}
+          {changes.map(item => <span key={item.key} className="px-2.5 py-1 rounded-lg bg-slate-950/40 border border-white/10 text-xs text-slate-300 inline-flex items-center gap-1.5">{item.label}: <bdi>{store.policy[item.key]}</bdi> <ArrowLeft className="w-3 h-3 text-gold-300" aria-label="يصبح" /> <bdi>{draft[item.key]}</bdi></span>)}
         </div>
         <ul className="space-y-1.5 text-xs text-slate-400 leading-5">
           {impactSignals.map(signal => <li key={signal} className="flex gap-2"><span className="text-sky-300">•</span><span>{signal}</span></li>)}

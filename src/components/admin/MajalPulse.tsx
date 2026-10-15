@@ -44,7 +44,7 @@ export const MajalPulse: React.FC = () => {
   ];
 
   return (
-    <section className="glass-panel rounded-[30px] p-5 md:p-6 border border-white/10 relative overflow-hidden">
+    <section className="glass-panel rounded-[28px] p-5 md:p-6 border border-white/10 relative overflow-hidden">
       <div className="majal-glow -top-[17rem] -end-16 w-[40rem] h-[40rem]" style={{ '--glow': 'rgba(52,211,153,0.08)' } as React.CSSProperties} />
       <div className="relative z-10 space-y-5">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
