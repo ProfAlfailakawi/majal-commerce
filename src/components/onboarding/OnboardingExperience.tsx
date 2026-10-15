@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { SHORTCUT_HINT } from '../common/ExperienceGuide';
 import {
   ArrowLeft,
   ArrowRight,
@@ -94,21 +95,21 @@ const intents: {
 /** The disclosure ladder — the single mechanic that makes the rest of the model safe. */
 const disclosureLevels = [
   {
-    level: 'المستوى الأول',
+    level: 'الدرجة الأولى',
     title: 'البطاقة العامة',
     body: 'الاسم والفئة والقصة وصورة المنتج. مفتوحة للاستكشاف، ولا تكشف أي سر.',
     icon: <Eye className="w-5 h-5" />,
     accent: { text: 'text-emerald-300', ring: 'border-emerald-400/30', fill: 'bg-emerald-500/10' }
   },
   {
-    level: 'المستوى الثاني',
+    level: 'الدرجة الثانية',
     title: 'الملف التشغيلي',
     body: 'المكوّنات العامة والحساسيات ومتطلبات الإنتاج. تُفتح بمنحة زمنية محدودة للمنشأة المرشّحة.',
     icon: <KeyRound className="w-5 h-5" />,
     accent: { text: 'text-sky-300', ring: 'border-sky-400/30', fill: 'bg-sky-500/10' }
   },
   {
-    level: 'المستوى الثالث',
+    level: 'الدرجة الثالثة',
     title: 'الوصفة الكاملة',
     body: 'النسب وطريقة التنفيذ. لا تُفتح إلا بعد عقد موقّع وبموافقة صريحة من المبدع.',
     icon: <FileLock2 className="w-5 h-5" />,
@@ -292,7 +293,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           {step === 'INTENT' && (
             <div className="space-y-8">
               <div className="text-center space-y-3">
-                <span style={rise(0)} className="block text-xs font-black tracking-[0.3em] text-gold-300">
+                <span style={rise(0)} className="block text-xs font-black text-gold-300">
                   سؤال واحد فقط
                 </span>
                 <h2
@@ -350,8 +351,8 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           {step === 'JOURNEY' && (
             <div className="space-y-8">
               <div className="text-center space-y-3">
-                <span style={rise(0)} className="block text-xs font-black tracking-[0.3em] text-gold-300">
-                  MAJAL JOURNEY
+                <span style={rise(0)} className="block text-xs font-black text-gold-300">
+                  رحلة مجال
                 </span>
                 <h2
                   id={headingId}
@@ -377,7 +378,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           {step === 'PROTECTION' && (
             <div className="space-y-8">
               <div className="text-center space-y-3">
-                <span style={rise(0)} className="block text-xs font-black tracking-[0.3em] text-gold-300">
+                <span style={rise(0)} className="block text-xs font-black text-gold-300">
                   خزنة الوصفات
                 </span>
                 <h2
@@ -459,7 +460,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                   <span>
                     <span className="block text-xs font-black text-slate-100">لوحة الأوامر</span>
                     <span className="block mt-1 text-xs text-slate-400 leading-6">
-                      اضغط <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-xs font-bold">⌘K</kbd> في أي
+                      اضغط <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-xs font-bold" dir="ltr">{SHORTCUT_HINT}</kbd> في أي
                       وقت للتنقل بين المساحات بالبحث.
                     </span>
                   </span>
@@ -481,7 +482,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           )}
         </main>
 
-        <footer className="sticky bottom-0 shrink-0 space-y-4 -mx-4 sm:-mx-8 px-4 sm:px-8 pt-8 pb-3 bg-gradient-to-t from-(--onb-fade) via-(--onb-fade) via-65% to-transparent">
+        <footer className="sticky bottom-0 shrink-0 space-y-4 -mx-4 sm:-mx-8 px-4 sm:px-8 pt-8 pb-3 bg-gradient-to-t from-(--onb-fade) via-(--onb-fade) via-85% to-transparent">
           {/* A segmented rail, not dots: it shows how much is left, which is the only
               honest way to ask someone to keep going. */}
           <div className="flex items-center gap-1.5" aria-hidden="true">
