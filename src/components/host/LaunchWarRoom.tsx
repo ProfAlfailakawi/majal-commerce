@@ -139,7 +139,7 @@ const LaunchWarRoomBody: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => 
           />
         )}
         <div className="grid md:grid-cols-4 gap-3 text-xs">
-          {[['عبر المبدع', sourceUnits.CREATOR, pct(sourceUnits.CREATOR), 'text-emerald-300'], ['عبر المنشأة', sourceUnits.HOST, pct(sourceUnits.HOST), 'text-sky-300'], ['عبر مجال', sourceUnits.MAJAL, pct(sourceUnits.MAJAL), 'text-gold-300'], ['غير منسوب', sourceUnits.UNKNOWN, null, 'text-slate-400']].map(([label, units, percentage, tone]) => (
+          {[['عبر المبدع', sourceUnits.CREATOR, pct(sourceUnits.CREATOR), 'text-emerald-300'], ['عبر المنشأة', sourceUnits.HOST, pct(sourceUnits.HOST), 'text-slate-300'], ['عبر مجال', sourceUnits.MAJAL, pct(sourceUnits.MAJAL), 'text-gold-300'], ['غير منسوب', sourceUnits.UNKNOWN, null, 'text-slate-400']].map(([label, units, percentage, tone]) => (
             <div key={label as string} className="rounded-xl p-3 bg-slate-950/45 border border-white/10"><div className="text-slate-400">{label}</div><div className={`text-xl font-black mt-1 ${tone}`}>{percentage === null ? `${units} وحدة` : `${percentage}%`}</div><div className="text-xs text-slate-400 mt-1">{percentage === null ? 'يحتاج تحديد مصدر الطلب' : `${units} وحدة متتبعة`}</div></div>
           ))}
         </div>
