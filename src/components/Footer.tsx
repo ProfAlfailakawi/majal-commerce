@@ -68,7 +68,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
                 className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl glass-card border border-gold-400/20 text-xs font-bold text-gold-300 hover:text-gold-200 hover:border-gold-300/40 transition-colors"
               >
                 <FileText className="w-3.5 h-3.5 text-gold-400" />
-                <span>العرض التفاعلي</span>
+                <span>شاهد العرض التعريفي</span>
               </a>
               <a
                 href="/presentation/majal-deck.pdf"
@@ -77,7 +77,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
                 className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl glass-card border border-white/10 text-xs font-bold text-slate-300 hover:text-gold-300 hover:border-gold-300/25 transition-colors"
               >
                 <FileText className="w-3.5 h-3.5" />
-                <span>عرض PDF</span>
+                <span>نسخة للتحميل</span>
               </a>
             </div>
           </div>
@@ -133,24 +133,6 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
             <a href={`mailto:${SUPPORT_EMAIL}`} className="py-1.5 -my-1.5 inline-flex items-center gap-1.5 hover:text-gold-300 transition-colors">
               <Mail className="w-3.5 h-3.5" />
               <span dir="ltr">{SUPPORT_EMAIL}</span>
-            </a>
-            <a
-              href="/presentation/majal-deck.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="py-1.5 -my-1.5 inline-flex items-center gap-1 text-gold-400 hover:text-gold-300 transition-colors"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>العرض التفاعلي (HTML)</span>
-            </a>
-            <a
-              href="/presentation/majal-deck.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="py-1.5 -my-1.5 inline-flex items-center gap-1 hover:text-gold-300 transition-colors"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>ملف العرض (PDF)</span>
             </a>
           </nav>
         </div>
