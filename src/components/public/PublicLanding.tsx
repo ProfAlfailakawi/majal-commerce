@@ -33,14 +33,14 @@ const phases = [
 ];
 
 /** Where each movement starts before drifting into its seat on the ring —
-    hand-placed so the four arrive from the hero's four quarters, offsets and
+    hand-placed so the four arrive from around the ring, always inside the hero's clip box (a label must never be cut at the card edge), offsets and
     rotations deliberately unequal so the choreography reads as gathered rather
     than mechanical. Consumed by the `majal-hero-phase-in` keyframes. */
 const scatter = [
-  { x: '-16rem', y: '-7rem', r: '-14deg', d: '0ms' },
-  { x: '13rem', y: '-10rem', r: '10deg', d: '110ms' },
-  { x: '15rem', y: '8rem', r: '-8deg', d: '220ms' },
-  { x: '-12rem', y: '11rem', r: '12deg', d: '330ms' }
+  { x: '-8rem', y: '-6rem', r: '-14deg', d: '0ms' },
+  { x: '8rem', y: '-7rem', r: '10deg', d: '110ms' },
+  { x: '8rem', y: '6rem', r: '-8deg', d: '220ms' },
+  { x: '-7rem', y: '7rem', r: '12deg', d: '330ms' }
 ];
 
 export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange }) => {

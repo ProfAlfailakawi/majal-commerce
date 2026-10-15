@@ -98,7 +98,7 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
     setError('');
     setPhoneError('');
     const contactPhone = normalizeKuwaitPhone(phone);
-    if (!contactPhone) { setPhoneError('اكتب رقمًا كويتيًا من 8 أرقام'); document.getElementById('drop-phone')?.focus(); return; }
+    if (!contactPhone) { setPhoneError('اكتب رقمًا كويتيًا من 8 أرقام يبدأ بـ 2 أو 4 أو 5 أو 6 أو 9'); document.getElementById('drop-phone')?.focus(); return; }
     if (options?.branches.length && !branchId) return setError('اختر الفرع.');
     if (fulfillment === 'DELIVERY' && !zone) return setError('اختر منطقة التوصيل.');
     setBusy(true);

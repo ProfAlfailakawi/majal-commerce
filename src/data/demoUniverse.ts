@@ -101,8 +101,21 @@ const DISH_BY_CATEGORY: Record<string, string> = {
   'حلويات': '/dishes/qurs-ageili.svg', 'مخبوزات': '/dishes/bakery.svg', 'مشروبات': '/dishes/sobia.svg',
   'وجبات': '/dishes/meal.svg', 'صلصات': '/dishes/sauce.svg', 'مقبلات': '/dishes/starter.svg',
 };
-// Neutral per-category illustrations are used unless the product is the dish itself.
-const dishFor = (name: string, category: string) => name.includes('مجبوس') ? '/dishes/machboos.svg' : (DISH_BY_CATEGORY[category] || '/dishes/placeholder.svg');
+// Each dish has its own simple line illustration (public/dishes/d-<slug>-<0..3>.svg); the 0..3
+// suffix is a palette variant chosen deterministically per product so repeats never look identical.
+const DISH_SLUG: Record<string, string> = {
+  'قرص عقيلي بالزعفران': 'qurs', 'سوبيا التمر': 'sobia', 'معمول تمر خلاص': 'maamoul', 'دقّوس محمّص': 'dakoos',
+  'خبز تنور حجري': 'tannour', 'لقيمات بدبس التمر': 'lugaimat', 'حلا الديرة البارد': 'hala', 'مخلل الوالدة': 'pickles',
+  'قهوة عربية محمّصة': 'coffee', 'بلاليط بالبيض': 'balaleet', 'غريبة الهيل': 'ghraiba', 'رقاق باللحم': 'ragag',
+  'شراب الليمون بالنعناع': 'lemon', 'كبة بالصنوبر': 'kibba', 'عصيدة بالتمر': 'asida', 'صلصة الشطة البيتية': 'shatta',
+  'برجر التتبيلة البيتية': 'burger', 'مجبوس دجاج بيتي': 'rice',
+};
+const dishFor = (name: string, category: string, variant = 0) => {
+  if (name === 'مجبوس دجاج بالبهارات الكويتية') return '/dishes/machboos.svg';
+  const slug = DISH_SLUG[name];
+  if (slug) return `/dishes/d-${slug}-${((variant % 4) + 4) % 4}.svg`;
+  return DISH_BY_CATEGORY[category] || '/dishes/placeholder.svg';
+};
 
 const PRODUCT_STATUSES: CreatorProduct['status'][] = [
   'AVAILABLE_FOR_MATCHING', 'IN_DISCUSSION', 'TESTING', 'COMMERCIAL_NEGOTIATION',
@@ -242,7 +255,7 @@ function demoProducts(creators: CreatorProfile[]): CreatorProduct[] {
         category,
         shortDescription,
         story: creator.story,
-        mediaUrls: [dishFor(name, category)],
+        mediaUrls: [dishFor(name, category, index + creatorIndex)],
         // The last item of every catalogue stays open for matching, so each
         // creator's opportunity radar has hosts to rank.
         status: n === count - 1 ? 'AVAILABLE_FOR_MATCHING' : pick(PRODUCT_STATUSES, index),

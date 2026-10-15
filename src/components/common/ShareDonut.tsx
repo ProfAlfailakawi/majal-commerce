@@ -61,7 +61,7 @@ export const ShareDonut: React.FC<ShareDonutProps> = ({ segments, total, size = 
             return node;
           })}
         </svg>
-        {centerValue !== undefined && <div className="absolute inset-0 flex flex-col items-center justify-center leading-tight text-center" aria-hidden="true"><span className="text-lg font-black font-mono text-slate-100">{centerValue}</span>{centerLabel && <span className="text-[11px] text-slate-400">{centerLabel}</span>}</div>}
+        {centerValue !== undefined && <div className="absolute inset-0 flex flex-col items-center justify-center leading-tight text-center" aria-hidden="true"><span className="text-lg font-black font-mono text-slate-100">{centerValue}</span>{centerLabel && <span className="text-xs text-slate-400">{centerLabel}</span>}</div>}
         {icon && <div className="absolute inset-0 flex items-center justify-center text-slate-400" aria-hidden="true">{icon}</div>}
       </div>
       <ul className={`flex gap-2 text-xs text-slate-300 ${legendBeside ? 'flex-col items-start' : formatValue ? 'flex-col items-stretch min-w-[14rem]' : 'flex-wrap justify-center'}`}>

@@ -34,6 +34,17 @@ const LegalCenter = lazy(() => import('./components/legal/LegalCenter').then(mod
 export default function App() {
   const [, setTick] = useState(0);
   useEffect(() => store.subscribe(() => setTick(t => t + 1)), []);
+  // Presentation only: lets CSS fade the floating assistant button while the page is scrolling.
+  useEffect(() => {
+    let timer: number | undefined;
+    const onScroll = () => {
+      document.body.classList.add('is-scrolling');
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => document.body.classList.remove('is-scrolling'), 220);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => { window.removeEventListener('scroll', onScroll); window.clearTimeout(timer); document.body.classList.remove('is-scrolling'); };
+  }, []);
 
   const [activeSurface, setActiveSurface] = useState<SurfaceType>(store.activeSurface || 'PUBLIC');
   const [showAiDrawer, setShowAiDrawer] = useState(false);

@@ -188,7 +188,7 @@
   border-radius: 999px;
   background: var(--dna-surface);
   color: var(--dna-ink);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   box-shadow: 0 0 0 1px var(--dna-line-2);
@@ -378,7 +378,7 @@
   border-radius: 999px;
   background: var(--dna-surface);
   color: var(--dna-ink);
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   box-shadow: 0 0 0 1px var(--dna-line-2);
@@ -400,9 +400,9 @@
 }
 .dna-stepi[data-state='returned'] .dna-lbl { color: var(--dna-warn); font-weight: 650; }
 .dna-stepi[data-state='blocked'] .dna-lbl { color: var(--dna-danger); font-weight: 650; }
-.dna-steps[data-size='sm'] .dna-lbl { font-size: 11.5px; }
+.dna-steps[data-size='sm'] .dna-lbl { font-size: 12px; }
 @media (max-width: 359px) {
-  .dna-steps:not([data-size='xs']) .dna-lbl { font-size: 11px; font-weight: 600; letter-spacing: 0; }
+  .dna-steps:not([data-size='xs']) .dna-lbl { font-size: 12px; font-weight: 600; letter-spacing: 0; }
 }
 /* xs: inline dots for table rows (labels always screen-reader only) */
 .dna-steps[data-size='xs'] {
@@ -600,7 +600,7 @@
 .dna-ringc small {
   display: block;
   margin-block-start: 1px;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--dna-muted);
 }
@@ -651,7 +651,7 @@
 .dna-segb .dna-count {
   block-size: 20px;
   padding: 0 7px;
-  font-size: 11px;
+  font-size: 12px;
   background: color-mix(in srgb, var(--dna-ink) 6%, transparent);
   box-shadow: none;
 }
@@ -919,7 +919,7 @@ button.dna-hubn:focus-visible .dna-hubt { transform: translateY(-2px); }
   border-radius: 999px;
   background: var(--dna-surface);
   color: var(--dna-ink);
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -944,7 +944,7 @@ button.dna-hubn:focus-visible .dna-hubt { transform: translateY(-2px); }
   line-height: 1.3;
   color: var(--dna-ink);
 }
-.dna-hub[data-tight='true'] .dna-hubl { font-size: 11px; line-height: 1.2; white-space: normal; text-wrap: balance; }
+.dna-hub[data-tight='true'] .dna-hubl { font-size: 12px; line-height: 1.2; white-space: normal; text-wrap: balance; }
 .dna-hubp {
   position: absolute;
   z-index: 2;
@@ -978,7 +978,7 @@ button.dna-hubn:focus-visible .dna-hubt { transform: translateY(-2px); }
   gap: 2px;
 }
 .dna-over {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 800;
   color: var(--dna-accent);
 }

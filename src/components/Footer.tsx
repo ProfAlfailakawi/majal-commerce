@@ -42,7 +42,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
               <MajalMark size={34} />
               <span className="min-w-0">
                 <span className="block text-lg font-black majal-wordmark leading-none">مجال</span>
-                <span className="block text-xs font-semibold tracking-[0.42em] text-gold-500/60 leading-none mt-1.5" dir="ltr">MAJAL</span>
+                <span className="block text-xs font-semibold text-gold-500/70 leading-none mt-1.5">الابتكار الغذائي</span>
               </span>
             </div>
             <p className="text-slate-400 text-xs leading-relaxed">
