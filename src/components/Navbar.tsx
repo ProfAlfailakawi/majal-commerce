@@ -207,7 +207,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={() => resetDemoData()}
                   title="إعادة تعيين البيانات التجريبية"
                   aria-label="إعادة تعيين البيانات التجريبية"
-                  className="hidden sm:grid place-items-center w-5 h-5 rounded-full hover:bg-white/15 transition-colors"
+                  className="relative hidden sm:grid place-items-center w-5 h-5 rounded-full hover:bg-white/15 transition-colors after:content-[''] after:absolute after:-inset-2.5"
                 >
                   <RefreshCw className="w-3 h-3" />
                 </button>
@@ -216,7 +216,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={() => exitDemoMode()}
                   title="الخروج من البيئة التجريبية"
                   aria-label="الخروج من البيئة التجريبية"
-                  className="hidden sm:grid place-items-center w-5 h-5 rounded-full hover:bg-white/15 transition-colors"
+                  className="relative hidden sm:grid place-items-center w-5 h-5 rounded-full hover:bg-white/15 transition-colors after:content-[''] after:absolute after:-inset-2.5"
                 >
                   <LogOut className="w-3 h-3" />
                 </button>
@@ -236,7 +236,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   key={s.id}
                   onClick={() => onSurfaceChange(s.id)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap shrink-0 transition-all ${
+                  className={`flex items-center gap-2 px-3 py-2 min-h-10 rounded-xl text-xs font-medium whitespace-nowrap shrink-0 transition-all ${
                     isActive ? 'bg-gold-500 text-slate-950 font-black shadow-sm' : 'text-slate-300 hover:text-slate-100 hover:bg-white/5'
                   }`}
                 >
@@ -292,7 +292,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {INTEGRATION_SIMULATORS_ENABLED && <button
               onClick={onOpenIntegrations}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-bold transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 min-h-10 rounded-xl bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-bold transition-colors cursor-pointer"
               title="مختبر محاكاة التكاملات المحلية"
             >
               <Zap className="w-4 h-4 text-amber-400" />
@@ -301,7 +301,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {AI_ASSISTANT_ENABLED && <button
               onClick={onOpenAiDrawer}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold-500/10 text-gold-200 hover:bg-gold-500/15 border border-gold-300/20 text-xs font-medium transition-colors cursor-pointer"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-2 min-h-10 rounded-xl bg-gold-500/10 text-gold-200 hover:bg-gold-500/15 border border-gold-300/20 text-xs font-medium transition-colors cursor-pointer"
               title="مساعد مجال الذكي"
             >
               <Bot className="w-4 h-4 text-gold-300" />
@@ -325,7 +325,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 aria-expanded={showNotifications}
               >
                 <Bell className="w-4 h-4" />
-                {unreadCount > 0 && <span aria-hidden="true" className="absolute top-0.5 end-0.5 min-w-4 h-4 px-1 rounded-full bg-gold-500 text-slate-950 text-[11px] font-black leading-4 text-center tabular-nums">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+                {unreadCount > 0 && <span aria-hidden="true" className="absolute top-0.5 end-0.5 min-w-4 h-4 px-1 rounded-full bg-gold-500 text-slate-950 text-xs font-black leading-4 text-center tabular-nums">{unreadCount > 99 ? '99+' : unreadCount}</span>}
               </button>
 
               {showNotifications && (

@@ -20,7 +20,7 @@ export const PermissionMatrix: React.FC<{ roles: UserRole[] }> = ({ roles }) => 
       <thead>
         <tr className="text-slate-400">
           <th scope="col" className="text-start font-bold pb-2 pe-3">الدور</th>
-          {PERMISSION_GROUPS.map(g => <th key={g.label} scope="col" className="font-bold pb-2 px-0.5 sm:px-1.5 text-center whitespace-nowrap max-sm:text-[11px] max-[374px]:[writing-mode:vertical-rl] max-[374px]:rotate-180 max-[374px]:align-bottom">{g.label}</th>)}
+          {PERMISSION_GROUPS.map(g => <th key={g.label} scope="col" className="font-bold pb-2 px-0.5 sm:px-1.5 text-center whitespace-nowrap max-sm:text-xs max-[374px]:[writing-mode:vertical-rl] max-[374px]:rotate-180 max-[374px]:align-bottom">{g.label}</th>)}
           <th scope="col" className="hidden sm:table-cell font-bold pb-2 ps-2 text-center">الإجمالي</th>
         </tr>
       </thead>

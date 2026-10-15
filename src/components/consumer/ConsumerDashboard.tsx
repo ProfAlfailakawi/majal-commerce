@@ -152,11 +152,11 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
           {launchSummary && launchSummary.count > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gold-500/10 border border-gold-300/25 text-xs font-black text-gold-300"><Star className="w-3 h-3" aria-hidden="true" />{launchSummary.taste.toFixed(1)} <span className="font-medium text-slate-400">({arCount(launchSummary.count, AR.review)})</span></span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/25 text-xs font-black text-emerald-300"><Heart className="w-3 h-3" aria-hidden="true" />خلّوه <bdi dir="ltr">{launchSummary.keepItPercent}%</bdi></span>
+              {launchSummary.keepItPercent > 0 ? <span title="نسبة المقيّمين الذين يريدون إبقاء الطبق في القائمة" className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/25 text-xs font-black text-emerald-300"><Heart className="w-3 h-3" aria-hidden="true" /><bdi dir="ltr">{launchSummary.keepItPercent}%</bdi> يريدون إبقاءه</span> : <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-slate-400">لا أصوات لإبقائه بعد</span>}
             </div>
           )}
-          <div><div className="flex justify-between text-xs text-slate-400 mb-1"><span>{launch.unitsSold} مبيعة</span><span>{capped ? `${progress}%` : 'مستمر'}</span></div><DnaDraw draw={`consumer-sold:${launch.id}`} className="h-2 bg-white/5 rounded-full overflow-hidden" style={{ ['--draw-dur' as string]: '400ms' } as React.CSSProperties}>{capped ? <div className="h-full bg-gradient-to-l from-gold-500 to-emerald-400 rounded-full dna-draw-bar" style={{ width: `${progress}%` }} /> : <div className="h-full w-full bg-gradient-to-l from-emerald-500/30 to-emerald-400/30 rounded-full" />}</DnaDraw></div>
-          <div className="flex items-center justify-between"><div><div className="text-xs text-slate-400">السعر</div><div className="font-black text-gold-300">{formatKwd(launch.sellingPriceKwd)}</div></div><button type="button" onClick={() => setSelectedLaunch(launch)} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black text-slate-100">شاهد واطلب</button></div>
+          <div><div className="flex justify-between text-xs text-slate-400 mb-1"><span>{capped ? `تم بيع ${launch.unitsSold} من ${launch.quantityCapUnits}` : `${launch.unitsSold} مبيعة`}</span><span>{capped ? `${progress}% من الكمية` : 'متاح باستمرار'}</span></div><DnaDraw draw={`consumer-sold:${launch.id}`} className="h-2 bg-white/5 rounded-full overflow-hidden" style={{ ['--draw-dur' as string]: '400ms' } as React.CSSProperties}>{capped ? <div className="h-full bg-gradient-to-l from-gold-500 to-emerald-400 rounded-full dna-draw-bar" style={{ width: `${progress}%` }} /> : <div className="h-full w-full bg-gradient-to-l from-emerald-500/30 to-emerald-400/30 rounded-full" />}</DnaDraw></div>
+          <div className="flex items-center justify-between"><div><div className="text-xs text-slate-400">السعر</div><div className="font-black text-gold-300">{formatKwd(launch.sellingPriceKwd)}</div></div><button type="button" onClick={() => setSelectedLaunch(launch)} className="px-4 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-slate-950 text-xs font-black transition-colors">شاهد واطلب</button></div>
         </div>
       </article>
     );
@@ -164,7 +164,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
-      <section className="majal-hero glass-panel rounded-[34px] p-6 md:p-10 border border-white/10 relative overflow-hidden">
+      <section className="majal-hero glass-panel rounded-[28px] p-6 md:p-10 border border-white/10 relative overflow-hidden">
         <div className="majal-glow -top-80 -end-48 w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
         <div className="relative z-10 grid lg:grid-cols-[1.05fr_.95fr] gap-8 items-center">
           <div className="space-y-5">

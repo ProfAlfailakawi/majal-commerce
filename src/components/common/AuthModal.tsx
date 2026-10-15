@@ -134,7 +134,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
               <h2 id="auth-dialog-title" className="font-black text-slate-100 text-base">
                 {needsMfa ? 'التحقق بخطوتين' : mode === 'LOGIN' ? 'دخول إلى منصة مجال' : (mode === 'RESET_REQUEST' || mode === 'RESET_VERIFY') ? 'إعادة تعيين كلمة المرور' : 'إنشاء حساب جديد في مجال'}
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">جلسة خادمية مشفّرة — بيانات وتحليلات فورية</p>
+              <p className="text-xs text-slate-400 mt-0.5">جلسة آمنة ومشفّرة — بيانات وتحليلات فورية</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 cursor-pointer" aria-label="إغلاق نافذة الدخول"><X className="w-5 h-5" /></button>

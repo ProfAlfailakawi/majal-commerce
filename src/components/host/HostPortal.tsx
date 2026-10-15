@@ -156,7 +156,7 @@ export const HostPortal: React.FC = () => {
 
   return (
     <div data-accent="gold" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
-      <section className="majal-hero glass-panel rounded-[30px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
+      <section className="majal-hero glass-panel rounded-[28px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
         <div className="majal-glow -top-[18rem] -start-[17rem] w-[42rem] h-[42rem]" style={{ '--glow': 'rgba(56,189,248,0.08)' } as React.CSSProperties} />
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
           <div className="flex items-center gap-4 max-[374px]:flex-col max-[374px]:items-start">
@@ -188,7 +188,7 @@ export const HostPortal: React.FC = () => {
               { label: canSeeFinance ? 'إجمالي المبيعات' : 'الإطلاقات', value: canSeeFinance ? `${finance.gmv.toFixed(3)} د.ك` : store.launches.filter(l => l.hostBusinessId === currentHostId && ['LIVE','PERMANENT'].includes(l.status)).length, icon: <Activity className="w-4 h-4 text-emerald-300" /> },
               { label: canSeeFinance ? 'صافي المنشأة' : 'المنتجات النشطة', value: canSeeFinance ? `${finance.hostNet.toFixed(3)} د.ك` : activeHostProducts.length, icon: <CircleDollarSign className="w-4 h-4 text-gold-300" />, ring: canSeeFinance ? (finance.gmv > 0 ? { pct: Math.round(finance.hostNet / finance.gmv * 100), aria: 'حصة المنشأة من إجمالي المبيعات' } : null) : (hostProducts.length ? { pct: Math.round(activeHostProducts.length / hostProducts.length * 100), aria: 'نسبة المنتجات النشطة من منتجات المنشأة' } : null) }
             ].map((item, idx) => (
-              <div key={idx} className="majal-stat glass-card rounded-2xl p-4 border border-white/10"><div className="flex items-center gap-2 text-xs text-slate-400">{item.icon}{item.label}</div><div className="majal-stat-row mt-2 flex flex-wrap items-center justify-between gap-2"><div className="text-xl font-black text-slate-100 font-mono min-w-0 whitespace-nowrap">{typeof item.value === 'number' ? <DnaCountUp value={item.value} playKey={`host-stat:${item.label}:${currentHostId}`} /> : item.value}</div>{'ring' in item && item.ring && <DnaRing value={item.ring.pct} size={48} stroke={4} draw={`host-ring:${item.label}:${currentHostId}`} label={`${item.ring.pct}%`} ariaLabel={`${item.ring.aria} ${item.ring.pct}%`} />}</div></div>
+              <div key={idx} className="majal-stat glass-card rounded-2xl p-4 border border-white/10"><div className="flex items-center gap-2 text-xs text-slate-400">{item.icon}{item.label}</div><div className="majal-stat-row mt-2 flex flex-wrap items-center justify-between gap-2"><div className="text-xl font-black text-slate-100 font-mono min-w-0 whitespace-nowrap">{typeof item.value === 'number' ? <DnaCountUp value={item.value} playKey={`host-stat:${item.label}:${currentHostId}`} /> : item.value}</div>{'ring' in item && item.ring && <DnaRing value={item.ring.pct} size={48} stroke={4} draw={`host-ring:${item.label}:${currentHostId}`} label={`${item.ring.pct}%`} ariaLabel={`${item.ring.aria} ${item.ring.pct}%`} />}</div>{'ring' in item && item.ring && <div className="text-xs text-slate-400 mt-1.5 leading-5">{item.ring.aria}</div>}</div>
             ))}
           </div>
 

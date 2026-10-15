@@ -286,7 +286,7 @@ export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => voi
                       className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-amber-500"
                     >
                       <option value="CONTRACT">عقد ترخيص حقوق الطهي التجاري</option>
-                      <option value="NDA">اتفاقية عدم إفصاح وحماية أسرار الخلطة (المستوى 3)</option>
+                      <option value="NDA">اتفاقية عدم إفصاح وحماية أسرار الخلطة (الدرجة 3)</option>
                     </select>
                   </div>
                 </div>

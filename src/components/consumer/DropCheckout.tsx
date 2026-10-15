@@ -55,6 +55,7 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
   const [zoneId, setZoneId] = useState('');
   const [slotId, setSlotId] = useState('');
   const [error, setError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [busy, setBusy] = useState(false);
   const [placed, setPlaced] = useState<Placed | null>(null);
   const [waitlistMsg, setWaitlistMsg] = useState('');
@@ -95,8 +96,9 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError('');
+    setPhoneError('');
     const contactPhone = normalizeKuwaitPhone(phone);
-    if (!contactPhone) return setError('أدخل رقمًا كويتيًا من 8 أرقام، مثل 5XXX XXXX أو ‎+965 5XXX XXXX.');
+    if (!contactPhone) { setPhoneError('اكتب رقمًا كويتيًا من 8 أرقام يبدأ بـ 2 أو 4 أو 5 أو 6 أو 9'); document.getElementById('drop-phone')?.focus(); return; }
     if (options?.branches.length && !branchId) return setError('اختر الفرع.');
     if (fulfillment === 'DELIVERY' && !zone) return setError('اختر منطقة التوصيل.');
     setBusy(true);
@@ -217,8 +219,8 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
         </div>
         <div>
           <label htmlFor="drop-phone" className="text-xs text-slate-300 block mb-1.5">رقم الهاتف (الكويت ‎+965)</label>
-          <input id="drop-phone" dir="ltr" value={phone} onChange={e => setPhone(e.target.value)} inputMode="tel" autoComplete="tel" maxLength={18} placeholder="+965 5XXX XXXX" aria-describedby="drop-phone-hint" className={`${inputClass} text-end`} required />
-          <p id="drop-phone-hint" className="text-xs text-slate-300 mt-1">8 أرقام، يُستخدم للتواصل بشأن الطلب فقط.</p>
+          <input id="drop-phone" dir="ltr" value={phone} onChange={e => { setPhone(e.target.value); if (phoneError) setPhoneError(''); }} aria-invalid={phoneError ? true : undefined} inputMode="tel" autoComplete="tel" maxLength={18} placeholder="+965 5XXX XXXX" aria-describedby="drop-phone-hint" className={`${inputClass} text-end ${phoneError ? 'border-rose-400/60' : ''}`} required />
+          {phoneError ? <p id="drop-phone-hint" role="alert" className="text-xs text-rose-300 font-bold mt-1">{phoneError}</p> : <p id="drop-phone-hint" className="text-xs text-slate-300 mt-1">8 أرقام، يُستخدم للتواصل بشأن الطلب فقط.</p>}
         </div>
         {options && options.branches.length > 0 && (
           <div>

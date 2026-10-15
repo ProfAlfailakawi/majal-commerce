@@ -42,7 +42,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
               <MajalMark size={34} />
               <span className="min-w-0">
                 <span className="block text-lg font-black majal-wordmark leading-none">مجال</span>
-                <span className="block text-xs font-semibold tracking-[0.42em] text-gold-500/60 leading-none mt-1.5" dir="ltr">MAJAL</span>
+                <span className="block text-xs font-semibold text-gold-500/70 leading-none mt-1.5">الابتكار الغذائي</span>
               </span>
             </div>
             <p className="text-slate-400 text-xs leading-relaxed">
@@ -68,7 +68,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
                 className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl glass-card border border-gold-400/20 text-xs font-bold text-gold-300 hover:text-gold-200 hover:border-gold-300/40 transition-colors"
               >
                 <FileText className="w-3.5 h-3.5 text-gold-400" />
-                <span>العرض التفاعلي</span>
+                <span>شاهد العرض التعريفي</span>
               </a>
               <a
                 href="/presentation/majal-deck.pdf"
@@ -77,13 +77,13 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
                 className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl glass-card border border-white/10 text-xs font-bold text-slate-300 hover:text-gold-300 hover:border-gold-300/25 transition-colors"
               >
                 <FileText className="w-3.5 h-3.5" />
-                <span>عرض PDF</span>
+                <span>نسخة للتحميل</span>
               </a>
             </div>
           </div>
 
           <div className="space-y-2">
-            <h4 className="font-bold text-slate-200 text-sm mb-3 border-b border-slate-800 pb-1">أسطح النظام</h4>
+            <h4 className="font-bold text-slate-200 text-sm mb-3 border-b border-slate-800 pb-1">أقسام المنصة</h4>
             <ul className="flex flex-wrap gap-2">
               {visibleSurfaces.map(surface => (
                 <li key={surface.id}><button onClick={() => onSurfaceChange(surface.id)} className="inline-flex items-center px-3 py-2 rounded-xl glass-card border border-white/10 text-xs font-bold text-slate-300 hover:text-gold-300 hover:border-gold-300/25 transition-colors">{surface.label}</button></li>
@@ -133,24 +133,6 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
             <a href={`mailto:${SUPPORT_EMAIL}`} className="py-1.5 -my-1.5 inline-flex items-center gap-1.5 hover:text-gold-300 transition-colors">
               <Mail className="w-3.5 h-3.5" />
               <span dir="ltr">{SUPPORT_EMAIL}</span>
-            </a>
-            <a
-              href="/presentation/majal-deck.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="py-1.5 -my-1.5 inline-flex items-center gap-1 text-gold-400 hover:text-gold-300 transition-colors"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>العرض التفاعلي (HTML)</span>
-            </a>
-            <a
-              href="/presentation/majal-deck.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="py-1.5 -my-1.5 inline-flex items-center gap-1 hover:text-gold-300 transition-colors"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>ملف العرض (PDF)</span>
             </a>
           </nav>
         </div>

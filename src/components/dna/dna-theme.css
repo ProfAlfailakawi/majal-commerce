@@ -57,12 +57,12 @@ html:root {
 /* Journey stepper: title + actor caption under each node. */
 .journey-dna .dna-lbl { display: flex; flex-direction: column; gap: 2px; }
 .journey-dna .journey-dna-title { font-size: 13px; font-weight: 800; color: var(--dna-ink); }
-.journey-dna .journey-dna-actor { font-size: 11px; font-weight: 500; color: var(--dna-muted); }
+.journey-dna .journey-dna-actor { font-size: 12px; font-weight: 500; color: var(--dna-muted); }
 .journey-dna summary::-webkit-details-marker { display: none; }
 @media (max-width: 520px) {
   .journey-dna .dna-steps[data-size='lg'] { --node: 38px; --icon: 16px; }
   .journey-dna .journey-dna-title { font-size: 12px; }
-  .journey-dna .journey-dna-actor { font-size: 11px; }
+  .journey-dna .journey-dna-actor { font-size: 12px; }
 }
 
 /* Landing reveal: unlit stations keep their labels legible (generic reveal rules live in dna.css). */

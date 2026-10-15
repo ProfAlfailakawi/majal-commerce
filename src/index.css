@@ -992,7 +992,7 @@ header.glass-nav { padding-top: env(safe-area-inset-top, 0px); }
 /* ── r29 · AI assistant FAB ───────────────────────────────────────────────────
    Sits below every modal backdrop (z-50+) and steps out of sight while any
    aria-modal dialog is open. Display-only: the button and its click are untouched. */
-.majal-ai-fab { z-index: 30; transition: opacity 0.15s ease; }
+.majal-ai-fab { z-index: 30; transition: opacity 0.2s ease; }
 body:has([aria-modal='true']) .majal-ai-fab { opacity: 0; visibility: hidden; pointer-events: none; }
 /* phones: the open role menu spans the screen, so the button steps aside instead of sitting on its rows */
 @media (max-width: 639px) {
@@ -1000,7 +1000,8 @@ body:has([aria-modal='true']) .majal-ai-fab { opacity: 0; visibility: hidden; po
 }
 /* r42 · desktop: the pill rests as a 3rem circle (label opens on hover/focus) so it never parks
    over left-edge content; the page keeps a bottom gutter so the last rows clear it. */
-body:has(.majal-ai-fab) { padding-bottom: 4.5rem; }
+/* The gutter lives inside the footer (not on body) so no bare page-colour strip shows below it. */
+body:has(.majal-ai-fab) footer { padding-bottom: 4.5rem; }
 @media (min-width: 640px) {
   .majal-ai-fab > button { padding: 0; width: 3rem; height: 3rem; justify-content: center; gap: 0; overflow: hidden; transition: width 0.2s ease, padding 0.2s ease, background-color 0.15s ease; }
   .majal-ai-fab > button > span, .majal-ai-fab > button > svg:last-child { display: none; }
@@ -1008,8 +1009,14 @@ body:has(.majal-ai-fab) { padding-bottom: 4.5rem; }
   .majal-ai-fab > button:hover > span, .majal-ai-fab > button:focus-visible > span, .majal-ai-fab > button:hover > svg:last-child, .majal-ai-fab > button:focus-visible > svg:last-child { display: inline-block; }
 }
 @media (max-width: 639px) {
-  .majal-ai-fab { inset-inline-end: 0.75rem; }
-  .majal-ai-fab > button { padding: 0; width: 3rem; height: 3rem; min-width: 3rem; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28); }
+  /* Smaller, tucked into the corner and slightly translucent so it covers as little of the
+     left-edge content (rings, stat values) as possible; the page keeps a taller bottom gutter. */
+  .majal-ai-fab { inset-inline-end: 0.5rem; bottom: max(0.5rem, env(safe-area-inset-bottom)) !important; }
+  .majal-ai-fab > button { padding: 0; width: 2.75rem; height: 2.75rem; min-width: 2.75rem; min-height: 2.75rem; opacity: 0.6; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28); }
+  .majal-ai-fab > button:focus-visible, .majal-ai-fab > button:active { opacity: 1; }
+  body:has(.majal-ai-fab) footer { padding-bottom: 5.25rem; }
+  /* While the page is moving the button steps aside, so it never rides over rings and numbers. */
+  body.is-scrolling .majal-ai-fab { opacity: 0; pointer-events: none; }
 }
 
 /* ── r29 · lighter top chrome ─────────────────────────────────────────────────
@@ -1103,7 +1110,6 @@ body:has(.majal-ai-fab) { padding-bottom: 4.5rem; }
   /* Wraps only at the space before the currency; the digits themselves never split. */
   overflow-wrap: normal;
   line-height: 1.1;
-  letter-spacing: -0.01em;
 }
 :root[data-theme='light'] .majal-stat {
   background-image: linear-gradient(155deg, rgba(199, 165, 91, 0.2) 0%, rgba(255, 255, 255, 0.85) 55%, #ffffff 100%);
@@ -1149,3 +1155,26 @@ body:has(.majal-ai-fab) { padding-bottom: 4.5rem; }
 
 /* Stat rows reserve the ring's height so tiles with and without a ring read as one even set. */
 .majal-stat-row { min-block-size: 3rem; align-content: center; }
+
+/* ---------------------------------------------------------------------------
+   Entrance utilities. Components use `animate-in fade-in slide-in-from-top-2`
+   (tailwindcss-animate vocabulary) but that plugin is not installed, so these
+   classes did nothing. Minimal equivalents built on the motion tokens above.
+   Collapsed to an instant, final-state render under prefers-reduced-motion.
+   --------------------------------------------------------------------------- */
+@keyframes majal-enter {
+  from { opacity: var(--enter-opacity, 1); transform: translate3d(var(--enter-x, 0), var(--enter-y, 0), 0); }
+  to { opacity: 1; transform: none; }
+}
+.animate-in {
+  animation: majal-enter var(--enter-dur, var(--dur-base)) var(--ease-out) both;
+}
+.fade-in { --enter-opacity: 0; }
+.slide-in-from-top { --enter-y: -1rem; }
+.slide-in-from-top-2 { --enter-y: -0.5rem; }
+.duration-200.animate-in { --enter-dur: 200ms; }
+.duration-300.animate-in { --enter-dur: 300ms; }
+.duration-500.animate-in { --enter-dur: 500ms; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-in { animation: none !important; }
+}

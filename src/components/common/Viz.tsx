@@ -5,17 +5,29 @@ import { dnaDrawDelay, drawOptions, useDrawIn } from '../dna/useDrawIn';
 
 export interface Seg { value: number; className: string; label?: string }
 
-/** Thin segmented bar. Segments share the width in proportion to value; `total` (optional) pads the rest. */
-export const SegBar: React.FC<{ segs: Seg[]; total?: number; className?: string; height?: number; label?: string; /** Opt-in: segments grow in order once (string = playKey). */ draw?: boolean | string }> = ({ segs, total, className = '', height = 6, label, draw }) => {
+/** Thin segmented bar. Segments share the width in proportion to value; `total` (optional) pads the rest.
+ *  `legend` adds a visible text key (colour dot + label + count) so colour is never the only explanation. */
+export const SegBar: React.FC<{ segs: Seg[]; total?: number; className?: string; height?: number; label?: string; /** Opt-in: segments grow in order once (string = playKey). */ draw?: boolean | string; legend?: boolean }> = ({ segs, total, className = '', height = 6, label, draw, legend = false }) => {
   const sum = total ?? segs.reduce((a, s) => a + Math.max(0, s.value), 0);
   const drawProps = useDrawIn(drawOptions(draw));
   /* The observed root stays unclipped (an element clipped to nothing can report no intersection);
      the wipe itself runs on the inner bar. */
-  return (
+  const bar = (
     <div ref={drawProps.ref as React.Ref<HTMLDivElement>} data-draw={drawProps['data-draw']} role="img" aria-label={label} className={className}>
       <div className="flex w-full overflow-hidden rounded-full bg-white/10 gap-px dna-draw-stack" style={{ height }}>
         {sum > 0 && segs.filter(s => s.value > 0).map((s, i) => <span key={i} title={s.label} className={`${s.className} h-full dna-draw-bar`} style={{ width: `${(s.value / sum) * 100}%`, ...dnaDrawDelay(i) }} />)}
       </div>
+    </div>
+  );
+  if (!legend) return bar;
+  return (
+    <div className="space-y-1.5">
+      {bar}
+      <ul className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-400">
+        {segs.filter(s => s.label && s.value > 0).map((s, i) => (
+          <li key={i} className="inline-flex items-center gap-1.5"><span aria-hidden="true" className={`w-2 h-2 rounded-full ${s.className}`} />{s.label} <bdi className="font-mono text-slate-300">{s.value}</bdi></li>
+        ))}
+      </ul>
     </div>
   );
 };
