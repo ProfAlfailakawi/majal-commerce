@@ -7,6 +7,8 @@
 import * as React from 'react';
 import './dna.css';
 import { useJourneyReveal } from './useJourneyReveal';
+import { dnaDrawDelay, drawOptions, useChangeFlash, useDrawIn } from './useDrawIn';
+import { useCountUp } from './useCountUp';
 import { revealTarget, shownState } from '../../lib/journeyReveal';
 
 export type DnaTone =
@@ -144,9 +146,15 @@ export interface DnaStepperProps {
   threshold?: number;
   /** With `reveal`: extra gate before the first tick; returns a cancel function. */
   revealGate?: (go: () => void) => () => void;
+  /**
+   * Opt-in change-highlight: when a state genuinely changes after first paint (e.g. an order
+   * moves to PAID), the newest newly lit station gets ONE halo (~1.5s). Never on first render,
+   * never loops, no effect on the states themselves.
+   */
+  flashChange?: boolean;
 }
 
-export function DnaStepper({ steps, size = 'md', showLabels = true, ariaLabel, stateText, className, reveal = false, playKey, ready, persist, hold, stepMs, threshold, revealGate }: DnaStepperProps) {
+export function DnaStepper({ steps, size = 'md', showLabels = true, ariaLabel, stateText, className, reveal = false, playKey, ready, persist, hold, stepMs, threshold, revealGate, flashChange = false }: DnaStepperProps) {
   const text = { ...DEFAULT_STATE_TEXT, ...stateText };
   const labels = showLabels && size !== 'xs';
   const { ref, lit } = useJourneyReveal({
@@ -161,6 +169,23 @@ export function DnaStepper({ steps, size = 'md', showLabels = true, ariaLabel, s
     persist,
     gate: revealGate,
   });
+  const prevStates = React.useRef(steps.map((s) => s.state));
+  const [justKey, setJustKey] = React.useState<string | null>(null);
+  const stateSig = steps.map((s) => `${s.key}:${s.state}`).join('|');
+  React.useEffect(() => {
+    const prev = prevStates.current;
+    const next = steps.map((s) => s.state);
+    prevStates.current = next;
+    if (!flashChange) return;
+    const lit = (st: DnaStepState) => st === 'done' || st === 'current';
+    let newest = -1;
+    next.forEach((st, i) => { if (lit(st) && prev[i] !== undefined && !lit(prev[i])) newest = i; });
+    if (newest < 0) return;
+    setJustKey(steps[newest].key);
+    const t = window.setTimeout(() => setJustKey(null), 1600);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stateSig, flashChange]);
   /* During the intro the visuals follow `shown`; screen readers always get the real state. */
   const shown = steps.map((s, i) => shownState(s.state, i, lit));
   return (
@@ -169,6 +194,7 @@ export function DnaStepper({ steps, size = 'md', showLabels = true, ariaLabel, s
       className={cx('dna', 'dna-steps', className)}
       data-size={size}
       data-journey={reveal ? '' : undefined}
+      data-flash={flashChange ? '' : undefined}
       data-reveal={reveal ? (lit ?? 'done') : undefined}
       aria-label={ariaLabel}
     >
@@ -184,7 +210,7 @@ export function DnaStepper({ steps, size = 'md', showLabels = true, ariaLabel, s
             data-state={step.state}
             data-link={link}
             data-stamp={stamped ? 'true' : undefined}
-            data-just={lit !== null && i === lit - 1 ? '' : undefined}
+            data-just={(lit !== null && i === lit - 1 && (step.state === 'done' || step.state === 'current')) || (justKey !== null && step.key === justKey) ? '' : undefined}
             aria-current={rawStep.state === 'current' ? 'step' : undefined}
             title={step.title ?? (size === 'xs' && typeof step.label === 'string' ? step.label : undefined)}
           >
@@ -231,22 +257,33 @@ export function DnaTimeline({
   maxHeight,
   wrapMeta = false,
   className,
+  draw,
 }: {
   items: DnaEvent[];
   ariaLabel?: string;
   maxHeight?: number | string;
   wrapMeta?: boolean;
   className?: string;
+  /** Opt-in: dots and connectors appear in order, once (rows stay readable). A string is the playKey. */
+  draw?: boolean | string;
 }) {
+  const drawProps = useDrawIn(drawOptions(draw));
   return (
     <ol
+      ref={drawProps.ref as React.Ref<HTMLOListElement>}
+      data-draw={drawProps['data-draw']}
       className={cx('dna', 'dna-tline', className)}
       aria-label={ariaLabel}
       data-wrap={wrapMeta ? 'true' : undefined}
       style={maxHeight != null ? { maxHeight, overflowY: 'auto' } : undefined}
     >
-      {items.map((item) => (
-        <li key={item.key} className="dna-tli" data-dna-tone={item.tone ?? 'accent'}>
+      {items.map((item, i) => (
+        <li
+          key={item.key}
+          className="dna-tli"
+          data-dna-tone={item.tone ?? 'accent'}
+          style={draw ? ({ ['--draw-delay' as string]: `${Math.min(i, 6) * 70}ms` } as React.CSSProperties) : undefined}
+        >
           <span className="dna-dot" aria-hidden="true">
             {item.icon ?? <span className="dna-pip" />}
           </span>
@@ -320,9 +357,12 @@ export interface DnaRingProps {
   sublabel?: React.ReactNode;
   ariaLabel?: string;
   className?: string;
+  /** Opt-in: the arc draws once when it scrolls into view. A string is the playKey (once per session). */
+  draw?: boolean | string;
 }
 
-export function DnaRing({ value, max = 100, size = 52, stroke = 4, tone = 'accent', label, sublabel, ariaLabel, className }: DnaRingProps) {
+export function DnaRing({ value, max = 100, size = 52, stroke = 4, tone = 'accent', label, sublabel, ariaLabel, className, draw }: DnaRingProps) {
+  const drawProps = useDrawIn(drawOptions(draw));
   const has = typeof value === 'number' && Number.isFinite(value) && max > 0;
   const fraction = has ? Math.min(1, Math.max(0, (value as number) / max)) : 0;
   const r = (size - stroke) / 2;
@@ -330,6 +370,8 @@ export function DnaRing({ value, max = 100, size = 52, stroke = 4, tone = 'accen
   const mid = size / 2;
   return (
     <div
+      ref={drawProps.ref as React.Ref<HTMLDivElement>}
+      data-draw={drawProps['data-draw']}
       className={cx('dna', 'dna-ring', className)}
       data-dna-tone={tone}
       style={{ inlineSize: size, blockSize: size }}
@@ -340,7 +382,7 @@ export function DnaRing({ value, max = 100, size = 52, stroke = 4, tone = 'accen
         <circle className="dna-ringt" cx={mid} cy={mid} r={r} fill="none" strokeWidth={stroke} strokeDasharray={has ? undefined : '3 4'} />
         {has && fraction > 0 && (
           <circle
-            className="dna-ringv"
+            className="dna-ringv dna-draw-arc"
             cx={mid}
             cy={mid}
             r={r}
@@ -413,6 +455,7 @@ export function DnaSpark({
   tone = 'accent',
   ariaLabel,
   className,
+  draw,
 }: {
   values: number[];
   width?: number;
@@ -420,7 +463,10 @@ export function DnaSpark({
   tone?: DnaTone;
   ariaLabel?: string;
   className?: string;
+  /** Opt-in: the line draws once, then the area fades in. A string is the playKey. */
+  draw?: boolean | string;
 }) {
+  const drawProps = useDrawIn(drawOptions(draw));
   const clean = values.filter((v) => Number.isFinite(v));
   if (clean.length < 2) return null;
   const min = Math.min(...clean);
@@ -436,6 +482,8 @@ export function DnaSpark({
   const last = pts[pts.length - 1];
   return (
     <svg
+      ref={drawProps.ref as React.Ref<SVGSVGElement>}
+      data-draw={drawProps['data-draw']}
       className={cx('dna', 'dna-spark', className)}
       data-dna-tone={tone}
       width={width}
@@ -446,7 +494,7 @@ export function DnaSpark({
       aria-hidden={ariaLabel ? undefined : true}
     >
       <path className="dna-sparka" d={area} />
-      <path className="dna-sparkl" d={line} />
+      <path className="dna-sparkl" d={line} pathLength={1} />
       <circle cx={last[0]} cy={last[1]} r={2.6} />
     </svg>
   );
@@ -481,6 +529,69 @@ export function DnaStat({
     </div>
   );
 }
+
+/* ------------------------------------------------- count-up + draw wrapper */
+
+export interface DnaCountUpProps {
+  value: number;
+  /** The SAME formatter the screen already used for this number. */
+  format?: (n: number) => React.ReactNode;
+  /** Once per session per key. Required in practice: without it the count plays on every mount. */
+  playKey?: string;
+  durationMs?: number;
+  className?: string;
+}
+
+/**
+ * Plain counts only (never money, never timers). The final value is always what assistive
+ * tech reads; the animating digits are aria-hidden. Value changes after it played snap.
+ */
+export function DnaCountUp({ value, format = (n) => String(n), playKey, durationMs, className }: DnaCountUpProps) {
+  const { ref, display } = useCountUp(value, { playKey, durationMs });
+  return (
+    <span ref={ref as React.Ref<HTMLSpanElement>} className={cx('dna-countup', className)}>
+      <span className="dna-sr">{format(value)}</span>
+      <span aria-hidden="true">{format(display)}</span>
+    </span>
+  );
+}
+
+/** Wraps a live value: one soft accent wash when it changes after first paint (never on mount). */
+export function DnaFlash({ value, as: Tag = 'span', className, children }: { value: unknown; as?: 'span' | 'div'; className?: string; children: React.ReactNode }) {
+  const flash = useChangeFlash(value);
+  const Root = Tag as React.ElementType;
+  return <Root className={cx(className, flash && 'dna-changed')}>{children}</Root>;
+}
+
+/**
+ * Wrapper for bars drawn from existing markup: give the fill element the class `dna-draw-bar`
+ * (grows along the inline axis) or `dna-draw-barv` (grows from the baseline) and, for an ordered
+ * group, a `--draw-delay` (use dnaDrawDelay(i)). Nothing changes unless `draw` is true/a key.
+ */
+export function DnaDraw({
+  as: Tag = 'div',
+  draw = true,
+  className,
+  style,
+  children,
+  ...rest
+}: {
+  as?: 'div' | 'span' | 'ul' | 'ol' | 'section';
+  draw?: boolean | string;
+  className?: string;
+  style?: React.CSSProperties;
+  children?: React.ReactNode;
+} & Omit<React.HTMLAttributes<HTMLElement>, 'className' | 'style' | 'children'>) {
+  const drawProps = useDrawIn(drawOptions(draw));
+  const Root = Tag as React.ElementType;
+  return (
+    <Root {...rest} ref={drawProps.ref} data-draw={drawProps['data-draw']} className={className} style={style}>
+      {children}
+    </Root>
+  );
+}
+
+export { dnaDrawDelay };
 
 /* ------------------------------------------------------------ heat strip */
 

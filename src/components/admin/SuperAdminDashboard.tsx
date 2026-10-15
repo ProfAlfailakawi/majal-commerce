@@ -33,6 +33,7 @@ import { IS_DEMO_MODE } from '../../lib/runtime';
 import { completedOrderTotals } from '../../lib/money';
 import { SurfaceTabs } from '../common/SurfaceTabs';
 import { Avatar } from '../common/Avatar';
+import { DnaFlash } from '../dna/DnaKit';
 
 /** Icon + two-word label + optional state. The long sentence stays available as a tooltip. */
 const InfoChip: React.FC<{ icon: React.ReactNode; label: string; status?: string; hint?: string }> = ({ icon, label, status, hint }) => (
@@ -115,7 +116,7 @@ export const SuperAdminDashboard: React.FC = () => {
               { icon: <Building2 className="w-5 h-5 text-gold-300" />, label: 'المنشآت', value: store.hosts.length },
               { icon: <Network className="w-5 h-5 text-fuchsia-300" />, label: 'إشارات المطابقة', value: store.matches.length }
             ].map((item, idx) => (
-              <div key={idx} className="glass-card rounded-2xl p-5 border border-white/10"><div>{item.icon}</div><div className="mt-4 text-xs text-slate-400">{item.label}</div><div className="mt-1 text-3xl font-black font-mono">{item.value}</div></div>
+              <div key={idx} className="majal-rise glass-card rounded-2xl p-5 border border-white/10"><div>{item.icon}</div><div className="mt-4 text-xs text-slate-400">{item.label}</div><DnaFlash as="div" value={item.value} className="mt-1 text-3xl font-black font-mono">{item.value}</DnaFlash></div>
             ))}
           </div>
 

@@ -12,6 +12,7 @@ import {
   WalletCards
 } from 'lucide-react';
 import { store } from '../../lib/store';
+import { DnaDraw, dnaDrawDelay } from '../dna/DnaKit';
 
 export const MajalPulse: React.FC = () => {
   const pulse = (() => {
@@ -58,20 +59,20 @@ export const MajalPulse: React.FC = () => {
           </div>
         </div>
 
-        <ol aria-label="مسار الصفقات من المبدعين إلى الإطلاق" className="rounded-2xl p-4 bg-slate-950/35 border border-white/10 space-y-2.5">
-          {funnel.map(step => (
+        <DnaDraw as="ol" draw="pulse-funnel" aria-label="مسار الصفقات من المبدعين إلى الإطلاق" className="rounded-2xl p-4 bg-slate-950/35 border border-white/10 space-y-2.5">
+          {funnel.map((step, fi) => (
             <li key={step.label} className="flex flex-wrap md:flex-nowrap items-center gap-x-3 gap-y-1.5 text-xs">
               <span className={`order-1 flex items-center gap-1.5 md:w-40 shrink-0 font-bold text-slate-200`}><span className={step.tone} aria-hidden="true">{step.icon}</span>{step.label}</span>
               <span className="order-3 hidden md:block w-40 shrink-0 text-slate-400">{step.detail}</span>
-              <span className="order-4 basis-full md:basis-auto md:flex-1 h-3 rounded-full bg-white/5 overflow-hidden" aria-hidden="true"><span className={`block h-full rounded-full ${step.bar}`} style={{ width: `${(step.value / funnelMax) * 100}%` }} /></span>
+              <span className="order-4 basis-full md:basis-auto md:flex-1 h-3 rounded-full bg-white/5 overflow-hidden" aria-hidden="true"><span className={`block h-full rounded-full dna-draw-bar ${step.bar}`} style={{ width: `${(step.value / funnelMax) * 100}%`, ...dnaDrawDelay(fi) }} /></span>
               <strong className={`order-2 min-w-10 text-start font-mono text-base ${step.tone}`}>{step.value}</strong>
             </li>
           ))}
-        </ol>
+        </DnaDraw>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {cards.map((card, index) => (
-            <div key={index} className="max-sm:last:col-span-2 rounded-2xl p-4 bg-slate-950/35 border border-white/10 hover:border-white/20 transition-colors">
+            <div key={index} className="majal-rise max-sm:last:col-span-2 rounded-2xl p-4 bg-slate-950/35 border border-white/10 hover:border-white/20 transition-colors">
               <div className={`${card.tone}`}>{card.icon}</div>
               <div className={`mt-3 text-xl md:text-2xl font-black ${card.tone} font-mono`}>{card.value}</div>
               <div className="text-xs font-bold text-slate-200 mt-1">{card.label}</div>

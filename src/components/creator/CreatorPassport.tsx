@@ -14,7 +14,7 @@ import {
 import { arCount, AR } from '../../lib/arPlural';
 import { store } from '../../lib/store';
 import { Avatar } from '../common/Avatar';
-import { DnaRing, DnaStepper } from '../dna/DnaKit';
+import { DnaCountUp, DnaRing, DnaStepper } from '../dna/DnaKit';
 
 interface CreatorPassportProps {
   creatorId: string;
@@ -72,14 +72,17 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: 'منتجات مسجلة', value: products.length, icon: <PackageCheck className="w-4 h-4 text-gold-300" /> },
-          { label: 'تعاونات تجارية', value: collaborations.length, icon: <Building2 className="w-4 h-4 text-gold-300" /> },
-          { label: 'مبيعات مسجلة', value: `${stats.revenue.toFixed(3)} د.ك`, icon: <TrendingUp className="w-4 h-4 text-gold-300" /> },
-          { label: 'خلّوه — يبقى في المنيو', value: reviews.length ? `${stats.keepRate}%` : '—', icon: <Repeat2 className="w-4 h-4 text-gold-300" /> }
+          { label: 'منتجات مسجلة', count: 'products', value: products.length, icon: <PackageCheck className="w-4 h-4 text-gold-300" /> },
+          { label: 'تعاونات تجارية', count: 'collabs', value: collaborations.length, icon: <Building2 className="w-4 h-4 text-gold-300" /> },
+          { label: 'مبيعات مسجلة', count: '', value: `${stats.revenue.toFixed(3)} د.ك`, icon: <TrendingUp className="w-4 h-4 text-gold-300" /> },
+          { label: 'خلّوه — يبقى في المنيو', count: '', value: reviews.length ? `${stats.keepRate}%` : '—', icon: <Repeat2 className="w-4 h-4 text-gold-300" /> }
         ].map((item, idx) => (
           <div key={idx} className="majal-stat rounded-2xl p-4 bg-white/5 border border-white/10">
             <div className="flex items-center gap-2 text-xs text-slate-400"><span className="majal-icon-tile" aria-hidden="true">{item.icon}</span>{item.label}</div>
-            <div className="majal-numeral mt-2 text-xl font-black text-slate-100 font-mono">{item.value}</div>
+            <div className="majal-numeral mt-2 text-xl font-black text-slate-100 font-mono">
+              {/* Plain counts only; money and percentages stay as printed. */}
+              {item.count ? <DnaCountUp value={item.value as number} playKey={`creator-stat-${item.count}:${creatorId}`} /> : item.value}
+            </div>
           </div>
         ))}
       </div>
@@ -92,6 +95,7 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
               value={reviews.length ? (stats.avgRating / 5) * 100 : null}
               size={64}
               stroke={5}
+              draw={`creator-trust-quality:${creatorId}`}
               ariaLabel={reviews.length ? `جودة المنتج ${Math.round((stats.avgRating / 5) * 100)}%` : 'جودة المنتج: لا تقييمات بعد'}
             />
             <div>
@@ -105,6 +109,7 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
               size={48}
               stroke={4}
               tone="info"
+              draw={`creator-trust-keep:${creatorId}`}
               ariaLabel={reviews.length ? `خلّوه ${stats.keepRate}%` : 'خلّوه: لا أصوات بعد'}
             />
             <div>
@@ -118,6 +123,8 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
           <div className="flex items-center gap-2 font-bold text-slate-100"><Crown className="w-4 h-4 text-gold-300" /> مسار الترقّي</div>
           <DnaStepper
             size="md"
+            reveal
+            playKey={`creator-path:${creatorId}`}
             ariaLabel="مسار الترقّي"
             stateText={{ done: 'مكتمل', pending: 'قادم' }}
             steps={[

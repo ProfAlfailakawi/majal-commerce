@@ -74,7 +74,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
+    <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/70 backdrop-blur-sm animate-in fade-in" data-fade>
       <div className="absolute inset-y-0 end-0 max-w-full flex pe-0 sm:pe-10">
         <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="ai-drawer-title" className="w-full max-w-md max-h-dvh bg-slate-900 border-s border-slate-800 shadow-2xl flex flex-col text-slate-100">
           
@@ -159,7 +159,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
             </button>
 
             {aiOutput && (
-              <div role="status" className="p-4 rounded-xl bg-gold-500/10 border border-gold-500/30 space-y-2 animate-in fade-in">
+              <div role="status" className="p-4 rounded-xl bg-gold-500/10 border border-gold-500/30 space-y-2 animate-in fade-in" data-fade>
                 <div className="flex items-center justify-between text-gold-400 font-bold">
                   <span className="flex items-center gap-1.5">
                     <Sparkles className="w-4 h-4" />

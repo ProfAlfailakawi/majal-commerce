@@ -15,7 +15,7 @@ import {
 import { store } from '../../lib/store';
 import { hasPermission } from '../../lib/permissions';
 import { StatusPill } from '../common/StatusPill';
-import { DnaRing } from '../dna/DnaKit';
+import { DnaDraw, DnaRing, dnaDrawDelay } from '../dna/DnaKit';
 import { ShareDonut } from '../common/ShareDonut';
 import { WarRoomOps } from './WarRoomOps';
 
@@ -95,22 +95,22 @@ const LaunchWarRoomBody: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => 
           { label: 'نسبة البيع', value: `${metrics.sellThrough}%`, icon: <Gauge className="w-4 h-4 text-gold-300" /> },
           { label: 'نية إعادة الشراء', value: reviews.length ? `${metrics.repeatIntent}%` : '—', icon: <Users className="w-4 h-4 text-fuchsia-300" /> },
           { label: 'الفروع المتاحة', value: `${launch.branches.length}`, icon: <Building2 className="w-4 h-4 text-amber-300" /> }
-        ].map((item, idx) => <div key={idx} className="rounded-2xl p-4 bg-white/5 border border-white/10"><div className="flex items-center gap-2 text-xs text-slate-400">{item.icon}{item.label}</div>{item.label === 'نسبة البيع' ? <DnaRing className="mt-2" value={metrics.sellThrough} size={52} stroke={5} label={item.value} ariaLabel={`نسبة البيع ${metrics.sellThrough}%`} /> : item.label === 'نية إعادة الشراء' && reviews.length ? <DnaRing className="mt-2" value={metrics.repeatIntent} size={52} stroke={5} label={item.value} ariaLabel={`نية إعادة الشراء ${metrics.repeatIntent}%`} /> : <div className="mt-2 text-base sm:text-lg font-black font-mono sm:whitespace-nowrap">{item.value}</div>}</div>)}
+        ].map((item, idx) => <div key={idx} className="majal-rise rounded-2xl p-4 bg-white/5 border border-white/10"><div className="flex items-center gap-2 text-xs text-slate-400">{item.icon}{item.label}</div>{item.label === 'نسبة البيع' ? <DnaRing className="mt-2" value={metrics.sellThrough} size={52} stroke={5} draw={`warroom-sell:${launch.id}`} label={item.value} ariaLabel={`نسبة البيع ${metrics.sellThrough}%`} /> : item.label === 'نية إعادة الشراء' && reviews.length ? <DnaRing className="mt-2" value={metrics.repeatIntent} size={52} stroke={5} draw={`warroom-repeat:${launch.id}`} label={item.value} ariaLabel={`نية إعادة الشراء ${metrics.repeatIntent}%`} /> : <div className="mt-2 text-base sm:text-lg font-black font-mono sm:whitespace-nowrap">{item.value}</div>}</div>)}
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
-        <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3">
+        <DnaDraw draw={`warroom-branches:${launch.id}`} className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3">
           <div className="font-bold flex items-center gap-2"><Store className="w-4 h-4 text-sky-300" /> تتبع الفروع</div>
-          {branchRows.length ? branchRows.map(branch => (
+          {branchRows.length ? branchRows.map((branch, bi) => (
             <div key={branch.id} className="rounded-xl p-3 bg-slate-950/45 border border-white/10 space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs text-slate-300 font-bold">{branch.name}</span>
                 <span className={`text-xs ${branch.hasTrackedData ? 'text-sky-300 font-mono' : 'text-slate-400'}`}>{branch.hasTrackedData ? `${branch.units} وحدة متتبعة` : 'لا توجد طلبات منسوبة لهذا الفرع بعد'}</span>
               </div>
-              {branch.hasTrackedData && <div role="img" aria-label={`حصة الفرع من الوحدات: ${Math.round((branch.units / Math.max(1, ...branchRows.map(b => b.units))) * 100)}%`} className="h-2 rounded-full bg-white/5 overflow-hidden"><div className="h-full rounded-full bg-sky-400/80" style={{ width: `${Math.max(6, (branch.units / Math.max(1, ...branchRows.map(b => b.units))) * 100)}%` }} /></div>}
+              {branch.hasTrackedData && <div role="img" aria-label={`حصة الفرع من الوحدات: ${Math.round((branch.units / Math.max(1, ...branchRows.map(b => b.units))) * 100)}%`} className="h-2 rounded-full bg-white/5 overflow-hidden"><div className="h-full rounded-full bg-sky-400/80 dna-draw-bar" style={{ width: `${Math.max(6, (branch.units / Math.max(1, ...branchRows.map(b => b.units))) * 100)}%`, ...dnaDrawDelay(bi) }} /></div>}
             </div>
           )) : <div className="text-xs text-slate-400">لم تحدد فروع لهذا الإطلاق.</div>}
-        </div>
+        </DnaDraw>
 
         <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3">
           <div className="font-bold flex items-center gap-2"><Zap className="w-4 h-4 text-gold-300" /> إشارات التشغيل</div>
@@ -131,6 +131,7 @@ const LaunchWarRoomBody: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => 
             legendBeside
             centerValue={trackedSourceUnits}
             centerLabel="وحدة"
+            draw={`warroom-sources:${launch.id}`}
             segments={[
               { key: 'creator', label: 'عبر المبدع', value: sourceUnits.CREATOR, strokeClass: 'stroke-emerald-400', dotClass: 'bg-emerald-400' },
               { key: 'host', label: 'عبر المنشأة', value: sourceUnits.HOST, strokeClass: 'stroke-slate-400', dotClass: 'bg-slate-400' },

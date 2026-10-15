@@ -654,7 +654,7 @@ textarea:disabled {
   height: 22%;
   border-radius: 100% 0 100% 0;
   opacity: 0;
-  animation: ml-assemble 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: ml-assemble 0.55s var(--ease-out) forwards;
 }
 .majal-loader .ml-l2 { animation-delay: 0.06s; }
 .majal-loader .ml-l3 { animation-delay: 0.12s; }
@@ -668,7 +668,7 @@ textarea:disabled {
   border-radius: 50%;
   opacity: 0;
   animation:
-    ml-assemble 0.5s 0.24s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+    ml-assemble 0.5s 0.24s var(--ease-out) forwards,
     ml-idle 2.4s 1s ease-in-out infinite;
 }
 @keyframes ml-assemble {
@@ -704,7 +704,7 @@ textarea:disabled {
    settling into place. Short, once, transform + opacity only.
    ============================================================ */
 .majal-settle-in {
-  animation: majal-settle 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: majal-settle 0.45s var(--ease-out) both;
 }
 @keyframes majal-settle {
   from { opacity: 0; transform: translateY(10px) scale(0.97); }
@@ -712,7 +712,7 @@ textarea:disabled {
 }
 /* Launch-gate: checked items calmly compress toward the ready state. */
 .majal-gate-converge {
-  animation: majal-gate-compress 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: majal-gate-compress 0.6s var(--ease-out) both;
 }
 @keyframes majal-gate-compress {
   0%   { transform: scale(1); }
@@ -1117,15 +1117,33 @@ body:has(.majal-ai-fab) footer { padding-bottom: 4.5rem; }
   box-shadow: var(--elev-1), var(--edge-hi);
 }
 :root[data-theme='contrast'] .majal-stat { background-image: none; box-shadow: none; }
+/* `animate-in fade-in` classes come from a utility plugin this project does not ship, so they
+   did nothing. Opt-in only (data-fade): non-sensitive surfaces get one short fade; forms,
+   signing, vault and approval surfaces keep their class and stay static. No fill-mode, so
+   the resting style is the end state. */
+@keyframes majal-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .animate-in.fade-in[data-fade] { animation: majal-fade-in var(--dur-slow) var(--ease-out) backwards; }
+}
 @keyframes majal-stat-rise {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: none; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .majal-stat { animation: majal-stat-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+  .majal-stat { animation: majal-stat-rise 0.5s var(--ease-out) backwards; }
   .majal-stat:nth-child(2) { animation-delay: 60ms; }
   .majal-stat:nth-child(3) { animation-delay: 120ms; }
   .majal-stat:nth-child(4) { animation-delay: 180ms; }
+}
+/* Rise only: the same entrance as .majal-stat for key-number tiles that keep their own surface. */
+@media (prefers-reduced-motion: no-preference) {
+  .majal-rise { animation: majal-stat-rise 0.5s var(--ease-out) backwards; }
+  .majal-rise:nth-child(2) { animation-delay: 60ms; }
+  .majal-rise:nth-child(3) { animation-delay: 120ms; }
+  .majal-rise:nth-child(4) { animation-delay: 180ms; }
 }
 .majal-icon-tile {
   display: inline-flex; align-items: center; justify-content: center;

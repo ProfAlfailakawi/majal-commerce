@@ -116,9 +116,15 @@ const disclosureLevels = [
   }
 ];
 
+/** The journey stations start lighting once the step's own rise has settled (~400ms). */
+const journeyAfterRise = (go: () => void): (() => void) => {
+  const t = window.setTimeout(go, 400);
+  return () => window.clearTimeout(t);
+};
+
 /** Staggered entrance for a step's children — index in, delay out. */
 const rise = (order: number): React.CSSProperties => ({
-  animation: 'majal-onboard-rise 560ms cubic-bezier(0.16, 1, 0.3, 1) both',
+  animation: 'majal-onboard-rise 560ms var(--ease-out) both',
   animationDelay: `${60 + order * 70}ms`
 });
 
@@ -363,7 +369,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
               </div>
 
               <div style={rise(3)} className="glass-card rounded-3xl p-4 sm:p-6 max-w-2xl mx-auto">
-                <JourneyStepper detail="brief" />
+                <JourneyStepper detail="brief" animate playKey="onboarding-journey" stepMs={600} revealGate={journeyAfterRise} />
               </div>
             </div>
           )}

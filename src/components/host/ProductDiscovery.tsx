@@ -103,13 +103,13 @@ export const ProductDiscovery: React.FC = () => {
       </div>
 
       {requestSentNotice && (
-        <div className="p-3 bg-gold-500/20 text-gold-300 border border-gold-500/30 rounded-xl text-xs font-bold animate-in fade-in">
+        <div className="p-3 bg-gold-500/20 text-gold-300 border border-gold-500/30 rounded-xl text-xs font-bold animate-in fade-in" data-fade>
           {requestSentNotice}
         </div>
       )}
 
       {/* Product Match Cards */}
-      <CapGrid className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <CapGrid className="dna-draw-quick grid grid-cols-1 md:grid-cols-2 gap-6">
         {visibleProducts.map(p => {
           const creator = store.creators.find(cr => cr.id === p.creatorId);
           const matchCalc = store.calculateMatchScore(p, host);
@@ -134,7 +134,7 @@ export const ProductDiscovery: React.FC = () => {
                   </div>
 
                   {/* Match score: ring with the number kept inside */}
-                  <ScoreRing value={matchCalc.overallScore} suffix="٪" caption="نسبة المطابقة" size={60} />
+                  <ScoreRing value={matchCalc.overallScore} suffix="٪" caption="نسبة المطابقة" size={60} draw={`discovery-ring:${p.id}`} />
                 </div>
 
                 <p className="text-slate-300 text-xs leading-relaxed">{p.shortDescription}</p>
@@ -146,7 +146,7 @@ export const ProductDiscovery: React.FC = () => {
                     <ChevronDown className="w-4 h-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
                   </summary>
                   <div className="px-3.5 pb-3.5 space-y-3">
-                    <MicroBars suffix="٪" bars={[
+                    <MicroBars suffix="٪" draw={`discovery-bars:${p.id}`} bars={[
                       { label: 'توافق المعدات', value: matchCalc.equipmentFit },
                       { label: 'ملاءمة الهامش', value: matchCalc.marginFit },
                       { label: 'مطابقة الجمهور', value: matchCalc.brandFit }
