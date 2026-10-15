@@ -9,9 +9,13 @@ export interface Seg { value: number; className: string; label?: string }
 export const SegBar: React.FC<{ segs: Seg[]; total?: number; className?: string; height?: number; label?: string; /** Opt-in: segments grow in order once (string = playKey). */ draw?: boolean | string }> = ({ segs, total, className = '', height = 6, label, draw }) => {
   const sum = total ?? segs.reduce((a, s) => a + Math.max(0, s.value), 0);
   const drawProps = useDrawIn(drawOptions(draw));
+  /* The observed root stays unclipped (an element clipped to nothing can report no intersection);
+     the wipe itself runs on the inner bar. */
   return (
-    <div ref={drawProps.ref as React.Ref<HTMLDivElement>} data-draw={drawProps['data-draw']} role="img" aria-label={label} className={`flex w-full overflow-hidden rounded-full bg-white/10 gap-px ${className}`} style={{ height }}>
-      {sum > 0 && segs.filter(s => s.value > 0).map((s, i) => <span key={i} title={s.label} className={`${s.className} h-full dna-draw-bar`} style={{ width: `${(s.value / sum) * 100}%`, ...dnaDrawDelay(i) }} />)}
+    <div ref={drawProps.ref as React.Ref<HTMLDivElement>} data-draw={drawProps['data-draw']} role="img" aria-label={label} className={className}>
+      <div className="flex w-full overflow-hidden rounded-full bg-white/10 gap-px dna-draw-stack" style={{ height }}>
+        {sum > 0 && segs.filter(s => s.value > 0).map((s, i) => <span key={i} title={s.label} className={`${s.className} h-full dna-draw-bar`} style={{ width: `${(s.value / sum) * 100}%`, ...dnaDrawDelay(i) }} />)}
+      </div>
     </div>
   );
 };
@@ -26,7 +30,8 @@ export const MiniRing: React.FC<{ value: number; size?: number; stroke?: number;
     <span ref={drawProps.ref as React.Ref<HTMLSpanElement>} data-draw={drawProps['data-draw']} className={`relative inline-grid place-items-center shrink-0 ${className}`} style={{ width: size, height: size }} aria-hidden="true">
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeOpacity={0.15} strokeWidth={stroke} />
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${c * v} ${c}`} className="dna-draw-arc" />
+        {/* No arc at 0: a zero-length dash with round caps would still paint a dot at the start. */}
+        {v > 0 && <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${c * v} ${c}`} className="dna-draw-arc" />}
       </svg>
       {children !== undefined && <span className="absolute inset-0 grid place-items-center text-xs font-black tabular-nums text-slate-100">{children}</span>}
     </span>
