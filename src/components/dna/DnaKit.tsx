@@ -210,7 +210,7 @@ export function DnaStepper({ steps, size = 'md', showLabels = true, ariaLabel, s
             data-state={step.state}
             data-link={link}
             data-stamp={stamped ? 'true' : undefined}
-            data-just={(lit !== null && i === lit - 1) || (justKey !== null && step.key === justKey) ? '' : undefined}
+            data-just={(lit !== null && i === lit - 1 && (step.state === 'done' || step.state === 'current')) || (justKey !== null && step.key === justKey) ? '' : undefined}
             aria-current={rawStep.state === 'current' ? 'step' : undefined}
             title={step.title ?? (size === 'xs' && typeof step.label === 'string' ? step.label : undefined)}
           >
