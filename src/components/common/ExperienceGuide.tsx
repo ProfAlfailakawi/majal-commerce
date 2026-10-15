@@ -40,7 +40,7 @@ const surfaceMeta: Record<SurfaceType, { label: string; icon: React.ReactNode; k
 };
 
 /** Platform-neutral shortcut hint: ⌘K on Apple devices, Ctrl K elsewhere. */
-const SHORTCUT_HINT = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent) ? '⌘K' : 'Ctrl K';
+export const SHORTCUT_HINT = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent) ? '⌘K' : 'Ctrl K';
 
 const preferredModeKey = 'majal_experience_mode_v1';
 
