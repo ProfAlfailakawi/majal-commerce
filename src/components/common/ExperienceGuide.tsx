@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   Building2,
-  Command,
   Compass,
   Crown,
   Gauge,
@@ -39,6 +38,9 @@ const surfaceMeta: Record<SurfaceType, { label: string; icon: React.ReactNode; k
   ADMIN: { label: 'مركز العمليات', icon: <ShieldCheck className="w-4 h-4" />, keywords: 'ادمن امتثال نزاعات admin compliance' },
   SUPER_ADMIN: { label: 'مركز القيادة', icon: <Crown className="w-4 h-4" />, keywords: 'سوبر سياسة مستخدمين super admin policy' }
 };
+
+/** Platform-neutral shortcut hint: ⌘K on Apple devices, Ctrl K elsewhere. */
+const SHORTCUT_HINT = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent) ? '⌘K' : 'Ctrl K';
 
 const preferredModeKey = 'majal_experience_mode_v1';
 
@@ -153,16 +155,16 @@ export const ExperienceGuide: React.FC<ExperienceGuideProps> = ({ activeSurface,
           <div className="flex items-start sm:items-center gap-3 min-w-0">
             <span className="w-10 h-10 shrink-0 rounded-xl bg-gold-500/15 border border-gold-300/20 grid place-items-center text-gold-300"><Compass className="w-5 h-5" /></span>
             <div className="min-w-0">
-              <span className="majal-guide-eyebrow block text-xs font-black tracking-wide text-gold-300 uppercase">{nextMove.eyebrow}</span>
+              <span className="majal-guide-eyebrow block text-xs font-black text-gold-300">{nextMove.eyebrow}</span>
               <span className="block text-sm font-black text-slate-100 sm:truncate" title={nextMove.title}>{nextMove.title}</span>
               {mode !== 'SIMPLE' && <span className="majal-guide-reason block text-xs text-slate-400 mt-1 leading-5" title={nextMove.reason}>{nextMove.reason}</span>}
               {mode === 'EXPERT' && <span className="inline-flex mt-1 text-xs text-sky-300">إشارة السياق: {nextMove.signal} · السطح الحالي: {surfaceMeta[activeSurface].label}</span>}
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button onClick={cycleMode} className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white" aria-label={`تغيير مستوى التفاصيل، الحالي ${MODE_LABELS[mode]}`} title="مبسّط / موجّه / خبير"><Gauge className="w-4 h-4" /></button>
-            <button onClick={() => setPaletteOpen(true)} className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white text-xs font-bold flex items-center gap-2"><Command className="w-4 h-4" /><span>بحث</span><span className="hidden md:inline text-slate-400" dir="ltr">⌘K</span></button>
-            <button onClick={() => onSurfaceChange(nextMove.surface)} className="px-4 py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center gap-2 hover:bg-gold-400"><span>{nextMove.action}</span><ArrowLeft className="w-4 h-4" /></button>
+            <button onClick={cycleMode} className="px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white flex items-center gap-1.5" aria-label={`مستوى التفاصيل: ${MODE_LABELS[mode]}. اضغط للتبديل بين مبسّط وموجّه وخبير`} title="مستوى التفاصيل: مبسّط / موجّه / خبير"><Gauge className="w-4 h-4" /><span className="text-xs font-bold">{MODE_LABELS[mode]}</span></button>
+            <button onClick={() => setPaletteOpen(true)} className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white text-xs font-bold flex items-center gap-2"><Search className="w-4 h-4" /><span>بحث</span><kbd className="hidden lg:inline text-slate-400 font-sans" dir="ltr">{SHORTCUT_HINT}</kbd></button>
+            {!(activeSurface === 'PUBLIC' && nextMove.surface === 'CONSUMER') && <button onClick={() => onSurfaceChange(nextMove.surface)} className="px-4 py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center gap-2 hover:bg-gold-400"><span>{nextMove.action}</span><ArrowLeft className="w-4 h-4" /></button>}
           </div>
         </div>
       </section>

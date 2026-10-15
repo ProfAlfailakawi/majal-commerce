@@ -401,7 +401,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
                       <span className={`w-11 h-11 rounded-2xl grid place-items-center border ${item.accent.ring} ${item.accent.fill} ${item.accent.text}`}>
                         {item.icon}
                       </span>
-                      <span className="text-xs font-black tracking-wider text-slate-400">{item.level}</span>
+                      <span className="text-xs font-black text-slate-400">{item.level}</span>
                     </div>
                     <h3 className="text-sm font-black text-slate-100">{item.title}</h3>
                     <p className="text-xs text-slate-400 leading-6">{item.body}</p>
