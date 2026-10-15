@@ -1041,6 +1041,13 @@ button.dna-hubn:focus-visible .dna-hubt { transform: translateY(-2px); }
 html[dir='rtl'] [data-draw='armed'] .dna-draw-bar,
 html[dir='rtl'] [data-draw] .dna-draw-bar { transform-origin: 100% 50%; }
 
+/* Stacked segmented bars: one left-to-right (inline-start) wipe of the whole bar, so the segments stay
+   joined while it draws instead of each sliding in on its own with gaps between. */
+[data-draw] .dna-draw-stack { transition: clip-path var(--draw-dur, 700ms) var(--dna-ease); clip-path: inset(0); }
+[data-draw='armed'] .dna-draw-stack, [data-draw='armed'].dna-draw-stack { clip-path: inset(0 100% 0 0); transition: none; }
+[data-draw='armed'] .dna-draw-stack:dir(rtl), [data-draw='armed'].dna-draw-stack:dir(rtl) { clip-path: inset(0 0 0 100%); }
+[data-draw] .dna-draw-stack .dna-draw-bar { transform: none; transition: none; }
+
 /* sparkline: the line draws (pathLength is 1), then the area and end dot fade in */
 [data-draw] .dna-sparkl { stroke-dasharray: 1; transition: stroke-dashoffset var(--draw-dur, 900ms) var(--dna-ease), opacity 120ms linear; }
 [data-draw='armed'] .dna-sparkl { stroke-dashoffset: 1; opacity: 0; transition: none; }

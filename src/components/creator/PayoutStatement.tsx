@@ -59,7 +59,7 @@ const SplitBar: React.FC<{ title: string; total: number; totalLabel: string; seg
       <span className="text-xs font-bold text-slate-300">{title}</span>
       <span className="text-xs text-slate-300 whitespace-nowrap">{totalLabel} <b className="text-gold-300 text-base font-black tabular-nums whitespace-nowrap">{formatFils(total)}</b></span>
     </div>
-    <div role="img" aria-label={`${title}: ${segs.map(g => `${g.label} ${formatFils(g.fils)}`).join('، ')}`} className="flex h-3 w-full overflow-hidden rounded-full bg-white/5 gap-px" dir="rtl">
+    <div role="img" aria-label={`${title}: ${segs.map(g => `${g.label} ${formatFils(g.fils)}`).join('، ')}`} className="flex h-3 w-full overflow-hidden rounded-full bg-white/5 gap-px dna-draw-stack" dir="rtl">
       {total > 0 && segs.filter(g => g.fils > 0).map((g, i) => <span key={g.label} className={`${g.bar} dna-draw-bar`} style={{ width: `${(g.fils / total) * 100}%`, ...dnaDrawDelay(i) }} />)}
     </div>
     <dl className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-x-4 gap-y-2 text-xs">
