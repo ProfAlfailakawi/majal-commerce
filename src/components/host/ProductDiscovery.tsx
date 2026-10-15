@@ -103,7 +103,7 @@ export const ProductDiscovery: React.FC = () => {
       </div>
 
       {requestSentNotice && (
-        <div className="p-3 bg-gold-500/20 text-gold-300 border border-gold-500/30 rounded-xl text-xs font-bold animate-in fade-in">
+        <div className="p-3 bg-gold-500/20 text-gold-300 border border-gold-500/30 rounded-xl text-xs font-bold animate-in fade-in" data-fade>
           {requestSentNotice}
         </div>
       )}

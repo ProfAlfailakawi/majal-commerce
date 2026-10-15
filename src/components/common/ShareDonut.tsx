@@ -1,4 +1,5 @@
 import React from 'react';
+import { drawOptions, useDrawIn } from '../dna/useDrawIn';
 
 export interface ShareSegment {
   key: string;
@@ -25,13 +26,16 @@ interface ShareDonutProps {
   legendBeside?: boolean;
   /** When given, each legend chip also shows its value and share (display only). */
   formatValue?: (value: number) => React.ReactNode;
+  /** Opt-in: arcs draw one after another, once (string = playKey). */
+  draw?: boolean | string;
 }
 
 /**
  * Presentation-only donut: arcs are value/total of numbers the screen already shows.
  * It never computes money — it only draws the proportions it is given.
  */
-export const ShareDonut: React.FC<ShareDonutProps> = ({ segments, total, size = 112, stroke = 14, ariaLabel, icon, centerValue, centerLabel, legendBeside, formatValue }) => {
+export const ShareDonut: React.FC<ShareDonutProps> = ({ segments, total, size = 112, stroke = 14, ariaLabel, icon, centerValue, centerLabel, legendBeside, formatValue, draw }) => {
+  const drawProps = useDrawIn(drawOptions(draw));
   const sum = total && total > 0 ? total : segments.reduce((acc, s) => acc + Math.max(0, s.value), 0);
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
@@ -39,7 +43,7 @@ export const ShareDonut: React.FC<ShareDonutProps> = ({ segments, total, size = 
   let offset = 0;
   return (
     <div className={`flex flex-wrap items-center gap-x-6 gap-y-3 w-full ${legendBeside ? 'justify-start' : 'justify-center'} ${formatValue ? 'gap-x-10 max-w-xl mx-auto rounded-2xl border border-white/10 bg-white/[0.03] p-5' : ''}`}>
-      <div role="img" aria-label={centerValue !== undefined ? `${ariaLabel}، الإجمالي ${centerValue}${centerLabel ? ' ' + centerLabel : ''}` : ariaLabel} className="relative shrink-0" style={{ inlineSize: size, blockSize: size }}>
+      <div ref={drawProps.ref as React.Ref<HTMLDivElement>} data-draw={drawProps['data-draw']} role="img" aria-label={centerValue !== undefined ? `${ariaLabel}، الإجمالي ${centerValue}${centerLabel ? ' ' + centerLabel : ''}` : ariaLabel} className="relative shrink-0" style={{ inlineSize: size, blockSize: size }}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true" className="-rotate-90 rtl:scale-x-[-1]">
           <circle cx={mid} cy={mid} r={r} fill="none" strokeWidth={stroke} className="stroke-white/10" />
           {sum > 0 && segments.map(seg => {
@@ -54,7 +58,8 @@ export const ShareDonut: React.FC<ShareDonutProps> = ({ segments, total, size = 
                 strokeWidth={stroke}
                 strokeDasharray={`${Math.max(0, len - 1.5)} ${c}`}
                 strokeDashoffset={-offset}
-                className={seg.strokeClass}
+                className={`${seg.strokeClass} dna-draw-arc`}
+                style={{ ['--draw-delay' as string]: `${Math.round((offset / c) * 700)}ms`, ['--draw-dur' as string]: `${Math.max(120, Math.round((len / c) * 700))}ms` } as React.CSSProperties}
               />
             ) : null;
             offset += len;
