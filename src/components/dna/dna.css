@@ -1025,6 +1025,8 @@ button.dna-hubn:focus-visible .dna-hubt { transform: translateY(-2px); }
 [data-draw] .dna-draw-arc {
   transition: stroke-dasharray var(--draw-dur, 900ms) var(--dna-ease) var(--draw-delay, 0ms), opacity 160ms linear var(--draw-delay, 0ms);
 }
+/* The collapsed start state only exists on screen: print always shows the final graphics. */
+@media screen {
 [data-draw='armed'] .dna-draw-arc {
   stroke-dasharray: 0 10000;
   opacity: 0;
@@ -1058,6 +1060,7 @@ html[dir='rtl'] [data-draw] .dna-draw-bar { transform-origin: 100% 50%; }
 .dna-draw-quick { --draw-dur: 400ms; }
 [data-draw] .dna-draw-item { transition: opacity 240ms var(--dna-ease) var(--draw-delay, 0ms), transform 240ms var(--dna-ease) var(--draw-delay, 0ms); }
 [data-draw='armed'] .dna-draw-item { opacity: 0; transform: translateY(4px); transition: none; }
+}
 
 .dna-countup { font-variant-numeric: tabular-nums; position: relative; }
 

@@ -2,6 +2,7 @@ import './dna.css';
 import type { CSSProperties } from 'react';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { markDrawn, readMotionEnv, shouldArm, type DrawPhase } from '../../lib/drawIn';
+import { effectiveThreshold } from '../../lib/journeyReveal';
 
 export interface DrawInOptions {
   /** Opt-in switch; false renders the final state and never observes. */
@@ -34,13 +35,17 @@ export function useDrawIn({ enabled = true, playKey, threshold = 0.4, settleMs =
     }
     let settle: number | undefined;
     setPhase('armed');
-    const io = new IntersectionObserver(([entry]) => {
-      if (!entry || !entry.isIntersecting || entry.intersectionRatio < threshold - 0.01) return;
+    const io = new IntersectionObserver((entries) => {
+      const entry = entries[entries.length - 1];
+      if (!entry || !entry.isIntersecting) return;
+      // A wrapper taller than the viewport can never show `threshold` of itself: cap the share (same rule as the journey reveal).
+      const need = effectiveThreshold(threshold, entry.boundingClientRect.height, window.innerHeight);
+      if (entry.intersectionRatio < need - 0.01) return;
       io.disconnect();
       markDrawn(playKey);
       setPhase('go');
       settle = window.setTimeout(() => setPhase('idle'), settleMs);
-    }, { threshold: [0, threshold] });
+    }, { threshold: [0, 0.05, 0.1, 0.15, 0.2, 0.3, threshold] });
     io.observe(node);
     return () => {
       io.disconnect();
