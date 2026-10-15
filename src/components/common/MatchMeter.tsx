@@ -1,18 +1,20 @@
 import React from 'react';
 import { Info } from 'lucide-react';
+import { dnaDrawDelay, drawOptions, useDrawIn } from '../dna/useDrawIn';
 
 export interface MatchBar { label: string; value: number }
 
 /** Score as a thin ring with the number kept in the middle. Pure display of an existing value. */
-export const ScoreRing: React.FC<{ value: number; caption?: string; suffix?: string; size?: number }> = ({ value, caption, suffix = '', size = 56 }) => {
+export const ScoreRing: React.FC<{ value: number; caption?: string; suffix?: string; size?: number; /** Opt-in: the arc draws once (string = playKey). */ draw?: boolean | string }> = ({ value, caption, suffix = '', size = 56, draw }) => {
+  const drawProps = useDrawIn(drawOptions(draw));
   const r = 22;
   const c = 2 * Math.PI * r;
   const pct = Math.max(0, Math.min(100, value));
   return (
-    <div className="relative shrink-0 grid place-items-center text-center" style={{ width: size, height: size }} role="img" aria-label={`${caption ?? ''} ${value}${suffix}`.trim()}>
+    <div ref={drawProps.ref as React.Ref<HTMLDivElement>} data-draw={drawProps['data-draw']} className="relative shrink-0 grid place-items-center text-center" style={{ width: size, height: size }} role="img" aria-label={`${caption ?? ''} ${value}${suffix}`.trim()}>
       <svg viewBox="0 0 56 56" className="absolute inset-0 w-full h-full -rotate-90" aria-hidden="true">
         <circle cx="28" cy="28" r={r} fill="none" strokeWidth="3.5" className="stroke-white/10" />
-        <circle cx="28" cy="28" r={r} fill="none" strokeWidth="3.5" strokeLinecap="round" className="stroke-gold-400" strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)} />
+        {pct > 0 && <circle cx="28" cy="28" r={r} fill="none" strokeWidth="3.5" strokeLinecap="round" className="stroke-gold-400 dna-draw-arc" strokeDasharray={`${c * (pct / 100)} ${c}`} />}
       </svg>
       <span className="relative text-base font-black text-gold-300 tabular-nums leading-none">{value}{suffix}</span>
     </div>
@@ -20,19 +22,22 @@ export const ScoreRing: React.FC<{ value: number; caption?: string; suffix?: str
 };
 
 /** Thin labelled bars, one per fit dimension, number kept beside each. */
-export const MicroBars: React.FC<{ bars: MatchBar[]; suffix?: string }> = ({ bars, suffix = '%' }) => (
-  <ul className="space-y-2 text-xs">
-    {bars.map(b => (
+export const MicroBars: React.FC<{ bars: MatchBar[]; suffix?: string; /** Opt-in: bars grow once (string = playKey). */ draw?: boolean | string }> = ({ bars, suffix = '%', draw }) => {
+  const drawProps = useDrawIn(drawOptions(draw));
+  return (
+  <ul ref={drawProps.ref as React.Ref<HTMLUListElement>} data-draw={drawProps['data-draw']} className="space-y-2 text-xs">
+    {bars.map((b, i) => (
       <li key={b.label} className="grid grid-cols-[minmax(0,6.5rem)_1fr_2.75rem] items-center gap-2">
         <span className="text-slate-400 truncate">{b.label}</span>
         <span className="h-1.5 rounded-full bg-white/10 overflow-hidden" aria-hidden="true">
-          <span className="block h-full rounded-full bg-gold-400/80" style={{ width: `${Math.max(0, Math.min(100, b.value))}%` }} />
+          <span className="block h-full rounded-full bg-gold-400/80 dna-draw-bar" style={{ width: `${Math.max(0, Math.min(100, b.value))}%`, ...dnaDrawDelay(i) }} />
         </span>
         <strong className="text-slate-100 tabular-nums text-end">{b.value}{suffix}</strong>
       </li>
     ))}
   </ul>
-);
+  );
+};
 
 /** The explanation sentence stays in the page, folded behind a native disclosure. */
 export const FoldedNote: React.FC<{ summary: string; children: React.ReactNode }> = ({ summary, children }) => (

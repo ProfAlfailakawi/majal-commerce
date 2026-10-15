@@ -329,7 +329,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
 
               {showNotifications && (
-                <div className="fixed inset-x-3 top-[4.5rem] sm:absolute sm:inset-x-auto sm:top-auto sm:end-0 mt-2 sm:w-96 max-w-[calc(100vw-1.5rem)] max-h-[calc(100dvh-6rem)] overflow-y-auto bg-ink-700 sm:bg-ink-700/95 border border-white/10 rounded-2xl shadow-2xl p-4 text-xs text-slate-200 z-50 animate-in fade-in slide-in-from-top-2">
+                <div className="fixed inset-x-3 top-[4.5rem] sm:absolute sm:inset-x-auto sm:top-auto sm:end-0 mt-2 sm:w-96 max-w-[calc(100vw-1.5rem)] max-h-[calc(100dvh-6rem)] overflow-y-auto bg-ink-700 sm:bg-ink-700/95 border border-white/10 rounded-2xl shadow-2xl p-4 text-xs text-slate-200 z-50 animate-in fade-in slide-in-from-top-2" data-fade>
                   <div className="font-bold pb-3 mb-3 flex justify-between items-center text-gold-300 border-b border-white/10">
                     <div><span className="block">مركز القرار</span><span className="text-xs text-slate-400 font-medium">الأهم أولاً، والمتكرر يُدمج</span></div>
                     <div className="flex items-center gap-2">

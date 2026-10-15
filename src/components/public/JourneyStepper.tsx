@@ -26,7 +26,18 @@ function whenBootReady(cb: () => void): () => void {
  * the message; each station's explanation stays available as the node's tooltip and in
  * the «تفاصيل المحطات» disclosure, so no copy from src/data/journey.tsx is lost.
  */
-export const JourneyStepper: React.FC<{ detail?: 'body' | 'brief'; className?: string; animate?: boolean; hold?: boolean }> = ({ detail = 'body', className, animate = false, hold = false }) => {
+export const JourneyStepper: React.FC<{
+  detail?: 'body' | 'brief';
+  className?: string;
+  animate?: boolean;
+  hold?: boolean;
+  /** Which surface owns the one-time intro; the landing keeps its own key by default. */
+  playKey?: string;
+  /** Per-station pace; the landing keeps its slower, deliberate default. */
+  stepMs?: number;
+  /** Replaces the boot-splash gate (e.g. a short delay after a screen's own entrance). */
+  revealGate?: (go: () => void) => () => void;
+}> = ({ detail = 'body', className, animate = false, hold = false, playKey = 'landing-journey', stepMs = STEP_MS, revealGate = whenBootReady }) => {
   return (
   <div className={`journey-dna space-y-5 ${className ?? ''}`}>
     <DnaStepper
@@ -34,12 +45,12 @@ export const JourneyStepper: React.FC<{ detail?: 'body' | 'brief'; className?: s
       ariaLabel="محطات رحلة مجال"
       stateText={{ done: 'محطة من الرحلة' }}
       reveal={animate}
-      playKey="landing-journey"
+      playKey={playKey}
       persist={false}
       hold={hold}
-      stepMs={STEP_MS}
+      stepMs={stepMs}
       threshold={REVEAL_THRESHOLD}
-      revealGate={whenBootReady}
+      revealGate={revealGate}
       steps={journeyStages.map(stage => ({
         key: stage.index,
         state: 'done' as const,

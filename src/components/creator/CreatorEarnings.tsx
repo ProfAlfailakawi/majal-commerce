@@ -64,10 +64,10 @@ export const CreatorEarnings: React.FC = () => {
       {exported && <div className="p-3 bg-emerald-500/10 border border-emerald-400/20 text-emerald-300 font-bold text-xs rounded-xl">تم إنشاء كشف فعلي من البيانات الحالية وتنزيله بصيغة CSV.</div>}
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="glass-card p-4 sm:p-5 rounded-2xl border border-white/10"><div className="text-xs text-slate-400">إجمالي الحقوق المسجلة</div><div className="text-xl sm:text-2xl font-black text-gold-300 mt-2">{totals.lifetime.toFixed(3)} <span className="text-xs">د.ك</span></div></div>
-        <div className="glass-card p-4 sm:p-5 rounded-2xl border border-gold-400/15"><div className="flex items-center justify-between text-xs text-gold-300"><span>مؤهل للتسوية</span><ArrowDownRight className="w-4 h-4" /></div><div className="text-xl sm:text-2xl font-black text-gold-300 mt-2">{totals.eligible.toFixed(3)} <span className="text-xs">د.ك</span></div></div>
-        <div className="glass-card p-4 sm:p-5 rounded-2xl border border-sky-400/15"><div className="flex items-center justify-between text-xs text-sky-300"><span>ضمن دفعة معتمدة</span><Clock3 className="w-4 h-4" /></div><div className="text-xl sm:text-2xl font-black text-sky-300 mt-2">{totals.locked.toFixed(3)} <span className="text-xs">د.ك</span></div></div>
-        <div className="glass-card p-5 rounded-2xl border border-emerald-400/15"><div className="flex items-center justify-between text-xs text-emerald-300"><span>مدفوع ومؤكد</span><CheckCircle2 className="w-4 h-4" /></div><div className="text-2xl font-black text-emerald-300 mt-2">{totals.paid.toFixed(3)} <span className="text-xs">د.ك</span></div></div>
+        <div className="majal-rise glass-card p-4 sm:p-5 rounded-2xl border border-white/10"><div className="text-xs text-slate-400">إجمالي الحقوق المسجلة</div><div className="text-xl sm:text-2xl font-black text-gold-300 mt-2">{totals.lifetime.toFixed(3)} <span className="text-xs">د.ك</span></div></div>
+        <div className="majal-rise glass-card p-4 sm:p-5 rounded-2xl border border-gold-400/15"><div className="flex items-center justify-between text-xs text-gold-300"><span>مؤهل للتسوية</span><ArrowDownRight className="w-4 h-4" /></div><div className="text-xl sm:text-2xl font-black text-gold-300 mt-2">{totals.eligible.toFixed(3)} <span className="text-xs">د.ك</span></div></div>
+        <div className="majal-rise glass-card p-4 sm:p-5 rounded-2xl border border-sky-400/15"><div className="flex items-center justify-between text-xs text-sky-300"><span>ضمن دفعة معتمدة</span><Clock3 className="w-4 h-4" /></div><div className="text-xl sm:text-2xl font-black text-sky-300 mt-2">{totals.locked.toFixed(3)} <span className="text-xs">د.ك</span></div></div>
+        <div className="majal-rise glass-card p-5 rounded-2xl border border-emerald-400/15"><div className="flex items-center justify-between text-xs text-emerald-300"><span>مدفوع ومؤكد</span><CheckCircle2 className="w-4 h-4" /></div><div className="text-2xl font-black text-emerald-300 mt-2">{totals.paid.toFixed(3)} <span className="text-xs">د.ك</span></div></div>
       </div>
 
       {totals.lifetime > 0 && (
@@ -76,6 +76,7 @@ export const CreatorEarnings: React.FC = () => {
             formatValue={v => `${v.toFixed(3)} د.ك`}
               ariaLabel="توزيع الحقوق حسب حالة التسوية"
             total={totals.lifetime}
+            draw="creator-earnings-donut"
             icon={<Wallet className="w-6 h-6" />}
             segments={[
               { key: 'eligible', label: 'مؤهل للتسوية', value: totals.eligible, strokeClass: 'stroke-gold-400', dotClass: 'bg-gold-400' },

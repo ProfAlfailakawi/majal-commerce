@@ -21,8 +21,8 @@ import {
   PauseCircle,
   Wrench
 } from 'lucide-react';
-import { DnaHubMap } from '../dna/DnaKit';
-import { SegBar, MiniRing } from '../common/Viz';
+import { DnaFlash, DnaHubMap, DnaStepper } from '../dna/DnaKit';
+import { MiniRing } from '../common/Viz';
 import { MajalMark } from '../brand/MajalMark';
 import { shortRef } from '../../lib/displayRef';
 import { store } from '../../lib/store';
@@ -142,10 +142,10 @@ export const AdminDashboard: React.FC = () => {
           { label: 'منشآت مرخّصة', value: `${totals.verifiedHosts}`, icon: <Building2 className="w-5 h-5 text-fuchsia-300" /> },
           { label: 'نزاعات مفتوحة', value: `${totals.openDisputes}`, icon: <AlertTriangle className="w-5 h-5 text-rose-300" /> }
         ].map((card, idx) => (
-          <div key={idx} className={`glass-card rounded-2xl p-4 sm:p-5 border border-white/10 min-w-0 ${idx === 0 ? 'col-span-2 sm:col-span-1' : ''}`}>
+          <div key={idx} className={`majal-rise glass-card rounded-2xl p-4 sm:p-5 border border-white/10 min-w-0 ${idx === 0 ? 'col-span-2 sm:col-span-1' : ''}`}>
             <div>{card.icon}</div>
             <div className="mt-3 sm:mt-4 text-xs text-slate-400">{card.label}</div>
-            <div className="mt-1 text-xl sm:text-2xl font-black text-slate-100 font-mono break-words">{card.value}</div>
+            <DnaFlash as="div" value={card.value} className="mt-1 text-xl sm:text-2xl font-black text-slate-100 font-mono break-words">{card.value}</DnaFlash>
           </div>
         ))}
       </section>
@@ -318,7 +318,7 @@ export const AdminDashboard: React.FC = () => {
             const paid = store.settlements.filter(b => b.status === 'PAID').reduce((a, b) => a + b.totalAmountKwd, 0);
             return (
               <div className="flex items-center gap-4 rounded-2xl p-4 bg-white/[0.03] border border-white/10">
-                <MiniRing value={total ? paid / total : 0} size={64} stroke={7} className="shrink-0 text-emerald-400">{total ? Math.round((paid / total) * 100) : 0}%</MiniRing>
+                <MiniRing value={total ? paid / total : 0} size={64} stroke={7} draw="admin-settlements-ring" className="shrink-0 text-emerald-400">{total ? Math.round((paid / total) * 100) : 0}%</MiniRing>
                 <div className="flex flex-wrap gap-2 text-xs min-w-0 flex-1">
                   <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/20 text-emerald-300 font-bold">مدفوع <span className="whitespace-nowrap">{paid.toFixed(3)} د.ك</span></span>
                   <span className="px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-400/20 text-amber-300 font-bold">بانتظار الدفع <span className="whitespace-nowrap">{(total - paid).toFixed(3)} د.ك</span></span>
@@ -355,8 +355,12 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
                 <div aria-hidden="true" className="max-w-sm">
-                  <SegBar height={4} segs={steps.map(st => ({ value: 1, className: st.done ? (paidBatch ? 'bg-emerald-400' : 'bg-amber-400') : 'bg-white/10' }))} />
-                  <div className="mt-1 grid grid-cols-3 text-xs text-slate-500">{steps.map(st => <span key={st.label} className={st.done ? 'text-slate-300' : ''}>{st.label}</span>)}</div>
+                  {/* Same three-station pipeline as the creator's payout statement; static states, no intro. */}
+                  <DnaStepper
+                    size="sm"
+                    className="dna-calm"
+                    steps={steps.map((st, i) => ({ key: `${i}`, label: st.label, state: st.done ? 'done' as const : 'pending' as const }))}
+                  />
                 </div>
               </div>
               );

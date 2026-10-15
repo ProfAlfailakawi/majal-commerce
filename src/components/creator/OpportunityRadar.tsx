@@ -105,7 +105,7 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId, o
       </div>
 
       {hasOpportunities ? (
-        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="dna-draw-quick grid md:grid-cols-2 xl:grid-cols-3 gap-4">
           {(compact ? opportunities.slice(0, 3) : opportunities).map(({ product, matchScore, host, key }) => (
             <div key={key} className="rounded-2xl p-5 bg-white/5 border border-white/10 hover:border-gold-300/25 transition-colors space-y-4">
               <div className="flex items-start justify-between gap-3">
@@ -113,10 +113,10 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId, o
                   <div className="text-xs text-slate-400">{product.publicName}</div>
                   <h4 className="font-black text-slate-100 mt-1">{host?.commercialName || 'منشأة مرخّصة'}</h4>
                 </div>
-                <ScoreRing value={matchScore.overallScore} caption="تطابق" />
+                <ScoreRing value={matchScore.overallScore} caption="تطابق" draw={`opp-ring:${key}`} />
               </div>
 
-              <MicroBars bars={[
+              <MicroBars draw={`opp-bars:${key}`} bars={[
                 { label: 'توافق التشغيل', value: matchScore.equipmentFit },
                 { label: 'توافق الهامش', value: matchScore.marginFit },
                 { label: 'توافق العلامة', value: matchScore.brandFit }

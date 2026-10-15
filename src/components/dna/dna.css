@@ -29,7 +29,7 @@
   --dna-r: 18px;
   --dna-r-sm: 12px;
   --dna-shadow: 0 1px 2px rgba(20, 32, 27, 0.04), 0 12px 30px -18px rgba(20, 32, 27, 0.2);
-  --dna-ease: cubic-bezier(0.22, 0.78, 0.24, 1);
+  --dna-ease: var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 /* ---------- base ---------- */
@@ -441,6 +441,9 @@
 
 /* Calm: decision/admin surfaces keep the current ring static (no continuous pulse). */
 .dna-steps.dna-calm .dna-stepi[data-state='current'] .dna-node { animation: none; }
+
+/* Change-highlight (flashChange): one halo on the newest newly lit station. */
+.dna-steps[data-flash] .dna-stepi[data-just] .dna-node { animation: dna-halo 1.5s var(--dna-ease) 1; }
 
 /* ---------- timeline ---------- */
 .dna-tline {
@@ -1014,6 +1017,67 @@ button.dna-hubn:focus-visible .dna-hubt { transform: translateY(-2px); }
   block-size: 18px !important;
 }
 
+/* ---------- draw-in (opt-in) ----------
+   One rule set for every ring, donut, bar, sparkline and timeline. `data-draw` is only ever
+   present while JS is playing the effect (see useDrawIn): 'armed' is the collapsed start,
+   'go' transitions to the real value. Without the attribute (SSR, tests, reduced motion,
+   already played, print) the final state renders. Transform / opacity / stroke only. */
+[data-draw] .dna-draw-arc {
+  transition: stroke-dasharray var(--draw-dur, 900ms) var(--dna-ease) var(--draw-delay, 0ms), opacity 160ms linear var(--draw-delay, 0ms);
+}
+/* The collapsed start state only exists on screen: print always shows the final graphics. */
+@media screen {
+[data-draw='armed'] .dna-draw-arc {
+  stroke-dasharray: 0 10000;
+  opacity: 0;
+  transition: none;
+}
+[data-draw] .dna-draw-bar,
+[data-draw] .dna-draw-barv {
+  transition: transform var(--draw-dur, 600ms) var(--dna-ease) var(--draw-delay, 0ms);
+}
+[data-draw='armed'] .dna-draw-bar { transform: scaleX(0); transform-origin: 0 50%; transition: none; }
+[data-draw='armed'] .dna-draw-barv { transform: scaleY(0); transform-origin: 50% 100%; transition: none; }
+html[dir='rtl'] [data-draw='armed'] .dna-draw-bar,
+html[dir='rtl'] [data-draw] .dna-draw-bar { transform-origin: 100% 50%; }
+
+/* sparkline: the line draws (pathLength is 1), then the area and end dot fade in */
+[data-draw] .dna-sparkl { stroke-dasharray: 1; transition: stroke-dashoffset var(--draw-dur, 900ms) var(--dna-ease), opacity 120ms linear; }
+[data-draw='armed'] .dna-sparkl { stroke-dashoffset: 1; opacity: 0; transition: none; }
+[data-draw] .dna-sparka,
+[data-draw] .dna-spark circle { transition: opacity 360ms var(--dna-ease) 600ms; }
+[data-draw='armed'] .dna-sparka,
+[data-draw='armed'] .dna-spark circle { opacity: 0; transition: none; }
+
+/* timeline: dots and connectors appear in order; the text is readable at once */
+[data-draw] .dna-tli .dna-dot { transition: transform 320ms var(--dna-ease) var(--draw-delay, 0ms), opacity 320ms var(--dna-ease) var(--draw-delay, 0ms); }
+[data-draw='armed'] .dna-tli .dna-dot { transform: scale(0.6); opacity: 0; transition: none; }
+[data-draw] .dna-tli:not(:last-child)::after { transition: transform 320ms var(--dna-ease) var(--draw-delay, 0ms); transform-origin: 50% 0; }
+[data-draw='armed'] .dna-tli:not(:last-child)::after { transform: scaleY(0); transition: none; }
+
+/* list rows that appear in order after the figure above them (short, opacity + 4px) */
+/* Card grids: a shorter draw so a page full of cards never feels slow. */
+.dna-draw-quick { --draw-dur: 400ms; }
+[data-draw] .dna-draw-item { transition: opacity 240ms var(--dna-ease) var(--draw-delay, 0ms), transform 240ms var(--dna-ease) var(--draw-delay, 0ms); }
+[data-draw='armed'] .dna-draw-item { opacity: 0; transform: translateY(4px); transition: none; }
+}
+
+.dna-countup { font-variant-numeric: tabular-nums; position: relative; }
+
+/* Short change-highlight: one soft accent wash (background only) that fades to rest. */
+@keyframes dna-changed {
+  from { background-color: color-mix(in srgb, var(--dna-accent) 22%, transparent); }
+  to   { background-color: transparent; }
+}
+.dna-changed { animation: dna-changed 1.2s var(--dna-ease) 1; border-radius: 6px; }
+
+@media print {
+  [data-draw] * { transition: none !important; }
+  [data-draw='armed'] .dna-draw-bar, [data-draw='armed'] .dna-draw-barv, [data-draw='armed'] .dna-draw-item { transform: none; opacity: 1; }
+  [data-draw='armed'] .dna-draw-arc, [data-draw='armed'] .dna-sparkl, [data-draw='armed'] .dna-sparka,
+  [data-draw='armed'] .dna-spark circle, [data-draw='armed'] .dna-tli .dna-dot { opacity: 1; stroke-dashoffset: 0; }
+}
+
 /* ---------- motion safety ---------- */
 @media (prefers-reduced-motion: reduce) {
   .dna-hub .dna-hubln,
@@ -1022,6 +1086,8 @@ button.dna-hubn:focus-visible .dna-hubt { transform: translateY(-2px); }
   .dna-live i {
     animation: none !important;
   }
+  .dna-changed { animation: none !important; }
+  [data-draw] * { transition: none !important; }
   .dna-ringv,
   .dna-stepi + .dna-stepi::before,
   .dna-stepi + .dna-stepi::after,

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Clock3, ShieldCheck, XCircle } from 'lucide-react';
-import { DnaRing } from '../dna/DnaKit';
+import { DnaDraw, DnaRing } from '../dna/DnaKit';
 import { commerceClient, TrustChecklist, TrustItem } from '../../lib/commerceClient';
 import { IS_DEMO_MODE } from '../../lib/runtime';
 
@@ -29,7 +29,7 @@ export const DropTrustChecklist: React.FC<{ launchId: string }> = ({ launchId })
   if (IS_DEMO_MODE || failed) return null;
   if (!data) return <div className="text-xs text-slate-300" role="status">جارٍ تحميل قائمة الامتثال…</div>;
   return (
-    <section aria-labelledby={`trust-${launchId}`} className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3">
+    <DnaDraw as="section" draw={`trust-checklist:${launchId}`} aria-labelledby={`trust-${launchId}`} className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3">
       <div className="flex items-center gap-3">
         <DnaRing value={data.items.length ? data.items.filter(i => i.status === 'PASS').length : null} max={Math.max(1, data.items.length)} size={48} stroke={4} tone="accent" label={`${data.items.filter(i => i.status === 'PASS').length}/${data.items.length}`} ariaLabel={`${data.items.filter(i => i.status === 'PASS').length} من ${data.items.length} بنود متحقق منها`} />
         <div>
@@ -38,10 +38,10 @@ export const DropTrustChecklist: React.FC<{ launchId: string }> = ({ launchId })
         </div>
       </div>
       <ul className="space-y-2">
-        {data.items.map(item => {
+        {data.items.map((item, i) => {
           const s = STATUS[item.status];
           return (
-            <li key={item.key} className="flex items-start justify-between gap-3 text-xs">
+            <li key={item.key} className="dna-draw-item flex items-start justify-between gap-3 text-xs" style={{ ['--draw-delay' as string]: `${500 + Math.min(i, 6) * 60}ms` } as React.CSSProperties}>
               <div>
                 <div className="font-bold text-slate-100">{item.labelAr}</div>
                 {item.detail && <div className="text-slate-300 mt-0.5">{item.detail}</div>}
@@ -52,6 +52,6 @@ export const DropTrustChecklist: React.FC<{ launchId: string }> = ({ launchId })
           );
         })}
       </ul>
-    </section>
+    </DnaDraw>
   );
 };
