@@ -91,9 +91,9 @@ export const CreatorPortal: React.FC = () => {
       <section className="majal-hero glass-panel rounded-[28px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
         <div className="majal-glow -top-[19rem] -end-[17rem] w-[42rem] h-[42rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-          <div className="flex items-center gap-4 max-[374px]:flex-col max-[374px]:items-start">
+          <div className="flex items-center gap-4 min-w-0 max-[374px]:flex-col max-[374px]:items-start">
             <Avatar name={profile.displayName} src={profile.avatarUrl} size={80} shape="squircle" className="shadow-xl" />
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-400/20 text-xs font-black">مساحة المبدع</span>
                 <span className="text-xs text-slate-400">{profile.specialty}</span>
@@ -103,7 +103,7 @@ export const CreatorPortal: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 xl:shrink-0">
             <button onClick={() => setShowCalculator(true)} className="px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-bold text-slate-300 hover:bg-white/10">حاسبة الاقتصاديات</button>
             <button onClick={() => setShowWizard(true)} className="px-6 py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 text-xs font-black flex items-center gap-2"><Plus className="w-4 h-4" /> تسجيل منتج جديد</button>
           </div>

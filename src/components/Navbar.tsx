@@ -412,7 +412,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        <div className="xl:hidden flex items-center gap-2 overflow-x-auto py-2 sm:py-3 border-t border-white/10 text-xs no-scrollbar">
+        <div className="xl:hidden flex flex-wrap items-center gap-2 py-2 sm:py-3 border-t border-white/10 text-xs">
           {surfaces.map(s => {
             const isActive = activeSurface === s.id;
             return (

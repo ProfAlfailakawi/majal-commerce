@@ -145,7 +145,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
           <ProductImage src={product?.mediaUrls[0]} alt={launch.title} loading="lazy" className="w-full h-full object-cover" />
           <div className="majal-art-scrim absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
           <div className="absolute top-3 start-3 px-2.5 py-1 rounded-full bg-slate-950/75 border border-white/10 text-xs text-gold-300 font-black">{({ LIMITED_DROP: 'إطلاق محدود', TRIAL_PERIOD: 'فترة تجريبية', PERMANENT_MENU: 'قائمة دائمة', SEASONAL: 'موسمي' } as Record<string, string>)[launch.launchType] ?? launch.launchType}</div>
-          <div className="majal-art-title absolute bottom-4 start-4 end-4"><div className="text-xs text-emerald-300 font-black">{creator?.displayName} × {host?.commercialName}</div><h3 className="font-black text-white mt-1">{product?.publicName || launch.title}</h3></div>
+          <div className="majal-art-title absolute bottom-4 start-4 end-4"><div className="text-xs text-emerald-300 font-black line-clamp-1">{creator?.displayName} × {host?.commercialName}</div><h3 className="font-black text-white mt-1 leading-snug line-clamp-2">{product?.publicName || launch.title}</h3></div>
         </div>
         <div className="p-5 space-y-4">
           <p className="text-xs text-slate-400 leading-6 line-clamp-2">{product?.shortDescription}</p>
@@ -196,8 +196,8 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
                 <div className="majal-art-scrim absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
                 <div className="absolute top-4 start-4 px-3 py-1.5 rounded-full bg-slate-950/75 backdrop-blur text-gold-300 border border-gold-300/20 text-xs font-black">{formatKwd(featured.sellingPriceKwd)}</div>
                 <div className="majal-art-title absolute bottom-5 start-5 end-5">
-                  <div className="text-xs text-emerald-300 font-black mb-1">{featuredHost?.commercialName}</div>
-                  <h2 className="text-xl md:text-2xl font-black text-white">{featuredProduct.publicName}</h2>
+                  <div className="text-xs text-emerald-300 font-black mb-1 line-clamp-1">{featuredHost?.commercialName}</div>
+                  <h2 className="text-xl md:text-2xl font-black text-white leading-snug line-clamp-2">{featuredProduct.publicName}</h2>
                 </div>
               </div>
               <div className="p-5 space-y-4">
@@ -224,7 +224,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
       </section>
 
       <section className="space-y-5">
-        <div className="flex items-center justify-between gap-4"><div><h2 className="text-2xl font-black">الإطلاقات الحالية</h2><p className="text-xs text-slate-400 mt-1">منتجات محدودة، تجريبية، موسمية أو مرشحة للدخول الدائم.</p></div><div className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-400">{arCount(launches.length, AR.launch)}</div></div>
+        <div className="flex items-center justify-between gap-4"><div><h2 className="text-2xl font-black">الإطلاقات الحالية</h2><p className="text-xs text-slate-400 mt-1">منتجات محدودة، تجريبية، موسمية أو مرشحة للدخول الدائم.</p></div><div className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-400 whitespace-nowrap shrink-0">{arCount(launches.length, AR.launch)}</div></div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {launches.slice(0, LAUNCHES_VISIBLE).map(renderLaunchCard)}
           {!launches.length && <div className="md:col-span-2 lg:col-span-3 rounded-3xl p-8 border border-dashed border-white/15 bg-white/[0.02] text-center"><Sparkles className="w-7 h-7 text-gold-300 mx-auto" /><div className="font-black mt-3">لا توجد إطلاقات متاحة حاليًا</div><div className="text-xs text-slate-400 mt-2">لن يظهر زر الطلب قبل اكتمال الجاهزية وربط الدفع.</div></div>}

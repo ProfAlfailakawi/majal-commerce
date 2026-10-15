@@ -139,7 +139,7 @@ export const DigitalTwinPanel: React.FC<DigitalTwinPanelProps> = ({ product, hos
                 </div>
                 <button
                   onClick={() => setCompareMode(v => !v)}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold ${compareMode ? 'bg-sky-400 text-slate-950' : 'bg-white/5 text-slate-300 border border-white/10'}`}
+                  className={`shrink-0 whitespace-nowrap px-3 py-2 rounded-xl text-xs font-bold ${compareMode ? 'bg-sky-400 text-slate-950' : 'bg-white/5 text-slate-300 border border-white/10'}`}
                 >
                   {compareMode ? 'إغلاق المقارنة' : 'قارن نسختين'}
                 </button>
