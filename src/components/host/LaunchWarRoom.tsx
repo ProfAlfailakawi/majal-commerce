@@ -81,11 +81,11 @@ const LaunchWarRoomBody: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => 
     <section className="glass-panel rounded-3xl border border-white/10 p-5 md:p-6 space-y-5 relative overflow-hidden">
       <div className="absolute top-0 end-0 start-0 h-px bg-gradient-to-r from-transparent via-gold-400/60 to-transparent" />
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gold-500/10 border border-gold-400/20 flex items-center justify-center text-gold-300"><Rocket className="w-6 h-6" /></div>
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-12 h-12 shrink-0 rounded-2xl bg-gold-500/10 border border-gold-400/20 flex items-center justify-center text-gold-300"><Rocket className="w-6 h-6" /></div>
           <div><div className="flex items-center gap-2 flex-wrap"><h3 className="text-lg font-black">غرفة قيادة الإطلاق</h3><StatusPill status={launch.status} /></div><p className="text-xs text-slate-400 mt-1">{product?.publicName} — بيانات هذا الإطلاق فقط، بلا خلط مع منشآت أخرى.</p></div>
         </div>
-        <div className="flex items-center gap-2 text-xs font-bold text-emerald-300"><Activity className="w-4 h-4" /> عرض تشغيلي حي</div>
+        <div className="flex items-center gap-2 text-xs font-bold text-emerald-300 shrink-0 whitespace-nowrap"><Activity className="w-4 h-4" /> عرض تشغيلي حي</div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 max-lg:[&>*:last-child:nth-child(odd)]:col-span-2">

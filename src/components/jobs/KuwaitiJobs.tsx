@@ -72,7 +72,7 @@ export const KuwaitiJobs: React.FC = () => {
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h2 id="kuwaiti-jobs-title" className="text-lg font-black">فرص كويتية عبر مجال</h2>
-              <span className="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-slate-300">بوابة مضبوطة وليست سوق إعلانات مفتوح</span>
+              <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-slate-300 max-sm:rounded-xl max-sm:leading-5">بوابة مضبوطة وليست سوق إعلانات مفتوح</span>
             </div>
             <p className="text-xs text-slate-300 mt-1 leading-6">تظهر هنا فقط الوظائف التي وافقت عليها إدارة مجال. مخصصة لتوظيف الكويتيين لدى المنشآت والموردين في المنظومة.</p>
           </div>

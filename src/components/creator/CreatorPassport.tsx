@@ -119,10 +119,11 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
           </div>
         </div>
 
-        <div className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-4">
+        <div className="rounded-2xl p-4 bg-white/5 border border-white/10 flex flex-col gap-4">
           <div className="flex items-center gap-2 font-bold text-slate-100"><Crown className="w-4 h-4 text-gold-300" /> مسار الترقّي</div>
           <DnaStepper
             size="md"
+            className="my-auto"
             reveal
             playKey={`creator-path:${creatorId}`}
             ariaLabel="مسار الترقّي"

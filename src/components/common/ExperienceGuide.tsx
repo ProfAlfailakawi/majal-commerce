@@ -161,10 +161,10 @@ export const ExperienceGuide: React.FC<ExperienceGuideProps> = ({ activeSurface,
               {mode === 'EXPERT' && <span className="inline-flex mt-1 text-xs text-sky-300">إشارة السياق: {nextMove.signal} · السطح الحالي: {surfaceMeta[activeSurface].label}</span>}
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
             <button onClick={cycleMode} className="px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white flex items-center gap-1.5" aria-label={`مستوى التفاصيل: ${MODE_LABELS[mode]}. اضغط للتبديل بين مبسّط وموجّه وخبير`} title="مستوى التفاصيل: مبسّط / موجّه / خبير"><Gauge className="w-4 h-4" /><span className="text-xs font-bold">{MODE_LABELS[mode]}</span></button>
             <button onClick={() => setPaletteOpen(true)} className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white text-xs font-bold flex items-center gap-2"><Search className="w-4 h-4" /><span>بحث</span><kbd className="hidden lg:inline text-slate-400 font-sans" dir="ltr">{SHORTCUT_HINT}</kbd></button>
-            {!(activeSurface === 'PUBLIC' && nextMove.surface === 'CONSUMER') && <button onClick={() => onSurfaceChange(nextMove.surface)} className="px-4 py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center gap-2 hover:bg-gold-400"><span>{nextMove.action}</span><ArrowLeft className="w-4 h-4" /></button>}
+            {!(activeSurface === 'PUBLIC' && nextMove.surface === 'CONSUMER') && <button onClick={() => onSurfaceChange(nextMove.surface)} className="px-4 py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center gap-2 whitespace-nowrap hover:bg-gold-400"><span>{nextMove.action}</span><ArrowLeft className="w-4 h-4" /></button>}
           </div>
         </div>
       </section>
