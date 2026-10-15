@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   Lock,
@@ -101,7 +102,9 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
 
   const watermarkText = `نسخة حساسة من مجال — مشاهدة بواسطة: ${store.activeUser.name} — ${product.id} — ${currentRecipe?.versionNumber || 'NO-VERSION'} — ${new Date().toLocaleDateString('ar-KW-u-nu-latn')}`;
 
-  return (
+  // Portalled to <body>: rendered inside a glass panel (backdrop-filter), `fixed` would be
+  // positioned against that panel instead of the viewport and the sheet would sit half off-screen.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in">
       <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="recipe-vault-title" className="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl text-slate-100 flex flex-col max-h-[92dvh] relative">
         
@@ -126,7 +129,7 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
                   خزنة الوصفة السرية
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-xs font-bold whitespace-nowrap bg-gold-500/20 text-gold-400 border border-gold-500/30">
-                  درجة الاطلاع المتاحة: {effectiveDisclosureLevel} من 3
+                  درجة الاطلاع المتاحة: <bdi>{effectiveDisclosureLevel}</bdi> (الحد الأقصى <bdi>3</bdi>)
                 </span>
               </div>
               <p className="text-xs text-slate-400">
@@ -307,5 +310,5 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
 
       </div>
     </div>
-  );
+  , document.body);
 };

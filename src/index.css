@@ -1009,11 +1009,17 @@ body:has(.majal-ai-fab) footer { padding-bottom: 4.5rem; }
   .majal-ai-fab > button:hover > span, .majal-ai-fab > button:focus-visible > span, .majal-ai-fab > button:hover > svg:last-child, .majal-ai-fab > button:focus-visible > svg:last-child { display: inline-block; }
 }
 @media (max-width: 639px) {
-  /* Smaller, tucked into the corner and slightly translucent so it covers as little of the
-     left-edge content (rings, stat values) as possible; the page keeps a taller bottom gutter. */
-  .majal-ai-fab { inset-inline-end: 0.5rem; bottom: max(0.5rem, env(safe-area-inset-bottom)) !important; }
-  .majal-ai-fab > button { padding: 0; width: 2.75rem; height: 2.75rem; min-width: 2.75rem; min-height: 2.75rem; opacity: 0.6; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28); }
-  .majal-ai-fab > button:focus-visible, .majal-ai-fab > button:active { opacity: 1; }
+  /* Phones: the assistant is an edge tab, not a floating disc. It is flush with the screen edge
+     and only 2rem wide, so it stays inside the page gutter and never sits on rings, numbers or text
+     (cards keep >= 2rem of inline padding). It also steps aside entirely while the page scrolls. */
+  .majal-ai-fab { inset-inline-end: 0; bottom: max(1rem, env(safe-area-inset-bottom)); }
+  .majal-ai-fab > button {
+    padding: 0; width: 2rem; height: 3rem; min-width: 2rem; min-height: 3rem; opacity: 0.92; gap: 0;
+    border-radius: 0; border-start-start-radius: 0.875rem; border-end-start-radius: 0.875rem;
+    border-inline-end-width: 0; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  }
+  .majal-ai-fab > button > span, .majal-ai-fab > button > svg:last-child { display: none; }
+  .majal-ai-fab > button > svg { width: 1.125rem; height: 1.125rem; }
   body:has(.majal-ai-fab) footer { padding-bottom: 5.25rem; }
   /* While the page is moving the button steps aside, so it never rides over rings and numbers. */
   body.is-scrolling .majal-ai-fab { opacity: 0; pointer-events: none; }
@@ -1033,9 +1039,9 @@ body:has(.majal-ai-fab) footer { padding-bottom: 4.5rem; }
   .majal-guide-eyebrow, .majal-guide-reason { display: none; }
   .majal-guide > div > div:first-child > span:first-child { width: 2rem; height: 2rem; border-radius: 0.6rem; }
   .majal-guide > div > div:first-child > span:first-child svg { width: 1rem; height: 1rem; }
-  .majal-hero { padding: 1.1rem !important; }
+  .majal-hero { padding: 1.1rem; }
 }
-@media (min-width: 768px) { .majal-hero { padding: 1.4rem 1.6rem !important; } }
+@media (min-width: 768px) { .majal-hero { padding: 1.4rem 1.6rem; } }
 
 /* ── r29 · one accent in dark mode ────────────────────────────────────────────
    The light theme already folds sky into gold (see :root[data-theme='light']). The host
@@ -1057,10 +1063,10 @@ body:has(.majal-ai-fab) footer { padding-bottom: 4.5rem; }
    The scrim under a title on photo cards is a fixed dark ramp in every theme, and the
    title/creator line on it keeps light text (in the light theme the text utilities remap
    to ink, which sat on this dark ramp). */
-.majal-art-scrim { background-image: linear-gradient(to top, rgba(7, 13, 24, 0.9) 0%, rgba(7, 13, 24, 0.6) 34%, rgba(7, 13, 24, 0) 68%) !important; }
-.majal-art-title, .majal-art-title :is(h1, h2, h3, h4) { color: #ffffff !important; }
-.majal-art-title .text-emerald-300 { color: #6ee7b7 !important; }
-.majal-art-title .text-slate-300, .majal-art-title .text-slate-400 { color: #e2e8f0 !important; }
+.majal-art-scrim { background-image: linear-gradient(to top, rgba(7, 13, 24, 0.9) 0%, rgba(7, 13, 24, 0.6) 34%, rgba(7, 13, 24, 0) 68%); }
+.majal-art-title, .majal-art-title :is(h1, h2, h3, h4) { color: #ffffff; }
+.majal-art-title .text-emerald-300 { color: #6ee7b7; }
+.majal-art-title .text-slate-300, .majal-art-title .text-slate-400 { color: #e2e8f0; }
 
 /* ── r29 · scrollable tab strips ──────────────────────────────────────────────
    Phones: tabs snap into place and the strip fades at its far (left, RTL) edge so a cut-off tab reads
@@ -1167,7 +1173,7 @@ body:has(.majal-ai-fab) footer { padding-bottom: 4.5rem; }
   to { opacity: 1; transform: none; }
 }
 .animate-in {
-  animation: majal-enter var(--enter-dur, var(--dur-base)) var(--ease-out) both;
+  animation: majal-enter var(--enter-dur, var(--dur-base)) var(--ease-out) backwards; /* backwards, not both: a filled transform animation would turn <main> into the containing block for every position:fixed modal inside it */
 }
 .fade-in { --enter-opacity: 0; }
 .slide-in-from-top { --enter-y: -1rem; }
@@ -1176,5 +1182,5 @@ body:has(.majal-ai-fab) footer { padding-bottom: 4.5rem; }
 .duration-300.animate-in { --enter-dur: 300ms; }
 .duration-500.animate-in { --enter-dur: 500ms; }
 @media (prefers-reduced-motion: reduce) {
-  .animate-in { animation: none !important; }
+  .animate-in { animation: none; }
 }

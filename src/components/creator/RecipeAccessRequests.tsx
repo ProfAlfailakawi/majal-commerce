@@ -56,7 +56,7 @@ export const RecipeAccessRequests: React.FC<RecipeAccessRequestsProps> = ({ crea
                     {grant.status === 'REQUESTED' ? 'طلب جديد' : 'إذن فعّال'}
                   </span>
                 </div>
-                <div className="text-xs text-slate-400 mt-2 leading-6">{host?.commercialName} — درجة الاطلاع المطلوبة/الممنوحة: <strong className="text-slate-200">{grant.disclosureLevel} من 3</strong></div>
+                <div className="text-xs text-slate-400 mt-2 leading-6">{host?.commercialName} — درجة الاطلاع المطلوبة/الممنوحة: <strong className="text-slate-200"><bdi>{grant.disclosureLevel}</bdi></strong> (الحد الأقصى <bdi>3</bdi>)</div>
                 <div className="text-xs text-slate-400 mt-1">السبب: {grant.purpose}</div>
               </div>
 

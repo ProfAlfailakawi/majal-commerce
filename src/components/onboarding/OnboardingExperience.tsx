@@ -292,7 +292,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           {step === 'INTENT' && (
             <div className="space-y-8">
               <div className="text-center space-y-3">
-                <span style={rise(0)} className="block text-xs font-black tracking-[0.3em] text-gold-300">
+                <span style={rise(0)} className="block text-xs font-black text-gold-300">
                   سؤال واحد فقط
                 </span>
                 <h2
@@ -350,8 +350,8 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           {step === 'JOURNEY' && (
             <div className="space-y-8">
               <div className="text-center space-y-3">
-                <span style={rise(0)} className="block text-xs font-black tracking-[0.3em] text-gold-300">
-                  MAJAL JOURNEY
+                <span style={rise(0)} className="block text-xs font-black text-gold-300">
+                  رحلة مجال
                 </span>
                 <h2
                   id={headingId}
@@ -377,7 +377,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           {step === 'PROTECTION' && (
             <div className="space-y-8">
               <div className="text-center space-y-3">
-                <span style={rise(0)} className="block text-xs font-black tracking-[0.3em] text-gold-300">
+                <span style={rise(0)} className="block text-xs font-black text-gold-300">
                   خزنة الوصفات
                 </span>
                 <h2
@@ -481,7 +481,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           )}
         </main>
 
-        <footer className="sticky bottom-0 shrink-0 space-y-4 -mx-4 sm:-mx-8 px-4 sm:px-8 pt-8 pb-3 bg-gradient-to-t from-(--onb-fade) via-(--onb-fade) via-65% to-transparent">
+        <footer className="sticky bottom-0 shrink-0 space-y-4 -mx-4 sm:-mx-8 px-4 sm:px-8 pt-8 pb-3 bg-gradient-to-t from-(--onb-fade) via-(--onb-fade) via-85% to-transparent">
           {/* A segmented rail, not dots: it shows how much is left, which is the only
               honest way to ask someone to keep going. */}
           <div className="flex items-center gap-1.5" aria-hidden="true">
