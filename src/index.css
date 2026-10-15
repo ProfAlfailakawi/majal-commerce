@@ -1008,8 +1008,12 @@ body:has(.majal-ai-fab) { padding-bottom: 4.5rem; }
   .majal-ai-fab > button:hover > span, .majal-ai-fab > button:focus-visible > span, .majal-ai-fab > button:hover > svg:last-child, .majal-ai-fab > button:focus-visible > svg:last-child { display: inline-block; }
 }
 @media (max-width: 639px) {
-  .majal-ai-fab { inset-inline-end: 0.75rem; }
-  .majal-ai-fab > button { padding: 0; width: 3rem; height: 3rem; min-width: 3rem; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28); }
+  /* Smaller, tucked into the corner and slightly translucent so it covers as little of the
+     left-edge content (rings, stat values) as possible; the page keeps a taller bottom gutter. */
+  .majal-ai-fab { inset-inline-end: 0.5rem; bottom: max(0.5rem, env(safe-area-inset-bottom)) !important; }
+  .majal-ai-fab > button { padding: 0; width: 2.75rem; height: 2.75rem; min-width: 2.75rem; min-height: 2.75rem; opacity: 0.86; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28); }
+  .majal-ai-fab > button:focus-visible, .majal-ai-fab > button:active { opacity: 1; }
+  body:has(.majal-ai-fab) { padding-bottom: 5.25rem; }
 }
 
 /* ── r29 · lighter top chrome ─────────────────────────────────────────────────
