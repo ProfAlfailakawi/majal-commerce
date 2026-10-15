@@ -26,7 +26,7 @@ import { formatKwd } from '../../lib/money';
 import { commerceClient } from '../../lib/commerceClient';
 import { domainClient } from '../../lib/domainClient';
 import { IS_DEMO_MODE } from '../../lib/runtime';
-import { DnaRing } from '../dna/DnaKit';
+import { DnaDraw, DnaRing } from '../dna/DnaKit';
 
 interface ConsumerDashboardProps {
   onSurfaceChange: (surface: SurfaceType) => void;
@@ -155,7 +155,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/25 text-xs font-black text-emerald-300"><Heart className="w-3 h-3" aria-hidden="true" />خلّوه <bdi dir="ltr">{launchSummary.keepItPercent}%</bdi></span>
             </div>
           )}
-          <div><div className="flex justify-between text-xs text-slate-400 mb-1"><span>{launch.unitsSold} مبيعة</span><span>{capped ? `${progress}%` : 'مستمر'}</span></div><div className="h-2 bg-white/5 rounded-full overflow-hidden">{capped ? <div className="h-full bg-gradient-to-l from-gold-500 to-emerald-400 rounded-full" style={{ width: `${progress}%` }} /> : <div className="h-full w-full bg-gradient-to-l from-emerald-500/30 to-emerald-400/30 rounded-full" />}</div></div>
+          <div><div className="flex justify-between text-xs text-slate-400 mb-1"><span>{launch.unitsSold} مبيعة</span><span>{capped ? `${progress}%` : 'مستمر'}</span></div><DnaDraw draw={`consumer-sold:${launch.id}`} className="h-2 bg-white/5 rounded-full overflow-hidden" style={{ ['--draw-dur' as string]: '400ms' } as React.CSSProperties}>{capped ? <div className="h-full bg-gradient-to-l from-gold-500 to-emerald-400 rounded-full dna-draw-bar" style={{ width: `${progress}%` }} /> : <div className="h-full w-full bg-gradient-to-l from-emerald-500/30 to-emerald-400/30 rounded-full" />}</DnaDraw></div>
           <div className="flex items-center justify-between"><div><div className="text-xs text-slate-400">السعر</div><div className="font-black text-gold-300">{formatKwd(launch.sellingPriceKwd)}</div></div><button type="button" onClick={() => setSelectedLaunch(launch)} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black text-slate-100">شاهد واطلب</button></div>
         </div>
       </article>
@@ -203,8 +203,8 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
               <div className="p-5 space-y-4">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                   <div className="rounded-xl p-3 bg-white/5"><Star className="w-4 h-4 text-gold-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.rating === null ? '—' : metrics.rating.toFixed(1)}</div><div className="text-xs text-slate-400">الطعم</div></div>
-                  {!(featuredSummary && featuredSummary.repeat === null) && <div className="rounded-xl p-3 bg-white/5"><DnaRing className="mx-auto" value={metrics.repeat} size={44} stroke={4} tone="accent" label={metrics.repeat === null ? '—' : `${metrics.repeat}%`} ariaLabel={metrics.repeat === null ? 'يكرر: لا بيانات بعد' : `يكرر ${metrics.repeat}%`} /><div className="text-xs text-slate-400">يكرر</div></div>}
-                  <div className="rounded-xl p-3 bg-white/5"><DnaRing className="mx-auto" value={metrics.keep} size={44} stroke={4} tone="info" label={metrics.keep === null ? '—' : `${metrics.keep}%`} ariaLabel={metrics.keep === null ? 'خلّوه: لا أصوات بعد' : `خلّوه ${metrics.keep}%`} /><div className="text-xs text-slate-400">خلّوه</div></div>
+                  {!(featuredSummary && featuredSummary.repeat === null) && <div className="rounded-xl p-3 bg-white/5"><DnaRing className="mx-auto" value={metrics.repeat} size={44} stroke={4} tone="accent" draw={`consumer-ring-repeat:${featured.id}`} label={metrics.repeat === null ? '—' : `${metrics.repeat}%`} ariaLabel={metrics.repeat === null ? 'يكرر: لا بيانات بعد' : `يكرر ${metrics.repeat}%`} /><div className="text-xs text-slate-400">يكرر</div></div>}
+                  <div className="rounded-xl p-3 bg-white/5"><DnaRing className="mx-auto" value={metrics.keep} size={44} stroke={4} tone="info" draw={`consumer-ring-keep:${featured.id}`} label={metrics.keep === null ? '—' : `${metrics.keep}%`} ariaLabel={metrics.keep === null ? 'خلّوه: لا أصوات بعد' : `خلّوه ${metrics.keep}%`} /><div className="text-xs text-slate-400">خلّوه</div></div>
                   <div className="rounded-xl p-3 bg-white/5"><PackageOpen className="w-4 h-4 text-gold-300 mx-auto" /><div className="text-xs font-black mt-1">{metrics.remaining ?? <InfinityIcon className="w-4 h-4 mx-auto" aria-hidden="true" />}</div><div className="text-xs text-slate-400">{metrics.remaining === null ? 'بلا سقف' : 'متبقي'}</div></div>
                 </div>
                 <div className="flex gap-2">

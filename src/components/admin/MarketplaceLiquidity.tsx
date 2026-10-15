@@ -40,9 +40,9 @@ export const MarketplaceLiquidity: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-3 gap-2 sm:gap-4">
-        <div className="rounded-2xl p-3 sm:p-4 bg-white/5 border border-white/10"><Sparkles className="w-5 h-5 text-emerald-300" /><div className="mt-3 text-xs text-slate-400">منتجات قابلة للمطابقة</div><div className="text-2xl font-black mt-1">{matchableProducts.length}</div></div>
-        <div className="rounded-2xl p-3 sm:p-4 bg-white/5 border border-white/10"><Building2 className="w-5 h-5 text-sky-300" /><div className="mt-3 text-xs text-slate-400">منشآت متحققة</div><div className="text-2xl font-black mt-1">{store.hosts.filter(h => h.verificationStatus === 'VERIFIED').length}</div></div>
-        <div className="rounded-2xl p-3 sm:p-4 bg-white/5 border border-white/10"><SearchCheck className="w-5 h-5 text-gold-300" /><div className="mt-3 text-xs text-slate-400">إشارات المطابقة</div><div className="text-2xl font-black mt-1">{store.matches.length}</div></div>
+        <div className="majal-rise rounded-2xl p-3 sm:p-4 bg-white/5 border border-white/10"><Sparkles className="w-5 h-5 text-emerald-300" /><div className="mt-3 text-xs text-slate-400">منتجات قابلة للمطابقة</div><div className="text-2xl font-black mt-1">{matchableProducts.length}</div></div>
+        <div className="majal-rise rounded-2xl p-3 sm:p-4 bg-white/5 border border-white/10"><Building2 className="w-5 h-5 text-sky-300" /><div className="mt-3 text-xs text-slate-400">منشآت متحققة</div><div className="text-2xl font-black mt-1">{store.hosts.filter(h => h.verificationStatus === 'VERIFIED').length}</div></div>
+        <div className="majal-rise rounded-2xl p-3 sm:p-4 bg-white/5 border border-white/10"><SearchCheck className="w-5 h-5 text-gold-300" /><div className="mt-3 text-xs text-slate-400">إشارات المطابقة</div><div className="text-2xl font-black mt-1">{store.matches.length}</div></div>
       </div>
 
       <div className="grid gap-3">

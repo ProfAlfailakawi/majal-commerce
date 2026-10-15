@@ -7,7 +7,7 @@
 import * as React from 'react';
 import './dna.css';
 import { useJourneyReveal } from './useJourneyReveal';
-import { dnaDrawDelay, drawOptions, useDrawIn } from './useDrawIn';
+import { dnaDrawDelay, drawOptions, useChangeFlash, useDrawIn } from './useDrawIn';
 import { useCountUp } from './useCountUp';
 import { revealTarget, shownState } from '../../lib/journeyReveal';
 
@@ -146,9 +146,15 @@ export interface DnaStepperProps {
   threshold?: number;
   /** With `reveal`: extra gate before the first tick; returns a cancel function. */
   revealGate?: (go: () => void) => () => void;
+  /**
+   * Opt-in change-highlight: when a state genuinely changes after first paint (e.g. an order
+   * moves to PAID), the newest newly lit station gets ONE halo (~1.5s). Never on first render,
+   * never loops, no effect on the states themselves.
+   */
+  flashChange?: boolean;
 }
 
-export function DnaStepper({ steps, size = 'md', showLabels = true, ariaLabel, stateText, className, reveal = false, playKey, ready, persist, hold, stepMs, threshold, revealGate }: DnaStepperProps) {
+export function DnaStepper({ steps, size = 'md', showLabels = true, ariaLabel, stateText, className, reveal = false, playKey, ready, persist, hold, stepMs, threshold, revealGate, flashChange = false }: DnaStepperProps) {
   const text = { ...DEFAULT_STATE_TEXT, ...stateText };
   const labels = showLabels && size !== 'xs';
   const { ref, lit } = useJourneyReveal({
@@ -163,6 +169,23 @@ export function DnaStepper({ steps, size = 'md', showLabels = true, ariaLabel, s
     persist,
     gate: revealGate,
   });
+  const prevStates = React.useRef(steps.map((s) => s.state));
+  const [justKey, setJustKey] = React.useState<string | null>(null);
+  const stateSig = steps.map((s) => `${s.key}:${s.state}`).join('|');
+  React.useEffect(() => {
+    const prev = prevStates.current;
+    const next = steps.map((s) => s.state);
+    prevStates.current = next;
+    if (!flashChange) return;
+    const lit = (st: DnaStepState) => st === 'done' || st === 'current';
+    let newest = -1;
+    next.forEach((st, i) => { if (lit(st) && prev[i] !== undefined && !lit(prev[i])) newest = i; });
+    if (newest < 0) return;
+    setJustKey(steps[newest].key);
+    const t = window.setTimeout(() => setJustKey(null), 1600);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stateSig, flashChange]);
   /* During the intro the visuals follow `shown`; screen readers always get the real state. */
   const shown = steps.map((s, i) => shownState(s.state, i, lit));
   return (
@@ -171,6 +194,7 @@ export function DnaStepper({ steps, size = 'md', showLabels = true, ariaLabel, s
       className={cx('dna', 'dna-steps', className)}
       data-size={size}
       data-journey={reveal ? '' : undefined}
+      data-flash={flashChange ? '' : undefined}
       data-reveal={reveal ? (lit ?? 'done') : undefined}
       aria-label={ariaLabel}
     >
@@ -186,7 +210,7 @@ export function DnaStepper({ steps, size = 'md', showLabels = true, ariaLabel, s
             data-state={step.state}
             data-link={link}
             data-stamp={stamped ? 'true' : undefined}
-            data-just={lit !== null && i === lit - 1 ? '' : undefined}
+            data-just={(lit !== null && i === lit - 1) || (justKey !== null && step.key === justKey) ? '' : undefined}
             aria-current={rawStep.state === 'current' ? 'step' : undefined}
             title={step.title ?? (size === 'xs' && typeof step.label === 'string' ? step.label : undefined)}
           >
@@ -532,6 +556,13 @@ export function DnaCountUp({ value, format = (n) => String(n), playKey, duration
   );
 }
 
+/** Wraps a live value: one soft accent wash when it changes after first paint (never on mount). */
+export function DnaFlash({ value, as: Tag = 'span', className, children }: { value: unknown; as?: 'span' | 'div'; className?: string; children: React.ReactNode }) {
+  const flash = useChangeFlash(value);
+  const Root = Tag as React.ElementType;
+  return <Root className={cx(className, flash && 'dna-changed')}>{children}</Root>;
+}
+
 /**
  * Wrapper for bars drawn from existing markup: give the fill element the class `dna-draw-bar`
  * (grows along the inline axis) or `dna-draw-barv` (grows from the baseline) and, for an ordered
@@ -543,17 +574,18 @@ export function DnaDraw({
   className,
   style,
   children,
+  ...rest
 }: {
   as?: 'div' | 'span' | 'ul' | 'ol' | 'section';
   draw?: boolean | string;
   className?: string;
   style?: React.CSSProperties;
   children?: React.ReactNode;
-}) {
+} & Omit<React.HTMLAttributes<HTMLElement>, 'className' | 'style' | 'children'>) {
   const drawProps = useDrawIn(drawOptions(draw));
   const Root = Tag as React.ElementType;
   return (
-    <Root ref={drawProps.ref} data-draw={drawProps['data-draw']} className={className} style={style}>
+    <Root {...rest} ref={drawProps.ref} data-draw={drawProps['data-draw']} className={className} style={style}>
       {children}
     </Root>
   );

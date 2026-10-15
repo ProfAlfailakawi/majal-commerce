@@ -1,6 +1,6 @@
 import './dna.css';
 import type { CSSProperties } from 'react';
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { markDrawn, readMotionEnv, shouldArm, type DrawPhase } from '../../lib/drawIn';
 
 export interface DrawInOptions {
@@ -59,3 +59,20 @@ export function drawOptions(draw: boolean | string | undefined): DrawInOptions {
 /** Ordered delay for grouped bars: <=60ms apart, whole group <=420ms. */
 export const dnaDrawDelay = (index: number): CSSProperties =>
   ({ ['--draw-delay' as string]: `${Math.min(index, 7) * 60}ms` }) as CSSProperties;
+
+/**
+ * True for ~1.3s after `value` genuinely changes (never on first render, never loops).
+ * Used for the one-time change-highlight on live counts.
+ */
+export function useChangeFlash(value: unknown, holdMs = 1300): boolean {
+  const prev = useRef(value);
+  const [flash, setFlash] = useState(false);
+  useEffect(() => {
+    if (Object.is(prev.current, value)) return;
+    prev.current = value;
+    setFlash(true);
+    const t = window.setTimeout(() => setFlash(false), holdMs);
+    return () => window.clearTimeout(t);
+  }, [value, holdMs]);
+  return flash;
+}

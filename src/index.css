@@ -1132,6 +1132,13 @@ body:has(.majal-ai-fab) { padding-bottom: 4.5rem; }
   .majal-stat:nth-child(3) { animation-delay: 120ms; }
   .majal-stat:nth-child(4) { animation-delay: 180ms; }
 }
+/* Rise only: the same entrance as .majal-stat for key-number tiles that keep their own surface. */
+@media (prefers-reduced-motion: no-preference) {
+  .majal-rise { animation: majal-stat-rise 0.5s var(--ease-out) backwards; }
+  .majal-rise:nth-child(2) { animation-delay: 60ms; }
+  .majal-rise:nth-child(3) { animation-delay: 120ms; }
+  .majal-rise:nth-child(4) { animation-delay: 180ms; }
+}
 .majal-icon-tile {
   display: inline-flex; align-items: center; justify-content: center;
   width: 1.75rem; height: 1.75rem; flex: none; border-radius: 0.6rem;

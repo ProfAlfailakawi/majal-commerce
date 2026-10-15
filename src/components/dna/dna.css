@@ -442,6 +442,9 @@
 /* Calm: decision/admin surfaces keep the current ring static (no continuous pulse). */
 .dna-steps.dna-calm .dna-stepi[data-state='current'] .dna-node { animation: none; }
 
+/* Change-highlight (flashChange): one halo on the newest newly lit station. */
+.dna-steps[data-flash] .dna-stepi[data-just] .dna-node { animation: dna-halo 1.5s var(--dna-ease) 1; }
+
 /* ---------- timeline ---------- */
 .dna-tline {
   list-style: none;
@@ -1050,6 +1053,12 @@ html[dir='rtl'] [data-draw] .dna-draw-bar { transform-origin: 100% 50%; }
 [data-draw] .dna-tli:not(:last-child)::after { transition: transform 320ms var(--dna-ease) var(--draw-delay, 0ms); transform-origin: 50% 0; }
 [data-draw='armed'] .dna-tli:not(:last-child)::after { transform: scaleY(0); transition: none; }
 
+/* list rows that appear in order after the figure above them (short, opacity + 4px) */
+/* Card grids: a shorter draw so a page full of cards never feels slow. */
+.dna-draw-quick { --draw-dur: 400ms; }
+[data-draw] .dna-draw-item { transition: opacity 240ms var(--dna-ease) var(--draw-delay, 0ms), transform 240ms var(--dna-ease) var(--draw-delay, 0ms); }
+[data-draw='armed'] .dna-draw-item { opacity: 0; transform: translateY(4px); transition: none; }
+
 .dna-countup { font-variant-numeric: tabular-nums; position: relative; }
 
 /* Short change-highlight: one soft accent wash (background only) that fades to rest. */
@@ -1057,11 +1066,11 @@ html[dir='rtl'] [data-draw] .dna-draw-bar { transform-origin: 100% 50%; }
   from { background-color: color-mix(in srgb, var(--dna-accent) 22%, transparent); }
   to   { background-color: transparent; }
 }
-.dna-changed { animation: dna-changed 1.2s var(--dna-ease) 1; }
+.dna-changed { animation: dna-changed 1.2s var(--dna-ease) 1; border-radius: 6px; }
 
 @media print {
   [data-draw] * { transition: none !important; }
-  [data-draw='armed'] .dna-draw-bar, [data-draw='armed'] .dna-draw-barv { transform: none; }
+  [data-draw='armed'] .dna-draw-bar, [data-draw='armed'] .dna-draw-barv, [data-draw='armed'] .dna-draw-item { transform: none; opacity: 1; }
   [data-draw='armed'] .dna-draw-arc, [data-draw='armed'] .dna-sparkl, [data-draw='armed'] .dna-sparka,
   [data-draw='armed'] .dna-spark circle, [data-draw='armed'] .dna-tli .dna-dot { opacity: 1; stroke-dashoffset: 0; }
 }

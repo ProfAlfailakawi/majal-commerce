@@ -136,6 +136,8 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
         <div className="font-black text-slate-100">تم حجز طلبك — رقم <span className="font-mono" title={placed.orderId}>{shortRef(placed.orderId, 'ط')}</span></div>
         <DnaStepper
           size="sm"
+          className="dna-calm"
+          flashChange
           ariaLabel="حالة الطلب"
           steps={[
             { key: 'hold', label: 'حجز', state: 'done', icon: <CheckCircle2 /> },
