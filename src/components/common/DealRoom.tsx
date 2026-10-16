@@ -228,7 +228,7 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
         </div>
         <div className="flex flex-wrap gap-2 pt-2 border-t border-white/5">
           {copilot.blockedActions.map((guard, idx) => (
-            <span key={idx} className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-slate-950/50 border border-white/10 text-slate-400">
+            <span key={idx} className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-2xl bg-slate-950/50 border border-white/10 text-slate-400">
               <ShieldCheck className="w-3 h-3 text-emerald-300" /> {guard.label}
             </span>
           ))}

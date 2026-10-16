@@ -159,7 +159,7 @@ export const ProductDiscovery: React.FC = () => {
               {/* Actions Footer */}
               <div className="p-3 bg-slate-950/40 rounded-xl border border-white/10 flex items-center justify-between max-sm:flex-col max-sm:items-stretch max-sm:gap-3 text-xs mt-4">
                 <div className="text-slate-400">
-                  سعر البيع المستهدف: <strong className="text-gold-400 font-mono">{p.targetSellingPriceKwd.toFixed(3)} د.ك</strong>
+                  سعر البيع المستهدف: <strong className="text-gold-400 font-mono whitespace-nowrap">{p.targetSellingPriceKwd.toFixed(3)} د.ك</strong>
                 </div>
 
                 {hasApprovedGrant ? (
