@@ -45,6 +45,9 @@ html:root {
   --dna-shadow: var(--elev-1);
 }
 
+/* Dark: --dna-danger is a pale rose, so the attention count on a hub node reads in ink, not white (white on rose was 1.9:1). */
+:root:not([data-theme='light']) .dna-hubn[data-state='attention'] .dna-hubv { color: var(--dna-on-accent); }
+
 /* Kit's dark tone rule, scoped to Majal's dark selector. */
 :root:not([data-theme='light']) [data-dna-tone] {
   --t-bg: color-mix(in srgb, var(--t-fg) 20%, transparent);
