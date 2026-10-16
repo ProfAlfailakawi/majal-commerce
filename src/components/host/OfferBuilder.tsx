@@ -121,7 +121,7 @@ export const OfferBuilder: React.FC<OfferBuilderProps> = ({ collaboration }) => 
         <div className="rounded-xl p-3 bg-white/5 border border-white/10"><span className="block text-slate-400">المنشأة قبل تكاليفها</span><strong className={hostSharePercent > 0 ? 'text-emerald-300' : 'text-rose-300'}>{hostSharePercent.toFixed(1)}%</strong></div>
       </div>
 
-      <div className="flex items-center justify-between pt-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
         <div className="text-xs text-slate-400 font-mono">
           مستحق المبدع للقطعة: <strong className="text-gold-400">{(sellingPriceKwd * (royaltyRatePercent / 100)).toFixed(3)} د.ك</strong>
         </div>
@@ -129,7 +129,7 @@ export const OfferBuilder: React.FC<OfferBuilderProps> = ({ collaboration }) => 
         <button
           onClick={handleSendOffer}
           disabled={!isValid}
-          className="px-6 py-2.5 bg-gold-500 hover:bg-gold-400 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-black rounded-xl text-xs transition-colors flex items-center gap-1.5 shadow-lg"
+          className="px-6 py-2.5 bg-gold-500 hover:bg-gold-400 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-black rounded-xl text-xs transition-colors flex items-center gap-1.5 max-sm:w-full max-sm:justify-center shadow-lg"
         >
           <Send className="w-4 h-4" />
           <span>إرسال العرض التجاري للمبدع</span>

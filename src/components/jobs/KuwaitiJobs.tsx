@@ -85,7 +85,7 @@ export const KuwaitiJobs: React.FC = () => {
       ) : (
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
           {jobs.slice(0, 6).map(job => (
-            <article key={job.id} className="rounded-2xl p-4 bg-white/[0.03] border border-white/10">
+            <article key={job.id} className="rounded-2xl p-4 flex flex-col bg-white/[0.03] border border-white/10">
               <div className="flex justify-between gap-3">
                 <div className="flex gap-3 min-w-0">
                   <Avatar name={job.employerName} size={40} shape="squircle" />
@@ -101,11 +101,11 @@ export const KuwaitiJobs: React.FC = () => {
                 <span>{employmentLabel[job.employmentType] || job.employmentType}</span>
                 {job.department && <span>{job.department}</span>}
               </div>
-              <p className="text-xs text-slate-300 leading-6 mt-3 line-clamp-3">{job.description}</p>
+              <p className="text-xs text-slate-300 leading-6 mt-3 line-clamp-3 mb-4">{job.description}</p>
               <button
                 type="button"
                 onClick={() => setSelected(job)}
-                className="mt-4 w-full py-2.5 rounded-xl bg-gold-500/10 border border-gold-300/25 text-gold-300 text-xs font-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
+                className="mt-auto w-full py-2.5 rounded-xl bg-gold-500/10 border border-gold-300/25 text-gold-300 text-xs font-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
               >
                 عرض والتقديم
               </button>
