@@ -6,6 +6,11 @@ import { audienceOf, type AdAudience } from '../../lib/adAudience';
 import { store } from '../../lib/store';
 import type { AdAccent, AdSlot as AdSlotType, PublicAd, SurfaceType } from '../../types/majal';
 
+export const AD_ICON_KEYS = ['megaphone', 'store', 'coffee', 'truck', 'package', 'sparkles', 'utensils', 'shopping-bag', 'printer', 'credit-card', 'leaf', 'gift'] as const;
+export const AD_ACCENT_KEYS: AdAccent[] = ['gold', 'emerald', 'sky', 'rose', 'violet'];
+/** Swatches use the card's own text colour as their fill, so they match what the card shows in every theme. */
+export const AD_ACCENT_DOT: Record<AdAccent, string> = { gold: 'text-gold-300 bg-current', emerald: 'text-emerald-300 bg-current', sky: 'text-sky-300 bg-current', rose: 'text-rose-300 bg-current', violet: 'text-violet-300 bg-current' };
+export const AdIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => { const I = ICONS[name] ?? Megaphone; return <I className={className} />; };
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   megaphone: Megaphone, store: Store, coffee: Coffee, truck: Truck, package: Package, sparkles: Sparkles,
   utensils: Utensils, 'shopping-bag': ShoppingBag, printer: Printer, 'credit-card': CreditCard, leaf: Leaf, gift: Gift,
@@ -131,5 +136,22 @@ export const AdSlot: React.FC<{ slot: AdSlotType; topic?: string; className?: st
         <div key={ad.id} className={slot === 'PORTAL' && i > 0 ? 'hidden sm:block' : ''}><AdCard ad={ad} audience={audience} compact={compactSlot} onHide={() => hide(ad.id)} /></div>
       ))}
     </aside>
+  );
+};
+
+/** What an ad will look like, drawn with the very same styles as the live card (not clickable). */
+export const AdPreview: React.FC<{ ad: Pick<PublicAd, 'company' | 'headline' | 'tagline' | 'accent' | 'icon'>; compact?: boolean }> = ({ ad, compact }) => {
+  const tone = TONES[ad.accent] ?? TONES.gold;
+  const Icon = ICONS[ad.icon] ?? Megaphone;
+  return (
+    <div className={`flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] ${compact ? 'px-3 py-2' : 'p-4'} min-w-0`} aria-label="معاينة الإعلان" role="img">
+      <span className={`shrink-0 grid place-items-center rounded-xl border ${tone.chip} ${compact ? 'w-9 h-9' : 'w-11 h-11'}`}><Icon className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} ${tone.text}`} /></span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-2 text-xs"><span className="px-1.5 py-0.5 rounded-md bg-white/10 text-slate-300 font-black shrink-0">إعلان</span><span className={`font-black truncate ${tone.text}`}>{ad.company || 'اسم شركتك'}</span></span>
+        <strong className={`block text-slate-100 leading-6 ${compact ? 'text-xs truncate' : 'text-sm mt-1'}`}>{ad.headline || 'عنوان إعلانك يظهر هنا'}</strong>
+        {!compact && ad.tagline && <span className="block text-xs text-slate-300 leading-5 mt-0.5 line-clamp-2">{ad.tagline}</span>}
+      </span>
+      <ExternalLink className="w-4 h-4 text-slate-400 shrink-0 opacity-60" aria-hidden="true" />
+    </div>
   );
 };

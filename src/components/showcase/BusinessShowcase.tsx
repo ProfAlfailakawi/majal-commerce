@@ -1,7 +1,8 @@
 import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { BadgeCheck, Banknote, CalendarClock, ChevronLeft, Eye, FileUp, Gift, Handshake, Info, Layers, Megaphone, MapPin, MessageCircle, Phone, ShieldCheck, Store, TrendingUp, X } from 'lucide-react';
-import type { BusinessListing, BusinessSector, SurfaceType } from '../../types/majal';
+import type { AdAccent, AdSlot, BusinessListing, BusinessSector, SurfaceType } from '../../types/majal';
+import { AD_AUDIENCES, AD_AUDIENCE_LABEL, AD_TOPICS } from '../../lib/adAudience';
 import { fetchBusinesses, requestAdSlot, submitBusiness } from '../../lib/showcaseClient';
 import { reportGateEvent } from '../../lib/audienceClient';
 import { arCount } from '../../lib/arPlural';
@@ -9,7 +10,7 @@ import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { SectorArt } from './SectorArt';
 import { PrivateLinkNote } from './PrivateLinkNote';
 import { SECTORS, SECTOR_KEYS } from './sectors';
-import { AdSlot } from './AdSlot';
+import { AdSlot as AdSlotView, AdPreview, AdIcon, AD_ACCENT_DOT, AD_ACCENT_KEYS, AD_ICON_KEYS } from './AdSlot';
 
 /** Asking prices are whole dinars; formatKwd's three decimals would read as fils. */
 const formatKwd = (kwd: number) => `${kwd.toLocaleString('ar-EG')} د.ك`;
@@ -108,14 +109,24 @@ const SubmitForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   );
 };
 
+const SLOT_CHOICES: { key: AdSlot; label: string; hint: string }[] = [
+  { key: 'MARKET', label: 'السوق', hint: 'بين إطلاقات السوق وفرص العمل' },
+  { key: 'PORTAL', label: 'بوابات الشركاء', hint: 'داخل بوابات المبدعين والمنشآت والموردين' },
+  { key: 'SPONSOR', label: 'شريط الراعي', hint: 'شريط ثابت أعلى الصفحات (حصري)' },
+];
+
 export const AdRequestForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const [f, setF] = useState({ company: '', headline: '', tagline: '', linkUrl: 'https://', phone: '', website: '' });
+  const [f, setF] = useState({ company: '', headline: '', tagline: '', linkUrl: 'https://', phone: '', website: '', slot: 'MARKET' as AdSlot, accent: 'gold' as AdAccent, icon: 'megaphone', audiences: [] as string[], topics: [] as string[] });
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [done, setDone] = useState<{ message: string; token: string } | null>(null);
-  const set = (k: keyof typeof f, v: string) => setF(prev => ({ ...prev, [k]: v }));
+  const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF(prev => ({ ...prev, [k]: v }));
+  const flip = (list: string[], v: string) => (list.includes(v) ? list.filter(x => x !== v) : [...list, v]);
+  const chip = (on: boolean) => `px-2.5 py-1 rounded-full text-xs border transition ${on ? 'bg-gold-500 text-slate-950 border-gold-300 font-black' : 'bg-white/5 border-white/10 text-slate-300'}`;
   const submit = async (e: FormEvent) => {
     e.preventDefault(); setBusy(true); setError('');
-    try { const r = await requestAdSlot({ company: f.company, headline: f.headline, tagline: f.tagline, linkUrl: f.linkUrl, contactPhone: f.phone, website: f.website }); setDone({ message: r.message, token: r.reportToken }); }
-    catch (err) { setError(err instanceof Error ? err.message : 'تعذّر إرسال الطلب.'); } finally { setBusy(false); }
+    try {
+      const r = await requestAdSlot({ company: f.company, headline: f.headline, tagline: f.tagline, linkUrl: f.linkUrl, contactPhone: f.phone, website: f.website, slot: f.slot, accent: f.accent, icon: f.icon, audiences: f.audiences, topics: f.topics });
+      setDone({ message: r.message, token: r.reportToken });
+    } catch (err) { setError(err instanceof Error ? err.message : 'تعذّر إرسال الطلب.'); } finally { setBusy(false); }
   };
   const reportUrl = done ? `${window.location.origin}/?ad-report=${done.token}` : '';
   return (
@@ -128,12 +139,26 @@ export const AdRequestForm: React.FC<{ onClose: () => void }> = ({ onClose }) =>
         </div>
       ) : (
         <form onSubmit={submit} className="mt-4 space-y-3">
-          <p className="text-xs text-slate-300 leading-6">الإعلان هنا مجاني تمامًا: لا نأخذ منكم أي مقابل، وهو خدمة من مجال لأصحاب المشاريع. كل إعلان يحمل وسم «إعلان» ويمر على الإدارة قبل الظهور، وتحدد الإدارة الموقع والمدة.</p>
+          <p className="text-xs text-slate-300 leading-6">الإعلان هنا مجاني تمامًا: لا نأخذ منكم أي مقابل، وهو خدمة من مجال لأصحاب المشاريع. كل إعلان يحمل وسم «إعلان» ويمر على الإدارة قبل الظهور، وتحدد الإدارة المدة.</p>
+          <AdPreview ad={{ company: f.company, headline: f.headline, tagline: f.tagline, accent: f.accent, icon: f.icon }} />
           <label className="block text-xs font-black space-y-1.5"><span>اسم الشركة</span><input required maxLength={80} value={f.company} onChange={e => set('company', e.target.value)} className={fieldClass} /></label>
-          <label className="block text-xs font-black space-y-1.5"><span>عنوان الإعلان (٧٠ حرفًا)</span><input required minLength={4} maxLength={70} value={f.headline} onChange={e => set('headline', e.target.value)} className={fieldClass} /></label>
+          <label className="block text-xs font-black space-y-1.5"><span>عنوان الإعلان ({(70 - f.headline.length).toLocaleString('ar-EG')} حرفًا متبقيًا)</span><input required minLength={4} maxLength={70} value={f.headline} onChange={e => set('headline', e.target.value)} className={fieldClass} /></label>
           <label className="block text-xs font-black space-y-1.5"><span>سطر توضيحي — اختياري</span><input maxLength={120} value={f.tagline} onChange={e => set('tagline', e.target.value)} className={fieldClass} /></label>
           <label className="block text-xs font-black space-y-1.5"><span>رابط الوجهة (https)</span><input required type="url" value={f.linkUrl} onChange={e => set('linkUrl', e.target.value)} className={fieldClass} dir="ltr" /></label>
           <label className="block text-xs font-black space-y-1.5"><span>رقم التواصل</span><input required type="tel" maxLength={24} value={f.phone} onChange={e => set('phone', e.target.value)} className={fieldClass} dir="ltr" /></label>
+          <fieldset className="space-y-1.5"><legend className="text-xs font-black">أين تفضّل أن يظهر؟ (الإدارة تقرر)</legend>
+            <div className="grid gap-2">{SLOT_CHOICES.map(c => <label key={c.key} className={`flex gap-2 items-start rounded-xl border p-2.5 text-xs cursor-pointer ${f.slot === c.key ? 'border-gold-300/50 bg-gold-500/10' : 'border-white/10 bg-white/[0.03]'}`}><input type="radio" name="slot" checked={f.slot === c.key} onChange={() => set('slot', c.key)} className="mt-1" /><span><strong className="block">{c.label}</strong><span className="text-slate-400">{c.hint}</span></span></label>)}</div>
+          </fieldset>
+          <fieldset className="space-y-1.5"><legend className="text-xs font-black">من تريد أن يراه؟ (اتركه فارغًا للجميع)</legend>
+            <div className="flex flex-wrap gap-1.5">{AD_AUDIENCES.map(a => <button type="button" key={a} aria-pressed={f.audiences.includes(a)} onClick={() => set('audiences', flip(f.audiences, a))} className={chip(f.audiences.includes(a))}>{AD_AUDIENCE_LABEL[a]}</button>)}</div>
+          </fieldset>
+          <fieldset className="space-y-1.5"><legend className="text-xs font-black">ويتبع أي فئة منتجات؟ (اختياري)</legend>
+            <div className="flex flex-wrap gap-1.5">{AD_TOPICS.map(t => <button type="button" key={t} aria-pressed={f.topics.includes(t)} onClick={() => set('topics', flip(f.topics, t))} className={chip(f.topics.includes(t))}>{t}</button>)}</div>
+          </fieldset>
+          <fieldset className="space-y-1.5"><legend className="text-xs font-black">اللون والأيقونة</legend>
+            <div className="flex flex-wrap items-center gap-2">{AD_ACCENT_KEYS.map(a => <button type="button" key={a} aria-label={`لون ${a}`} aria-pressed={f.accent === a} onClick={() => set('accent', a)} className={`w-7 h-7 rounded-full ${AD_ACCENT_DOT[a]} ${f.accent === a ? 'ring-2 ring-offset-2 ring-gold-300 ring-offset-transparent' : 'opacity-70'}`} />)}</div>
+            <div className="flex flex-wrap gap-1.5">{AD_ICON_KEYS.map(i => <button type="button" key={i} aria-label={`أيقونة ${i}`} aria-pressed={f.icon === i} onClick={() => set('icon', i)} className={`w-9 h-9 rounded-xl border grid place-items-center ${f.icon === i ? 'bg-gold-500/20 border-gold-300/60 text-gold-200' : 'bg-white/5 border-white/10 text-slate-300'}`}><AdIcon name={i} className="w-4 h-4" /></button>)}</div>
+          </fieldset>
           <input tabIndex={-1} autoComplete="off" aria-hidden="true" value={f.website} onChange={e => set('website', e.target.value)} className="hidden" name="website" />
           {error && <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-400/20 text-xs text-rose-200">{error}</div>}
           <button disabled={busy} className="w-full py-3 rounded-xl bg-gold-500 text-slate-950 text-sm font-black disabled:opacity-50">{busy ? 'جارٍ الإرسال…' : 'أرسل الطلب'}</button>
@@ -187,7 +212,7 @@ export const BusinessShowcase: React.FC<{ onSurfaceChange: (surface: SurfaceType
         </div>
       </section>
 
-      <AdSlot slot="MARKET" />
+      <AdSlotView slot="MARKET" />
 
       <section className="space-y-5" aria-labelledby="biz-list-title">
         <div className="flex flex-wrap items-end justify-between gap-3">

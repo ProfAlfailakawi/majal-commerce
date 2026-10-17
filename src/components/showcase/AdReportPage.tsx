@@ -26,7 +26,7 @@ export const AdReportPage: React.FC<{ token: string; onClose: () => void }> = ({
           <section className="glass-panel rounded-3xl border border-white/10 p-5 space-y-1">
             <div className="text-xs text-gold-300 font-black">{report.campaign.company}</div>
             <h2 className="font-black">{report.campaign.headline}</h2>
-            <p className="text-xs text-slate-400">{SLOT_LABEL[report.campaign.slot]} · {STATUS_LABEL[report.campaign.status] ?? report.campaign.status}{report.campaign.startsOn ? ` · من ${report.campaign.startsOn}` : ''}{report.campaign.endsOn ? ` إلى ${report.campaign.endsOn}` : ''}</p>
+            <p className="text-xs text-slate-400">{SLOT_LABEL[report.campaign.slot]} · {report.campaign.phase === 'ended' ? 'انتهت' : report.campaign.phase === 'scheduled' ? 'مجدولة' : report.campaign.phase === 'live' ? 'تعمل الآن' : STATUS_LABEL[report.campaign.status] ?? report.campaign.status}{report.campaign.startsOn ? ` · من ${report.campaign.startsOn}` : ''}{report.campaign.endsOn ? ` إلى ${report.campaign.endsOn}` : ''}</p>
           </section>
           <section className="grid grid-cols-3 gap-3">
             {[{ icon: Eye, label: 'ظهور', value: report.totals.impressions }, { icon: MousePointerClick, label: 'نقرات', value: report.totals.clicks }, { icon: Percent, label: 'نسبة النقر', value: `${report.ctr}٪` }].map(k => (

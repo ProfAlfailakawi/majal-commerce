@@ -1,13 +1,43 @@
 import React, { FormEvent, useEffect, useState } from 'react';
 import { BadgeCheck, CalendarRange, Check, ClipboardCopy, ImagePlus, KeyRound, Megaphone, Truck, Pause, Play, Plus, RefreshCw, Store, Trash2, X } from 'lucide-react';
-import { createCampaign, fetchShowcaseOverview, removeCampaignImage, reviewBusiness, reviewDirectorySupplier, rotateReportLink, setCampaignStatus, setCampaignTargeting, uploadCampaignImage } from '../../lib/showcaseClient';
+import { createCampaign, fetchShowcaseOverview, removeCampaignImage, reviewBusiness, editCampaign, reviewDirectorySupplier, rotateReportLink, setCampaignStatus, setCampaignTargeting, uploadCampaignImage } from '../../lib/showcaseClient';
 import { upcomingSeasons } from '../../lib/adSeasons';
 import { AD_AUDIENCES, AD_AUDIENCE_LABEL, AD_TOPICS } from '../../lib/adAudience';
 import type { AdCampaign, AdSlot, BusinessListing, DirectorySupplier } from '../../types/majal';
 import { SECTORS, SUPPLIER_CATEGORIES } from '../showcase/sectors';
+import { AD_ACCENT_DOT, AD_ACCENT_KEYS, AD_ICON_KEYS, AdIcon } from '../showcase/AdSlot';
 
 const SLOTS: Record<AdSlot, string> = { SPONSOR: 'الراعي (حصري)', MARKET: 'السوق', PORTAL: 'بوابات الشركاء' };
 const STATUS: Record<string, string> = { PENDING_REVIEW: 'معلّق', APPROVED: 'معتمد', PAUSED: 'موقوف', REJECTED: 'مرفوض', SOLD: 'تم البيع' };
+const PHASE: Record<string, { label: string; cls: string }> = {
+  pending: { label: 'بانتظار الاعتماد', cls: 'bg-amber-500/10 text-amber-300' }, scheduled: { label: 'مجدولة', cls: 'bg-sky-500/10 text-sky-300' },
+  live: { label: 'تعمل الآن', cls: 'bg-emerald-500/10 text-emerald-300' }, ended: { label: 'انتهت', cls: 'bg-slate-500/20 text-slate-300' }, inactive: { label: 'متوقفة', cls: 'bg-white/10 text-slate-300' },
+};
+
+/** Change what a campaign says or where it sits. A new link or slot on an approved campaign pauses it for review. */
+const CampaignEditor: React.FC<{ c: AdCampaign; busy: boolean; onSave: (input: Parameters<typeof editCampaign>[1]) => void }> = ({ c, busy, onSave }) => {
+  const [f, setF] = useState({ company: c.company, headline: c.headline, tagline: c.tagline, linkUrl: c.linkUrl, slot: c.slot as AdSlot, accent: c.accent as string, icon: c.icon });
+  const k = 'w-full glass-input rounded-xl px-3 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300';
+  return (
+    <details className="rounded-xl border border-white/10 bg-white/[0.02]">
+      <summary className="cursor-pointer px-3 py-2 text-xs font-black">تعديل الحملة</summary>
+      <form className="p-3 space-y-2" onSubmit={e => { e.preventDefault(); onSave({ ...f, tagline: f.tagline }); }}>
+        <div className="grid sm:grid-cols-2 gap-2">
+          <input aria-label="الشركة" required maxLength={80} value={f.company} onChange={e => setF({ ...f, company: e.target.value })} className={k} />
+          <select aria-label="الموقع" value={f.slot} onChange={e => setF({ ...f, slot: e.target.value as AdSlot })} className={k}>{(Object.keys(SLOTS) as AdSlot[]).map(s => <option key={s} value={s}>{SLOTS[s]}</option>)}</select>
+        </div>
+        <input aria-label="العنوان" required minLength={4} maxLength={70} value={f.headline} onChange={e => setF({ ...f, headline: e.target.value })} className={k} />
+        <input aria-label="السطر التوضيحي" maxLength={120} value={f.tagline} onChange={e => setF({ ...f, tagline: e.target.value })} className={k} />
+        <input aria-label="الرابط" required type="url" dir="ltr" value={f.linkUrl} onChange={e => setF({ ...f, linkUrl: e.target.value })} className={k} />
+        <div className="flex flex-wrap items-center gap-2">{AD_ACCENT_KEYS.map(a => <button type="button" key={a} aria-label={`لون ${a}`} aria-pressed={f.accent === a} onClick={() => setF({ ...f, accent: a })} className={`w-6 h-6 rounded-full ${AD_ACCENT_DOT[a]} ${f.accent === a ? 'ring-2 ring-offset-2 ring-gold-300 ring-offset-transparent' : 'opacity-60'}`} />)}
+          <span className="w-px h-5 bg-white/10" />{AD_ICON_KEYS.map(i => <button type="button" key={i} aria-label={`أيقونة ${i}`} aria-pressed={f.icon === i} onClick={() => setF({ ...f, icon: i })} className={`w-8 h-8 rounded-lg border grid place-items-center ${f.icon === i ? 'bg-gold-500/20 border-gold-300/60 text-gold-200' : 'bg-white/5 border-white/10 text-slate-300'}`}><AdIcon name={i} className="w-3.5 h-3.5" /></button>)}</div>
+        {c.status === 'APPROVED' && <p className="text-[11px] text-amber-200/90 leading-5">تغيير الرابط أو الموقع يوقف الحملة لإعادة اعتمادها.</p>}
+        <button disabled={busy} className="w-full py-2 rounded-xl bg-gold-500 text-slate-950 text-xs font-black disabled:opacity-50">حفظ التعديل</button>
+      </form>
+    </details>
+  );
+};
+
 /** Toggle chips for "who sees it" (none selected = everyone) and "which category pages". */
 const TargetChips: React.FC<{ audiences: string[]; topics: string[]; disabled?: boolean; onChange: (audiences: string[], topics: string[]) => void }> = ({ audiences, topics, disabled, onChange }) => {
   const flip = (list: string[], v: string) => (list.includes(v) ? list.filter(x => x !== v) : [...list, v]);
@@ -124,9 +154,12 @@ export const ShowcaseAdmin: React.FC = () => {
               const d = dates[c.id] ?? { s: c.startsOn ?? '', e: c.endsOn ?? '' };
               return (
                 <article key={c.id} className="glass-card rounded-2xl p-5 border border-white/10 space-y-3">
-                  <div className="flex justify-between gap-3"><div className="min-w-0"><div className="text-xs text-gold-300 font-black">{c.company} · {SLOTS[c.slot]}</div><h4 className="font-black mt-1">{c.headline}</h4></div><span className={`text-xs px-2 py-1 rounded-full h-fit shrink-0 whitespace-nowrap ${c.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-300' : c.status === 'PENDING_REVIEW' ? 'bg-amber-500/10 text-amber-300' : 'bg-white/10 text-slate-300'}`}>{STATUS[c.status]}</span></div>
+                  <div className="flex justify-between gap-3"><div className="min-w-0"><div className="text-xs text-gold-300 font-black">{c.company} · {SLOTS[c.slot]}</div><h4 className="font-black mt-1">{c.headline}</h4></div><span className={`text-xs px-2 py-1 rounded-full h-fit shrink-0 whitespace-nowrap ${PHASE[c.phase ?? 'inactive'].cls}`}>{c.status === 'REJECTED' ? 'مرفوضة' : c.status === 'PAUSED' ? 'موقوفة' : PHASE[c.phase ?? 'inactive'].label}</span></div>
                   <div className="text-xs text-slate-400" dir="ltr">{c.linkUrl}</div>
+                  {c.phase === 'live' && c.daysLeft !== null && c.daysLeft !== undefined && c.daysLeft <= 7 && <div className="text-xs text-amber-300 font-black">تنتهي {c.daysLeft === 0 ? 'اليوم' : `بعد ${c.daysLeft.toLocaleString('ar-EG')} أيام`} — تواصل للتجديد</div>}
+                  {c.phase === 'ended' && <div className="text-xs text-slate-400">انتهت مدتها. عدّل التواريخ واعتمد من جديد للتجديد.</div>}
                   <div className="text-xs text-slate-300">ظهور {c.impressions.toLocaleString('ar-EG')} · نقرات {c.clicks.toLocaleString('ar-EG')}{c.contactPhone ? ` · ${c.contactPhone}` : ''}</div>
+                  <CampaignEditor c={c} busy={busy === c.id} onSave={input => void run(c.id, async () => { const r = await editCampaign(c.id, input); if (r.pausedForReview) setNotice('تغيير الرابط أو الموقع أوقف الحملة لإعادة اعتمادها.'); })} />
                   <TargetChips audiences={c.audiences ?? []} topics={c.topics ?? []} disabled={busy === c.id} onChange={(audiences, topics) => void run(c.id, async () => { const r = await setCampaignTargeting(c.id, audiences, topics); if (r.pausedForReview) setNotice('توسيع الجمهور أعاد الحملة إلى الإيقاف لإعادة الاعتماد.'); })} />
                   <div className="grid grid-cols-2 gap-2"><input type="date" aria-label="من" value={d.s} onChange={e => setDates({ ...dates, [c.id]: { ...d, s: e.target.value } })} className={field} /><input type="date" aria-label="إلى" value={d.e} onChange={e => setDates({ ...dates, [c.id]: { ...d, e: e.target.value } })} className={field} /></div>
                   <div className="flex flex-wrap gap-2 text-xs">
