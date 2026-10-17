@@ -31,11 +31,12 @@ import { AdminAuditLogs } from './AdminAuditLogs';
 import { TrustEngine } from './TrustEngine';
 import { StatusPill } from '../common/StatusPill';
 import { EmptyState } from '../common/EmptyState';
-import { completedOrderTotals } from '../../lib/money';
 import { SurfaceTabs } from '../common/SurfaceTabs';
 import { EcosystemApprovals } from './EcosystemApprovals';
 import { ShowcaseAdmin } from './ShowcaseAdmin';
 import { AudienceDashboard } from './AudienceDashboard';
+import { kwdFromFils, useAdminMetrics } from '../../lib/adminMetrics';
+import { MetricsStatus } from './MetricsStatus';
 
 const GRANTS_VISIBLE = 8;
 
@@ -43,13 +44,15 @@ export const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'APPROVALS' | 'COMPLIANCE' | 'ACCESS' | 'AUDIENCE' | 'SETTLEMENTS' | 'RISK' | 'AUDIT'>('OVERVIEW');
   const [notice, setNotice] = useState<string | null>(null);
 
-  const orderTotals = completedOrderTotals(store.orders);
+  // Platform figures: from the server in real mode (refreshed every minute), from the local data in demo.
+  const { metrics, error: metricsError, real: metricsReal } = useAdminMetrics();
+  const dash = (value: string) => (metrics ? value : '—');
   const totals = {
-    totalGmv: orderTotals.salesKwd,
-    totalPlatformFees: orderTotals.platformFeesKwd,
-    signedContractsCount: store.contracts.filter(c => c.status === 'FULLY_SIGNED').length,
-    openDisputes: store.disputes.filter(d => !['RESOLVED', 'CLOSED'].includes(d.status)).length,
-    verifiedHosts: store.hosts.filter(h => h.verificationStatus === 'VERIFIED').length
+    totalGmv: dash(kwdFromFils(metrics?.sales.grossFils ?? 0)),
+    totalPlatformFees: dash(kwdFromFils(metrics?.sales.platformFeeFils ?? 0)),
+    signedContractsCount: dash(String(metrics?.contracts.fullySigned ?? 0)),
+    openDisputes: dash(String(metrics?.disputes.open ?? 0)),
+    verifiedHosts: dash(String(metrics?.hosts.verified ?? 0))
   };
 
   // Copy of the former overview paragraphs, kept verbatim behind the disclosures below.
@@ -72,9 +75,9 @@ export const AdminDashboard: React.FC = () => {
     review: store.products.filter(p => p.status === 'SUBMITTED' || p.status === 'SCREENING').length,
     paused: store.products.filter(p => p.status === 'PAUSED').length,
     access: store.recipeGrants.filter(g => g.status === 'REQUESTED').length,
-    disputes: totals.openDisputes,
-    compliance: store.hosts.filter(h => h.verificationStatus !== 'VERIFIED').length,
-    settlements: new Set(store.accruals.filter(a => a.settlementStatus === 'SETTLEMENT_ELIGIBLE').map(a => a.creatorId)).size
+    disputes: metrics?.disputes.open ?? 0,
+    compliance: metrics ? metrics.hosts.total - metrics.hosts.verified : 0,
+    settlements: metrics?.settlements.eligibleCreators ?? 0
   };
 
   const handleRunMonthlySettlementEngine = async () => {
@@ -138,11 +141,11 @@ export const AdminDashboard: React.FC = () => {
 
       <section className="grid grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4">
         {[
-          { label: 'إجمالي المبيعات (طلبات مكتملة)', value: `${totals.totalGmv.toFixed(3)} د.ك`, icon: <Wallet className="w-5 h-5 text-gold-300" /> },
-          { label: 'رسوم المنصة', value: `${totals.totalPlatformFees.toFixed(3)} د.ك`, icon: <BadgeCheck className="w-5 h-5 text-emerald-300" /> },
-          { label: 'عقود موقعة', value: `${totals.signedContractsCount}`, icon: <FileCheck2 className="w-5 h-5 text-sky-300" /> },
-          { label: 'منشآت مرخّصة', value: `${totals.verifiedHosts}`, icon: <Building2 className="w-5 h-5 text-fuchsia-300" /> },
-          { label: 'نزاعات مفتوحة', value: `${totals.openDisputes}`, icon: <AlertTriangle className="w-5 h-5 text-rose-300" /> }
+          { label: 'إجمالي المبيعات (طلبات مكتملة)', value: metrics ? `${totals.totalGmv} د.ك` : '—', icon: <Wallet className="w-5 h-5 text-gold-300" /> },
+          { label: 'رسوم المنصة', value: metrics ? `${totals.totalPlatformFees} د.ك` : '—', icon: <BadgeCheck className="w-5 h-5 text-emerald-300" /> },
+          { label: 'عقود موقعة', value: totals.signedContractsCount, icon: <FileCheck2 className="w-5 h-5 text-sky-300" /> },
+          { label: 'منشآت مرخّصة', value: totals.verifiedHosts, icon: <Building2 className="w-5 h-5 text-fuchsia-300" /> },
+          { label: 'نزاعات مفتوحة', value: totals.openDisputes, icon: <AlertTriangle className="w-5 h-5 text-rose-300" /> }
         ].map((card, idx) => (
           <div key={idx} className={`majal-rise glass-card rounded-2xl p-4 sm:p-5 border border-white/10 min-w-0 ${idx === 0 ? 'col-span-2 sm:col-span-1' : ''}`}>
             <div>{card.icon}</div>
@@ -151,6 +154,7 @@ export const AdminDashboard: React.FC = () => {
           </div>
         ))}
       </section>
+      <MetricsStatus metrics={metrics} error={metricsError} real={metricsReal} />
 
       <SurfaceTabs
         tabs={[

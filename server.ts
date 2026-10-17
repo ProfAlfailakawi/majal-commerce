@@ -19,6 +19,7 @@ import { createTeamRouter } from './server/team';
 import { createAudienceRouter } from './server/audience';
 import { createAdvancedRouter } from './server/advanced';
 import { createOrdersRouter, createPublicReviewsRouter } from './server/orders';
+import { createAdminMetricsRouter } from './server/admin-metrics';
 import { msUntilNextLaunchEvent, sweepLaunchSchedule } from './server/launch-schedule';
 import { activityTracker, startAdaptiveLoop } from './server/idle-aware';
 import { createModerationRouter } from './server/moderation';
@@ -159,6 +160,7 @@ async function initializeApplication(app: express.Express) {
   app.use('/api/v1/audience', createAudienceRouter(db, authConfig));
   app.use('/api/v1/advanced', createAdvancedRouter(db, authConfig));
   app.use('/api/v1/orders', createOrdersRouter(db, authConfig, paymentRegistry));
+  app.use('/api/v1/admin', createAdminMetricsRouter(db, authConfig));
   // قائمة الحسابات الإدارية قراءة فقط ومحصورة بالسوبر أدمن؛ حدّ إضافي يمنع كشطها.
   app.get('/api/v1/moderation/users', expressRateLimit(limitOptions(60, 5 * 60_000, 'moderation-users')));
   app.use('/api/v1/moderation', createModerationRouter(db, authConfig));
