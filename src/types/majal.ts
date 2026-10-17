@@ -686,6 +686,8 @@ export interface PublicAd {
   slot: AdSlot;
   accent: AdAccent;
   icon: string;
+  /** True when an approved creative image exists at /api/v1/showcase/ads/img/:id. */
+  hasImage?: boolean;
 }
 
 export interface AdCampaign extends PublicAd {
@@ -698,4 +700,6 @@ export interface AdCampaign extends PublicAd {
   createdAt: string;
   impressions: number;
   clicks: number;
+  weekImpressions?: number;
+  weekClicks?: number;
 }

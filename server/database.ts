@@ -1572,6 +1572,14 @@ const migrations = [
       );
       CREATE INDEX IF NOT EXISTS idx_org_invites_org ON organization_invites(organization_id, accepted_at, revoked_at, expires_at);
     `
+  },
+  {
+    /* Ad creatives: an optional approved image per campaign, stored inline (<= 300 KB). */
+    version: 23,
+    sql: `
+      ALTER TABLE ad_campaigns ADD COLUMN image_mime TEXT;
+      ALTER TABLE ad_campaigns ADD COLUMN image_data TEXT;
+    `
   }
 ] as const;
 
