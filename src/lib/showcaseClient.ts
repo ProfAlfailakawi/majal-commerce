@@ -31,7 +31,7 @@ export interface BusinessSubmission {
 export interface AdRequest { company: string; headline: string; tagline?: string; linkUrl: string; contactPhone: string; slot?: AdSlot; website?: string }
 
 export const fetchBusinesses = (): Promise<{ listings: BusinessListing[] }> => IS_DEMO_MODE ? demoShowcase.businesses() : request('/businesses');
-export const submitBusiness = (input: BusinessSubmission): Promise<{ id: string; message: string }> =>
+export const submitBusiness = (input: BusinessSubmission): Promise<{ id: string; reportToken?: string; message: string }> =>
   IS_DEMO_MODE ? demoShowcase.submitBusiness(input as never) : request('/businesses', { method: 'POST', body: JSON.stringify(input) });
 export const requestAdSlot = (input: AdRequest): Promise<{ id: string; reportToken: string; message: string }> =>
   IS_DEMO_MODE ? demoShowcase.requestAd(input) : request('/ads/requests', { method: 'POST', body: JSON.stringify(input) });
@@ -80,7 +80,7 @@ export interface SupplierSubmission {
   contactPublic: boolean; termsAccepted: boolean; products?: string[]; minOrder?: string; delivers?: boolean; website?: string;
 }
 export const fetchDirectorySuppliers = (): Promise<{ suppliers: DirectorySupplier[] }> => IS_DEMO_MODE ? demoShowcase.suppliers() : request('/suppliers');
-export const submitDirectorySupplier = (input: SupplierSubmission): Promise<{ id: string; message: string }> =>
+export const submitDirectorySupplier = (input: SupplierSubmission): Promise<{ id: string; reportToken?: string; message: string }> =>
   IS_DEMO_MODE ? demoShowcase.submitSupplier(input as never) : request('/suppliers', { method: 'POST', body: JSON.stringify(input) });
 export const reviewDirectorySupplier = (id: string, decision: 'APPROVED' | 'REJECTED', adminNote = ''): Promise<{ supplier: DirectorySupplier }> =>
   IS_DEMO_MODE ? demoShowcase.reviewSupplier(id, decision, adminNote) : request(`/admin/suppliers/${encodeURIComponent(id)}/review`, { method: 'POST', body: JSON.stringify({ decision, adminNote }) });

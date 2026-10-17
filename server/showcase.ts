@@ -216,16 +216,17 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
     if (price !== null && (!Number.isInteger(price) || price < 0 || price > 100_000_000)) return jsonError(res, 400, 'السعر المطلوب غير صالح.', 'INVALID_PRICE');
     const years = req.body?.yearsOperating === null || req.body?.yearsOperating === undefined || req.body?.yearsOperating === '' ? null : Number(req.body.yearsOperating);
     if (years !== null && (!Number.isInteger(years) || years < 0 || years > 80)) return jsonError(res, 400, 'سنوات التشغيل غير صالحة.', 'INVALID_YEARS');
-    const id = `biz_${randomUUID()}`, at = now();
+    const id = `biz_${randomUUID()}`, at = now(), reportToken = randomBytes(24).toString('hex');
     await db.prepare(`INSERT INTO business_listings(
       id,title,sector,city,summary,highlights_json,includes_json,asking_price_kwd,revenue_band,years_operating,reason,
-      seller_name,contact_phone,contact_public,status,submitted_at,updated_at
-    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,'PENDING_REVIEW',?,?)`).run(
+      seller_name,contact_phone,contact_public,status,submitted_at,updated_at,report_token_hash
+    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,'PENDING_REVIEW',?,?,?)`).run(
       id, title, sector, city, summary, JSON.stringify(stringList(req.body?.highlights, 4, 80)), JSON.stringify(stringList(req.body?.includes, 6, 60)),
       price, text(req.body?.revenueBand, 0, 60) ?? '', years, text(req.body?.reason, 0, 300) ?? '',
-      sellerName, phone, req.body?.contactPublic === true ? 1 : 0, at, at
+      sellerName, phone, req.body?.contactPublic === true ? 1 : 0, at, at, sha(reportToken)
     );
-    res.status(201).json({ id, message: 'وصل طلبك. لن يظهر للجمهور قبل مراجعة الإدارة، وهي خدمة مجانية.' });
+    // Shown once: the seller keeps this private link to see how many people opened and contacted.
+    res.status(201).json({ id, reportToken, message: 'وصل طلبك. لن يظهر للجمهور قبل مراجعة الإدارة، وهي خدمة مجانية.' });
   });
 
   /* ───────── public: free supplier directory ───────── */
@@ -240,13 +241,13 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
     const description = text(req.body?.description, 15, 600), contactName = text(req.body?.contactName, 2, 80), phone = phoneOf(req.body?.contactPhone);
     if (!name || !category || !region || !description || !contactName || !phone) return jsonError(res, 400, 'أكمل الاسم والفئة والمنطقة والوصف واسم المسؤول ورقم تواصل صحيحًا.', 'INVALID_SUPPLIER');
     if (req.body?.termsAccepted !== true) return jsonError(res, 400, 'يلزم الإقرار بصحة البيانات وأن المراجعة شكلية.', 'TERMS_REQUIRED');
-    const id = `sdir_${randomUUID()}`, at = now();
-    await db.prepare(`INSERT INTO supplier_directory(id,name,category,region,description,products_json,min_order,delivers,contact_name,contact_phone,contact_public,status,submitted_at,updated_at)
-      VALUES(?,?,?,?,?,?,?,?,?,?,?,'PENDING_REVIEW',?,?)`).run(
+    const id = `sdir_${randomUUID()}`, at = now(), reportToken = randomBytes(24).toString('hex');
+    await db.prepare(`INSERT INTO supplier_directory(id,name,category,region,description,products_json,min_order,delivers,contact_name,contact_phone,contact_public,status,submitted_at,updated_at,report_token_hash)
+      VALUES(?,?,?,?,?,?,?,?,?,?,?,'PENDING_REVIEW',?,?,?)`).run(
       id, name, category, region, description, JSON.stringify(stringList(req.body?.products, 8, 60)), text(req.body?.minOrder, 0, 80) ?? '',
-      req.body?.delivers === true ? 1 : 0, contactName, phone, req.body?.contactPublic === true ? 1 : 0, at, at
+      req.body?.delivers === true ? 1 : 0, contactName, phone, req.body?.contactPublic === true ? 1 : 0, at, at, sha(reportToken)
     );
-    res.status(201).json({ id, message: 'وصل طلبك. لن يظهر قبل مراجعة الإدارة، والتسجيل مجاني.' });
+    res.status(201).json({ id, reportToken, message: 'وصل طلبك. لن يظهر قبل مراجعة الإدارة، والتسجيل مجاني.' });
   });
 
   /* ───────── public: ads ───────── */

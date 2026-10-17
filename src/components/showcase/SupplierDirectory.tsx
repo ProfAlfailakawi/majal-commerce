@@ -7,6 +7,7 @@ import { fetchPublicEcosystem } from '../../lib/ecosystemClient';
 import { reportGateEvent } from '../../lib/audienceClient';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { SupplierArt } from './SupplierArt';
+import { PrivateLinkNote } from './PrivateLinkNote';
 import { SUPPLIER_CATEGORIES, SUPPLIER_CATEGORY_KEYS, categoryFromText } from './sectors';
 
 const fieldClass = 'w-full glass-input rounded-xl px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300';
@@ -43,13 +44,13 @@ const SupplierCard: React.FC<{ s: DirectorySupplier }> = ({ s }) => (
 const SubmitForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const ref = useDialogBehavior<HTMLDivElement>(true, onClose);
   const [f, setF] = useState({ name: '', category: 'INGREDIENTS' as SupplierCategory, region: '', description: '', products: '', minOrder: '', delivers: true, contactName: '', phone: '', contactPublic: true, terms: false, website: '' });
-  const [busy, setBusy] = useState(false), [error, setError] = useState(''), [done, setDone] = useState('');
+  const [busy, setBusy] = useState(false), [error, setError] = useState(''), [done, setDone] = useState(''), [token, setToken] = useState('');
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF(p => ({ ...p, [k]: v }));
   const submit = async (e: FormEvent) => {
     e.preventDefault(); setBusy(true); setError('');
     try {
       const r = await submitDirectorySupplier({ name: f.name, category: f.category, region: f.region, description: f.description, contactName: f.contactName, contactPhone: f.phone, contactPublic: f.contactPublic, termsAccepted: f.terms, products: f.products.split(/[،,\n]/).map(x => x.trim()).filter(Boolean), minOrder: f.minOrder, delivers: f.delivers, website: f.website });
-      setDone(r.message);
+      setDone(r.message); setToken(r.reportToken ?? '');
     } catch (err) { setError(err instanceof Error ? err.message : 'تعذّر إرسال الطلب.'); } finally { setBusy(false); }
   };
   return createPortal(
@@ -58,7 +59,7 @@ const SubmitForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <button type="button" onClick={onClose} aria-label="إغلاق" className="absolute top-4 end-4 p-2 rounded-full text-slate-300 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"><X className="w-4 h-4" aria-hidden="true" /></button>
         <h3 id="sup-submit-title" className="text-xl font-black pe-10">سجّل مورّدك في الدليل</h3>
         {done ? (
-          <div className="mt-6 space-y-4 text-center py-4"><BadgeCheck className="w-12 h-12 mx-auto text-emerald-300" aria-hidden="true" /><p role="status" className="text-sm text-slate-200 leading-7">{done}</p><button type="button" onClick={onClose} className="px-6 py-2.5 rounded-xl bg-gold-500 text-slate-950 text-sm font-black">تم</button></div>
+          <div className="mt-6 space-y-4 text-center py-4"><BadgeCheck className="w-12 h-12 mx-auto text-emerald-300" aria-hidden="true" /><p role="status" className="text-sm text-slate-200 leading-7">{done}</p>{token && <PrivateLinkNote token={token} />}<button type="button" onClick={onClose} className="px-6 py-2.5 rounded-xl bg-gold-500 text-slate-950 text-sm font-black">تم</button></div>
         ) : (
           <form onSubmit={submit} className="mt-4 space-y-3">
             <p className="text-xs text-slate-300 leading-6">مجاني وبلا عمولة. تراجعه الإدارة ثم يظهر في الدليل.</p>
