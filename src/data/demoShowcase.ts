@@ -70,6 +70,14 @@ const today = () => new Date(Date.now() + 3 * 3_600_000).toISOString().slice(0, 
 const live = (ad: AdCampaign) => ad.status === 'APPROVED' && (!ad.startsOn || ad.startsOn <= today()) && (!ad.endsOn || ad.endsOn >= today());
 export const SLOT_CAPACITY: Record<AdSlot, number> = { SPONSOR: 1, MARKET: 3, PORTAL: 3 };
 
+/** Same phase rules as the server so the demo admin shows ending-soon and ended campaigns. */
+const withPhase = (c: AdCampaign): AdCampaign => {
+  const t = today();
+  const phase = c.status === 'PENDING_REVIEW' ? 'pending' : c.status !== 'APPROVED' ? 'inactive' : c.endsOn && c.endsOn < t ? 'ended' : c.startsOn && c.startsOn > t ? 'scheduled' : 'live';
+  const daysLeft = c.endsOn ? Math.round((Date.parse(`${c.endsOn}T00:00:00Z`) - Date.parse(`${t}T00:00:00Z`)) / 86_400_000) : null;
+  return { ...c, phase, daysLeft };
+};
+
 export const demoShowcase = {
   businesses() {
     return delay({ listings: current().listings.filter(x => x.status === 'APPROVED').map(x => ({ ...x, sellerName: undefined, adminNote: undefined, contactPhone: x.contactPublic ? x.contactPhone : undefined })) });
@@ -94,8 +102,8 @@ export const demoShowcase = {
     const ad = current().campaigns.find(a => a.id === id);
     if (ad && live(ad)) { if (type === 'click') ad.clicks += 1; else ad.impressions += 1; commit(); }
   },
-  requestAd(input: { company: string; headline: string; tagline?: string; linkUrl: string; contactPhone: string; slot?: AdSlot }) {
-    current().campaigns.unshift({ id: `ad_demo_${Date.now()}`, company: input.company, headline: input.headline, tagline: input.tagline || '', slot: input.slot || 'MARKET', accent: 'gold', icon: 'megaphone', linkUrl: input.linkUrl, status: 'PENDING_REVIEW', startsOn: null, endsOn: null, createdAt: new Date().toISOString(), impressions: 0, clicks: 0, contactPhone: input.contactPhone });
+  requestAd(input: { company: string; headline: string; tagline?: string; linkUrl: string; contactPhone: string; slot?: AdSlot; accent?: string; icon?: string; audiences?: string[]; topics?: string[] }) {
+    current().campaigns.unshift({ id: `ad_demo_${Date.now()}`, company: input.company, headline: input.headline, tagline: input.tagline || '', slot: input.slot || 'MARKET', accent: (input.accent as PublicAd['accent']) || 'gold', icon: input.icon || 'megaphone', linkUrl: input.linkUrl, status: 'PENDING_REVIEW', startsOn: null, endsOn: null, createdAt: new Date().toISOString(), impressions: 0, clicks: 0, contactPhone: input.contactPhone, audiences: input.audiences || [], topics: input.topics || [] });
     commit();
     return delay({ id: 'demo', reportToken: 'demo-report-token-not-real', message: 'وصل طلب الإعلان. لا يظهر قبل اعتماد الإدارة وتحديد المدة.' });
   },
@@ -120,13 +128,21 @@ export const demoShowcase = {
   overview() {
     const s = current();
     const rank = (x: string) => (x === 'PENDING_REVIEW' ? 0 : x === 'APPROVED' ? 1 : 2);
-    return delay({ suppliers: [...s.suppliers].sort((a, b) => rank(a.status) - rank(b.status)), listings: [...s.listings].sort((a, b) => rank(a.status) - rank(b.status)), campaigns: [...s.campaigns].sort((a, b) => rank(a.status) - rank(b.status)) });
+    return delay({ suppliers: [...s.suppliers].sort((a, b) => rank(a.status) - rank(b.status)), listings: [...s.listings].sort((a, b) => rank(a.status) - rank(b.status)), campaigns: [...s.campaigns].sort((a, b) => rank(a.status) - rank(b.status)).map(c => withPhase(c)) });
   },
   reviewBusiness(id: string, decision: 'APPROVED' | 'REJECTED' | 'SOLD', adminNote = '') {
     const row = current().listings.find(x => x.id === id);
     if (!row) return Promise.reject(new Error('الإعلان غير موجود.'));
     Object.assign(row, { status: decision, adminNote: adminNote || undefined }); commit();
     return delay({ listing: row });
+  },
+  editCampaign(id: string, input: { company: string; headline: string; tagline?: string; linkUrl: string; slot: AdSlot; accent?: string; icon?: string }) {
+    const ad = current().campaigns.find(x => x.id === id);
+    if (!ad) return Promise.reject(new Error('الحملة غير موجودة.'));
+    const retarget = ad.status === 'APPROVED' && (input.linkUrl !== ad.linkUrl || input.slot !== ad.slot);
+    Object.assign(ad, { company: input.company, headline: input.headline, tagline: input.tagline || '', linkUrl: input.linkUrl, slot: input.slot, accent: (input.accent as PublicAd['accent']) || ad.accent, icon: input.icon || ad.icon, status: retarget ? 'PAUSED' : ad.status });
+    commit();
+    return delay({ campaign: ad, pausedForReview: retarget });
   },
   setTargeting(id: string, audiences: string[], topics: string[]) {
     const ad = current().campaigns.find(x => x.id === id);

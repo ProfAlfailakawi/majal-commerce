@@ -97,35 +97,35 @@ test('admin reviews listings and campaigns; slot capacity, creatives and report 
     assert.equal(full.status, 409); assert.equal((await full.json()).code, 'SLOT_FULL');
     assert.equal((await approve(5, { endsOn: '2000-01-01' })).status, 409, 'an already-ended campaign cannot be approved');
     assert.equal((await h.call(admin, 'POST', `/showcase/admin/campaigns/${ids[5]}/status`, { status: 'APPROVED', startsOn: '2030-05-01', endsOn: '2030-04-01' })).status, 400);
-    assert.equal((await (await fetch(`${h.base}/showcase/ads/serve?slot=MARKET`)).json()).ads.length, 3);
+    assert.equal((await (await fetch(`${h.base}/showcase/promo/serve?slot=MARKET`)).json()).ads.length, 3);
     // The future sponsor campaign is approved but not serving yet.
-    assert.equal((await (await fetch(`${h.base}/showcase/ads/serve?slot=SPONSOR`)).json()).ads[0].company, 'شركة 1');
+    assert.equal((await (await fetch(`${h.base}/showcase/promo/serve?slot=SPONSOR`)).json()).ads[0].company, 'شركة 1');
 
     // Creatives: sniffed by content, size-checked, served only while live, removable.
     assert.equal((await h.call(admin, 'POST', `/showcase/admin/campaigns/${ids[2]}/image`, undefined, Buffer.from('<svg onload=alert(1)>'))).status, 422);
     assert.equal((await h.call(admin, 'POST', `/showcase/admin/campaigns/${ids[2]}/image`, undefined, png(100, 100))).status, 422);
     assert.equal((await h.call(admin, 'POST', `/showcase/admin/campaigns/${ids[2]}/image`, undefined, png(1000, 100))).status, 422);
     assert.equal((await h.call(admin, 'POST', `/showcase/admin/campaigns/${ids[2]}/image`, undefined, png(640, 320))).status, 200);
-    const img = await fetch(`${h.base}/showcase/ads/img/${ids[2]}`);
+    const img = await fetch(`${h.base}/showcase/promo/img/${ids[2]}`);
     assert.equal(img.status, 200);
     assert.equal(img.headers.get('content-type'), 'image/png');
     assert.equal(img.headers.get('x-content-type-options'), 'nosniff');
-    assert.equal((await (await fetch(`${h.base}/showcase/ads/serve?slot=MARKET`)).json()).ads.find((a: { id: string }) => a.id === ids[2]).hasImage, true);
+    assert.equal((await (await fetch(`${h.base}/showcase/promo/serve?slot=MARKET`)).json()).ads.find((a: { id: string }) => a.id === ids[2]).hasImage, true);
     await h.call(admin, 'POST', `/showcase/admin/campaigns/${ids[2]}/status`, { status: 'PAUSED' });
-    assert.equal((await fetch(`${h.base}/showcase/ads/img/${ids[2]}`)).status, 404, 'a paused campaign serves no image');
+    assert.equal((await fetch(`${h.base}/showcase/promo/img/${ids[2]}`)).status, 404, 'a paused campaign serves no image');
     await h.call(admin, 'POST', `/showcase/admin/campaigns/${ids[2]}/image/remove`);
-    assert.equal((await fetch(`${h.base}/showcase/ads/img/${ids[2]}`)).status, 404);
+    assert.equal((await fetch(`${h.base}/showcase/promo/img/${ids[2]}`)).status, 404);
 
     // Report link rotation invalidates the old token.
     const created = await (await h.call(admin, 'POST', '/showcase/admin/campaigns', campaign(9, 'PORTAL'))).json();
     const oldToken = created.reportToken;
-    assert.equal((await fetch(`${h.base}/showcase/ads/report/${oldToken}`)).status, 200);
+    assert.equal((await fetch(`${h.base}/showcase/promo/report/${oldToken}`)).status, 200);
     const { reportToken } = await (await h.call(admin, 'POST', `/showcase/admin/campaigns/${created.campaign.id}/rotate-report`)).json();
-    assert.equal((await fetch(`${h.base}/showcase/ads/report/${oldToken}`)).status, 404);
-    assert.equal((await fetch(`${h.base}/showcase/ads/report/${reportToken}`)).status, 200);
+    assert.equal((await fetch(`${h.base}/showcase/promo/report/${oldToken}`)).status, 404);
+    assert.equal((await fetch(`${h.base}/showcase/promo/report/${reportToken}`)).status, 200);
 
     // Weekly numbers reach the admin overview.
-    await fetch(`${h.base}/showcase/ads/event`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: ids[3], type: 'impression' }) });
+    await fetch(`${h.base}/showcase/promo/event`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: ids[3], type: 'impression' }) });
     const again = await (await h.call(admin, 'GET', '/showcase/admin/overview')).json();
     assert.equal(again.campaigns.find((c: { id: string }) => c.id === ids[3]).weekImpressions, 1);
     assert.ok(kuwaitToday() >= '2026-01-01');
@@ -196,7 +196,7 @@ test('smart serving: role targeting, topic priority, even pacing, per-audience c
       assert.equal(r.status, 201); return await r.json() as { campaign: { id: string }; reportToken: string };
     };
     const approve = (id: string, extra: object = {}) => h.call(admin, 'POST', `/showcase/admin/campaigns/${id}/status`, { status: 'APPROVED', ...extra });
-    const serve = async (slot: string, query = '') => ((await (await fetch(`${h.base}/showcase/ads/serve?slot=${slot}${query}`)).json()).ads as { id: string; company: string }[]);
+    const serve = async (slot: string, query = '') => ((await (await fetch(`${h.base}/showcase/promo/serve?slot=${slot}${query}`)).json()).ads as { id: string; company: string }[]);
 
     // Disjoint audiences share an "exclusive" slot; an overlapping one does not.
     const forHosts = await make(1, 'SPONSOR', { audiences: ['HOST'] });
@@ -233,14 +233,58 @@ test('smart serving: role targeting, topic priority, even pacing, per-audience c
     // Pacing: with capacity trimmed, the least-shown neutral campaign leads the next rotation.
     const p1 = await make(21, 'PORTAL'), p2 = await make(22, 'PORTAL');
     await approve(p1.campaign.id); await approve(p2.campaign.id);
-    for (let i = 0; i < 3; i++) await fetch(`${h.base}/showcase/ads/event`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: p1.campaign.id, type: 'impression', audience: 'HOST' }) });
+    for (let i = 0; i < 3; i++) await fetch(`${h.base}/showcase/promo/event`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: p1.campaign.id, type: 'impression', audience: 'HOST' }) });
     assert.equal((await serve('PORTAL', '&audience=HOST'))[0].company, 'شركة 22', 'the under-delivered campaign goes first');
 
     // The company sees which roles saw its ad.
-    await fetch(`${h.base}/showcase/ads/event`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: p1.campaign.id, type: 'impression', audience: 'creator' }) });
-    await fetch(`${h.base}/showcase/ads/click/${p1.campaign.id}?a=HOST`, { redirect: 'manual' });
-    const report = await (await fetch(`${h.base}/showcase/ads/report/${p1.reportToken}`)).json();
+    await fetch(`${h.base}/showcase/promo/event`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: p1.campaign.id, type: 'impression', audience: 'creator' }) });
+    await fetch(`${h.base}/showcase/promo/click/${p1.campaign.id}?a=HOST`, { redirect: 'manual' });
+    const report = await (await fetch(`${h.base}/showcase/promo/report/${p1.reportToken}`)).json();
     assert.deepEqual(report.audiences.map((a: { audience: string; impressions: number; clicks: number }) => [a.audience, a.impressions, a.clicks]).sort(), [['CREATOR', 1, 0], ['HOST', 3, 1]]);
     assert.equal(report.totals.impressions, 4);
+  } finally { await h.close(); }
+});
+
+test('admins are told about every public submission; campaign phases and edits behave', async () => {
+  const h = await harness();
+  try {
+    await createUser(h.db, { name: 'Admin', email: 'admin@notify.test', password, role: 'ADMIN' });
+    await createUser(h.db, { name: 'Buyer', email: 'buyer@notify.test', password, role: 'CONSUMER' });
+    const admin = await h.login('admin@notify.test'), buyer = await h.login('buyer@notify.test');
+    const post = (path: string, body: unknown) => fetch(`${h.base}${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+
+    // Three public submissions → three inbox kinds; a repeat coalesces instead of piling up.
+    await post('/showcase/businesses', { title: 'مقهى للبيع', sector: 'CAFE', city: 'حولي', summary: 'مقهى بعقد ساري ومعدات كاملة وزبائن ثابتين.', sellerName: 'سالم', contactPhone: '50001234', termsAccepted: true });
+    await post('/showcase/businesses', { title: 'مخبز للبيع', sector: 'BAKERY', city: 'السالمية', summary: 'مخبز بعقد ساري ومعدات كاملة وزبائن ثابتين.', sellerName: 'سعد', contactPhone: '50001235', termsAccepted: true });
+    await post('/showcase/suppliers', { name: 'مورد', category: 'SPICES', region: 'المباركية', description: 'بهارات مطحونة بحسب الطلب.', contactName: 'سعد', contactPhone: '50002222', termsAccepted: true });
+    const ad = await (await post('/showcase/promo/requests', { company: 'شركة التغليف', headline: 'علب مخصصة لمنتجك', linkUrl: 'https://example.com/pack', contactPhone: '50003333', slot: 'PORTAL', audiences: ['HOST', 'BOGUS'], topics: ['حلويات'], accent: 'sky', icon: 'package' })).json();
+    const inbox = await h.db.prepare("SELECT dedupe_key, occurrence_count FROM notification_inbox WHERE category='SHOWCASE_REVIEW' ORDER BY dedupe_key").all<{ dedupe_key: string; occurrence_count: number | string }>();
+    assert.deepEqual(inbox.map(r => [r.dedupe_key, Number(r.occurrence_count)]), [['showcase-pending:ad', 1], ['showcase-pending:business', 2], ['showcase-pending:supplier', 1]]);
+    assert.equal((await h.db.prepare("SELECT COUNT(*) AS n FROM notification_inbox WHERE user_id IN (SELECT id FROM users WHERE role='CONSUMER')").get<{ n: number | string }>())?.n.toString(), '0', 'shoppers get nothing');
+
+    // The company's choices arrive as submitted (junk dropped) and the admin sees the phase.
+    const overview = async () => (await (await h.call(admin, 'GET', '/showcase/admin/overview')).json()).campaigns as { id: string; slot: string; status: string; phase: string; daysLeft: number | null; audiences: string[]; topics: string[]; accent: string; icon: string }[];
+    let c = (await overview()).find(x => x.id === ad.id)!;
+    assert.deepEqual([c.slot, c.audiences, c.topics, c.accent, c.icon, c.phase], ['PORTAL', ['HOST'], ['حلويات'], 'sky', 'package', 'pending']);
+    const dayPlus = (n: number) => kuwaitToday(new Date(Date.now() + n * 86_400_000));
+    assert.equal((await h.call(admin, 'POST', `/showcase/admin/campaigns/${ad.id}/status`, { status: 'APPROVED', startsOn: dayPlus(2), endsOn: dayPlus(9) })).status, 200);
+    c = (await overview()).find(x => x.id === ad.id)!;
+    assert.deepEqual([c.phase, c.daysLeft], ['scheduled', 9]);
+    await h.call(admin, 'POST', `/showcase/admin/campaigns/${ad.id}/status`, { status: 'APPROVED', startsOn: dayPlus(-3), endsOn: dayPlus(5) });
+    assert.deepEqual([(await overview()).find(x => x.id === ad.id)!.phase], ['live']);
+    // A campaign whose end date has passed reads as ended, whatever its stored status.
+    await h.db.prepare("UPDATE ad_campaigns SET ends_on=? WHERE id=?").run(dayPlus(-1), ad.id);
+    assert.equal((await overview()).find(x => x.id === ad.id)!.phase, 'ended');
+    await h.db.prepare("UPDATE ad_campaigns SET ends_on=? WHERE id=?").run(dayPlus(5), ad.id);
+
+    // Editing words keeps it live; changing the link or slot sends it back to review.
+    const edit = (body: object) => h.call(admin, 'POST', `/showcase/admin/campaigns/${ad.id}/edit`, { company: 'شركة التغليف', headline: 'علب مخصصة لمنتجك', linkUrl: 'https://example.com/pack', slot: 'PORTAL', ...body });
+    assert.equal((await h.call(buyer, 'POST', `/showcase/admin/campaigns/${ad.id}/edit`, {})).status, 403);
+    assert.equal((await edit({ linkUrl: 'http://insecure.example.com' })).status, 400);
+    const words = await (await edit({ headline: 'علب أنيقة لمنتجك', tagline: 'كميات صغيرة' })).json();
+    assert.deepEqual([words.pausedForReview, words.campaign.status, words.campaign.headline], [false, 'APPROVED', 'علب أنيقة لمنتجك']);
+    const moved = await (await edit({ linkUrl: 'https://example.com/other' })).json();
+    assert.deepEqual([moved.pausedForReview, moved.campaign.status], [true, 'PAUSED']);
+    assert.deepEqual((await (await fetch(`${h.base}/showcase/promo/serve?slot=PORTAL&audience=HOST`)).json()).ads, [], 'a paused campaign stops serving');
   } finally { await h.close(); }
 });

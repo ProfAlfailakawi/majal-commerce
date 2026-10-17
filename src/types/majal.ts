@@ -686,7 +686,7 @@ export interface PublicAd {
   slot: AdSlot;
   accent: AdAccent;
   icon: string;
-  /** True when an approved creative image exists at /api/v1/showcase/ads/img/:id. */
+  /** True when an approved creative image exists at /api/v1/showcase/promo/img/:id. */
   hasImage?: boolean;
 }
 
@@ -702,6 +702,9 @@ export interface AdCampaign extends PublicAd {
   clicks: number;
   weekImpressions?: number;
   weekClicks?: number;
+  /** Where it is in time regardless of review status; `daysLeft` counts to the end date. */
+  phase?: 'pending' | 'scheduled' | 'live' | 'ended' | 'inactive';
+  daysLeft?: number | null;
   /** Viewer roles it is shown to (empty = everyone) and marketplace categories it follows (empty = any). */
   audiences?: string[];
   topics?: string[];

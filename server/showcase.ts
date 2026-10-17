@@ -5,6 +5,7 @@ import { AuthConfig, AuthenticatedRequest, requireAuth, requireCsrf } from './au
 import express from 'express';
 import { MajalDatabase, withTransaction } from './database';
 import { creativeProblem, readImageMeta } from './image-meta';
+import { createOrCoalesceNotification } from './notifications';
 
 /*
  * Showcase: (1) a free "business for sale" gate and (2) sponsor campaigns.
@@ -108,7 +109,7 @@ const supplierAdmin = (row: SupplierDirRow) => ({ ...supplierBase(row), contactN
 const adPublic = (row: CampaignRow) => ({ id: row.id, company: row.company, headline: row.headline, tagline: row.tagline, slot: row.slot, accent: row.accent, icon: row.icon, hasImage: !!row.image_mime });
 const targetingOf = (row: CampaignRow) => ({ audiences: parseList(row.audiences_json ?? '[]'), topics: parseList(row.topics_json ?? '[]') });
 const campaignAdmin = (row: CampaignRow, stat?: { impressions: number; clicks: number }, week?: { impressions: number; clicks: number }) => ({
-  ...adPublic(row), ...targetingOf(row), linkUrl: row.link_url, contactPhone: row.contact_phone || undefined, status: row.status,
+  ...adPublic(row), ...targetingOf(row), phase: phaseOf(row, kuwaitToday()), daysLeft: daysLeft(row, kuwaitToday()), linkUrl: row.link_url, contactPhone: row.contact_phone || undefined, status: row.status,
   startsOn: row.starts_on, endsOn: row.ends_on, adminNote: row.admin_note || undefined, createdAt: row.created_at,
   impressions: stat?.impressions ?? 0, clicks: stat?.clicks ?? 0, weekImpressions: week?.impressions ?? 0, weekClicks: week?.clicks ?? 0
 });
@@ -116,6 +117,33 @@ const campaignAdmin = (row: CampaignRow, stat?: { impressions: number; clicks: n
 const pick = <T extends string>(value: unknown, list: readonly T[], max = 10): T[] =>
   Array.isArray(value) ? [...new Set(value.filter((v): v is T => typeof v === 'string' && (list as readonly string[]).includes(v)))].slice(0, max) : [];
 const audienceOf = (value: unknown) => oneOf(typeof value === 'string' ? value.toUpperCase() : '', AD_AUDIENCES) ?? 'VISITOR';
+
+/**
+ * A public submission must not wait unseen: every active administrator gets one inbox item per kind
+ * (repeats coalesce into a counter). A failure here never fails the submitter's request.
+ */
+async function notifyAdmins(db: MajalDatabase, kind: 'business' | 'supplier' | 'ad', title: string) {
+  try {
+    const admins = await db.prepare("SELECT id FROM users WHERE role IN ('ADMIN','SUPER_ADMIN') AND status='ACTIVE' LIMIT 20").all<{ id: string }>();
+    for (const a of admins) {
+      await createOrCoalesceNotification(db, {
+        userId: a.id, category: 'SHOWCASE_REVIEW', priority: 'SOON', title, body: 'بانتظار قرارك في تبويب الاعتمادات.',
+        actionLabel: 'افتح الاعتمادات', actionSurface: 'ADMIN', dedupeKey: `showcase-pending:${kind}`
+      });
+    }
+  } catch { /* the submission already succeeded */ }
+}
+
+/** Where a campaign is in time, independent of its review status. */
+const phaseOf = (row: Pick<CampaignRow, 'status' | 'starts_on' | 'ends_on'>, today: string) => {
+  if (row.status === 'PENDING_REVIEW') return 'pending';
+  if (row.status !== 'APPROVED') return 'inactive';
+  if (row.ends_on && row.ends_on < today) return 'ended';
+  if (row.starts_on && row.starts_on > today) return 'scheduled';
+  return 'live';
+};
+const daysLeft = (row: Pick<CampaignRow, 'ends_on'>, today: string) =>
+  row.ends_on ? Math.round((Date.parse(`${row.ends_on}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86_400_000) : null;
 
 const isLive = (row: Pick<CampaignRow, 'status' | 'starts_on' | 'ends_on'>, today: string) =>
   row.status === 'APPROVED' && (!row.starts_on || row.starts_on <= today) && (!row.ends_on || row.ends_on >= today);
@@ -226,6 +254,7 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
       sellerName, phone, req.body?.contactPublic === true ? 1 : 0, at, at, sha(reportToken)
     );
     // Shown once: the seller keeps this private link to see how many people opened and contacted.
+    await notifyAdmins(db, 'business', 'مشروع جديد للبيع بانتظار المراجعة');
     res.status(201).json({ id, reportToken, message: 'وصل طلبك. لن يظهر للجمهور قبل مراجعة الإدارة، وهي خدمة مجانية.' });
   });
 
@@ -247,11 +276,12 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
       id, name, category, region, description, JSON.stringify(stringList(req.body?.products, 8, 60)), text(req.body?.minOrder, 0, 80) ?? '',
       req.body?.delivers === true ? 1 : 0, contactName, phone, req.body?.contactPublic === true ? 1 : 0, at, at, sha(reportToken)
     );
+    await notifyAdmins(db, 'supplier', 'مورد جديد في الدليل بانتظار المراجعة');
     res.status(201).json({ id, reportToken, message: 'وصل طلبك. لن يظهر قبل مراجعة الإدارة، والتسجيل مجاني.' });
   });
 
   /* ───────── public: ads ───────── */
-  router.get('/ads/serve', publicLimit(300, 60_000, 'serve'), async (req, res) => {
+  router.get('/promo/serve', publicLimit(300, 60_000, 'serve'), async (req, res) => {
     const slot = oneOf(typeof req.query.slot === 'string' ? req.query.slot.toUpperCase() : '', AD_SLOTS);
     if (!slot) return jsonError(res, 400, 'موقع الإعلان غير معروف.', 'INVALID_SLOT');
     const rows = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE status='APPROVED' AND slot=? ORDER BY created_at ASC LIMIT 40`).all<CampaignRow>(slot);
@@ -262,7 +292,7 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
     res.json({ ads: picked.map(adPublic) });
   });
 
-  router.post('/ads/event', publicLimit(240, 60_000, 'event'), async (req, res) => {
+  router.post('/promo/event', publicLimit(240, 60_000, 'event'), async (req, res) => {
     const id = text(req.body?.id, 4, 80);
     if (!id || req.body?.type !== 'impression') return res.status(204).end();
     const row = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=? LIMIT 1`).get<CampaignRow>(id);
@@ -271,7 +301,7 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
   });
 
   // The only redirect target is the https link an administrator approved, never a caller value.
-  router.get('/ads/click/:id', publicLimit(120, 60_000, 'click'), async (req, res) => {
+  router.get('/promo/click/:id', publicLimit(120, 60_000, 'click'), async (req, res) => {
     const row = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=? LIMIT 1`).get<CampaignRow>(req.params.id);
     if (!row || !isLive(row, kuwaitToday())) return res.redirect(302, '/');
     await bump(db, row.id, 'clicks', audienceOf(req.query.a));
@@ -285,24 +315,26 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
   });
 
   /* A company asks for a slot; it is a PENDING_REVIEW campaign until an administrator decides. */
-  router.post('/ads/requests', publicLimit(5, 60 * 60_000, 'ad-request'), async (req, res) => {
+  router.post('/promo/requests', publicLimit(5, 60 * 60_000, 'ad-request'), async (req, res) => {
     if (typeof req.body?.website === 'string' && req.body.website.trim()) return res.status(201).json({ message: 'وصل طلبك.' });
     const company = text(req.body?.company, 2, 80), headline = text(req.body?.headline, 4, 70);
     const link = publicHttpsUrl(req.body?.linkUrl), phone = phoneOf(req.body?.contactPhone);
     if (!company || !headline || !link || !phone) return jsonError(res, 400, 'أكمل اسم الشركة والعنوان ورابط https عامًا ورقم تواصل.', 'INVALID_AD_REQUEST');
     const id = `ad_${randomUUID()}`, at = now(), token = randomBytes(24).toString('hex');
-    await db.prepare(`INSERT INTO ad_campaigns(id,company,headline,tagline,link_url,slot,accent,icon,contact_phone,status,report_token_hash,created_at,updated_at)
-      VALUES(?,?,?,?,?,?,?,?,?,'PENDING_REVIEW',?,?,?)`).run(
+    await db.prepare(`INSERT INTO ad_campaigns(id,company,headline,tagline,link_url,slot,accent,icon,contact_phone,status,report_token_hash,audiences_json,topics_json,created_at,updated_at)
+      VALUES(?,?,?,?,?,?,?,?,?,'PENDING_REVIEW',?,?,?,?,?)`).run(
       id, company, headline, text(req.body?.tagline, 0, 120) ?? '', link, oneOf(req.body?.slot, AD_SLOTS) ?? 'MARKET',
-      oneOf(req.body?.accent, AD_ACCENTS) ?? 'gold', oneOf(req.body?.icon, AD_ICONS) ?? 'megaphone', phone, sha(token), at, at
+      oneOf(req.body?.accent, AD_ACCENTS) ?? 'gold', oneOf(req.body?.icon, AD_ICONS) ?? 'megaphone', phone, sha(token),
+      JSON.stringify(pick(req.body?.audiences, AD_AUDIENCES)), JSON.stringify(pick(req.body?.topics, AD_TOPICS)), at, at
     );
     // The requester keeps this private link; it is the only way to see the campaign's numbers.
+    await notifyAdmins(db, 'ad', 'طلب إعلان جديد بانتظار المراجعة');
     res.status(201).json({ id, reportToken: token, message: 'وصل طلب الإعلان. لا يظهر قبل اعتماد الإدارة وتحديد المدة. احتفظ برابط التقرير.' });
   });
 
   // The creative is served only while its campaign is live, as an inert image: nosniff and a
   // CSP that forbids everything, so even a mislabelled file cannot execute.
-  router.get('/ads/img/:id', publicLimit(300, 60_000, 'img'), async (req, res) => {
+  router.get('/promo/img/:id', publicLimit(300, 60_000, 'img'), async (req, res) => {
     const row = await db.prepare('SELECT status, starts_on, ends_on, image_mime, image_data FROM ad_campaigns WHERE id=? LIMIT 1').get<Pick<CampaignRow, 'status' | 'starts_on' | 'ends_on' | 'image_mime' | 'image_data'>>(req.params.id);
     if (!row?.image_mime || !row.image_data || !isLive(row, kuwaitToday())) return res.status(404).end();
     res.setHeader('Content-Type', row.image_mime);
@@ -313,7 +345,7 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
   });
 
   /* Company report: the token is the identity. Aggregate numbers only. */
-  router.get('/ads/report/:token', publicLimit(60, 60_000, 'report'), async (req, res) => {
+  router.get('/promo/report/:token', publicLimit(60, 60_000, 'report'), async (req, res) => {
     const token = text(req.params.token, 20, 200);
     if (!token) return jsonError(res, 404, 'التقرير غير موجود.', 'NOT_FOUND');
     const row = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE report_token_hash=? LIMIT 1`).get<CampaignRow>(sha(token));
@@ -321,7 +353,7 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
     const days = await db.prepare('SELECT day, impressions, clicks FROM ad_daily_stats WHERE campaign_id=? ORDER BY day DESC LIMIT 30').all<{ day: string; impressions: number | string; clicks: number | string }>(row.id);
     const total = days.reduce((acc, d) => ({ impressions: acc.impressions + Number(d.impressions), clicks: acc.clicks + Number(d.clicks) }), { impressions: 0, clicks: 0 });
     res.json({
-      campaign: { company: row.company, headline: row.headline, slot: row.slot, status: row.status, startsOn: row.starts_on, endsOn: row.ends_on },
+      campaign: { company: row.company, headline: row.headline, slot: row.slot, status: row.status, phase: phaseOf(row, kuwaitToday()), daysLeft: daysLeft(row, kuwaitToday()), startsOn: row.starts_on, endsOn: row.ends_on },
       audiences: (await db.prepare('SELECT audience, impressions, clicks FROM ad_audience_stats WHERE campaign_id=? ORDER BY impressions DESC').all<{ audience: string; impressions: number | string; clicks: number | string }>(row.id))
         .map(a => ({ audience: a.audience, impressions: Number(a.impressions), clicks: Number(a.clicks) })),
       totals: total, ctr: total.impressions ? Math.round((total.clicks / total.impressions) * 1000) / 10 : 0,
@@ -423,6 +455,29 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
    * Retargeting an approved campaign could silently overfill a slot, so an approved campaign
    * goes back to review (PAUSED) when its audiences widen; narrowing is always safe.
    */
+  /**
+   * Edit what a campaign says and where it sits. Changing the link or the slot of an approved
+   * campaign pauses it: the approval was for the old target, so it is reviewed again.
+   */
+  router.post('/admin/campaigns/:id/edit', authenticated, csrfProtected, async (req: AuthenticatedRequest, res) => {
+    if (!isAdmin(req)) return jsonError(res, 403, 'للإدارة فقط.', 'ADMIN_REQUIRED');
+    const before = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=? LIMIT 1`).get<CampaignRow>(req.params.id);
+    if (!before) return jsonError(res, 404, 'الحملة غير موجودة.', 'NOT_FOUND');
+    const company = text(req.body?.company, 2, 80), headline = text(req.body?.headline, 4, 70), link = publicHttpsUrl(req.body?.linkUrl);
+    const slot = oneOf(req.body?.slot, AD_SLOTS);
+    if (!company || !headline || !link || !slot) return jsonError(res, 400, 'أكمل الشركة والعنوان ورابط https عامًا والموقع.', 'INVALID_CAMPAIGN');
+    const retarget = before.status === 'APPROVED' && (link !== before.link_url || slot !== before.slot);
+    await withTransaction(db, async tx => {
+      await tx.prepare('UPDATE ad_campaigns SET company=?,headline=?,tagline=?,link_url=?,slot=?,accent=?,icon=?,status=?,updated_at=? WHERE id=?').run(
+        company, headline, text(req.body?.tagline, 0, 120) ?? '', link, slot, oneOf(req.body?.accent, AD_ACCENTS) ?? before.accent,
+        oneOf(req.body?.icon, AD_ICONS) ?? before.icon, retarget ? 'PAUSED' : before.status, now(), before.id
+      );
+      await audit(tx, req, 'AD_CAMPAIGN_EDITED', 'AD_CAMPAIGN', before.id, { slot, pausedForReview: retarget });
+    });
+    const row = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=?`).get<CampaignRow>(before.id);
+    res.json({ campaign: campaignAdmin(row!), pausedForReview: retarget });
+  });
+
   router.post('/admin/campaigns/:id/targeting', authenticated, csrfProtected, async (req: AuthenticatedRequest, res) => {
     if (!isAdmin(req)) return jsonError(res, 403, 'للإدارة فقط.', 'ADMIN_REQUIRED');
     const before = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=? LIMIT 1`).get<CampaignRow>(req.params.id);

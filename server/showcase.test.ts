@@ -59,27 +59,27 @@ test('admin routes require a session', async () => {
 
 test('ads: pending requests never serve; live ones count impressions and clicks and redirect only to the approved link', async () => {
   await withApp(async (base, db) => {
-    const req = await post(`${base}/ads/requests`, { company: 'شركة التغليف', headline: 'علب مخصصة لمنتجك', linkUrl: 'https://example.com/pack', contactPhone: '+96550001111', slot: 'MARKET' });
+    const req = await post(`${base}/promo/requests`, { company: 'شركة التغليف', headline: 'علب مخصصة لمنتجك', linkUrl: 'https://example.com/pack', contactPhone: '+96550001111', slot: 'MARKET' });
     assert.equal(req.status, 201);
     const { id, reportToken } = await req.json();
-    assert.deepEqual((await (await fetch(`${base}/ads/serve?slot=MARKET`)).json()).ads, []);
+    assert.deepEqual((await (await fetch(`${base}/promo/serve?slot=MARKET`)).json()).ads, []);
     await db.prepare("UPDATE ad_campaigns SET status='APPROVED' WHERE id=?").run(id);
-    const { ads } = await (await fetch(`${base}/ads/serve?slot=MARKET`)).json();
+    const { ads } = await (await fetch(`${base}/promo/serve?slot=MARKET`)).json();
     assert.equal(ads.length, 1);
     assert.ok(!('linkUrl' in ads[0]) && !('contactPhone' in ads[0]));
-    assert.equal((await post(`${base}/ads/event`, { id, type: 'impression' })).status, 204);
-    const click = await fetch(`${base}/ads/click/${id}`, { redirect: 'manual' });
+    assert.equal((await post(`${base}/promo/event`, { id, type: 'impression' })).status, 204);
+    const click = await fetch(`${base}/promo/click/${id}`, { redirect: 'manual' });
     assert.equal(click.status, 302);
     assert.ok(click.headers.get('location')!.startsWith('https://example.com/pack?utm_source=majal'));
-    const report = await (await fetch(`${base}/ads/report/${reportToken}`)).json();
+    const report = await (await fetch(`${base}/promo/report/${reportToken}`)).json();
     assert.deepEqual(report.totals, { impressions: 1, clicks: 1 });
     assert.equal(report.ctr, 100);
-    assert.equal((await fetch(`${base}/ads/report/${'x'.repeat(48)}`)).status, 404);
+    assert.equal((await fetch(`${base}/promo/report/${'x'.repeat(48)}`)).status, 404);
     // Outside its dates the campaign stops serving and clicking.
     await db.prepare("UPDATE ad_campaigns SET ends_on='2000-01-01' WHERE id=?").run(id);
-    assert.deepEqual((await (await fetch(`${base}/ads/serve?slot=MARKET`)).json()).ads, []);
-    assert.equal((await fetch(`${base}/ads/click/${id}`, { redirect: 'manual' })).headers.get('location'), '/');
-    assert.equal((await fetch(`${base}/ads/serve?slot=NOPE`)).status, 400);
+    assert.deepEqual((await (await fetch(`${base}/promo/serve?slot=MARKET`)).json()).ads, []);
+    assert.equal((await fetch(`${base}/promo/click/${id}`, { redirect: 'manual' })).headers.get('location'), '/');
+    assert.equal((await fetch(`${base}/promo/serve?slot=NOPE`)).status, 400);
   });
 });
 
