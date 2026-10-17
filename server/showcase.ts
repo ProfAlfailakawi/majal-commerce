@@ -15,6 +15,7 @@ import { creativeProblem, readImageMeta } from './image-meta';
  */
 
 export const BUSINESS_SECTORS = ['CAFE', 'RESTAURANT', 'BAKERY', 'CLOUD_KITCHEN', 'RETAIL', 'ONLINE_STORE', 'SALON', 'SERVICES', 'PRODUCTION', 'OTHER'] as const;
+export const SUPPLIER_CATEGORIES = ['INGREDIENTS', 'PRODUCE', 'MEAT', 'SPICES', 'PACKAGING', 'PRINTING', 'EQUIPMENT', 'DELIVERY', 'OTHER'] as const;
 export const AD_SLOTS = ['SPONSOR', 'MARKET', 'PORTAL'] as const;
 export const AD_ACCENTS = ['gold', 'emerald', 'sky', 'rose', 'violet'] as const;
 export const AD_ICONS = ['megaphone', 'store', 'coffee', 'truck', 'package', 'sparkles', 'utensils', 'shopping-bag', 'printer', 'credit-card', 'leaf', 'gift'] as const;
@@ -74,6 +75,11 @@ type CampaignRow = {
   contact_phone: string; status: string; starts_on: string | null; ends_on: string | null; admin_note: string; created_at: string; updated_at: string;
   image_mime: string | null; image_data?: string | null;
 };
+type SupplierDirRow = {
+  id: string; name: string; category: string; region: string; description: string; products_json: string; min_order: string;
+  delivers: number | string; contact_name: string; contact_phone: string; contact_public: number | string; status: string; admin_note: string;
+  submitted_at: string; reviewed_at: string | null;
+};
 type StatRow = { campaign_id: string; impressions: number | string; clicks: number | string };
 
 const num = (value: unknown) => (value === null || value === undefined ? null : Number(value));
@@ -86,6 +92,14 @@ const listingBase = (row: ListingRow) => ({
 /** Anonymous callers never receive the seller's name, admin notes — and the phone only with consent. */
 const listingPublic = (row: ListingRow) => ({ ...listingBase(row), ...(Number(row.contact_public) === 1 ? { contactPhone: row.contact_phone } : {}) });
 const listingAdmin = (row: ListingRow) => ({ ...listingBase(row), sellerName: row.seller_name, contactPhone: row.contact_phone, adminNote: row.admin_note || undefined, reviewedAt: row.reviewed_at });
+const supplierBase = (row: SupplierDirRow) => ({
+  id: row.id, name: row.name, category: row.category, region: row.region, description: row.description,
+  products: parseList(row.products_json), minOrder: row.min_order, delivers: Number(row.delivers) === 1,
+  contactPublic: Number(row.contact_public) === 1, status: row.status, submittedAt: row.submitted_at
+});
+/** Same privacy rule as listings: the contact name and notes stay private, the phone needs consent. */
+const supplierPublic = (row: SupplierDirRow) => ({ ...supplierBase(row), ...(Number(row.contact_public) === 1 ? { contactPhone: row.contact_phone } : {}) });
+const supplierAdmin = (row: SupplierDirRow) => ({ ...supplierBase(row), contactName: row.contact_name, contactPhone: row.contact_phone, adminNote: row.admin_note || undefined, reviewedAt: row.reviewed_at });
 const adPublic = (row: CampaignRow) => ({ id: row.id, company: row.company, headline: row.headline, tagline: row.tagline, slot: row.slot, accent: row.accent, icon: row.icon, hasImage: !!row.image_mime });
 const campaignAdmin = (row: CampaignRow, stat?: { impressions: number; clicks: number }, week?: { impressions: number; clicks: number }) => ({
   ...adPublic(row), linkUrl: row.link_url, contactPhone: row.contact_phone || undefined, status: row.status,
@@ -170,6 +184,27 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
       sellerName, phone, req.body?.contactPublic === true ? 1 : 0, at, at
     );
     res.status(201).json({ id, message: 'وصل طلبك. لن يظهر للجمهور قبل مراجعة الإدارة، وهي خدمة مجانية.' });
+  });
+
+  /* ───────── public: free supplier directory ───────── */
+  router.get('/suppliers', publicLimit(120, 60_000, 'read'), async (_req, res) => {
+    const rows = await db.prepare("SELECT * FROM supplier_directory WHERE status='APPROVED' ORDER BY reviewed_at DESC, submitted_at DESC LIMIT 200").all<SupplierDirRow>();
+    res.json({ suppliers: rows.map(supplierPublic) });
+  });
+
+  router.post('/suppliers', publicLimit(5, 60 * 60_000, 'submit-supplier'), async (req, res) => {
+    if (typeof req.body?.website === 'string' && req.body.website.trim()) return res.status(201).json({ message: 'وصل طلبك وسيُراجع قبل الظهور.' });
+    const name = text(req.body?.name, 2, 100), category = oneOf(req.body?.category, SUPPLIER_CATEGORIES), region = text(req.body?.region, 2, 80);
+    const description = text(req.body?.description, 15, 600), contactName = text(req.body?.contactName, 2, 80), phone = phoneOf(req.body?.contactPhone);
+    if (!name || !category || !region || !description || !contactName || !phone) return jsonError(res, 400, 'أكمل الاسم والفئة والمنطقة والوصف واسم المسؤول ورقم تواصل صحيحًا.', 'INVALID_SUPPLIER');
+    if (req.body?.termsAccepted !== true) return jsonError(res, 400, 'يلزم الإقرار بصحة البيانات وأن المراجعة شكلية.', 'TERMS_REQUIRED');
+    const id = `sdir_${randomUUID()}`, at = now();
+    await db.prepare(`INSERT INTO supplier_directory(id,name,category,region,description,products_json,min_order,delivers,contact_name,contact_phone,contact_public,status,submitted_at,updated_at)
+      VALUES(?,?,?,?,?,?,?,?,?,?,?,'PENDING_REVIEW',?,?)`).run(
+      id, name, category, region, description, JSON.stringify(stringList(req.body?.products, 8, 60)), text(req.body?.minOrder, 0, 80) ?? '',
+      req.body?.delivers === true ? 1 : 0, contactName, phone, req.body?.contactPublic === true ? 1 : 0, at, at
+    );
+    res.status(201).json({ id, message: 'وصل طلبك. لن يظهر قبل مراجعة الإدارة، والتسجيل مجاني.' });
   });
 
   /* ───────── public: ads ───────── */
@@ -258,7 +293,8 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
     const campaigns = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns ORDER BY CASE status WHEN 'PENDING_REVIEW' THEN 0 WHEN 'APPROVED' THEN 1 ELSE 2 END, created_at DESC LIMIT 200`).all<CampaignRow>();
     const ids = campaigns.map(c => c.id);
     const [stats, week] = await Promise.all([statsFor(db, ids), weekFor(db, ids)]);
-    res.json({ listings: listings.map(listingAdmin), campaigns: campaigns.map(c => campaignAdmin(c, stats.get(c.id), week.get(c.id))) });
+    const suppliers = await db.prepare("SELECT * FROM supplier_directory WHERE status IN ('PENDING_REVIEW','APPROVED') ORDER BY CASE status WHEN 'PENDING_REVIEW' THEN 0 ELSE 1 END, submitted_at DESC LIMIT 300").all<SupplierDirRow>();
+    res.json({ suppliers: suppliers.map(supplierAdmin), listings: listings.map(listingAdmin), campaigns: campaigns.map(c => campaignAdmin(c, stats.get(c.id), week.get(c.id))) });
   });
 
   router.post('/admin/businesses/:id/review', authenticated, csrfProtected, async (req: AuthenticatedRequest, res) => {
@@ -274,6 +310,21 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
     });
     const row = await db.prepare('SELECT * FROM business_listings WHERE id=?').get<ListingRow>(before.id);
     res.json({ listing: listingAdmin(row!) });
+  });
+
+  router.post('/admin/suppliers/:id/review', authenticated, csrfProtected, async (req: AuthenticatedRequest, res) => {
+    if (!isAdmin(req)) return jsonError(res, 403, 'الاعتماد للإدارة فقط.', 'ADMIN_REQUIRED');
+    const decision = oneOf(req.body?.decision, ['APPROVED', 'REJECTED'] as const);
+    if (!decision) return jsonError(res, 400, 'قرار غير صالح.', 'INVALID_DECISION');
+    const before = await db.prepare('SELECT * FROM supplier_directory WHERE id=? LIMIT 1').get<SupplierDirRow>(req.params.id);
+    if (!before) return jsonError(res, 404, 'المورد غير موجود.', 'NOT_FOUND');
+    const adminNote = text(req.body?.adminNote, 0, 1000) ?? '', at = now();
+    await withTransaction(db, async tx => {
+      await tx.prepare('UPDATE supplier_directory SET status=?,admin_note=?,reviewed_by_user_id=?,reviewed_at=?,updated_at=? WHERE id=?').run(decision, adminNote, req.auth!.user.id, at, at, before.id);
+      await audit(tx, req, 'SUPPLIER_DIRECTORY_REVIEWED', 'SUPPLIER_DIRECTORY', before.id, { decision, adminNote });
+    });
+    const row = await db.prepare('SELECT * FROM supplier_directory WHERE id=?').get<SupplierDirRow>(before.id);
+    res.json({ supplier: supplierAdmin(row!) });
   });
 
   router.post('/admin/campaigns', authenticated, csrfProtected, async (req: AuthenticatedRequest, res) => {

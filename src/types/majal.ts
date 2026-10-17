@@ -10,7 +10,7 @@ export type UserRole =
   | 'SUPER_ADMIN'
   | 'CONSUMER';
 
-export type SurfaceType = 'PUBLIC' | 'SHOWCASE' | 'CREATOR' | 'HOST' | 'SUPPLIER' | 'CONSUMER' | 'ADMIN' | 'SUPER_ADMIN';
+export type SurfaceType = 'PUBLIC' | 'SHOWCASE' | 'DIRECTORY' | 'CREATOR' | 'HOST' | 'SUPPLIER' | 'CONSUMER' | 'ADMIN' | 'SUPER_ADMIN';
 
 export type Language = 'ar' | 'en';
 
@@ -702,4 +702,28 @@ export interface AdCampaign extends PublicAd {
   clicks: number;
   weekImpressions?: number;
   weekClicks?: number;
+}
+
+/* ───────── Free supplier directory ───────── */
+export type SupplierCategory = 'INGREDIENTS' | 'PRODUCE' | 'MEAT' | 'SPICES' | 'PACKAGING' | 'PRINTING' | 'EQUIPMENT' | 'DELIVERY' | 'OTHER';
+
+export interface DirectorySupplier {
+  id: string;
+  name: string;
+  category: SupplierCategory;
+  region: string;
+  description: string;
+  products: string[];
+  minOrder: string;
+  delivers: boolean;
+  contactPublic: boolean;
+  /** Public callers only receive this when the supplier consented; admins always do. */
+  contactPhone?: string;
+  /** Admin-only. */
+  contactName?: string;
+  adminNote?: string;
+  status: 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
+  submittedAt: string;
+  /** Set on cards that come from a verified supplier account rather than the free directory. */
+  verified?: boolean;
 }

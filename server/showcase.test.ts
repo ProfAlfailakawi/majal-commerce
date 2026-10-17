@@ -88,3 +88,23 @@ test('ad links must be public https URLs', () => {
   for (const bad of ['http://example.com', 'https://localhost/x', 'https://127.0.0.1/x', 'javascript:alert(1)', 'https://user:pw@example.com', 'https://intranet/x']) assert.equal(publicHttpsUrl(bad), undefined, bad);
   assert.match(kuwaitToday(), /^\d{4}-\d{2}-\d{2}$/);
 });
+
+const supplier = { name: 'مؤسسة الندى للتغليف', category: 'PACKAGING', region: 'الري', description: 'علب وأكياس تغليف غذائي بكميات صغيرة وكبيرة.', contactName: 'ندى', contactPhone: '+965 6000 7777', termsAccepted: true };
+
+test('supplier directory: hidden until approved, phone only with consent, invalid input refused', async () => {
+  await withApp(async (base, db) => {
+    assert.equal((await post(`${base}/suppliers`, { ...supplier, category: 'NOPE' })).status, 400);
+    assert.equal((await post(`${base}/suppliers`, { ...supplier, termsAccepted: false })).status, 400);
+    assert.equal((await post(`${base}/suppliers`, { ...supplier, contactPhone: 'x' })).status, 400);
+    assert.equal((await post(`${base}/suppliers`, { ...supplier, website: 'spam' })).status, 201);
+    assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM supplier_directory').get<{ n: number }>())?.n, 0, 'honeypot writes nothing');
+    assert.equal((await post(`${base}/suppliers`, { ...supplier, products: ['علب', 'أكياس'], delivers: true })).status, 201);
+    assert.deepEqual((await (await fetch(`${base}/suppliers`)).json()).suppliers, []);
+    await db.prepare("UPDATE supplier_directory SET status='APPROVED', reviewed_at=?").run(new Date().toISOString());
+    const [hidden] = (await (await fetch(`${base}/suppliers`)).json()).suppliers;
+    assert.deepEqual([hidden.name, hidden.delivers, hidden.products], ['مؤسسة الندى للتغليف', true, ['علب', 'أكياس']]);
+    assert.ok(!('contactPhone' in hidden) && !('contactName' in hidden));
+    await db.prepare('UPDATE supplier_directory SET contact_public=1').run();
+    assert.equal((await (await fetch(`${base}/suppliers`)).json()).suppliers[0].contactPhone, '+96560007777');
+  });
+});

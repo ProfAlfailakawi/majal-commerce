@@ -1,7 +1,7 @@
 import { authCsrfToken } from './authClient';
 import { IS_DEMO_MODE } from './runtime';
 import { demoShowcase } from '../data/demoShowcase';
-import type { AdCampaign, AdSlot, BusinessListing, PublicAd } from '../types/majal';
+import type { AdCampaign, AdSlot, BusinessListing, DirectorySupplier, PublicAd } from '../types/majal';
 
 export class ShowcaseApiError extends Error {
   constructor(message: string, public readonly code?: string, public readonly status?: number) { super(message); }
@@ -50,7 +50,7 @@ export interface AdReport {
   totals: { impressions: number; clicks: number }; ctr: number; days: { day: string; impressions: number; clicks: number }[]; note: string;
 }
 
-export const fetchShowcaseOverview = (): Promise<{ listings: BusinessListing[]; campaigns: AdCampaign[] }> => IS_DEMO_MODE ? demoShowcase.overview() : request('/admin/overview');
+export const fetchShowcaseOverview = (): Promise<{ listings: BusinessListing[]; campaigns: AdCampaign[]; suppliers: DirectorySupplier[] }> => IS_DEMO_MODE ? demoShowcase.overview() : request('/admin/overview');
 export const reviewBusiness = (id: string, decision: 'APPROVED' | 'REJECTED' | 'SOLD', adminNote = ''): Promise<{ listing: BusinessListing }> =>
   IS_DEMO_MODE ? demoShowcase.reviewBusiness(id, decision, adminNote) : request(`/admin/businesses/${encodeURIComponent(id)}/review`, { method: 'POST', body: JSON.stringify({ decision, adminNote }) });
 export const setCampaignStatus = (id: string, status: 'APPROVED' | 'PAUSED' | 'REJECTED', dates: { startsOn?: string | null; endsOn?: string | null } = {}): Promise<{ campaign: AdCampaign }> =>
@@ -73,3 +73,13 @@ export const removeCampaignImage = (id: string) => IS_DEMO_MODE ? Promise.resolv
 export const rotateReportLink = (id: string): Promise<{ reportToken: string }> =>
   IS_DEMO_MODE ? Promise.resolve({ reportToken: 'demo-report-token-not-real' }) : request(`/admin/campaigns/${encodeURIComponent(id)}/rotate-report`, { method: 'POST' });
 export const adImageSrc = (id: string) => `/api/v1/showcase/ads/img/${encodeURIComponent(id)}`;
+
+export interface SupplierSubmission {
+  name: string; category: string; region: string; description: string; contactName: string; contactPhone: string;
+  contactPublic: boolean; termsAccepted: boolean; products?: string[]; minOrder?: string; delivers?: boolean; website?: string;
+}
+export const fetchDirectorySuppliers = (): Promise<{ suppliers: DirectorySupplier[] }> => IS_DEMO_MODE ? demoShowcase.suppliers() : request('/suppliers');
+export const submitDirectorySupplier = (input: SupplierSubmission): Promise<{ id: string; message: string }> =>
+  IS_DEMO_MODE ? demoShowcase.submitSupplier(input as never) : request('/suppliers', { method: 'POST', body: JSON.stringify(input) });
+export const reviewDirectorySupplier = (id: string, decision: 'APPROVED' | 'REJECTED', adminNote = ''): Promise<{ supplier: DirectorySupplier }> =>
+  IS_DEMO_MODE ? demoShowcase.reviewSupplier(id, decision, adminNote) : request(`/admin/suppliers/${encodeURIComponent(id)}/review`, { method: 'POST', body: JSON.stringify({ decision, adminNote }) });

@@ -32,6 +32,7 @@ interface ExperienceGuideProps {
 const surfaceMeta: Record<SurfaceType, { label: string; icon: React.ReactNode; keywords: string }> = {
   PUBLIC: { label: 'عن مجال', icon: <Globe className="w-4 h-4" />, keywords: 'الرئيسية معلومات home public' },
   SHOWCASE: { label: 'مشاريع للبيع', icon: <StoreIcon className="w-4 h-4" />, keywords: 'بيع مشروع مشاريع للبيع تقبيل showcase business sale' },
+  DIRECTORY: { label: 'دليل الموردين', icon: <Truck className="w-4 h-4" />, keywords: 'دليل موردين مورد تغليف بهارات directory suppliers' },
   CONSUMER: { label: 'السوق والإطلاقات', icon: <StoreIcon className="w-4 h-4" />, keywords: 'سوق شراء منتجات consumer market' },
   CREATOR: { label: 'مساحة المبدع', icon: <Sparkles className="w-4 h-4" />, keywords: 'مبدع منتج وصفة creator product recipe' },
   HOST: { label: 'مساحة المنشأة', icon: <Building2 className="w-4 h-4" />, keywords: 'منشأة مصنع مطعم host factory' },
