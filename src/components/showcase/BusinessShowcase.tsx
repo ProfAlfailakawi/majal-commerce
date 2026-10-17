@@ -3,13 +3,14 @@ import { createPortal } from 'react-dom';
 import { BadgeCheck, Banknote, CalendarClock, ChevronLeft, Eye, FileUp, Gift, Handshake, Info, Layers, Megaphone, MapPin, MessageCircle, Phone, ShieldCheck, Store, TrendingUp, X } from 'lucide-react';
 import type { BusinessListing, BusinessSector, SurfaceType } from '../../types/majal';
 import { fetchBusinesses, requestAdSlot, submitBusiness } from '../../lib/showcaseClient';
-import { formatKwd } from '../../lib/money';
 import { arCount } from '../../lib/arPlural';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { SectorArt } from './SectorArt';
 import { SECTORS, SECTOR_KEYS } from './sectors';
 import { AdSlot } from './AdSlot';
 
+/** Asking prices are whole dinars; formatKwd's three decimals would read as fils. */
+const formatKwd = (kwd: number) => `${kwd.toLocaleString('ar-EG')} د.ك`;
 const forSale = { one: 'مشروع واحد', two: 'مشروعان', few: 'مشاريع', many: 'مشروعًا' };
 const fieldClass = 'w-full glass-input rounded-xl px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300';
 const waLink = (phone: string, title: string) => `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(`مرحبًا، أنا مهتم بمشروعك المعروض في مجال: ${title}`)}`;

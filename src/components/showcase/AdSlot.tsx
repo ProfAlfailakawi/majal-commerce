@@ -70,7 +70,7 @@ export const AdSlot: React.FC<{ slot: AdSlotType; className?: string }> = ({ slo
   if (!ads.length) return null;
   if (slot === 'SPONSOR') {
     const ad = ads[0];
-    return <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 ${className}`}><AdCard ad={ad} compact /></div>;
+    return <div className={`w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 ${className}`}><AdCard ad={ad} compact /></div>;
   }
   return (
     <aside aria-label="إعلانات الشركاء" className={`grid gap-3 sm:grid-cols-2 xl:grid-cols-3 ${className}`}>
