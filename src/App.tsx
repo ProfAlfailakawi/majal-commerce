@@ -20,6 +20,9 @@ const HostPortal = lazy(() => import('./components/host/HostPortal').then(module
 const SupplierPortal = lazy(() => import('./components/supplier/SupplierPortal').then(module => ({ default: module.SupplierPortal })));
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard').then(module => ({ default: module.AdminDashboard })));
 const SuperAdminDashboard = lazy(() => import('./components/admin/SuperAdminDashboard').then(module => ({ default: module.SuperAdminDashboard })));
+const BusinessShowcase = lazy(() => import('./components/showcase/BusinessShowcase').then(module => ({ default: module.BusinessShowcase })));
+const InviteAcceptPage = lazy(() => import('./components/common/InviteAcceptPage').then(module => ({ default: module.InviteAcceptPage })));
+const AdReportPage = lazy(() => import('./components/showcase/AdReportPage').then(module => ({ default: module.AdReportPage })));
 const AiAssistantDrawer = lazy(() => import('./components/common/AiAssistantDrawer').then(module => ({ default: module.AiAssistantDrawer })));
 const IntegrationHubModal = lazy(() => import('./components/common/IntegrationHubModal').then(module => ({ default: module.IntegrationHubModal })));
 const AuthModal = lazy(() => import('./components/common/AuthModal').then(module => ({ default: module.AuthModal })));
@@ -28,6 +31,7 @@ const AccountSecurityModal = lazy(() => import('./components/common/AccountSecur
 import { SurfaceFallback } from './components/common/SurfaceFallback';
 import type { LegalDocumentId } from './components/legal/LegalCenter';
 import { legalDocumentFromPath, legalPath } from './lib/legalRoutes';
+import { AdSlot } from './components/showcase/AdSlot';
 
 const LegalCenter = lazy(() => import('./components/legal/LegalCenter').then(module => ({ default: module.LegalCenter })));
 
@@ -54,6 +58,12 @@ export default function App() {
   const [authStatus, setAuthStatus] = useState<'LOADING' | 'AUTHENTICATED' | 'ANONYMOUS'>(IS_DEMO_MODE ? 'AUTHENTICATED' : 'LOADING');
   // The legal surface sits outside the role/permission surfaces on purpose: it is public,
   // has no permission model, and must stay reachable from every state of the app.
+  // A company opens its private campaign report from `/?ad-report=<token>`. Like the legal
+  // pages it sits outside the role surfaces: the link itself is the credential.
+  const [adReportToken, setAdReportToken] = useState<string | null>(() => new URLSearchParams(window.location.search).get('ad-report'));
+  const [inviteToken, setInviteToken] = useState<string | null>(() => new URLSearchParams(window.location.search).get('invite'));
+  const closeInvite = () => { window.history.replaceState(null, '', '/'); setInviteToken(null); };
+  const closeAdReport = () => { window.history.replaceState(null, '', '/'); setAdReportToken(null); };
   const [legalDocument, setLegalDocument] = useState<LegalDocumentId | null>(() => legalDocumentFromPath(window.location.pathname));
 
   useEffect(() => {
@@ -189,10 +199,13 @@ export default function App() {
 
         <ExperienceGuide activeSurface={activeSurface} onSurfaceChange={handleSurfaceChange} />
 
+        {!adReportToken && !inviteToken && !legalDocument && <AdSlot slot="SPONSOR" />}
+
         <main id="main-content" tabIndex={-1} className="animate-in fade-in duration-300 flex-1 pb-[4.5rem] sm:pb-10 outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
           <Suspense fallback={<SurfaceFallback />}>
-            {legalDocument ? <LegalCenter initialDocument={legalDocument} onBack={closeLegal} /> : <>
+            {inviteToken ? <InviteAcceptPage token={inviteToken} onDone={closeInvite} /> : adReportToken ? <AdReportPage token={adReportToken} onClose={closeAdReport} /> : legalDocument ? <LegalCenter initialDocument={legalDocument} onBack={closeLegal} /> : <>
               {activeSurface === 'PUBLIC' && <PublicLanding onSurfaceChange={handleSurfaceChange} />}
+              {activeSurface === 'SHOWCASE' && <BusinessShowcase onSurfaceChange={handleSurfaceChange} />}
               {activeSurface === 'CONSUMER' && <ConsumerDashboard onSurfaceChange={handleSurfaceChange} />}
               {activeSurface === 'CREATOR' && <CreatorPortal />}
               {activeSurface === 'HOST' && <HostPortal />}

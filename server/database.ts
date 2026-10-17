@@ -1494,6 +1494,84 @@ const migrations = [
       );
       CREATE INDEX IF NOT EXISTS idx_creator_follows_creator ON creator_follows(creator_id, alerts_opt_in);
     `
+  },
+  {
+    /*
+     * Showcase: free "business for sale" gate and sponsor campaigns.
+     *  - business_listings: public submissions (no account) that only become visible after
+     *    admin approval; the phone is only ever returned when the seller consented.
+     *  - ad_campaigns / ad_daily_stats: company campaigns approved by admin, with
+     *    anonymous per-day counters (no IP, no user id).
+     */
+    version: 22,
+    sql: `
+      CREATE TABLE IF NOT EXISTS business_listings (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        sector TEXT NOT NULL,
+        city TEXT NOT NULL,
+        summary TEXT NOT NULL,
+        highlights_json TEXT NOT NULL DEFAULT '[]',
+        includes_json TEXT NOT NULL DEFAULT '[]',
+        asking_price_kwd INTEGER CHECK(asking_price_kwd IS NULL OR asking_price_kwd >= 0),
+        revenue_band TEXT NOT NULL DEFAULT '',
+        years_operating INTEGER CHECK(years_operating IS NULL OR years_operating >= 0),
+        reason TEXT NOT NULL DEFAULT '',
+        seller_name TEXT NOT NULL,
+        contact_phone TEXT NOT NULL,
+        contact_public INTEGER NOT NULL DEFAULT 0 CHECK(contact_public IN (0, 1)),
+        status TEXT NOT NULL DEFAULT 'PENDING_REVIEW' CHECK(status IN ('PENDING_REVIEW','APPROVED','REJECTED','SOLD')),
+        admin_note TEXT NOT NULL DEFAULT '',
+        reviewed_by_user_id TEXT REFERENCES users(id) ON DELETE RESTRICT,
+        submitted_at TEXT NOT NULL,
+        reviewed_at TEXT,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_business_listings_status ON business_listings(status, submitted_at DESC, id);
+
+      CREATE TABLE IF NOT EXISTS ad_campaigns (
+        id TEXT PRIMARY KEY,
+        company TEXT NOT NULL,
+        headline TEXT NOT NULL,
+        tagline TEXT NOT NULL DEFAULT '',
+        link_url TEXT NOT NULL,
+        slot TEXT NOT NULL CHECK(slot IN ('SPONSOR','MARKET','PORTAL')),
+        accent TEXT NOT NULL DEFAULT 'gold',
+        icon TEXT NOT NULL DEFAULT 'megaphone',
+        contact_phone TEXT NOT NULL DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'PENDING_REVIEW' CHECK(status IN ('PENDING_REVIEW','APPROVED','PAUSED','REJECTED')),
+        starts_on TEXT,
+        ends_on TEXT,
+        admin_note TEXT NOT NULL DEFAULT '',
+        report_token_hash TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_ad_campaigns_serve ON ad_campaigns(status, slot, starts_on, ends_on);
+      CREATE INDEX IF NOT EXISTS idx_ad_campaigns_report ON ad_campaigns(report_token_hash);
+
+      CREATE TABLE IF NOT EXISTS ad_daily_stats (
+        campaign_id TEXT NOT NULL REFERENCES ad_campaigns(id) ON DELETE CASCADE,
+        day TEXT NOT NULL,
+        impressions INTEGER NOT NULL DEFAULT 0,
+        clicks INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY(campaign_id, day)
+      );
+
+      CREATE TABLE IF NOT EXISTS organization_invites (
+        id TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        email TEXT NOT NULL,
+        role TEXT NOT NULL CHECK(role IN ('HOST_OPERATIONS', 'HOST_CHEF', 'HOST_FINANCE', 'HOST_MARKETING', 'HOST_SUPPORT')),
+        token_hash TEXT NOT NULL UNIQUE,
+        invited_by_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        expires_at TEXT NOT NULL,
+        accepted_at TEXT,
+        revoked_at TEXT,
+        created_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_org_invites_org ON organization_invites(organization_id, accepted_at, revoked_at, expires_at);
+    `
   }
 ] as const;
 

@@ -117,7 +117,7 @@ const cleanText = (value: unknown, min: number, max: number) => {
   return clean.length >= min && clean.length <= max ? clean : undefined;
 };
 
-const normalizeEmail = (value: unknown) => {
+export const normalizeEmail = (value: unknown) => {
   const email = cleanText(value, 5, 254)?.toLowerCase();
   return email && EMAIL_PATTERN.test(email) ? email : undefined;
 };

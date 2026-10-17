@@ -95,7 +95,7 @@ export function getRolePermissions(role: UserRole): PermissionAction[] {
 }
 
 export function canAccessSurface(user: User, surface: SurfaceType): boolean {
-  if (surface === 'PUBLIC' || surface === 'CONSUMER') return true;
+  if (surface === 'PUBLIC' || surface === 'SHOWCASE' || surface === 'CONSUMER') return true;
   if (user.status === 'SUSPENDED' || user.status === 'INVITED') return false;
   if (surface === 'CREATOR') return user.role === 'CREATOR';
   if (surface === 'HOST') return user.role.startsWith('HOST_');

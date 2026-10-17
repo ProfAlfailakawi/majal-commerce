@@ -28,6 +28,7 @@ import { domainClient } from '../../lib/domainClient';
 import { IS_DEMO_MODE } from '../../lib/runtime';
 import { DnaDraw, DnaRing } from '../dna/DnaKit';
 import { publicProductImage } from '../../lib/productImage';
+import { AdSlot } from '../showcase/AdSlot';
 
 interface ConsumerDashboardProps {
   onSurfaceChange: (surface: SurfaceType) => void;
@@ -251,6 +252,8 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
           { icon: <TrendingUp className="w-5 h-5 text-gold-300" />, title: 'صوتك له قيمة', text: 'التقييم وتصويت «خلوه» يساعدان في قرار استمرار المنتج فعليًا.' }
         ].map((item, idx) => <div key={idx} className="glass-card rounded-2xl p-4 sm:p-5 border border-white/10"><div className="flex items-center gap-3 sm:block"><span className="shrink-0">{item.icon}</span><h3 className="font-black sm:mt-4">{item.title}</h3></div><p className="text-xs text-slate-400 leading-6 mt-2">{item.text}</p></div>)}
       </section>
+
+      <AdSlot slot="MARKET" />
 
       <KuwaitiJobs />
 

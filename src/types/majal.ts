@@ -10,7 +10,7 @@ export type UserRole =
   | 'SUPER_ADMIN'
   | 'CONSUMER';
 
-export type SurfaceType = 'PUBLIC' | 'CREATOR' | 'HOST' | 'SUPPLIER' | 'CONSUMER' | 'ADMIN' | 'SUPER_ADMIN';
+export type SurfaceType = 'PUBLIC' | 'SHOWCASE' | 'CREATOR' | 'HOST' | 'SUPPLIER' | 'CONSUMER' | 'ADMIN' | 'SUPER_ADMIN';
 
 export type Language = 'ar' | 'en';
 
@@ -645,4 +645,57 @@ export interface AuditLog {
   entityId: string;
   details: string;
   ipAddress: string;
+}
+
+
+/* ───────── Showcase: free business-for-sale gate + sponsor campaigns ───────── */
+export type BusinessSector = 'CAFE' | 'RESTAURANT' | 'BAKERY' | 'CLOUD_KITCHEN' | 'RETAIL' | 'ONLINE_STORE' | 'SALON' | 'SERVICES' | 'PRODUCTION' | 'OTHER';
+export type BusinessListingStatus = 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED' | 'SOLD';
+
+export interface BusinessListing {
+  id: string;
+  title: string;
+  sector: BusinessSector;
+  city: string;
+  summary: string;
+  highlights: string[];
+  includes: string[];
+  askingPriceKwd: number | null;
+  revenueBand: string;
+  yearsOperating: number | null;
+  reason: string;
+  contactPublic: boolean;
+  /** Public callers only receive this when the seller consented; admins always do. */
+  contactPhone?: string;
+  /** Admin-only. */
+  sellerName?: string;
+  adminNote?: string;
+  status: BusinessListingStatus;
+  submittedAt: string;
+}
+
+export type AdSlot = 'SPONSOR' | 'MARKET' | 'PORTAL';
+export type AdAccent = 'gold' | 'emerald' | 'sky' | 'rose' | 'violet';
+export type AdCampaignStatus = 'PENDING_REVIEW' | 'APPROVED' | 'PAUSED' | 'REJECTED';
+
+export interface PublicAd {
+  id: string;
+  company: string;
+  headline: string;
+  tagline: string;
+  slot: AdSlot;
+  accent: AdAccent;
+  icon: string;
+}
+
+export interface AdCampaign extends PublicAd {
+  linkUrl: string;
+  contactPhone?: string;
+  status: AdCampaignStatus;
+  startsOn: string | null;
+  endsOn: string | null;
+  adminNote?: string;
+  createdAt: string;
+  impressions: number;
+  clicks: number;
 }

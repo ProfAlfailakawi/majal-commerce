@@ -27,6 +27,7 @@ import { DealRoom } from '../common/DealRoom';
 import { DigitalTwinPanel } from '../common/DigitalTwinPanel';
 import { LaunchWarRoom } from './LaunchWarRoom';
 import { TeamPermissions } from './TeamPermissions';
+import { TeamManager } from './TeamManager';
 import { StatusPill } from '../common/StatusPill';
 import { ShareDonut } from '../common/ShareDonut';
 import { FoldedNote } from '../common/MatchMeter';
@@ -36,6 +37,7 @@ import { Avatar } from '../common/Avatar';
 import { JobComposer } from '../jobs/JobComposer';
 import { EmployerJobsStrip } from '../jobs/EmployerJobsStrip';
 import { SupplierDirectory } from './SupplierDirectory';
+import { AdSlot } from '../showcase/AdSlot';
 
 export const HostPortal: React.FC = () => {
   const [, setTick] = useState(0);
@@ -156,6 +158,7 @@ export const HostPortal: React.FC = () => {
 
   return (
     <div data-accent="gold" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
+      <AdSlot slot="PORTAL" />
       <section className="majal-hero glass-panel rounded-[28px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
         <div className="majal-glow -top-[18rem] -start-[17rem] w-[42rem] h-[42rem]" style={{ '--glow': 'rgba(56,189,248,0.08)' } as React.CSSProperties} />
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
@@ -273,7 +276,7 @@ export const HostPortal: React.FC = () => {
         </section>
       )}
 
-      {activeTab === 'TEAM' && <TeamPermissions hostBusinessId={currentHostId} />}
+      {activeTab === 'TEAM' && <div className="space-y-6"><TeamManager /><TeamPermissions hostBusinessId={currentHostId} /></div>}
 
       <JobComposer isOpen={showJobComposer} onClose={() => setShowJobComposer(false)} employerLabel={host.commercialName} />
       {showPublisher && <ChallengePublisher isOpen={showPublisher} onClose={() => setShowPublisher(false)} />}
