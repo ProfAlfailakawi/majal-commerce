@@ -57,3 +57,19 @@ export const setCampaignStatus = (id: string, status: 'APPROVED' | 'PAUSED' | 'R
   IS_DEMO_MODE ? demoShowcase.setCampaignStatus(id, status, dates) : request(`/admin/campaigns/${encodeURIComponent(id)}/status`, { method: 'POST', body: JSON.stringify({ status, ...dates }) });
 export const createCampaign = (input: { company: string; headline: string; tagline?: string; linkUrl: string; slot: AdSlot; accent?: string; icon?: string; contactPhone?: string; startsOn?: string | null; endsOn?: string | null }): Promise<{ campaign: AdCampaign; reportToken: string }> =>
   IS_DEMO_MODE ? demoShowcase.requestAd({ ...input, contactPhone: input.contactPhone || '' }).then(r => ({ campaign: {} as AdCampaign, reportToken: r.reportToken })) : request('/admin/campaigns', { method: 'POST', body: JSON.stringify(input) });
+
+/** Image creative: PNG/JPEG/WebP, ≤ 300 KB. The server sniffs the real type and size. */
+export const uploadCampaignImage = async (id: string, file: File): Promise<{ width: number; height: number }> => {
+  if (IS_DEMO_MODE) throw new ShowcaseApiError('رفع الصور غير متاح في العرض التجريبي.');
+  const response = await fetch(`/api/v1/showcase/admin/campaigns/${encodeURIComponent(id)}/image`, {
+    method: 'POST', credentials: 'same-origin', body: file,
+    headers: { 'Content-Type': file.type || 'application/octet-stream', 'X-CSRF-Token': authCsrfToken() }
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new ShowcaseApiError(payload.error || 'تعذّر رفع الصورة.', payload.code, response.status);
+  return payload;
+};
+export const removeCampaignImage = (id: string) => IS_DEMO_MODE ? Promise.resolve({ ok: true }) : request<{ ok: boolean }>(`/admin/campaigns/${encodeURIComponent(id)}/image/remove`, { method: 'POST' });
+export const rotateReportLink = (id: string): Promise<{ reportToken: string }> =>
+  IS_DEMO_MODE ? Promise.resolve({ reportToken: 'demo-report-token-not-real' }) : request(`/admin/campaigns/${encodeURIComponent(id)}/rotate-report`, { method: 'POST' });
+export const adImageSrc = (id: string) => `/api/v1/showcase/ads/img/${encodeURIComponent(id)}`;

@@ -10,6 +10,7 @@ This repository operates on a phased architecture for its production environment
 - **Security Boundaries:** Zero implicit trust. Authentication relies on server-side HttpOnly/SameSite cookies, CSRF protections, MFA via TOTP (AES-256-GCM encrypted), and strict RBAC.
 - **Frontend / Web App:** React (Vite-based) PWA serving as a pure presentation layer.
 - **AI Integration:** Gemini AI endpoints isolated entirely within the server layer (`server/gemini.ts` and `server/ai-intelligence.ts`). No API keys or configurations exposed to clients.
+- **Showcase & Ads:** free business-for-sale gate, sponsor campaigns (capacity-checked, token-based company reports) and owner-managed facility team invites, all admin-approved or owner-gated server-side. See `docs/showcase-and-ads.md`.
 - **Audit Trails:** Maintained for all sensitive events locally.
 - **Rate Limiting:** `express-rate-limit` on every route (app-wide ceiling plus per-route limits); counters are shared across instances through Redis when `REDIS_URL` is set (`server/rate-limit-store.ts`), with automatic per-instance fallback if Redis is unavailable.
 - **Error Reporting:** 5xx and process-level faults are logged in the Cloud Error Reporting format (`reportError` in `server/observability.ts`).

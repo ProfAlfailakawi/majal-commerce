@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Gift, CreditCard, Leaf, Megaphone, Package, Printer, ShoppingBag, Sparkles, Store, Truck, Coffee, Utensils, ExternalLink } from 'lucide-react';
-import { adClickHref, fetchAds, noteDemoAdClick, reportAdImpression } from '../../lib/showcaseClient';
+import { adClickHref, adImageSrc, fetchAds, noteDemoAdClick, reportAdImpression } from '../../lib/showcaseClient';
+import { IS_DEMO_MODE } from '../../lib/runtime';
 import type { AdAccent, AdSlot as AdSlotType, PublicAd } from '../../types/majal';
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -42,7 +43,9 @@ const AdCard: React.FC<{ ad: PublicAd; compact?: boolean }> = ({ ad, compact }) 
   return (
     <a ref={ref} href={adClickHref(ad.id)} target="_blank" rel="sponsored noopener noreferrer" onClick={() => noteDemoAdClick(ad.id)}
       className={`group flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] ${compact ? 'px-3 py-2' : 'p-4'} transition ${tone.ring} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300 min-w-0`}>
-      <span className={`shrink-0 grid place-items-center rounded-xl border ${tone.chip} ${compact ? 'w-9 h-9' : 'w-11 h-11'}`}><Icon className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} ${tone.text}`} /></span>
+      {ad.hasImage && !IS_DEMO_MODE
+        ? <img src={adImageSrc(ad.id)} alt="" loading="lazy" decoding="async" className={`shrink-0 rounded-xl object-cover border border-white/10 ${compact ? 'w-9 h-9' : 'w-14 h-14'}`} />
+        : <span className={`shrink-0 grid place-items-center rounded-xl border ${tone.chip} ${compact ? 'w-9 h-9' : 'w-11 h-11'}`}><Icon className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} ${tone.text}`} /></span>}
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2 text-xs">
           <span className="px-1.5 py-0.5 rounded-md bg-white/10 text-slate-300 font-black shrink-0">إعلان</span>
@@ -74,7 +77,7 @@ export const AdSlot: React.FC<{ slot: AdSlotType; className?: string }> = ({ slo
   }
   return (
     <aside aria-label="إعلانات الشركاء" className={`grid gap-3 sm:grid-cols-2 xl:grid-cols-3 ${className}`}>
-      {ads.map(ad => <AdCard key={ad.id} ad={ad} compact={slot === 'PORTAL'} />)}
+      {(slot === 'PORTAL' ? ads.slice(0, 2) : ads).map(ad => <AdCard key={ad.id} ad={ad} compact={slot === 'PORTAL'} />)}
     </aside>
   );
 };

@@ -1,11 +1,13 @@
 import React, { FormEvent, useEffect, useState } from 'react';
-import { BadgeCheck, Check, Megaphone, Pause, Play, Plus, RefreshCw, Store, X } from 'lucide-react';
-import { createCampaign, fetchShowcaseOverview, reviewBusiness, setCampaignStatus } from '../../lib/showcaseClient';
+import { BadgeCheck, CalendarRange, Check, ClipboardCopy, ImagePlus, KeyRound, Megaphone, Pause, Play, Plus, RefreshCw, Store, Trash2, X } from 'lucide-react';
+import { createCampaign, fetchShowcaseOverview, removeCampaignImage, reviewBusiness, rotateReportLink, setCampaignStatus, uploadCampaignImage } from '../../lib/showcaseClient';
+import { upcomingSeasons } from '../../lib/adSeasons';
 import type { AdCampaign, AdSlot, BusinessListing } from '../../types/majal';
 import { SECTORS } from '../showcase/sectors';
 
 const SLOTS: Record<AdSlot, string> = { SPONSOR: 'الراعي (حصري)', MARKET: 'السوق', PORTAL: 'بوابات الشركاء' };
 const STATUS: Record<string, string> = { PENDING_REVIEW: 'معلّق', APPROVED: 'معتمد', PAUSED: 'موقوف', REJECTED: 'مرفوض', SOLD: 'تم البيع' };
+const kuwaitDay = () => new Date(Date.now() + 3 * 3_600_000).toISOString().slice(0, 10);
 const field = 'w-full glass-input rounded-xl px-3 py-2.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300';
 
 export const ShowcaseAdmin: React.FC = () => {
@@ -28,6 +30,9 @@ export const ShowcaseAdmin: React.FC = () => {
       setDraft(d => ({ ...d, company: '', headline: '', tagline: '', linkUrl: 'https://' }));
     });
   };
+  const seasons = upcomingSeasons(kuwaitDay());
+  const weekly = (c: AdCampaign) => `ملخص أسبوع حملة «${c.headline}» (${c.company}) في مجال:\nظهور: ${(c.weekImpressions ?? 0).toLocaleString('ar-EG')}\nنقرات: ${(c.weekClicks ?? 0).toLocaleString('ar-EG')}\nالإجمالي: ظهور ${c.impressions.toLocaleString('ar-EG')} · نقرات ${c.clicks.toLocaleString('ar-EG')}${c.endsOn ? `\nتنتهي: ${c.endsOn}` : ''}`;
+  const copy = async (text: string, ok: string) => { try { await navigator.clipboard.writeText(text); setNotice(ok); } catch { setNotice(text); } };
   const pendingListings = listings.filter(l => l.status === 'PENDING_REVIEW').length, pendingAds = campaigns.filter(c => c.status === 'PENDING_REVIEW').length;
 
   return (
@@ -67,6 +72,7 @@ export const ShowcaseAdmin: React.FC = () => {
               <input required aria-label="العنوان" placeholder="عنوان الإعلان" minLength={4} maxLength={70} value={draft.headline} onChange={e => setDraft({ ...draft, headline: e.target.value })} className={field} />
               <input aria-label="السطر التوضيحي" placeholder="سطر توضيحي (اختياري)" maxLength={120} value={draft.tagline} onChange={e => setDraft({ ...draft, tagline: e.target.value })} className={field} />
               <input required type="url" dir="ltr" aria-label="الرابط" value={draft.linkUrl} onChange={e => setDraft({ ...draft, linkUrl: e.target.value })} className={field} />
+              <div className="flex flex-wrap items-center gap-1.5" aria-label="مواسم جاهزة"><CalendarRange className="w-4 h-4 text-gold-300" aria-hidden="true" />{seasons.map(s => <button type="button" key={s.key} onClick={() => setDraft(d => ({ ...d, startsOn: s.startsOn, endsOn: s.endsOn }))} title={`${s.startsOn} → ${s.endsOn}`} className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs hover:border-gold-300/40">{s.label}{s.active ? ' (جارٍ)' : ''}</button>)}</div>
               <div className="grid grid-cols-2 gap-2"><label className="text-xs text-slate-400 space-y-1"><span>من</span><input type="date" value={draft.startsOn} onChange={e => setDraft({ ...draft, startsOn: e.target.value })} className={field} /></label><label className="text-xs text-slate-400 space-y-1"><span>إلى</span><input type="date" value={draft.endsOn} onChange={e => setDraft({ ...draft, endsOn: e.target.value })} className={field} /></label></div>
               <button disabled={busy === 'create'} className="w-full py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black disabled:opacity-50">إنشاء</button>
             </form>
@@ -78,6 +84,12 @@ export const ShowcaseAdmin: React.FC = () => {
                   <div className="text-xs text-slate-400" dir="ltr">{c.linkUrl}</div>
                   <div className="text-xs text-slate-300">ظهور {c.impressions.toLocaleString('ar-EG')} · نقرات {c.clicks.toLocaleString('ar-EG')}{c.contactPhone ? ` · ${c.contactPhone}` : ''}</div>
                   <div className="grid grid-cols-2 gap-2"><input type="date" aria-label="من" value={d.s} onChange={e => setDates({ ...dates, [c.id]: { ...d, s: e.target.value } })} className={field} /><input type="date" aria-label="إلى" value={d.e} onChange={e => setDates({ ...dates, [c.id]: { ...d, e: e.target.value } })} className={field} /></div>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <label className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 font-black inline-flex items-center gap-1.5 cursor-pointer focus-within:ring-2 focus-within:ring-gold-300"><ImagePlus className="w-3.5 h-3.5" aria-hidden="true" />{c.hasImage ? 'استبدال الصورة' : 'رفع صورة'}<input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" disabled={busy === c.id} onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void run(c.id, () => uploadCampaignImage(c.id, f), 'رُفعت الصورة.'); }} /></label>
+                    {c.hasImage && <button type="button" disabled={busy === c.id} onClick={() => run(c.id, () => removeCampaignImage(c.id))} className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 font-black inline-flex items-center gap-1.5"><Trash2 className="w-3.5 h-3.5" aria-hidden="true" />حذف الصورة</button>}
+                    <button type="button" disabled={busy === c.id} onClick={() => copy(weekly(c), 'نُسخ ملخص الأسبوع.')} className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 font-black inline-flex items-center gap-1.5"><ClipboardCopy className="w-3.5 h-3.5" aria-hidden="true" />ملخص الأسبوع</button>
+                    <button type="button" disabled={busy === c.id} onClick={() => { if (window.confirm('سيتوقف رابط التقرير الحالي. متابعة؟')) void run(c.id, async () => { const r = await rotateReportLink(c.id); setNotice(`رابط التقرير الجديد (يظهر مرة واحدة): ${window.location.origin}/?ad-report=${r.reportToken}`); }); }} className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 font-black inline-flex items-center gap-1.5"><KeyRound className="w-3.5 h-3.5" aria-hidden="true" />رابط تقرير جديد</button>
+                  </div>
                   <div className="flex gap-2">
                     {c.status !== 'APPROVED' && <button disabled={busy === c.id} onClick={() => run(c.id, () => setCampaignStatus(c.id, 'APPROVED', { startsOn: d.s || null, endsOn: d.e || null }))} className="flex-1 py-2.5 rounded-xl bg-emerald-400 text-slate-950 text-xs font-black disabled:opacity-40 flex items-center justify-center gap-1.5"><Play className="w-4 h-4" aria-hidden="true" />اعتماد</button>}
                     {c.status === 'APPROVED' && <button disabled={busy === c.id} onClick={() => run(c.id, () => setCampaignStatus(c.id, 'PAUSED'))} className="flex-1 py-2.5 rounded-xl bg-amber-500/10 border border-amber-400/20 text-amber-300 text-xs font-black flex items-center justify-center gap-1.5"><Pause className="w-4 h-4" aria-hidden="true" />إيقاف</button>}

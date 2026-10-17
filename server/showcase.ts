@@ -2,7 +2,9 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { Response, Router } from 'express';
 import { rateLimit as expressRateLimit } from 'express-rate-limit';
 import { AuthConfig, AuthenticatedRequest, requireAuth, requireCsrf } from './auth';
+import express from 'express';
 import { MajalDatabase, withTransaction } from './database';
+import { creativeProblem, readImageMeta } from './image-meta';
 
 /*
  * Showcase: (1) a free "business for sale" gate and (2) sponsor campaigns.
@@ -19,6 +21,8 @@ export const AD_ICONS = ['megaphone', 'store', 'coffee', 'truck', 'package', 'sp
 /** How many approved campaigns may overlap in time in one slot. SPONSOR is exclusive. */
 export const SLOT_CAPACITY: Record<(typeof AD_SLOTS)[number], number> = { SPONSOR: 1, MARKET: 3, PORTAL: 3 };
 
+/** Everything but the (large) image payload. */
+const CAMPAIGN_COLUMNS = 'id,company,headline,tagline,link_url,slot,accent,icon,contact_phone,status,starts_on,ends_on,admin_note,created_at,updated_at,image_mime';
 const now = () => new Date().toISOString();
 const text = (value: unknown, min = 1, max = 500) => {
   if (typeof value !== 'string') return undefined;
@@ -68,6 +72,7 @@ type ListingRow = {
 type CampaignRow = {
   id: string; company: string; headline: string; tagline: string; link_url: string; slot: string; accent: string; icon: string;
   contact_phone: string; status: string; starts_on: string | null; ends_on: string | null; admin_note: string; created_at: string; updated_at: string;
+  image_mime: string | null; image_data?: string | null;
 };
 type StatRow = { campaign_id: string; impressions: number | string; clicks: number | string };
 
@@ -81,11 +86,11 @@ const listingBase = (row: ListingRow) => ({
 /** Anonymous callers never receive the seller's name, admin notes — and the phone only with consent. */
 const listingPublic = (row: ListingRow) => ({ ...listingBase(row), ...(Number(row.contact_public) === 1 ? { contactPhone: row.contact_phone } : {}) });
 const listingAdmin = (row: ListingRow) => ({ ...listingBase(row), sellerName: row.seller_name, contactPhone: row.contact_phone, adminNote: row.admin_note || undefined, reviewedAt: row.reviewed_at });
-const adPublic = (row: CampaignRow) => ({ id: row.id, company: row.company, headline: row.headline, tagline: row.tagline, slot: row.slot, accent: row.accent, icon: row.icon });
-const campaignAdmin = (row: CampaignRow, stat?: { impressions: number; clicks: number }) => ({
+const adPublic = (row: CampaignRow) => ({ id: row.id, company: row.company, headline: row.headline, tagline: row.tagline, slot: row.slot, accent: row.accent, icon: row.icon, hasImage: !!row.image_mime });
+const campaignAdmin = (row: CampaignRow, stat?: { impressions: number; clicks: number }, week?: { impressions: number; clicks: number }) => ({
   ...adPublic(row), linkUrl: row.link_url, contactPhone: row.contact_phone || undefined, status: row.status,
   startsOn: row.starts_on, endsOn: row.ends_on, adminNote: row.admin_note || undefined, createdAt: row.created_at,
-  impressions: stat?.impressions ?? 0, clicks: stat?.clicks ?? 0
+  impressions: stat?.impressions ?? 0, clicks: stat?.clicks ?? 0, weekImpressions: week?.impressions ?? 0, weekClicks: week?.clicks ?? 0
 });
 
 const isLive = (row: Pick<CampaignRow, 'status' | 'starts_on' | 'ends_on'>, today: string) =>
@@ -97,6 +102,15 @@ async function statsFor(db: MajalDatabase, ids: string[]) {
   const map = new Map<string, { impressions: number; clicks: number }>();
   if (!ids.length) return map;
   const rows = await db.prepare(`SELECT campaign_id, SUM(impressions) AS impressions, SUM(clicks) AS clicks FROM ad_daily_stats WHERE campaign_id IN (${ids.map(() => '?').join(',')}) GROUP BY campaign_id`).all<StatRow>(...ids);
+  for (const row of rows) map.set(row.campaign_id, { impressions: Number(row.impressions), clicks: Number(row.clicks) });
+  return map;
+}
+/** Last seven Kuwait days, for the "copy this week's summary" action. */
+async function weekFor(db: MajalDatabase, ids: string[]) {
+  const map = new Map<string, { impressions: number; clicks: number }>();
+  if (!ids.length) return map;
+  const since = kuwaitToday(new Date(Date.now() - 6 * 86_400_000));
+  const rows = await db.prepare(`SELECT campaign_id, SUM(impressions) AS impressions, SUM(clicks) AS clicks FROM ad_daily_stats WHERE day >= ? AND campaign_id IN (${ids.map(() => '?').join(',')}) GROUP BY campaign_id`).all<StatRow>(since, ...ids);
   for (const row of rows) map.set(row.campaign_id, { impressions: Number(row.impressions), clicks: Number(row.clicks) });
   return map;
 }
@@ -162,7 +176,7 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
   router.get('/ads/serve', publicLimit(300, 60_000, 'serve'), async (req, res) => {
     const slot = oneOf(typeof req.query.slot === 'string' ? req.query.slot.toUpperCase() : '', AD_SLOTS);
     if (!slot) return jsonError(res, 400, 'موقع الإعلان غير معروف.', 'INVALID_SLOT');
-    const rows = await db.prepare("SELECT * FROM ad_campaigns WHERE status='APPROVED' AND slot=? ORDER BY created_at ASC LIMIT 20").all<CampaignRow>(slot);
+    const rows = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE status='APPROVED' AND slot=? ORDER BY created_at ASC LIMIT 20`).all<CampaignRow>(slot);
     const today = kuwaitToday();
     res.setHeader('Cache-Control', 'no-store');
     res.json({ ads: rows.filter(row => isLive(row, today)).slice(0, SLOT_CAPACITY[slot]).map(adPublic) });
@@ -171,14 +185,14 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
   router.post('/ads/event', publicLimit(240, 60_000, 'event'), async (req, res) => {
     const id = text(req.body?.id, 4, 80);
     if (!id || req.body?.type !== 'impression') return res.status(204).end();
-    const row = await db.prepare('SELECT * FROM ad_campaigns WHERE id=? LIMIT 1').get<CampaignRow>(id);
+    const row = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=? LIMIT 1`).get<CampaignRow>(id);
     if (row && isLive(row, kuwaitToday())) await bump(db, id, 'impressions');
     res.status(204).end();
   });
 
   // The only redirect target is the https link an administrator approved, never a caller value.
   router.get('/ads/click/:id', publicLimit(120, 60_000, 'click'), async (req, res) => {
-    const row = await db.prepare('SELECT * FROM ad_campaigns WHERE id=? LIMIT 1').get<CampaignRow>(req.params.id);
+    const row = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=? LIMIT 1`).get<CampaignRow>(req.params.id);
     if (!row || !isLive(row, kuwaitToday())) return res.redirect(302, '/');
     await bump(db, row.id, 'clicks');
     const target = new URL(row.link_url);
@@ -206,11 +220,23 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
     res.status(201).json({ id, reportToken: token, message: 'وصل طلب الإعلان. لا يظهر قبل اعتماد الإدارة وتحديد المدة. احتفظ برابط التقرير.' });
   });
 
+  // The creative is served only while its campaign is live, as an inert image: nosniff and a
+  // CSP that forbids everything, so even a mislabelled file cannot execute.
+  router.get('/ads/img/:id', publicLimit(300, 60_000, 'img'), async (req, res) => {
+    const row = await db.prepare('SELECT status, starts_on, ends_on, image_mime, image_data FROM ad_campaigns WHERE id=? LIMIT 1').get<Pick<CampaignRow, 'status' | 'starts_on' | 'ends_on' | 'image_mime' | 'image_data'>>(req.params.id);
+    if (!row?.image_mime || !row.image_data || !isLive(row, kuwaitToday())) return res.status(404).end();
+    res.setHeader('Content-Type', row.image_mime);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Security-Policy', "default-src 'none'");
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    res.send(Buffer.from(row.image_data, 'base64'));
+  });
+
   /* Company report: the token is the identity. Aggregate numbers only. */
   router.get('/ads/report/:token', publicLimit(60, 60_000, 'report'), async (req, res) => {
     const token = text(req.params.token, 20, 200);
     if (!token) return jsonError(res, 404, 'التقرير غير موجود.', 'NOT_FOUND');
-    const row = await db.prepare('SELECT * FROM ad_campaigns WHERE report_token_hash=? LIMIT 1').get<CampaignRow>(sha(token));
+    const row = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE report_token_hash=? LIMIT 1`).get<CampaignRow>(sha(token));
     if (!row) return jsonError(res, 404, 'التقرير غير موجود.', 'NOT_FOUND');
     const days = await db.prepare('SELECT day, impressions, clicks FROM ad_daily_stats WHERE campaign_id=? ORDER BY day DESC LIMIT 30').all<{ day: string; impressions: number | string; clicks: number | string }>(row.id);
     const total = days.reduce((acc, d) => ({ impressions: acc.impressions + Number(d.impressions), clicks: acc.clicks + Number(d.clicks) }), { impressions: 0, clicks: 0 });
@@ -229,9 +255,10 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
   router.get('/admin/overview', authenticated, async (req: AuthenticatedRequest, res) => {
     if (!isAdmin(req)) return jsonError(res, 403, 'هذه الصفحة للإدارة فقط.', 'ADMIN_REQUIRED');
     const listings = await db.prepare("SELECT * FROM business_listings WHERE status IN ('PENDING_REVIEW','APPROVED') ORDER BY CASE status WHEN 'PENDING_REVIEW' THEN 0 ELSE 1 END, submitted_at DESC LIMIT 200").all<ListingRow>();
-    const campaigns = await db.prepare('SELECT * FROM ad_campaigns ORDER BY CASE status WHEN \'PENDING_REVIEW\' THEN 0 WHEN \'APPROVED\' THEN 1 ELSE 2 END, created_at DESC LIMIT 200').all<CampaignRow>();
-    const stats = await statsFor(db, campaigns.map(c => c.id));
-    res.json({ listings: listings.map(listingAdmin), campaigns: campaigns.map(c => campaignAdmin(c, stats.get(c.id))) });
+    const campaigns = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns ORDER BY CASE status WHEN 'PENDING_REVIEW' THEN 0 WHEN 'APPROVED' THEN 1 ELSE 2 END, created_at DESC LIMIT 200`).all<CampaignRow>();
+    const ids = campaigns.map(c => c.id);
+    const [stats, week] = await Promise.all([statsFor(db, ids), weekFor(db, ids)]);
+    res.json({ listings: listings.map(listingAdmin), campaigns: campaigns.map(c => campaignAdmin(c, stats.get(c.id), week.get(c.id))) });
   });
 
   router.post('/admin/businesses/:id/review', authenticated, csrfProtected, async (req: AuthenticatedRequest, res) => {
@@ -262,7 +289,7 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
       oneOf(req.body?.icon, AD_ICONS) ?? 'megaphone', phoneOf(req.body?.contactPhone) ?? '', starts.value, ends.value, sha(token), at, at
     );
     await audit(db, req, 'AD_CAMPAIGN_CREATED', 'AD_CAMPAIGN', id, { company, slot });
-    const row = await db.prepare('SELECT * FROM ad_campaigns WHERE id=?').get<CampaignRow>(id);
+    const row = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=?`).get<CampaignRow>(id);
     // The report token is shown exactly once; only its hash is stored.
     res.status(201).json({ campaign: campaignAdmin(row!), reportPath: `/?ad-report=${token}`, reportToken: token });
   });
@@ -271,7 +298,7 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
     if (!isAdmin(req)) return jsonError(res, 403, 'الاعتماد للإدارة فقط.', 'ADMIN_REQUIRED');
     const status = oneOf(req.body?.status, ['APPROVED', 'PAUSED', 'REJECTED'] as const);
     if (!status) return jsonError(res, 400, 'حالة غير صالحة.', 'INVALID_STATUS');
-    const before = await db.prepare('SELECT * FROM ad_campaigns WHERE id=? LIMIT 1').get<CampaignRow>(req.params.id);
+    const before = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=? LIMIT 1`).get<CampaignRow>(req.params.id);
     if (!before) return jsonError(res, 404, 'الحملة غير موجودة.', 'NOT_FOUND');
     const starts = req.body?.startsOn === undefined ? { value: before.starts_on, valid: true } : optionalDay(req.body.startsOn);
     const ends = req.body?.endsOn === undefined ? { value: before.ends_on, valid: true } : optionalDay(req.body.endsOn);
@@ -279,7 +306,7 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
     if (status === 'APPROVED') {
       if (ends.value && ends.value < kuwaitToday()) return jsonError(res, 409, 'تاريخ انتهاء الحملة مضى.', 'CAMPAIGN_ENDED');
       const slot = before.slot as (typeof AD_SLOTS)[number];
-      const others = await db.prepare("SELECT * FROM ad_campaigns WHERE status='APPROVED' AND slot=? AND id<>?").all<CampaignRow>(slot, before.id);
+      const others = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE status='APPROVED' AND slot=? AND id<>?`).all<CampaignRow>(slot, before.id);
       const clashes = others.filter(o => overlaps(o, { starts_on: starts.value, ends_on: ends.value })).length;
       if (clashes >= SLOT_CAPACITY[slot]) return jsonError(res, 409, slot === 'SPONSOR' ? 'موقع الراعي حصري وفيه حملة معتمدة في هذه الفترة.' : 'امتلأ هذا الموقع في الفترة المحددة.', 'SLOT_FULL');
     }
@@ -288,9 +315,42 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
       await tx.prepare('UPDATE ad_campaigns SET status=?,starts_on=?,ends_on=?,admin_note=?,updated_at=? WHERE id=?').run(status, starts.value, ends.value, adminNote, at, before.id);
       await audit(tx, req, 'AD_CAMPAIGN_STATUS', 'AD_CAMPAIGN', before.id, { status, startsOn: starts.value, endsOn: ends.value });
     });
-    const row = await db.prepare('SELECT * FROM ad_campaigns WHERE id=?').get<CampaignRow>(before.id);
+    const row = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=?`).get<CampaignRow>(before.id);
     const stats = await statsFor(db, [before.id]);
     res.json({ campaign: campaignAdmin(row!, stats.get(before.id)) });
+  });
+
+  router.post('/admin/campaigns/:id/image', authenticated, csrfProtected, express.raw({ type: () => true, limit: '400kb' }), async (req: AuthenticatedRequest, res) => {
+    if (!isAdmin(req)) return jsonError(res, 403, 'رفع الصور للإدارة فقط.', 'ADMIN_REQUIRED');
+    const row = await db.prepare('SELECT id FROM ad_campaigns WHERE id=? LIMIT 1').get<{ id: string }>(req.params.id);
+    if (!row) return jsonError(res, 404, 'الحملة غير موجودة.', 'NOT_FOUND');
+    const body = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+    const meta = readImageMeta(body);
+    const problem = creativeProblem(meta, body.length);
+    if (problem || !meta) return jsonError(res, 422, problem || 'صورة غير صالحة.', 'INVALID_CREATIVE');
+    await withTransaction(db, async tx => {
+      await tx.prepare('UPDATE ad_campaigns SET image_mime=?, image_data=?, updated_at=? WHERE id=?').run(meta.mime, body.toString('base64'), now(), row.id);
+      await audit(tx, req, 'AD_CREATIVE_UPLOADED', 'AD_CAMPAIGN', row.id, { mime: meta.mime, width: meta.width, height: meta.height, bytes: body.length });
+    });
+    res.json({ ok: true, width: meta.width, height: meta.height });
+  });
+
+  router.post('/admin/campaigns/:id/image/remove', authenticated, csrfProtected, async (req: AuthenticatedRequest, res) => {
+    if (!isAdmin(req)) return jsonError(res, 403, 'الصور للإدارة فقط.', 'ADMIN_REQUIRED');
+    await db.prepare('UPDATE ad_campaigns SET image_mime=NULL, image_data=NULL, updated_at=? WHERE id=?').run(now(), req.params.id);
+    await audit(db, req, 'AD_CREATIVE_REMOVED', 'AD_CAMPAIGN', req.params.id, {});
+    res.json({ ok: true });
+  });
+
+  /** Issues a fresh private report link; the old one stops working immediately. */
+  router.post('/admin/campaigns/:id/rotate-report', authenticated, csrfProtected, async (req: AuthenticatedRequest, res) => {
+    if (!isAdmin(req)) return jsonError(res, 403, 'للإدارة فقط.', 'ADMIN_REQUIRED');
+    const row = await db.prepare('SELECT id FROM ad_campaigns WHERE id=? LIMIT 1').get<{ id: string }>(req.params.id);
+    if (!row) return jsonError(res, 404, 'الحملة غير موجودة.', 'NOT_FOUND');
+    const token = randomBytes(24).toString('hex');
+    await db.prepare('UPDATE ad_campaigns SET report_token_hash=?, updated_at=? WHERE id=?').run(sha(token), now(), row.id);
+    await audit(db, req, 'AD_REPORT_ROTATED', 'AD_CAMPAIGN', row.id, {});
+    res.json({ reportToken: token });
   });
 
   return router;
