@@ -53,6 +53,7 @@
   },
   "description": "MAJAL Absolute Edition — secure creator-to-business commercialization platform",
   "overrides": {
-    "qs": "^6.16.0"
+    "qs": "^6.16.0",
+    "@grpc/grpc-js": "^1.14.5"
   }
 }
