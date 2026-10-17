@@ -282,6 +282,29 @@
       color-mix(in srgb, var(--glow) 0.0%, transparent) 100%);
   }
 
+  /* Phone/tablet stand-in for the wide-screen constellation aside (hidden below xl).
+   * Static concentric rings + a soft gold core, clipped by the hero panel's
+   * overflow and kept under the copy (z-10), so phones keep the "gate and orbit"
+   * motif without the aside's layout or its continuous animation. */
+  .majal-hero-rings {
+    position: absolute;
+    pointer-events: none;
+    inset-block-start: -5rem;
+    inset-inline-end: -5rem;
+    width: 14rem;
+    height: 14rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(199, 165, 91, 0.14);
+    background-image: radial-gradient(circle closest-side, rgba(199, 165, 91, 0.10), transparent 70%);
+  }
+  .majal-hero-rings::before {
+    content: '';
+    position: absolute;
+    inset: 18%;
+    border-radius: 9999px;
+    border: 1px solid rgba(199, 165, 91, 0.10);
+  }
+
   .elev-1 { box-shadow: var(--elev-1); }
   .elev-2 { box-shadow: var(--elev-2); }
   .elev-3 { box-shadow: var(--elev-3); }

@@ -78,6 +78,8 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
         <div className="majal-glow -top-[18rem] -end-[18rem] w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
         <div className="majal-glow -bottom-[18rem] -start-[18rem] w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(75,106,163,0.10)' } as React.CSSProperties} />
 
+        <span aria-hidden="true" className="majal-hero-rings xl:hidden" />
+
         {/*
           The brand monument. The previous version put four flat tiles here, which said
           the same thing as the journey section further down the page and said it worse.
