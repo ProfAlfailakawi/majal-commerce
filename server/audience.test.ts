@@ -36,7 +36,7 @@ async function harness() {
 test('anonymous traffic counters: pages, roles, unique browsers per day; junk is ignored', async () => {
   const h = await harness();
   try {
-    await createUser(h.db, { name: 'Admin', email: 'admin@aud.test', password, role: 'ADMIN' });
+    await createUser(h.db, { name: 'Owner', email: 'admin@aud.test', password, role: 'SUPER_ADMIN' });
     await createUser(h.db, { name: 'Buyer', email: 'buyer@aud.test', password, role: 'CONSUMER' });
     const admin = await h.login('admin@aud.test'), buyer = await h.login('buyer@aud.test');
     for (const body of [
@@ -46,6 +46,11 @@ test('anonymous traffic counters: pages, roles, unique browsers per day; junk is
     ]) assert.equal((await h.post('/audience/pulse', body)).status, 204);
     assert.equal((await h.post('/audience/pulse', { nothing: true })).status, 204);
 
+    // An ordinary administrator is refused too: these are the owner's marketing numbers.
+    await createUser(h.db, { name: 'Moderator', email: 'mod@aud.test', password, role: 'ADMIN' });
+    const moderator = await h.login('mod@aud.test');
+    assert.equal((await fetch(`${h.base}/audience/admin/overview`, { headers: { cookie: moderator.cookie } })).status, 403);
+    assert.equal((await h.post('/audience/admin/kit/rotate', {}, moderator)).status, 403);
     assert.equal((await fetch(`${h.base}/audience/admin/overview`)).status, 401);
     assert.equal((await fetch(`${h.base}/audience/admin/overview`, { headers: { cookie: buyer.cookie } })).status, 403);
     const o = await (await fetch(`${h.base}/audience/admin/overview`, { headers: { cookie: admin.cookie } })).json();
@@ -65,7 +70,7 @@ test('anonymous traffic counters: pages, roles, unique browsers per day; junk is
 test('gate events count only approved items and show up as top lists', async () => {
   const h = await harness();
   try {
-    await createUser(h.db, { name: 'Admin', email: 'admin@gate.test', password, role: 'ADMIN' });
+    await createUser(h.db, { name: 'Owner', email: 'admin@gate.test', password, role: 'SUPER_ADMIN' });
     const admin = await h.login('admin@gate.test');
     const now = new Date().toISOString();
     for (const [id, status] of [['biz_a', 'APPROVED'], ['biz_p', 'PENDING_REVIEW']] as const) {
@@ -85,7 +90,7 @@ test('gate events count only approved items and show up as top lists', async () 
 test('partner kit: private token, rotation kills the old link, nothing personal inside', async () => {
   const h = await harness();
   try {
-    await createUser(h.db, { name: 'Admin', email: 'admin@kit.test', password, role: 'ADMIN' });
+    await createUser(h.db, { name: 'Owner', email: 'admin@kit.test', password, role: 'SUPER_ADMIN' });
     await createUser(h.db, { name: 'Buyer', email: 'buyer@kit.test', password, role: 'CONSUMER' });
     const admin = await h.login('admin@kit.test'), buyer = await h.login('buyer@kit.test');
     assert.equal((await h.post('/audience/admin/kit/rotate', {}, buyer)).status, 403);

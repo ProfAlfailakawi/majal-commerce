@@ -6,6 +6,7 @@ import { ShareBars, TrendBars, WeekdayBars } from './charts';
 import { AUDIENCE_TONE, SLOT_LABEL, SURFACE_LABEL, audienceLabel, num } from './audienceLabels';
 import { AdRequestForm } from './BusinessShowcase';
 import { AD_AUDIENCES, AD_AUDIENCE_LABEL, AD_TOPICS } from '../../lib/adAudience';
+import { usePrivatePage } from '../../lib/privatePage';
 
 const SLOT_NOTE: Record<string, string> = {
   SPONSOR: 'شريط ثابت أسفل القائمة، لشركة واحدة لكل جمهور في الفترة.',
@@ -23,6 +24,7 @@ const STEPS = [
 export const PartnerKitPage: React.FC<{ token: string; onClose: () => void }> = ({ token, onClose }) => {
   const [kit, setKit] = useState<PartnerKit | null>(null);
   const [error, setError] = useState(''), [form, setForm] = useState(false);
+  usePrivatePage();
   useEffect(() => { fetchPartnerKit(token).then(setKit).catch(e => setError(e instanceof Error ? e.message : 'الرابط غير صالح.')); }, [token]);
 
   if (!kit) return (

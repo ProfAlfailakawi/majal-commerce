@@ -4,6 +4,7 @@ import { acceptInvite, previewInvite } from '../../lib/teamClient';
 import { roleLabel } from '../../lib/permissions';
 import type { UserRole } from '../../types/majal';
 import { MajalMark } from '../brand/MajalMark';
+import { usePrivatePage } from '../../lib/privatePage';
 
 const field = 'w-full glass-input rounded-xl px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300';
 
@@ -12,6 +13,7 @@ export const InviteAcceptPage: React.FC<{ token: string; onDone: () => void }> =
   const [info, setInfo] = useState<{ organizationName: string; role: string; email: string } | null>(null);
   const [name, setName] = useState(''), [password, setPassword] = useState('');
   const [error, setError] = useState(''), [busy, setBusy] = useState(false), [done, setDone] = useState(false);
+  usePrivatePage();
   useEffect(() => { previewInvite(token).then(setInfo).catch(e => setError(e instanceof Error ? e.message : 'الدعوة غير صالحة.')); }, [token]);
   const submit = async (e: FormEvent) => {
     e.preventDefault(); setBusy(true); setError('');

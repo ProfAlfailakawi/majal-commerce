@@ -156,7 +156,7 @@ export const AdminDashboard: React.FC = () => {
         tabs={[
           { id: 'OVERVIEW' as const, label: 'نظرة تشغيلية', icon: <LayoutDashboard className="w-4 h-4" /> },
           { id: 'APPROVALS' as const, label: 'الاعتمادات', icon: <ClipboardCheck className="w-4 h-4" /> },
-          { id: 'AUDIENCE' as const, label: 'لوحة الجمهور', icon: <Users className="w-4 h-4" /> },
+          ...(store.activeUser.role === 'SUPER_ADMIN' ? [{ id: 'AUDIENCE' as const, label: 'لوحة الجمهور', icon: <Users className="w-4 h-4" /> }] : []),
           { id: 'COMPLIANCE' as const, label: 'الامتثال والمنشآت', icon: <ShieldCheck className="w-4 h-4" /> },
           { id: 'ACCESS' as const, label: 'أذونات الوصفات والعقود', icon: <KeyRound className="w-4 h-4" /> },
           { id: 'SETTLEMENTS' as const, label: 'التسويات', icon: <Banknote className="w-4 h-4" /> },
@@ -208,7 +208,7 @@ export const AdminDashboard: React.FC = () => {
         </section>
       )}
 
-      {activeTab === 'AUDIENCE' && <AudienceDashboard />}
+      {activeTab === 'AUDIENCE' && store.activeUser.role === 'SUPER_ADMIN' && <AudienceDashboard />}
       {activeTab === 'APPROVALS' && <div className="space-y-10"><EcosystemApprovals /><ShowcaseAdmin /></div>}
 
       {activeTab === 'COMPLIANCE' && (
