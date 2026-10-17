@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createUser } from './auth';
 import { parseOpensAt } from './domain';
-import { sweepLaunchSchedule } from './launch-schedule';
+import { msUntilNextLaunchEvent, REMINDER_LEAD_MS, sweepLaunchSchedule } from './launch-schedule';
 import { openTestDatabase } from './test-db';
 
 const password = ['Majal', 'Schedule', '2026!'].join('-');
@@ -86,4 +86,20 @@ test('a launch that already opened (or opened long ago) is never announced by th
     assert.deepEqual(await sweepLaunchSchedule(db, new Date(now.getTime() + 1000)), { reminded: 0, opened: 0 });
     assert.deepEqual(await inboxOf(db, u.follow), []);
   } finally { await db.close(); }
+});
+
+test('the sweeper knows exactly when to wake: the reminder, then the opening, never a minute early', async () => {
+  const db = await openTestDatabase();
+  try {
+    await seed(db);
+    const now = new Date();
+    const at = (ms: number) => new Date(now.getTime() + ms).toISOString();
+    assert.equal(await msUntilNextLaunchEvent(db, now), null, 'nothing scheduled, nothing to wake for');
+    await launch(db, at(3 * 3_600_000));
+    assert.equal(await msUntilNextLaunchEvent(db, now), 3 * 3_600_000 - REMINDER_LEAD_MS);
+    await sweepLaunchSchedule(db, new Date(now.getTime() + 2.5 * 3_600_000));
+    assert.equal(await msUntilNextLaunchEvent(db, new Date(now.getTime() + 2.5 * 3_600_000)), 0.5 * 3_600_000);
+  } finally {
+    await db.close();
+  }
 });

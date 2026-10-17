@@ -19,7 +19,8 @@ import { createTeamRouter } from './server/team';
 import { createAudienceRouter } from './server/audience';
 import { createAdvancedRouter } from './server/advanced';
 import { createOrdersRouter, createPublicReviewsRouter } from './server/orders';
-import { sweepLaunchSchedule } from './server/launch-schedule';
+import { msUntilNextLaunchEvent, sweepLaunchSchedule } from './server/launch-schedule';
+import { activityTracker, startAdaptiveLoop } from './server/idle-aware';
 import { createModerationRouter } from './server/moderation';
 import { createCommercePublicRouter, createCommerceRouter } from './server/commerce-ops';
 import { expireStaleHolds } from './server/checkout';
@@ -307,18 +308,18 @@ async function initializeApplication(app: express.Express) {
   });
 
   const stopDeliveryWorker = startNotificationDeliveryWorker(db);
-  const cleanupTimer = setInterval(() => void purgeExpiredSessions(db), 30 * 60_000);
-  cleanupTimer.unref();
+  const stopCleanup = startAdaptiveLoop(() => purgeExpiredSessions(db), { activeMs: 30 * 60_000 });
   // Pending-payment holds release their reserved stock once the payment window elapses.
-  const holdTimer = setInterval(() => { expireStaleHolds(db).catch(error => reportError('hold_sweeper_failed', error, {})); }, 60_000);
-  holdTimer.unref();
+  const stopHolds = startAdaptiveLoop(() => expireStaleHolds(db).catch(error => reportError('hold_sweeper_failed', error, {})), { activeMs: 60_000 });
   // Scheduled launches: remind the waitlist an hour ahead and announce the opening.
-  const launchTimer = setInterval(() => { sweepLaunchSchedule(db).catch(error => reportError('launch_schedule_sweeper_failed', error, {})); }, 60_000);
-  launchTimer.unref();
+  const stopLaunches = startAdaptiveLoop(
+    () => sweepLaunchSchedule(db).catch(error => reportError('launch_schedule_sweeper_failed', error, {})),
+    { activeMs: 60_000, wakeInMs: () => msUntilNextLaunchEvent(db) }
+  );
   return {
     db,
     shutdown: async () => {
-      stopDeliveryWorker(); clearInterval(cleanupTimer); clearInterval(holdTimer); clearInterval(launchTimer); await closeRateLimitStore(); await db.close();
+      stopDeliveryWorker(); stopCleanup(); stopHolds(); stopLaunches(); await closeRateLimitStore(); await db.close();
     }
   };
 }
@@ -333,6 +334,7 @@ async function startServer() {
   const trustedProxyHops = resolveTrustProxyHops(process.env.TRUST_PROXY_HOPS, isProduction);
   app.set('trust proxy', trustedProxyHops);
   app.use(directHostGuard());
+  app.use(activityTracker);
   structuredLog('INFO', 'trust_proxy_configured', { hops: trustedProxyHops });
   app.use(requestTelemetry());
   app.use((req, res, next) => {

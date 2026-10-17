@@ -1,3 +1,4 @@
+import { startAdaptiveLoop } from './idle-aware';
 import { randomUUID } from 'node:crypto';
 import { MajalDatabase, withTransaction } from './database';
 import { getEncryptedJson, googleAccessToken } from './secure-storage';
@@ -146,8 +147,6 @@ export function startNotificationDeliveryWorker(db: MajalDatabase) {
       running = false;
     }
   };
-  const timer = setInterval(() => void tick(), 5_000);
-  timer.unref();
-  void tick();
-  return () => clearInterval(timer);
+  // Fast while visitors are around, once per IDLE_MS otherwise (lets the database sleep).
+  return startAdaptiveLoop(tick, { activeMs: 5_000 });
 }

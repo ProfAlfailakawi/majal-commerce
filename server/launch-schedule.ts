@@ -81,3 +81,21 @@ export async function sweepLaunchSchedule(db: MajalDatabase, at = new Date()) {
   }
   return { reminded, opened };
 }
+
+/**
+ * بعد كم مللي ثانية يلزم أن يستيقظ المكنِّس؟ (تذكير قبل ساعة، أو فتح الإطلاق) — null إن لم يكن
+ * هناك إطلاق ينتظر. يتيح ذلك النوم الطويل دون تفويت موعدٍ مجدول.
+ */
+export async function msUntilNextLaunchEvent(db: MajalDatabase, at = new Date()): Promise<number | null> {
+  const lateIso = new Date(at.getTime() - LATE_WINDOW_MS).toISOString();
+  const reminder = await db.prepare("SELECT MIN(starts_at) AS s FROM launches WHERE status = 'LIVE' AND opens_reminded_at IS NULL AND starts_at > ?")
+    .get<{ s: string | null }>(lateIso);
+  const opening = await db.prepare("SELECT MIN(starts_at) AS s FROM launches WHERE status = 'LIVE' AND open_notified_at IS NULL AND starts_at > ?")
+    .get<{ s: string | null }>(lateIso);
+  const events: number[] = [];
+  if (reminder?.s) events.push(new Date(reminder.s).getTime() - REMINDER_LEAD_MS);
+  if (opening?.s) events.push(new Date(opening.s).getTime());
+  const valid = events.filter(Number.isFinite);
+  if (!valid.length) return null;
+  return Math.max(0, Math.min(...valid) - at.getTime());
+}
