@@ -261,8 +261,8 @@ test('admins are told about every public submission; campaign phases and edits b
     await post('/showcase/businesses', { title: 'مخبز للبيع', sector: 'BAKERY', city: 'السالمية', summary: 'مخبز بعقد ساري ومعدات كاملة وزبائن ثابتين.', sellerName: 'سعد', contactPhone: '50001235', termsAccepted: true });
     await post('/showcase/suppliers', { name: 'مورد', category: 'SPICES', region: 'المباركية', description: 'بهارات مطحونة بحسب الطلب.', contactName: 'سعد', contactPhone: '50002222', termsAccepted: true });
     const ad = await (await post('/showcase/promo/requests', { company: 'شركة التغليف', headline: 'علب مخصصة لمنتجك', linkUrl: 'https://example.com/pack', contactPhone: '50003333', slot: 'PORTAL', audiences: ['HOST', 'BOGUS'], topics: ['حلويات'], accent: 'sky', icon: 'package' })).json();
-    const inbox = await h.db.prepare("SELECT dedupe_key, occurrence_count FROM notification_inbox WHERE category='SHOWCASE_REVIEW' ORDER BY dedupe_key").all<{ dedupe_key: string; occurrence_count: number | string }>();
-    assert.deepEqual(inbox.map(r => [r.dedupe_key, Number(r.occurrence_count)]), [['showcase-pending:ad', 1], ['showcase-pending:business', 2], ['showcase-pending:supplier', 1]]);
+    const inbox = await h.db.prepare("SELECT dedupe_key, occurrence_count FROM notification_inbox WHERE category='ADMIN_REVIEW' ORDER BY dedupe_key").all<{ dedupe_key: string; occurrence_count: number | string }>();
+    assert.deepEqual(inbox.map(r => [r.dedupe_key, Number(r.occurrence_count)]), [['admin-pending:ad', 1], ['admin-pending:business', 2], ['admin-pending:supplier', 1]]);
     assert.equal((await h.db.prepare("SELECT COUNT(*) AS n FROM notification_inbox WHERE user_id IN (SELECT id FROM users WHERE role='CONSUMER')").get<{ n: number | string }>())?.n.toString(), '0', 'shoppers get nothing');
 
     // The company's choices arrive as submitted (junk dropped) and the admin sees the phase.

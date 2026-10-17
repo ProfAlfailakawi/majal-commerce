@@ -4,6 +4,7 @@ import { AuthConfig, AuthenticatedRequest, requireAuth, requireCsrf } from './au
 import { MajalDatabase, withTransaction } from './database';
 import { appendLedgerEntry } from './ledger';
 import { PaymentRegistry } from './payments';
+import { SURFACE, launchParties, notify } from './notify';
 import { PAYMENT_HOLD_MINUTES, normalizeKuwaitPhone, organizationBranches, parseSlots, parseZones, releaseOrderReservation, reserveBranchStock } from './checkout';
 
 /*
@@ -333,6 +334,14 @@ export function createOrdersRouter(db: MajalDatabase, authConfig: AuthConfig, pa
       throw error;
     }
     await audit(db, req, 'REVIEW_SUBMITTED', 'REVIEW', reviewId, launch.organization_id);
+    {
+      const parties = await launchParties(db, launch.id);
+      if (parties) {
+        const input = { category: 'REVIEW', priority: 'SOON' as const, title: 'تقييم جديد من عميل موثّق', body: `قيّم عميل «${parties.title}» بعد الشراء.`, entityType: 'LAUNCH', entityId: launch.id, dedupeKey: `review:${launch.id}` };
+        await notify(db, parties.hostUsers, { ...input, actionLabel: 'افتح التقييمات', actionSurface: SURFACE.host }, auth.user.id);
+        await notify(db, [parties.creatorUser], { ...input, actionLabel: 'افتح مساحتك', actionSurface: SURFACE.creator }, auth.user.id);
+      }
+    }
     res.status(201).json({
       review: {
         id: reviewId, orderId: order.id, launchId: launch.id, productId: launch.product_id,
