@@ -67,6 +67,36 @@ test('recipe access and offers tell the other side, never the actor or a third f
     assert.equal(accepted.status, 200, await accepted.clone().text());
     assert.ok((await inbox('host@deal.test')).includes(`offer-accepted:${offerId}`), 'the offer sender is told it was accepted');
 
+    // Contract signing: each signature tells the other side; the second also announces completion to both.
+    const contractId = (await db.prepare('SELECT id FROM contract_versions WHERE collaboration_id=?').get<{ id: string }>(grant.collaborationId))!.id;
+    const paci = async (email: string, n: number) => {
+      const u = await db.prepare('SELECT id FROM users WHERE email=?').get<{ id: string }>(email);
+      const id = `paci_${n}`;
+      await db.prepare("INSERT INTO paci_auth_requests(id,user_id,civil_id_hash,purpose,status,provider_reference,request_nonce_hash,expires_at,created_at,updated_at) VALUES(?,?,?,?,'VERIFIED',?,?,?,?,?)")
+        .run(id, u!.id, 'h', 'CONTRACT_SIGN', `ref_${n}`, 'n', new Date(Date.now() + 3_600_000).toISOString(), now, now);
+      return id;
+    };
+    const hostSign = await call(h, `/contracts/${contractId}/sign`, { paciRequestId: await paci('host@deal.test', 1) });
+    assert.equal(hostSign.status, 200, await hostSign.clone().text());
+    assert.ok((await inbox('creator@deal.test')).includes(`contract:${contractId}:HOST`), 'the creator is told the facility signed');
+    assert.ok(!(await inbox('host@deal.test')).some(k => k.startsWith(`contract:${contractId}`)), 'the signer is told nothing');
+    const creatorSign = await call(c, `/contracts/${contractId}/sign`, { paciRequestId: await paci('creator@deal.test', 2) });
+    assert.equal(creatorSign.status, 200, await creatorSign.clone().text());
+    assert.ok((await inbox('host@deal.test')).includes(`contract:${contractId}:done`), 'both sides learn the contract is complete');
+    assert.ok((await inbox('creator@deal.test')).includes(`contract:${contractId}:done`) === false, 'the last signer is not told about their own action');
+    assert.deepEqual((await inbox('other@deal.test')), []);
+
+    // Launch going live tells the creator, not the facility that pressed the button.
+    await db.prepare("UPDATE organizations SET verification_status='VERIFIED' WHERE id=?").run(host.host_business_id);
+    for (const key of ['productionRecipeApproved', 'productNamePriceApproved', 'packagingDataCompleted', 'productionLocationSelected', 'settlementConfigApproved'])
+      assert.equal((await fetch(`${base}/domain/collaborations/${grant.collaborationId}/launch-gate/${key}`, { method: 'PUT', headers: { cookie: h.cookie, 'x-csrf-token': h.csrf, 'content-type': 'application/json' }, body: JSON.stringify({ value: true }) })).status, 200, key);
+    const prepared = await call(h, `/collaborations/${grant.collaborationId}/launch`);
+    assert.ok(prepared.status === 200 || prepared.status === 201, await prepared.clone().text());
+    const live = await call(h, `/collaborations/${grant.collaborationId}/launch/activate`);
+    assert.equal(live.status, 200, await live.clone().text());
+    assert.ok((await inbox('creator@deal.test')).includes(`launch-live:${grant.collaborationId}`), 'the creator is told the launch is live');
+    assert.ok(!(await inbox('host@deal.test')).includes(`launch-live:${grant.collaborationId}`));
+
     assert.equal((await call(c, `/recipe-access/${grant.id}/revoke`)).status, 200);
     assert.ok((await inbox('host@deal.test')).includes(`recipe-access-revoked:${grant.id}`));
     assert.deepEqual(await inbox('other@deal.test'), []);
