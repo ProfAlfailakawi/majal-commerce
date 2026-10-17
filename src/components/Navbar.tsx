@@ -133,6 +133,14 @@ export const Navbar: React.FC<NavbarProps> = ({
       if (expiring) items.push(`${expiring} مستند امتثال يحتاج تجديدًا أو مراجعة.`);
       if (approvedPayments) items.push(`${approvedPayments} دفعة معتمدة بانتظار تأكيد الدفع الخارجي.`);
     }
+    if (activeUser.accountType === 'SUPPLIER') {
+      items.push('طلب التوثيق قيد مراجعة الإدارة. سنخبرك فور اعتماده.');
+      items.push('وصل طلب توظيف جديد على إعلانك في بوابة التوظيف.');
+    }
+    if (activeUser.role === 'CONSUMER') {
+      items.push('طلبك قيد التجهيز. سنخبرك عند جاهزيته.');
+      items.push('قيّم طلبك الأخير لتساعد غيرك على الاختيار.');
+    }
     if (!items.length) items.push('لا توجد إجراءات حرجة معلقة لحسابك الآن.');
     return items.slice(0, 6);
   }, [activeUser.id, activeUser.role, store.auditLogs.length, store.recipeGrants.length, store.settlements.length]);
