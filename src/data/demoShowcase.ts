@@ -5,7 +5,7 @@
  */
 import type { AdCampaign, AdSlot, BusinessListing, DirectorySupplier, PublicAd } from '../types/majal';
 
-export const DEMO_SHOWCASE_STORAGE_KEY = 'majal_demo_showcase_v3';
+export const DEMO_SHOWCASE_STORAGE_KEY = 'majal_demo_showcase_v4';
 
 interface DemoShowcaseState { listings: BusinessListing[]; campaigns: AdCampaign[]; suppliers: DirectorySupplier[] }
 
@@ -18,7 +18,8 @@ export function buildDemoShowcase(): DemoShowcaseState {
     contactPhone: '+96550001234', sellerName: 'بائع تجريبي', status, submittedAt: ago(age), adminNote
   });
   const c = (id: string, company: string, headline: string, tagline: string, slot: AdSlot, accent: PublicAd['accent'], icon: string, status: AdCampaign['status'], impressions: number, clicks: number, startsOn: string | null = null, endsOn: string | null = null, audiences: string[] = [], topics: string[] = []): AdCampaign => ({
-    id, company, headline, tagline, slot, accent, icon, linkUrl: 'https://example.com/demo', status, startsOn, endsOn, createdAt: ago(10), impressions, clicks, contactPhone: '+96550002222', audiences, topics
+    id, company, headline, tagline, slot, accent, icon, linkUrl: 'https://example.com/demo', status, startsOn, endsOn, createdAt: ago(10), impressions, clicks, contactPhone: '+96550002222', audiences, topics,
+    billing: status === 'APPROVED' ? 'PAID' : 'UNSET', priceKwd: status === 'APPROVED' ? (slot === 'SPONSOR' ? 400 : slot === 'MARKET' ? 250 : 150) : null, paidAt: status === 'APPROVED' ? ago(9) : null
   });
   const d = (id: string, name: string, category: DirectorySupplier['category'], region: string, description: string, products: string[], minOrder: string, delivers: boolean, status: DirectorySupplier['status'], age: number, contactPublic = true): DirectorySupplier => ({
     id, name, category, region, description, products, minOrder, delivers, contactPublic, contactPhone: '+96560001234', contactName: 'مسؤول تجريبي', status, submittedAt: ago(age)
@@ -144,6 +145,15 @@ export const demoShowcase = {
     commit();
     return delay({ campaign: ad, pausedForReview: retarget });
   },
+  setBilling(id: string, billing: 'UNSET' | 'PAID' | 'COMPLIMENTARY', priceKwd: number | null, note = '') {
+    const ad = current().campaigns.find(x => x.id === id);
+    if (!ad) return Promise.reject(new Error('الحملة غير موجودة.'));
+    if (billing === 'PAID' && !(priceKwd && priceKwd > 0)) return Promise.reject(new Error('سجّل المبلغ المدفوع.'));
+    const pause = ad.status === 'APPROVED' && billing === 'UNSET';
+    Object.assign(ad, { billing, priceKwd: billing === 'COMPLIMENTARY' ? 0 : priceKwd, paidAt: billing === 'PAID' ? (ad.paidAt ?? new Date().toISOString()) : null, billingNote: note || undefined, status: pause ? 'PAUSED' : ad.status });
+    commit();
+    return delay({ campaign: ad, pausedForReview: pause });
+  },
   setTargeting(id: string, audiences: string[], topics: string[]) {
     const ad = current().campaigns.find(x => x.id === id);
     if (!ad) return Promise.reject(new Error('الحملة غير موجودة.'));
@@ -157,6 +167,7 @@ export const demoShowcase = {
     if (!ad) return Promise.reject(new Error('الحملة غير موجودة.'));
     const startsOn = dates.startsOn === undefined ? ad.startsOn : dates.startsOn, endsOn = dates.endsOn === undefined ? ad.endsOn : dates.endsOn;
     if (status === 'APPROVED') {
+      if ((ad.billing ?? 'UNSET') === 'UNSET') return Promise.reject(new Error('سجّل السعر المتفق عليه وحالة الدفع قبل الاعتماد.'));
       const clashes = s.campaigns.filter(o => o.id !== id && o.slot === ad.slot && o.status === 'APPROVED' && (!o.endsOn || !startsOn || o.endsOn >= startsOn) && (!endsOn || !o.startsOn || endsOn >= o.startsOn) && (!o.audiences?.length || !ad.audiences?.length || o.audiences.some(a => ad.audiences!.includes(a)))).length;
       if (clashes >= SLOT_CAPACITY[ad.slot]) return Promise.reject(new Error(ad.slot === 'SPONSOR' ? 'موقع الراعي حصري وفيه حملة معتمدة في هذه الفترة.' : 'امتلأ هذا الموقع في الفترة المحددة.'));
     }

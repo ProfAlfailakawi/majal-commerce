@@ -1666,6 +1666,20 @@ const migrations = [
       CREATE INDEX IF NOT EXISTS idx_business_listings_report ON business_listings(report_token_hash);
       CREATE INDEX IF NOT EXISTS idx_supplier_directory_report ON supplier_directory(report_token_hash);
     `
+  },
+  {
+    /*
+     * Sponsorship is a paid service: every campaign records what was agreed and whether it was paid
+     * (payment itself happens outside the app, by invoice/transfer). A campaign cannot be approved
+     * while billing is UNSET; COMPLIMENTARY is the explicit, audited way to host one for free.
+     */
+    version: 28,
+    sql: `
+      ALTER TABLE ad_campaigns ADD COLUMN price_kwd INTEGER;
+      ALTER TABLE ad_campaigns ADD COLUMN billing TEXT NOT NULL DEFAULT 'UNSET';
+      ALTER TABLE ad_campaigns ADD COLUMN paid_at TEXT;
+      ALTER TABLE ad_campaigns ADD COLUMN billing_note TEXT NOT NULL DEFAULT '';
+    `
   }
 ] as const;
 

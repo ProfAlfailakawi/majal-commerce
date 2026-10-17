@@ -101,7 +101,8 @@ export const AudienceDashboard: React.FC = () => {
             </div>
           ))}
         </Panel>
-        <Panel title="الإعلانات" sub="مجمل الحملات (٣٠ يومًا) وامتلاء المواقع الآن.">
+        <Panel title="الإعلانات والإيراد" sub="مجمل الحملات (٣٠ يومًا)، ما دفعه المعلنون، وامتلاء المواقع الآن.">
+          <div className="grid grid-cols-2 gap-3 text-center">{[{ l: 'مدفوع (٣٠ يومًا)', v: `${num(data.revenue.paid30)} د.ك`, tone: 'text-emerald-300' }, { l: 'إجمالي المدفوع', v: `${num(data.revenue.paidTotal)} د.ك`, tone: 'text-gold-300' }, { l: 'طلبات بانتظار السعر', v: num(data.revenue.awaitingBilling), tone: 'text-amber-300' }, { l: 'حملات ضيافة', v: num(data.revenue.complimentary), tone: 'text-slate-300' }].map(x => <div key={x.l} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3"><div className={`text-xl font-black tabular-nums ${x.tone}`}>{x.v}</div><div className="text-xs text-slate-400 mt-0.5">{x.l}</div></div>)}</div>
           <div className="grid grid-cols-3 gap-3 text-center">
             {[{ l: 'ظهور', v: num(data.ads.impressions) }, { l: 'نقرات', v: num(data.ads.clicks) }, { l: 'نسبة النقر', v: `${num(data.ads.ctr)}٪` }].map(x => <div key={x.l} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3"><div className="text-xl font-black tabular-nums">{x.v}</div><div className="text-xs text-slate-400 mt-0.5">{x.l}</div></div>)}
           </div>

@@ -22,6 +22,8 @@ export interface AudienceOverview {
   gates: { listingOpens: number; listingContacts: number; supplierContacts: number; topListings: GateTop[]; topSuppliers: GateTop[] };
   ads: { impressions: number; clicks: number; ctr: number; liveCampaigns: number };
   kit: { exists: boolean; createdAt?: string; rotatedAt?: string | null };
+  /** Advertiser payments in whole KWD (owner-only). */
+  revenue: { paid30: number; paidTotal: number; awaitingBilling: number; complimentary: number };
   /** True when these numbers are generated for the demo, never measured. */
   demo?: boolean;
 }
@@ -96,7 +98,7 @@ export const fetchAudienceOverview = (): Promise<AudienceOverview> => IS_DEMO_MO
   ? Promise.resolve({
     traffic: demoTraffic(), facts: demoFacts, slots: demoSlots, demo: true,
     gates: { listingOpens: 214, listingContacts: 37, supplierContacts: 52, topListings: [{ id: 'd1', title: 'مقهى مختص في حولي — جاهز للتشغيل', opens: 61, contacts: 12 }, { id: 'd2', title: 'مطبخ سحابي للوجبات البيتية', opens: 48, contacts: 9 }, { id: 'd3', title: 'مخبز حرفي بعلامة معروفة', opens: 39, contacts: 7 }], topSuppliers: [{ id: 's1', title: 'الندى للتغليف الغذائي', opens: 0, contacts: 18 }, { id: 's2', title: 'بهارات الديرة', opens: 0, contacts: 14 }] },
-    ads: { impressions: 12_740, clicks: 514, ctr: 4, liveCampaigns: 5 }, kit: { exists: true, createdAt: new Date().toISOString() },
+    ads: { impressions: 12_740, clicks: 514, ctr: 4, liveCampaigns: 5 }, revenue: { paid30: 1_150, paidTotal: 3_400, awaitingBilling: 1, complimentary: 0 }, kit: { exists: true, createdAt: new Date().toISOString() },
   })
   : request('/admin/overview');
 export const rotatePartnerKit = (): Promise<{ token: string }> => IS_DEMO_MODE ? Promise.resolve({ token: 'demo-partner-kit-token-not-real' }) : request('/admin/kit/rotate', { method: 'POST', body: '{}' });

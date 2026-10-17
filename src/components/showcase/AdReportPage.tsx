@@ -53,7 +53,6 @@ export const AdReportPage: React.FC<{ token: string; onClose: () => void }> = ({
             </section>
           )}
           <p className="text-xs text-slate-400 leading-6">{report.note}</p>
-          <p className="text-xs text-emerald-300 leading-6">إعلانكم في مجال مجاني: لا رسوم ولا عمولة، وهو خدمة منا لكم.</p>
         </>
       )}
     </div>

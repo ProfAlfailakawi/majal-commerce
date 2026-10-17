@@ -131,3 +131,20 @@ test('seller and supplier get a private report link with their own opens and con
     assert.equal((await fetch(`${h.base}/audience/gate-report/short`)).status, 404);
   } finally { await h.close(); }
 });
+
+test('owner dashboard shows what advertisers paid; nobody else sees it', async () => {
+  const h = await harness();
+  try {
+    await createUser(h.db, { name: 'Owner', email: 'owner@rev.test', password, role: 'SUPER_ADMIN' });
+    const owner = await h.login('owner@rev.test');
+    const at = new Date().toISOString();
+    const row = (id: string, billing: string, price: number | null, status: string, paidAt: string | null) => h.db.prepare(`INSERT INTO ad_campaigns(id,company,headline,tagline,link_url,slot,accent,icon,contact_phone,status,report_token_hash,billing,price_kwd,paid_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+      .run(id, 'ش', 'عنوان الحملة', '', 'https://example.com/x', 'MARKET', 'gold', 'megaphone', '', status, id, billing, price, paidAt, at, at);
+    await row('c1', 'PAID', 300, 'APPROVED', at);
+    await row('c2', 'PAID', 200, 'APPROVED', new Date(Date.now() - 90 * 86_400_000).toISOString());
+    await row('c3', 'UNSET', null, 'PENDING_REVIEW', null);
+    await row('c4', 'COMPLIMENTARY', 0, 'APPROVED', null);
+    const o = await (await fetch(`${h.base}/audience/admin/overview`, { headers: { cookie: owner.cookie } })).json();
+    assert.deepEqual(o.revenue, { paid30: 300, paidTotal: 500, awaitingBilling: 1, complimentary: 1 });
+  } finally { await h.close(); }
+});

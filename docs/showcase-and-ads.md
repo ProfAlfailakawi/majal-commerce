@@ -2,7 +2,7 @@
 
 Three related surfaces. All three keep the rule used by the jobs board: **nothing a visitor submits is public until an administrator approves it.**
 
-> **Everything here is free, on purpose.** Sellers, suppliers, sponsors and team invitations cost nothing and carry no commission; the pages say so openly. The reason is stated too: these are services that introduce people to the platform. There are no prices, invoices or payment fields anywhere in this module, and none should be added without a new decision.
+> **What is free and what is paid.** The business-for-sale gate, the supplier directory and team invitations are **free** (no fees, no commission); the pages say so and why: they introduce people to the platform. **Sponsorship (ads) is a paid service.** The public pages promise no price: the company asks for a slot, we contact it, agree slot, duration and price, and only then approve. The app records the agreed price and payment status per campaign, but takes no online payment (settlement is by invoice or transfer, outside the app).
 
 ## 1. Businesses for sale (`SHOWCASE` surface)
 - Free, no account. `POST /api/v1/showcase/businesses` (5 per hour per client, honeypot field `website`, explicit terms checkbox).
@@ -14,7 +14,9 @@ Three related surfaces. All three keep the rule used by the jobs board: **nothin
 ## 2. Sponsor campaigns
 - Public endpoints live under `/api/v1/showcase/promo/*` (not `/ads/*`) because common content blockers filter that path segment and would silently drop sponsors and their counters.
 - Slots: `SPONSOR` (strip under the navbar, exclusive), `MARKET` (3), `PORTAL` (3, compact cards in creator/host/supplier portals). Capacity is enforced **per overlapping date range** when a campaign is approved (`SLOT_FULL`). An open-ended campaign overlaps everything.
-- A company asks for a slot (`POST /promo/requests`, 5/hour) or an admin creates the campaign. Both start `PENDING_REVIEW`; the admin sets the dates and approves. Dates are Kuwait calendar days, end inclusive.
+- A company asks for a slot (`POST /promo/requests`, 5/hour) — it chooses the preferred slot, roles, categories, colour and icon and sees a live preview — or an admin creates the campaign. Both start `PENDING_REVIEW` with billing `UNSET`; admins are notified.
+- **Billing** (`POST /admin/campaigns/:id/billing`): `PAID` (whole-KWD amount, payment date kept on re-save), `COMPLIMENTARY` (explicit, audited free hosting) or `UNSET`. **A campaign cannot be approved while billing is `UNSET`** (`PAYMENT_REQUIRED`), and un-setting billing on an approved campaign pauses it. Prices and billing are never exposed publicly or in the company report. The owner dashboard shows paid last 30 days, paid total, requests awaiting a price and complimentary campaigns.
+- The admin sets the dates and approves. Dates are Kuwait calendar days, end inclusive.
 - Links must be public `https` URLs with a hostname (no IPs, localhost, credentials). Clicks go through `/promo/click/:id`, which redirects **only** to the stored, approved link and adds `utm_*` unless the link already has some.
 - Optional creative image: PNG/JPEG/WebP, ≤ 300 KB, ≥ 160 px, aspect ratio between 1:2 and 4:1. The type and size come from the file's own header (`server/image-meta.ts`), never from the client's Content-Type. It is served from `/promo/img/:id` only while the campaign is live, with `nosniff` and `Content-Security-Policy: default-src 'none'`. No SVG upload, on purpose.
 - Every card is labelled «إعلان». Impressions count once per browser session after the card is ≥ 50 % visible for one second. Counters are per day with no IP and no user id (`ad_daily_stats`).
@@ -46,7 +48,7 @@ Three related surfaces. All three keep the rule used by the jobs board: **nothin
 - Measurement starts the day it ships and does not backfill; the pages say so.
 
 ## Data
-Migrations 22–27: `business_listings`, `ad_campaigns`, `ad_daily_stats`, `organization_invites`, `supplier_directory`, `audience_daily`, `gate_events`, `partner_kit`, plus `ad_campaigns.image_mime/image_data`. Admin actions are written to `domain_audit_events`.
+Migrations 22–28: `business_listings`, `ad_campaigns`, `ad_daily_stats`, `organization_invites`, `supplier_directory`, `audience_daily`, `gate_events`, `partner_kit`, plus `ad_campaigns.image_mime/image_data`. Admin actions are written to `domain_audit_events`.
 
 ## Tests
 All server suites run on in-memory SQLite by default and on a throw-away PostgreSQL database when `TEST_DATABASE_URL` is set (`server/test-db.ts`); both were run green for this module. Also `server/audience.test.ts`.

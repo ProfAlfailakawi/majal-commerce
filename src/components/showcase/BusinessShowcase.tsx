@@ -139,7 +139,7 @@ export const AdRequestForm: React.FC<{ onClose: () => void }> = ({ onClose }) =>
         </div>
       ) : (
         <form onSubmit={submit} className="mt-4 space-y-3">
-          <p className="text-xs text-slate-300 leading-6">الإعلان هنا مجاني تمامًا: لا نأخذ منكم أي مقابل، وهو خدمة من مجال لأصحاب المشاريع. كل إعلان يحمل وسم «إعلان» ويمر على الإدارة قبل الظهور، وتحدد الإدارة المدة.</p>
+          <p className="text-xs text-slate-300 leading-6">الإعلان خدمة مدفوعة: نتواصل معك على رقمك لنتفق على الموقع والمدة والسعر، ثم يُعتمد وينشر بعد الاتفاق. كل إعلان يحمل وسم «إعلان»، ولا يظهر شيء قبل اعتماد الإدارة.</p>
           <AdPreview ad={{ company: f.company, headline: f.headline, tagline: f.tagline, accent: f.accent, icon: f.icon }} />
           <label className="block text-xs font-black space-y-1.5"><span>اسم الشركة</span><input required maxLength={80} value={f.company} onChange={e => set('company', e.target.value)} className={fieldClass} /></label>
           <label className="block text-xs font-black space-y-1.5"><span>عنوان الإعلان ({(70 - f.headline.length).toLocaleString('ar-EG')} حرفًا متبقيًا)</span><input required minLength={4} maxLength={70} value={f.headline} onChange={e => set('headline', e.target.value)} className={fieldClass} /></label>
@@ -248,7 +248,7 @@ export const BusinessShowcase: React.FC<{ onSurfaceChange: (surface: SurfaceType
       </section>
 
       <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
-        <div className="flex items-center gap-3"><Megaphone className="w-5 h-5 text-gold-300" aria-hidden="true" /><p className="text-xs text-slate-300 leading-6">هل تمثل شركة؟ اعرض دعايتك أمام مبدعين ومنشآت وزبائن مجال مجانًا وبلا أي مقابل، بوسم «إعلان» واضح وتقرير بأرقامك.</p></div>
+        <div className="flex items-center gap-3"><Megaphone className="w-5 h-5 text-gold-300" aria-hidden="true" /><p className="text-xs text-slate-300 leading-6">هل تمثل شركة؟ اعرض دعايتك أمام مبدعين ومنشآت وزبائن مجال، بوسم «إعلان» واضح وتقرير بأرقامك. الأسعار نتفق عليها معك.</p></div>
         <button type="button" onClick={() => setForm('ad')} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black">اطلب مساحة إعلانية</button>
       </section>
 
