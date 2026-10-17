@@ -77,6 +77,11 @@ Covered by `server/notifications-roles.test.ts` (jobs and team, including that o
 - Delivery is the in-app bell. The waitlist's WhatsApp consent is unchanged: the facility still sends WhatsApp itself from its waitlist view; the platform sends none.
 - Demo: one limited drop in the demo marketplace opens a day from now so the states can be seen. Tests: `src/lib/countdown.test.ts`, `server/launch-schedule.test.ts` (windows, once-only, no re-announcing), `server/launch-opening.test.ts` (route: scheduling, refusal before opening, exposed times, announcements).
 
+## 8. Numbers: Latin digits everywhere, refreshed every minute
+- **Digits.** Every number, date, time and percentage the site shows uses Latin digits (0-9, `%`, `.` and `,`), in Arabic text too. Formatting calls use the `ar-KW-u-nu-latn` locale (plain `ar-EG` / `ar-KW` default to Arabic-Indic digits), hard-coded strings use 0-9, and the Gemini system prompts tell the model to write Latin digits. The server's input normaliser (`server/ai-intelligence.ts`) still recognises Arabic-Indic digits on purpose, to convert what people type.
+- **Guard.** `src/lib/latinDigits.test.ts` fails the build if source code contains an Arabic-Indic digit/percent/separator, or an Arabic locale formatter without `-u-nu-latn`. A rendered-page scan of every role's screens (home and every tab) in the demo also found none.
+- **Refresh.** `src/lib/autoRefresh.ts` (`useAutoRefresh`, 60 s, only while the tab is visible, plus a catch-up when a tab hidden longer than a minute returns) now drives: the audience dashboard (with "last updated" in Kuwait time), the campaigns and showcase admin (silent: no loading flicker, an open form keeps its state), the company ad report, the partner kit, the seller/supplier report, and the platform figures on the admin and super-admin dashboards (server snapshot, real mode only). A failed refresh keeps the numbers already on screen.
+
 ## Data
 Migrations 22–30: `business_listings`, `ad_campaigns`, `ad_daily_stats`, `organization_invites`, `supplier_directory`, `audience_daily`, `gate_events`, `partner_kit`, plus `ad_campaigns.image_mime/image_data`. Admin actions are written to `domain_audit_events`.
 

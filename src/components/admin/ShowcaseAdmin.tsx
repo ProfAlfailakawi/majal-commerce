@@ -6,6 +6,7 @@ import { AD_AUDIENCES, AD_AUDIENCE_LABEL, AD_TOPICS } from '../../lib/adAudience
 import type { AdCampaign, AdSlot, BusinessListing, DirectorySupplier } from '../../types/majal';
 import { SECTORS, SUPPLIER_CATEGORIES } from '../showcase/sectors';
 import { AD_ACCENT_DOT, AD_ACCENT_KEYS, AD_ICON_KEYS, AdIcon } from '../showcase/AdSlot';
+import { useAutoRefresh } from '../../lib/autoRefresh';
 
 const SLOTS: Record<AdSlot, string> = { SPONSOR: 'الراعي (حصري)', MARKET: 'السوق', PORTAL: 'بوابات الشركاء' };
 const STATUS: Record<string, string> = { PENDING_REVIEW: 'معلّق', APPROVED: 'معتمد', PAUSED: 'موقوف', REJECTED: 'مرفوض', SOLD: 'تم البيع' };
@@ -14,7 +15,7 @@ const PHASE: Record<string, { label: string; cls: string }> = {
   live: { label: 'تعمل الآن', cls: 'bg-emerald-500/10 text-emerald-300' }, ended: { label: 'انتهت', cls: 'bg-slate-500/20 text-slate-300' }, inactive: { label: 'متوقفة', cls: 'bg-white/10 text-slate-300' },
 };
 
-const pct = (c: number, i: number) => (i ? `${((c / i) * 100).toLocaleString('ar-EG', { maximumFractionDigits: 1 })}٪` : '٠٪');
+const pct = (c: number, i: number) => (i ? `${((c / i) * 100).toLocaleString('ar-KW-u-nu-latn', { maximumFractionDigits: 1 })}%` : '0%');
 /** Results of a running A/B test with the verdict in words; applying a winner is a manual, explicit step. */
 const VariantsPanel: React.FC<{ c: AdCampaign; busy: boolean; onApply: (headline: string, tagline: string) => void }> = ({ c, busy, onApply }) => {
   const v = c.variants;
@@ -27,13 +28,13 @@ const VariantsPanel: React.FC<{ c: AdCampaign; busy: boolean; onApply: (headline
       {rows.map(r => (
         <div key={r.key} className={`rounded-lg border px-2.5 py-2 text-xs space-y-0.5 ${verdict.state === 'winner' && verdict.winner === r.key ? 'border-emerald-400/40 bg-emerald-500/10' : 'border-white/10 bg-white/[0.03]'}`}>
           <div className="flex justify-between gap-2"><strong className="truncate">{r.k}: {r.h}</strong><span className="shrink-0 text-slate-300">{pct(r.s.clicks, r.s.impressions)}</span></div>
-          <div className="text-slate-400">{r.s.impressions.toLocaleString('ar-EG')} ظهور · {r.s.clicks.toLocaleString('ar-EG')} نقرة</div>
+          <div className="text-slate-400">{r.s.impressions.toLocaleString('ar-KW-u-nu-latn')} ظهور · {r.s.clicks.toLocaleString('ar-KW-u-nu-latn')} نقرة</div>
         </div>
       ))}
       <p className="text-xs leading-5 text-slate-200">
-        {verdict.state === 'not_enough_data' && `يلزم ${verdict.needed.toLocaleString('ar-EG')} ظهور لكل نسخة قبل الحكم.`}
+        {verdict.state === 'not_enough_data' && `يلزم ${verdict.needed.toLocaleString('ar-KW-u-nu-latn')} ظهور لكل نسخة قبل الحكم.`}
         {verdict.state === 'no_difference' && 'لا فرق واضح بين النسختين حتى الآن.'}
-        {verdict.state === 'winner' && `النسخة ${verdict.winner === 'A' ? 'أ' : 'ب'} تتفوق بنسبة ${verdict.liftPercent.toLocaleString('ar-EG')}٪ — توصية فقط.`}
+        {verdict.state === 'winner' && `النسخة ${verdict.winner === 'A' ? 'أ' : 'ب'} تتفوق بنسبة ${verdict.liftPercent.toLocaleString('ar-KW-u-nu-latn')}% — توصية فقط.`}
       </p>
       {verdict.state === 'winner' && (
         <button type="button" disabled={busy} onClick={() => { const w = rows.find(r => r.key === verdict.winner)!; onApply(w.h, w.t); }} className="w-full py-2 rounded-lg bg-emerald-400 text-slate-950 text-xs font-black disabled:opacity-50">اعتمد النسخة الفائزة وأنهِ الاختبار</button>
@@ -51,7 +52,7 @@ const BillingEditor: React.FC<{ c: AdCampaign; busy: boolean; onSave: (billing: 
   const k = 'w-full glass-input rounded-xl px-3 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300';
   return (
     <details className="rounded-xl border border-white/10 bg-white/[0.02]" open={c.billing === 'UNSET' && c.status === 'PENDING_REVIEW'}>
-      <summary className="cursor-pointer px-3 py-2 text-xs font-black flex items-center justify-between gap-2"><span>السعر والدفع</span><span className={c.billing === 'PAID' ? 'text-emerald-300' : c.billing === 'COMPLIMENTARY' ? 'text-slate-300' : 'text-amber-300'}>{BILLING_LABEL[c.billing ?? 'UNSET']}{c.billing === 'PAID' && c.priceKwd ? ` · ${c.priceKwd.toLocaleString('ar-EG')} د.ك` : ''}</span></summary>
+      <summary className="cursor-pointer px-3 py-2 text-xs font-black flex items-center justify-between gap-2"><span>السعر والدفع</span><span className={c.billing === 'PAID' ? 'text-emerald-300' : c.billing === 'COMPLIMENTARY' ? 'text-slate-300' : 'text-amber-300'}>{BILLING_LABEL[c.billing ?? 'UNSET']}{c.billing === 'PAID' && c.priceKwd ? ` · ${c.priceKwd.toLocaleString('ar-KW-u-nu-latn')} د.ك` : ''}</span></summary>
       <form className="p-3 space-y-2" onSubmit={e => { e.preventDefault(); onSave(billing, price ? Number(price) : null, note); }}>
         <select aria-label="حالة الدفع" value={billing} onChange={e => setBilling(e.target.value as typeof billing)} className={k}>{(Object.keys(BILLING_LABEL) as (keyof typeof BILLING_LABEL)[]).map(b => <option key={b} value={b}>{BILLING_LABEL[b]}</option>)}</select>
         {billing === 'PAID' && <input aria-label="المبلغ المدفوع بالدينار" inputMode="numeric" pattern="\d*" dir="ltr" placeholder="المبلغ (د.ك)" value={price} onChange={e => setPrice(e.target.value.replace(/\D/g, ''))} className={k} />}
@@ -81,7 +82,7 @@ const CampaignEditor: React.FC<{ c: AdCampaign; busy: boolean; onSave: (input: P
           <div className="text-[11px] font-black text-gold-200">اختبار A/B — نسخة ثانية من النص (اختياري)</div>
           <input aria-label="عنوان النسخة ب" maxLength={70} placeholder="عنوان النسخة (ب)" value={f.bHeadline} onChange={e => setF({ ...f, bHeadline: e.target.value })} className={k} />
           {f.bHeadline && <input aria-label="سطر النسخة ب" maxLength={120} placeholder="سطر توضيحي للنسخة (ب)" value={f.bTagline} onChange={e => setF({ ...f, bTagline: e.target.value })} className={k} />}
-          <p className="text-[11px] text-slate-400 leading-5">يُعرض كل إعلان بإحدى النسختين عشوائيًا. تعديل أي نص يبدأ اختبارًا جديدًا. الحكم يحتاج ٥٠٠ ظهور لكل نسخة، والنتيجة توصية فقط.</p>
+          <p className="text-[11px] text-slate-400 leading-5">يُعرض كل إعلان بإحدى النسختين عشوائيًا. تعديل أي نص يبدأ اختبارًا جديدًا. الحكم يحتاج 500 ظهور لكل نسخة، والنتيجة توصية فقط.</p>
         </div>
         <input aria-label="الرابط" required type="url" dir="ltr" value={f.linkUrl} onChange={e => setF({ ...f, linkUrl: e.target.value })} className={k} />
         <div className="flex flex-wrap items-center gap-2">{AD_ACCENT_KEYS.map(a => <button type="button" key={a} aria-label={`لون ${a}`} aria-pressed={f.accent === a} onClick={() => setF({ ...f, accent: a })} className={`w-6 h-6 rounded-full ${AD_ACCENT_DOT[a]} ${f.accent === a ? 'ring-2 ring-offset-2 ring-gold-300 ring-offset-transparent' : 'opacity-60'}`} />)}
@@ -113,7 +114,7 @@ function useFolded<T extends { status: string }>(rows: T[], keep = 3) {
   const shown = all ? rows : [...pending, ...rest.slice(0, Math.max(0, keep - pending.length))];
   const hidden = rows.length - shown.length;
   const toggle = hidden > 0 || all
-    ? <button type="button" onClick={() => setAll(v => !v)} className="w-full py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black">{all ? 'إخفاء المعالَج' : `عرض الكل (${hidden.toLocaleString('ar-EG')} أخرى)`}</button>
+    ? <button type="button" onClick={() => setAll(v => !v)} className="w-full py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black">{all ? 'إخفاء المعالَج' : `عرض الكل (${hidden.toLocaleString('ar-KW-u-nu-latn')} أخرى)`}</button>
     : null;
   return { shown, toggle };
 }
@@ -129,6 +130,8 @@ export const ShowcaseAdmin: React.FC = () => {
   const [draft, setDraft] = useState({ company: '', headline: '', tagline: '', linkUrl: 'https://', slot: 'MARKET' as AdSlot, startsOn: '', endsOn: '', audiences: [] as string[], topics: [] as string[] });
   const load = () => { setLoading(true); fetchShowcaseOverview().then(r => { setListings(r.listings); setCampaigns(r.campaigns); setSuppliers(r.suppliers ?? []); setError(''); }).catch(e => setError(e instanceof Error ? e.message : 'تعذّر التحميل.')).finally(() => setLoading(false)); };
   useEffect(load, []);
+  // Campaign numbers refresh every minute without the loading flicker, so a form being edited keeps its state.
+  useAutoRefresh(() => { fetchShowcaseOverview().then(r => { setListings(r.listings); setCampaigns(r.campaigns); setSuppliers(r.suppliers ?? []); }).catch(() => undefined); });
   const run = async (key: string, job: () => Promise<unknown>, ok = '') => {
     setBusy(key); setError(''); setNotice('');
     try { await job(); if (ok) setNotice(ok); load(); } catch (e) { setError(e instanceof Error ? e.message : 'تعذّر تنفيذ العملية.'); } finally { setBusy(''); }
@@ -142,7 +145,7 @@ export const ShowcaseAdmin: React.FC = () => {
     });
   };
   const seasons = upcomingSeasons(kuwaitDay());
-  const weekly = (c: AdCampaign) => `ملخص أسبوع حملة «${c.headline}» (${c.company}) في مجال:\nظهور: ${(c.weekImpressions ?? 0).toLocaleString('ar-EG')}\nنقرات: ${(c.weekClicks ?? 0).toLocaleString('ar-EG')}\nالإجمالي: ظهور ${c.impressions.toLocaleString('ar-EG')} · نقرات ${c.clicks.toLocaleString('ar-EG')}${c.endsOn ? `\nتنتهي: ${c.endsOn}` : ''}`;
+  const weekly = (c: AdCampaign) => `ملخص أسبوع حملة «${c.headline}» (${c.company}) في مجال:\nظهور: ${(c.weekImpressions ?? 0).toLocaleString('ar-KW-u-nu-latn')}\nنقرات: ${(c.weekClicks ?? 0).toLocaleString('ar-KW-u-nu-latn')}\nالإجمالي: ظهور ${c.impressions.toLocaleString('ar-KW-u-nu-latn')} · نقرات ${c.clicks.toLocaleString('ar-KW-u-nu-latn')}${c.endsOn ? `\nتنتهي: ${c.endsOn}` : ''}`;
   const copy = async (text: string, ok: string) => { try { await navigator.clipboard.writeText(text); setNotice(ok); } catch { setNotice(text); } };
   const sup = useFolded(suppliers), lis = useFolded(listings), cam = useFolded(campaigns, 4);
   const pendingListings = listings.filter(l => l.status === 'PENDING_REVIEW').length, pendingAds = campaigns.filter(c => c.status === 'PENDING_REVIEW').length;
@@ -150,7 +153,7 @@ export const ShowcaseAdmin: React.FC = () => {
   return (
     <div className="space-y-6">
       <section className="glass-panel rounded-3xl p-5 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3"><span className="w-11 h-11 rounded-2xl bg-gold-500/10 border border-gold-300/20 grid place-items-center"><Megaphone className="w-5 h-5 text-gold-300" aria-hidden="true" /></span><div><h2 className="font-black text-lg">المشاريع المعروضة والإعلانات</h2><p className="text-xs text-slate-400 mt-1">{pendingListings.toLocaleString('ar-EG')} مشروع و{pendingAds.toLocaleString('ar-EG')} حملة و{suppliers.filter(s => s.status === 'PENDING_REVIEW').length.toLocaleString('ar-EG')} مورد بانتظار القرار</p></div></div>
+        <div className="flex items-center gap-3"><span className="w-11 h-11 rounded-2xl bg-gold-500/10 border border-gold-300/20 grid place-items-center"><Megaphone className="w-5 h-5 text-gold-300" aria-hidden="true" /></span><div><h2 className="font-black text-lg">المشاريع المعروضة والإعلانات</h2><p className="text-xs text-slate-400 mt-1">{pendingListings.toLocaleString('ar-KW-u-nu-latn')} مشروع و{pendingAds.toLocaleString('ar-KW-u-nu-latn')} حملة و{suppliers.filter(s => s.status === 'PENDING_REVIEW').length.toLocaleString('ar-KW-u-nu-latn')} مورد بانتظار القرار</p></div></div>
         <button type="button" onClick={load} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black flex items-center gap-2"><RefreshCw className="w-4 h-4" aria-hidden="true" />تحديث</button>
       </section>
       {error && <div role="alert" className="p-4 rounded-2xl bg-rose-500/10 border border-rose-400/20 text-xs text-rose-200">{error}</div>}
@@ -211,9 +214,9 @@ export const ShowcaseAdmin: React.FC = () => {
                 <article key={c.id} className="glass-card rounded-2xl p-5 border border-white/10 space-y-3">
                   <div className="flex justify-between gap-3"><div className="min-w-0"><div className="text-xs text-gold-300 font-black">{c.company} · {SLOTS[c.slot]}</div><h4 className="font-black mt-1">{c.headline}</h4></div><span className={`text-xs px-2 py-1 rounded-full h-fit shrink-0 whitespace-nowrap ${PHASE[c.phase ?? 'inactive'].cls}`}>{c.status === 'REJECTED' ? 'مرفوضة' : c.status === 'PAUSED' ? 'موقوفة' : PHASE[c.phase ?? 'inactive'].label}</span></div>
                   <div className="text-xs text-slate-400" dir="ltr">{c.linkUrl}</div>
-                  {c.phase === 'live' && c.daysLeft !== null && c.daysLeft !== undefined && c.daysLeft <= 7 && <div className="text-xs text-amber-300 font-black">تنتهي {c.daysLeft === 0 ? 'اليوم' : `بعد ${c.daysLeft.toLocaleString('ar-EG')} أيام`} — تواصل للتجديد</div>}
+                  {c.phase === 'live' && c.daysLeft !== null && c.daysLeft !== undefined && c.daysLeft <= 7 && <div className="text-xs text-amber-300 font-black">تنتهي {c.daysLeft === 0 ? 'اليوم' : `بعد ${c.daysLeft.toLocaleString('ar-KW-u-nu-latn')} أيام`} — تواصل للتجديد</div>}
                   {c.phase === 'ended' && <div className="text-xs text-slate-400">انتهت مدتها. عدّل التواريخ واعتمد من جديد للتجديد.</div>}
-                  <div className="text-xs text-slate-300">ظهور {c.impressions.toLocaleString('ar-EG')} · نقرات {c.clicks.toLocaleString('ar-EG')}{c.contactPhone ? ` · ${c.contactPhone}` : ''}</div>
+                  <div className="text-xs text-slate-300">ظهور {c.impressions.toLocaleString('ar-KW-u-nu-latn')} · نقرات {c.clicks.toLocaleString('ar-KW-u-nu-latn')}{c.contactPhone ? ` · ${c.contactPhone}` : ''}</div>
                   <VariantsPanel c={c} busy={busy === c.id} onApply={(headline, tagline) => void run(c.id, async () => { await editCampaign(c.id, { company: c.company, headline, tagline, linkUrl: c.linkUrl, slot: c.slot, accent: c.accent, icon: c.icon }); setNotice('طُبّقت النسخة الفائزة وانتهى الاختبار.'); })} />
                   <BillingEditor c={c} busy={busy === c.id} onSave={(billing, price, note) => void run(c.id, async () => { const r = await setCampaignBilling(c.id, billing, price, note); if (r.pausedForReview) setNotice('إلغاء حالة الدفع أوقف الحملة.'); })} />
                   <CampaignEditor c={c} busy={busy === c.id} onSave={input => void run(c.id, async () => { const r = await editCampaign(c.id, input); if (r.pausedForReview) setNotice('تغيير الرابط أو الموقع أوقف الحملة لإعادة اعتمادها.'); })} />

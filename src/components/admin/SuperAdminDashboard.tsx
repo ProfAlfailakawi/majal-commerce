@@ -34,6 +34,7 @@ import { completedOrderTotals } from '../../lib/money';
 import { SurfaceTabs } from '../common/SurfaceTabs';
 import { Avatar } from '../common/Avatar';
 import { DnaFlash } from '../dna/DnaKit';
+import { REFRESH_MS, useAutoRefresh } from '../../lib/autoRefresh';
 
 /** Icon + two-word label + optional state. The long sentence stays available as a tooltip. */
 const InfoChip: React.FC<{ icon: React.ReactNode; label: string; status?: string; hint?: string }> = ({ icon, label, status, hint }) => (
@@ -48,6 +49,7 @@ const InfoChip: React.FC<{ icon: React.ReactNode; label: string; status?: string
 export const SuperAdminDashboard: React.FC = () => {
   const [, setTick] = useState(0);
   useEffect(() => store.subscribe(() => setTick(t => t + 1)), []);
+  useAutoRefresh(() => { void store.hydrateFromServer(); }, REFRESH_MS, !IS_DEMO_MODE);
   const [activeTab, setActiveTab] = useState<'COMMAND' | 'PERMISSIONS' | 'LIQUIDITY' | 'TRUST' | 'SYSTEM' | 'AUDIT'>('COMMAND');
 
   const orderTotals = completedOrderTotals(store.orders);

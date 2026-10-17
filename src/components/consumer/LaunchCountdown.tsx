@@ -56,4 +56,4 @@ export const LaunchCountdown: React.FC<Props> = ({ opensAt, offsetMs = 0, compac
 
 /** «الخميس 8:00 م» in Kuwait time, regardless of the visitor's timezone. */
 export const formatOpening = (iso: string) =>
-  new Intl.DateTimeFormat('ar-KW', { timeZone: 'Asia/Kuwait', weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
+  new Intl.DateTimeFormat('ar-KW-u-nu-latn', { timeZone: 'Asia/Kuwait', weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));

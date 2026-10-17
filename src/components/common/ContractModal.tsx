@@ -206,11 +206,11 @@ export const ContractModal: React.FC<ContractModalProps> = ({
               </div>
               <div className="p-2.5 bg-slate-900 rounded-lg border border-slate-800">
                 <span className="text-slate-400 text-xs block">نسبة حقوق المبدع</span>
-                <span className="font-bold text-gold-300 text-sm">{contract.terms.creatorRoyaltyRatePercent}٪ من المبيعات</span>
+                <span className="font-bold text-gold-300 text-sm">{contract.terms.creatorRoyaltyRatePercent}% من المبيعات</span>
               </div>
               <div className="p-2.5 bg-slate-900 rounded-lg border border-slate-800">
                 <span className="text-slate-400 text-xs block">عمولة تشغيل المنصة</span>
-                <span className="font-bold text-slate-300 text-sm">{contract.terms.platformFeePercent}٪</span>
+                <span className="font-bold text-slate-300 text-sm">{contract.terms.platformFeePercent}%</span>
               </div>
               <div className="p-2.5 bg-slate-900 rounded-lg border border-slate-800">
                 <span className="text-slate-400 text-xs block">مدة العقد الحصري</span>

@@ -85,7 +85,7 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
 
             <div>
               <label className="block text-slate-300 font-bold mb-1">
-                نسبة حقوق المبدع (٪)
+                نسبة حقوق المبدع (%)
               </label>
               <input
                 type="number"
@@ -137,7 +137,7 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
 
             <div>
               <label className="block text-slate-400 font-medium mb-1">
-                عمولة التشغيل والمنصة (ثابتة 5٪)
+                عمولة التشغيل والمنصة (ثابتة 5%)
               </label>
               <div className="w-full bg-slate-800/50 border border-slate-800 rounded-lg p-2 text-slate-400 font-mono">
                 {platformFeeKwd.toFixed(3)} د.ك (5.0%)
@@ -198,7 +198,7 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
               </div>
               <div className="p-3 bg-slate-900/80 rounded-lg border border-slate-700/60">
                 <span className="block text-slate-400 text-xs">نسبة هامش المنشأة</span>
-                <span className="block font-bold text-slate-200 text-sm">{hostNetMarginPercent.toFixed(1)}٪</span>
+                <span className="block font-bold text-slate-200 text-sm">{hostNetMarginPercent.toFixed(1)}%</span>
               </div>
             </div>
           </div>

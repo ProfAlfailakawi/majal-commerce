@@ -31,7 +31,7 @@ export const TeamManager: React.FC = () => {
     <section className="glass-panel rounded-3xl border border-white/10 p-5 md:p-6 space-y-5" aria-labelledby="team-manager-title">
       <div className="flex items-center gap-3">
         <span className="w-11 h-11 rounded-2xl bg-gold-500/10 border border-gold-300/20 grid place-items-center text-gold-300"><UserPlus className="w-5 h-5" aria-hidden="true" /></span>
-        <div><h3 id="team-manager-title" className="font-black text-lg">أضف أعضاء فريقك</h3><p className="text-xs text-slate-400 mt-1">ادعُ زميلك واختر دوره. يفعّل حسابه بنفسه من رابط خاص صالح ٧ أيام.</p></div>
+        <div><h3 id="team-manager-title" className="font-black text-lg">أضف أعضاء فريقك</h3><p className="text-xs text-slate-400 mt-1">ادعُ زميلك واختر دوره. يفعّل حسابه بنفسه من رابط خاص صالح 7 أيام.</p></div>
       </div>
 
       <form onSubmit={invite} className="grid sm:grid-cols-[1fr_auto_auto] gap-2 items-end">
@@ -47,7 +47,7 @@ export const TeamManager: React.FC = () => {
           <div dir="ltr" className="text-xs break-all text-slate-200 select-all">{link}</div>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={copy} className="px-3 py-2 rounded-lg bg-white/10 text-xs font-black inline-flex items-center gap-1.5">{copied ? <Check className="w-3.5 h-3.5" aria-hidden="true" /> : <Copy className="w-3.5 h-3.5" aria-hidden="true" />}{copied ? 'نُسخ' : 'نسخ الرابط'}</button>
-            <a href={`https://wa.me/?text=${encodeURIComponent(`دعوة للانضمام إلى فريقنا في مجال. فعّل حسابك من هنا (الرابط لمرة واحدة وصالح ٧ أيام): ${link}`)}`} target="_blank" rel="noopener noreferrer" className="px-3 py-2 rounded-lg bg-emerald-400 text-slate-950 text-xs font-black inline-flex items-center gap-1.5"><MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />إرسال عبر واتساب</a>
+            <a href={`https://wa.me/?text=${encodeURIComponent(`دعوة للانضمام إلى فريقنا في مجال. فعّل حسابك من هنا (الرابط لمرة واحدة وصالح 7 أيام): ${link}`)}`} target="_blank" rel="noopener noreferrer" className="px-3 py-2 rounded-lg bg-emerald-400 text-slate-950 text-xs font-black inline-flex items-center gap-1.5"><MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />إرسال عبر واتساب</a>
           </div>
         </div>
       )}

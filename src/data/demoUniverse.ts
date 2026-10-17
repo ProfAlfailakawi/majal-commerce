@@ -703,7 +703,7 @@ function demoWorkbench(products: CreatorProduct[], collaborations: Collaboration
 
   const labBatches: LabBatch[] = [];
   const dealDecisions: DealDecision[] = [];
-  const RESULTS = ['القوام ممتاز والطعم مطابق للعينة المنزلية.', 'يحتاج تقليل السكر 10٪ ليتماشى مع ذوق الفرع.', 'اللون أغمق من المطلوب — خفض حرارة الفرن 10 درجات.'];
+  const RESULTS = ['القوام ممتاز والطعم مطابق للعينة المنزلية.', 'يحتاج تقليل السكر 10% ليتماشى مع ذوق الفرع.', 'اللون أغمق من المطلوب — خفض حرارة الفرن 10 درجات.'];
   collaborations.forEach((col, index) => {
     const product = products.find(p => p.id === col.productId);
     const creator = creators.find(c => c.id === col.creatorId);

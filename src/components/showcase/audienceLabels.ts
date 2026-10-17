@@ -8,4 +8,4 @@ export const AUDIENCE_TONE: Record<string, string> = {
 };
 export const audienceLabel = (key: string) => AD_AUDIENCE_LABEL[key as AdAudience] ?? key;
 export const SLOT_LABEL: Record<string, string> = { SPONSOR: 'شريط الراعي (حصري)', MARKET: 'السوق', PORTAL: 'بوابات الشركاء' };
-export const num = (n: number) => n.toLocaleString('ar-EG');
+export const num = (n: number) => n.toLocaleString('ar-KW-u-nu-latn');

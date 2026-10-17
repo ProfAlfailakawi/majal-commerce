@@ -6,7 +6,7 @@ export const TrendBars: React.FC<{ points: { day: string; value: number }[]; lab
   const max = Math.max(1, ...points.map(p => p.value));
   const w = 600, pad = 6, gap = 3, bw = (w - pad * 2 - gap * (points.length - 1)) / Math.max(1, points.length);
   const y = (v: number) => height - 18 - (v / max) * (height - 34);
-  const fmt = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+  const fmt = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString('ar-KW-u-nu-latn', { day: 'numeric', month: 'short', timeZone: 'UTC' });
   return (
     <figure className="m-0">
       <svg viewBox={`0 0 ${w} ${height}`} role="img" aria-label={label} className="w-full h-auto overflow-visible">
@@ -17,14 +17,14 @@ export const TrendBars: React.FC<{ points: { day: string; value: number }[]; lab
           return (
             <g key={p.day}>
               <rect x={x} y={top} width={bw} height={Math.max(2, height - 18 - top)} rx={Math.min(4, bw / 2)} fill={last ? '#34d399' : `url(#g${uid})`}>
-                <title>{`${fmt(p.day)}: ${p.value.toLocaleString('ar-EG')}${unit}`}</title>
+                <title>{`${fmt(p.day)}: ${p.value.toLocaleString('ar-KW-u-nu-latn')}${unit}`}</title>
               </rect>
             </g>
           );
         })}
         <text x={pad} y={height - 3} fontSize="11" fill="currentColor" fillOpacity="0.55">{points[0] ? fmt(points[0].day) : ''}</text>
         <text x={w - pad} y={height - 3} fontSize="11" textAnchor="end" fill="currentColor" fillOpacity="0.55">{points.at(-1) ? fmt(points.at(-1)!.day) : ''}</text>
-        <text x={w - pad} y={11} fontSize="11" textAnchor="end" fill="currentColor" fillOpacity="0.55">{max.toLocaleString('ar-EG')}</text>
+        <text x={w - pad} y={11} fontSize="11" textAnchor="end" fill="currentColor" fillOpacity="0.55">{max.toLocaleString('ar-KW-u-nu-latn')}</text>
       </svg>
     </figure>
   );
@@ -38,7 +38,7 @@ export const ShareBars: React.FC<{ rows: { key: string; label: string; value: nu
     <ul className="space-y-2.5 m-0 p-0 list-none">
       {rows.map(r => (
         <li key={r.key} className="space-y-1">
-          <div className="flex justify-between gap-3 text-xs"><span className="font-bold truncate">{r.label}</span><span className="text-slate-400 shrink-0">{r.value.toLocaleString('ar-EG')}{unit} · {Math.round((r.value / total) * 100).toLocaleString('ar-EG')}٪</span></div>
+          <div className="flex justify-between gap-3 text-xs"><span className="font-bold truncate">{r.label}</span><span className="text-slate-400 shrink-0">{r.value.toLocaleString('ar-KW-u-nu-latn')}{unit} · {Math.round((r.value / total) * 100).toLocaleString('ar-KW-u-nu-latn')}%</span></div>
           <div className="h-2 rounded-full bg-white/10 overflow-hidden"><div className={`h-full rounded-full ${r.tone ?? 'bg-gold-400'}`} style={{ width: `${Math.max(3, (r.value / max) * 100)}%` }} /></div>
         </li>
       ))}
@@ -56,7 +56,7 @@ export const WeekdayBars: React.FC<{ values: number[] }> = ({ values }) => {
     <div className="flex items-end gap-2 h-28" role="img" aria-label="الزيارات حسب أيام الأسبوع">
       {values.map((v, i) => (
         <div key={names[i]} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
-          <div className={`w-full rounded-t-lg ${i === top && v > 0 ? 'bg-emerald-400' : 'bg-gold-400/60'}`} style={{ height: `${Math.max(4, (v / max) * 78)}%` }} title={`${names[i]}: ${v.toLocaleString('ar-EG')}`} />
+          <div className={`w-full rounded-t-lg ${i === top && v > 0 ? 'bg-emerald-400' : 'bg-gold-400/60'}`} style={{ height: `${Math.max(4, (v / max) * 78)}%` }} title={`${names[i]}: ${v.toLocaleString('ar-KW-u-nu-latn')}`} />
           <span className="text-[10px] text-slate-400 leading-none">{short[i]}</span>
         </div>
       ))}

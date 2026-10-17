@@ -98,7 +98,7 @@ export const ProductDiscovery: React.FC = () => {
               onChange={(e) => setMinMatchScore(parseInt(e.target.value))}
               className="accent-gold-500 flex-1 min-w-0"
             />
-            <span className="shrink-0 font-bold text-gold-400 font-mono">{minMatchScore}٪</span>
+            <span className="shrink-0 font-bold text-gold-400 font-mono">{minMatchScore}%</span>
           </div>
         </div>
       </div>
@@ -135,7 +135,7 @@ export const ProductDiscovery: React.FC = () => {
                   </div>
 
                   {/* Match score: ring with the number kept inside */}
-                  <ScoreRing value={matchCalc.overallScore} suffix="٪" caption="نسبة المطابقة" size={60} draw={`discovery-ring:${p.id}`} />
+                  <ScoreRing value={matchCalc.overallScore} suffix="%" caption="نسبة المطابقة" size={60} draw={`discovery-ring:${p.id}`} />
                 </div>
 
                 <p className="text-slate-300 text-xs leading-relaxed">{p.shortDescription}</p>
@@ -147,7 +147,7 @@ export const ProductDiscovery: React.FC = () => {
                     <ChevronDown className="w-4 h-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
                   </summary>
                   <div className="px-3.5 pb-3.5 space-y-3">
-                    <MicroBars suffix="٪" draw={`discovery-bars:${p.id}`} bars={[
+                    <MicroBars suffix="%" draw={`discovery-bars:${p.id}`} bars={[
                       { label: 'توافق المعدات', value: matchCalc.equipmentFit },
                       { label: 'ملاءمة الهامش', value: matchCalc.marginFit },
                       { label: 'مطابقة الجمهور', value: matchCalc.brandFit }

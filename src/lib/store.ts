@@ -1002,7 +1002,7 @@ export class Store {
       brandFit,
       capacityFit,
       priceFit,
-      explanationAr: `مطابقة بنسبة ${overallScore}٪ مع ${host.commercialName} بناءً على التوافق التشغيلي، المعدات، والهوامش الربحية المتوقعة.`,
+      explanationAr: `مطابقة بنسبة ${overallScore}% مع ${host.commercialName} بناءً على التوافق التشغيلي، المعدات، والهوامش الربحية المتوقعة.`,
       explanationEn: `${overallScore}% Match with ${host.commercialName} based on equipment alignment and profit margins.`
     };
   }
