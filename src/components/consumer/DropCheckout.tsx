@@ -10,6 +10,8 @@ import { CheckoutOptions, commerceClient, newCheckoutKey, normalizeKuwaitPhone }
 import { DomainApiError, domainClient } from '../../lib/domainClient';
 import { DropTrustChecklist } from './DropTrustChecklist';
 import { DnaRing, DnaStepper } from '../dna/DnaKit';
+import { LaunchCountdown, formatOpening } from './LaunchCountdown';
+import { clockOffsetMs } from '../../lib/countdown';
 
 interface Props { launch: Launch; acquisitionSource: 'MAJAL' | 'CREATOR' | 'HOST' }
 
@@ -86,6 +88,12 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
     return values.length ? Math.min(...values) : null;
   }, [options, branch]);
   const soldOut = remaining === 0 || (branch ? !branch.orderingOpen : false);
+  // Scheduled opening: the server clock (not the device's) decides when the countdown ends.
+  const opensAtIso = IS_DEMO_MODE ? launch.startDate : options?.startsAt ?? null;
+  const offsetMs = useMemo(() => clockOffsetMs(options?.serverNow), [options?.serverNow]);
+  const [openedNow, setOpenedNow] = useState(false);
+  const upcoming = !openedNow && !!opensAtIso && Date.parse(opensAtIso) - (Date.now() + offsetMs) > 0;
+  const cap = options?.quantityCap ?? launch.quantityCapUnits ?? null;
   const maxUnits = Math.max(1, Math.min(store.policy.maxOrderUnits, remaining ?? store.policy.maxOrderUnits));
   const countdown = useCountdown(placed?.holdExpiresAt ?? null);
 
@@ -124,10 +132,10 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
   const joinWaitlist = async () => {
     const contactPhone = normalizeKuwaitPhone(phone);
     if (!contactPhone) { setWaitlistMsg('أدخل رقمك الكويتي أولًا لنبلغك عبر واتساب.'); return; }
-    if (IS_DEMO_MODE) { setWaitlistMsg('تم! (عرض تجريبي) بنرسل لك على واتساب أول ما يتوفر.'); return; }
+    if (IS_DEMO_MODE) { setWaitlistMsg('تم! (عرض تجريبي) بنذكّرك قبل الفتح وعند الفتح.'); return; }
     try {
       const r = await commerceClient.joinWaitlist(launch.id, contactPhone);
-      setWaitlistMsg(`تم! بنرسل لك على واتساب أول ما يتوفر. عدد المنتظرين: ${r.waiting}`);
+      setWaitlistMsg(`تم! بنذكّرك ${upcoming ? 'قبل الفتح بساعة وعند الفتح' : 'أول ما يتوفر'}. عدد المنتظرين: ${r.waiting}`);
     } catch (err) { setWaitlistMsg(err instanceof DomainApiError ? err.message : 'تعذّر التسجيل في قائمة الانتظار. سجّل دخولك ثم حاول.'); }
   };
 
@@ -202,7 +210,14 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
           </div>
         </div>
       )}
-      {remaining !== null && (
+      {upcoming && opensAtIso && (
+        <div className="rounded-2xl p-4 border border-gold-300/30 bg-gold-500/10 space-y-3 text-center">
+          <div className="text-xs font-black text-gold-300">ينفتح {formatOpening(opensAtIso)}</div>
+          <LaunchCountdown opensAt={opensAtIso} offsetMs={offsetMs} onOpen={() => setOpenedNow(true)} />
+          {cap ? <div className="text-xs text-slate-300">{cap} وحدة فقط — وما تتكرر.</div> : null}
+        </div>
+      )}
+      {remaining !== null && !upcoming && (
         <div className={`rounded-xl px-3 py-2 text-xs font-black flex items-center gap-2 ${soldOut ? 'py-3 bg-rose-500/10 text-rose-300 border border-dashed border-rose-400/40' : remaining <= 5 ? 'bg-rose-500/10 text-rose-300 border border-rose-400/20' : 'bg-white/5 text-slate-200 border border-white/10'}`} aria-live="polite">
           {soldOut && <PackageX className="w-5 h-5 shrink-0" aria-hidden="true" />}
           {soldOut ? 'نفدت الكمية المتاحة حاليًا' : `متبقي ${remaining} ${branch?.remainingUnits != null ? 'في هذا الفرع' : 'في هذا الإصدار'}`}
@@ -279,10 +294,10 @@ export const DropCheckout: React.FC<Props> = ({ launch, acquisitionSource }) => 
           {fulfillment === 'DELIVERY' && <div className="flex justify-between"><dt className="text-slate-300">رسوم التوصيل</dt><dd>{zone ? formatFils(zone.feeFils) : '—'}</dd></div>}
           <div className="flex justify-between text-sm pt-1.5 border-t border-white/10"><dt className="text-slate-200 font-bold">الإجمالي</dt><dd className="font-black text-gold-300">{formatFils(totalFils)}</dd></div>
         </dl>
-        {soldOut ? (
+        {soldOut || upcoming ? (
           <div className="space-y-2">
-            <button type="button" onClick={joinWaitlist} className="w-full py-3.5 rounded-xl bg-white/10 border border-white/15 text-slate-100 font-black text-sm flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"><Bell className="w-4 h-4" aria-hidden="true" /> نبّهني عبر واتساب عند التوفر</button>
-            <p className="text-xs text-slate-300">بالضغط توافق على استلام رسالة واتساب واحدة عند توفر هذا الإطلاق. يمكنك الإلغاء في أي وقت.</p>
+            <button type="button" onClick={joinWaitlist} className="w-full py-3.5 rounded-xl bg-white/10 border border-white/15 text-slate-100 font-black text-sm flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"><Bell className="w-4 h-4" aria-hidden="true" /> {upcoming ? 'ذكّرني قبل الفتح' : 'نبّهني عبر واتساب عند التوفر'}</button>
+            <p className="text-xs text-slate-300">{upcoming ? 'نذكّرك داخل مجال قبل الفتح بساعة وعند الفتح. وبالضغط توافق أن تراسلك المنشأة عبر واتساب مرة واحدة. يمكنك الإلغاء في أي وقت.' : 'بالضغط توافق على استلام رسالة واتساب واحدة عند توفر هذا الإطلاق. يمكنك الإلغاء في أي وقت.'}</p>
             {waitlistMsg && <div role="status" className="text-xs text-emerald-300 font-bold">{waitlistMsg}</div>}
           </div>
         ) : (

@@ -1374,8 +1374,9 @@ export class Store {
     return launch.gateChecklist;
   }
 
-  public activateLaunch(collaborationId: string) {
-    if (!IS_DEMO_MODE) return this.serverMutation(() => domainClient.activateLaunch(collaborationId));
+  /** `opensAt` (ISO, 2 minutes to 60 days ahead) schedules the opening; omitted, the launch opens now. */
+  public activateLaunch(collaborationId: string, opensAt?: string) {
+    if (!IS_DEMO_MODE) return this.serverMutation(() => domainClient.activateLaunch(collaborationId, opensAt));
     const col = this.collaborations.find(c => c.id === collaborationId);
     if (!col) return this.fail('التعاون غير موجود.');
     if (!this.canManageHostCommercials(col.hostBusinessId)) return this.fail('الإطلاق محصور بمالك المنشأة أو التشغيل.');
@@ -1383,8 +1384,10 @@ export class Store {
     if (!launch) return undefined;
     launch.gateChecklist = this.getLaunchGate(collaborationId)!;
     if (!launch.gateChecklist.allRequirementsPassed) return this.fail('بوابة الإطلاق غير مكتملة.');
+    const scheduledAt = opensAt ? Date.parse(opensAt) : NaN;
+    if (opensAt && (!Number.isFinite(scheduledAt) || scheduledAt - Date.now() < 2 * 60_000 || scheduledAt - Date.now() > 60 * 86_400_000)) return this.fail('وقت الفتح يجب أن يكون بعد دقيقتين على الأقل وخلال 60 يومًا.');
     launch.status = 'LIVE';
-    launch.startDate = new Date().toISOString();
+    launch.startDate = opensAt ? new Date(scheduledAt).toISOString() : new Date().toISOString();
     col.stage = 'LIVE';
     col.updatedAt = new Date().toISOString();
     const product = this.products.find(p => p.id === col.productId);
@@ -1412,6 +1415,7 @@ export class Store {
     const launch = this.launches.find(l => l.id === launchId);
     if (!launch) return this.fail('الإطلاق غير موجود.');
     if (launch.status !== 'LIVE' && launch.status !== 'PERMANENT') return this.fail('هذا الإطلاق غير متاح للطلب حاليًا.');
+    if (Date.parse(launch.startDate) > Date.now()) return this.fail('لم يبدأ هذا الإطلاق بعد.');
     if (!Number.isInteger(unitsCount) || unitsCount < 1 || unitsCount > this.policy.maxOrderUnits) return this.fail(`كمية الطلب يجب أن تكون بين 1 و${this.policy.maxOrderUnits} وحدة.`);
     if (launch.quantityCapUnits && launch.unitsSold + unitsCount > launch.quantityCapUnits) return this.fail('الكمية المطلوبة تتجاوز المتاح في هذا الإصدار.');
     if (!customerName.trim()) return this.fail('اسم العميل مطلوب.');

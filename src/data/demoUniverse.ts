@@ -621,6 +621,18 @@ function demoTrading(products: CreatorProduct[], hosts: HostBusiness[], creators
     } as AuditLog);
   }
 
+  // One limited drop opens tomorrow, so the countdown and "remind me" states can be seen. It
+  // has not sold anything yet, so its demo orders, accruals and reviews are removed.
+  const upcoming = launches.filter(l => l.id.startsWith('launch_demo_') && l.status === 'LIVE' && l.launchType === 'LIMITED_DROP' && l.quantityCapUnits)[1];
+  if (upcoming) {
+    upcoming.startDate = new Date(Date.now() + 26 * 3_600_000).toISOString();
+    upcoming.unitsSold = 0;
+    const goneOrders = new Set(orders.filter(o => o.launchId === upcoming.id).map(o => o.id));
+    for (let i = orders.length - 1; i >= 0; i -= 1) if (goneOrders.has(orders[i].id)) orders.splice(i, 1);
+    for (let i = accruals.length - 1; i >= 0; i -= 1) if (goneOrders.has(accruals[i].orderId)) accruals.splice(i, 1);
+    for (let i = reviews.length - 1; i >= 0; i -= 1) if (reviews[i].launchId === upcoming.id) reviews.splice(i, 1);
+  }
+
   return { collaborations, launches, orders, accruals, reviews, settlements, auditLogs };
 }
 

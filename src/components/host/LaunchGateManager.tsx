@@ -17,6 +17,7 @@ import { StatusPill } from '../common/StatusPill';
 import { DnaRing } from '../dna/DnaKit';
 import { ProductImage } from '../common/ProductImage';
 import { publicProductImage } from '../../lib/productImage';
+import { formatOpening } from '../consumer/LaunchCountdown';
 
 interface LaunchGateManagerProps {
   collaboration: Collaboration;
@@ -41,6 +42,10 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
     || (collaboration.activeLaunch && ['LIVE', 'PERMANENT'].includes(collaboration.activeLaunch.status) ? collaboration.activeLaunch : undefined);
   const product = store.products.find(p => p.id === collaboration.productId);
   const [isLaunching, setIsLaunching] = useState(false);
+  // Optional scheduled opening, typed as Kuwait wall-clock time (UTC+3, no daylight saving).
+  const [opensLocal, setOpensLocal] = useState('');
+  const [opensError, setOpensError] = useState('');
+  const kuwaitWallClock = (ms: number) => new Date(ms + 3 * 3_600_000).toISOString().slice(0, 16);
 
   const itemsConfig: { key: keyof Omit<LaunchGateChecklist, 'allRequirementsPassed'>; label: string; desc: string; source: 'SYSTEM' | 'HOST' }[] = [
     { key: 'hostVerified', label: 'التحقق من المنشأة المرخّصة', desc: 'مشتق آليًا من حالة التحقق الخاصة بالمنشأة.', source: 'SYSTEM' },
@@ -92,9 +97,17 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
 
   const handleLaunch = async () => {
     if (isLaunching) return;
+    setOpensError('');
+    let opensAt: string | undefined;
+    if (opensLocal) {
+      const at = Date.parse(`${opensLocal}:00+03:00`);
+      const ahead = at - Date.now();
+      if (!Number.isFinite(at) || ahead < 2 * 60_000 || ahead > 60 * 86_400_000) { setOpensError('وقت الفتح يجب أن يكون بعد دقيقتين على الأقل وخلال 60 يومًا.'); return; }
+      opensAt = new Date(at).toISOString();
+    }
     setIsLaunching(true);
     try {
-      await Promise.resolve(store.activateLaunch(collaboration.id));
+      await Promise.resolve(store.activateLaunch(collaboration.id, opensAt));
     } finally {
       setIsLaunching(false);
     }
@@ -184,8 +197,10 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
                 {product && <StatusPill status={product.status} />}
               </div>
               <p className="text-xs text-slate-400 leading-5">
-                المنتج الآن {liveLaunch.status === 'PERMANENT' ? 'إطلاق دائم' : 'إطلاق حيّ'} — سعر البيع {liveLaunch.sellingPriceKwd.toFixed(3)} د.ك
-                {liveLaunch.startDate ? ` — منذ ${new Date(liveLaunch.startDate).toLocaleDateString('ar-KW-u-nu-latn')}` : ''}
+                {Date.parse(liveLaunch.startDate) > Date.now()
+                  ? <>الإطلاق مجدول — يفتح {formatOpening(liveLaunch.startDate)} بسعر {liveLaunch.sellingPriceKwd.toFixed(3)} د.ك. يراه الجمهور بعدّ تنازلي ولا يُقبل طلب قبل الفتح.</>
+                  : <>المنتج الآن {liveLaunch.status === 'PERMANENT' ? 'إطلاق دائم' : 'إطلاق حيّ'} — سعر البيع {liveLaunch.sellingPriceKwd.toFixed(3)} د.ك
+                {liveLaunch.startDate ? ` — منذ ${new Date(liveLaunch.startDate).toLocaleDateString('ar-KW-u-nu-latn')}` : ''}</>}
               </p>
             </div>
             <div className="flex items-center gap-2 text-emerald-300 text-xs font-black shrink-0">
@@ -204,6 +219,19 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
           )}
         </div>
 
+        {canOperate && isAllReady && (
+          <div className="text-xs space-y-1.5 md:max-w-xs">
+            <label htmlFor="launch-opens-at" className="block font-black text-slate-200">افتح الإطلاق في وقت محدد <span className="font-normal text-slate-400">(اختياري)</span></label>
+            <input
+              id="launch-opens-at" type="datetime-local" value={opensLocal} min={kuwaitWallClock(Date.now() + 3 * 60_000)}
+              onChange={event => { setOpensLocal(event.target.value); setOpensError(''); }}
+              className="w-full glass-input rounded-xl px-3 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
+            />
+            <p className="text-slate-400 leading-5">بتوقيت الكويت. يظهر الإطلاق للجمهور بعدّ تنازلي، وننبّه المنتظرين والمتابعين قبل الفتح بساعة وعند الفتح. اتركه فارغًا ليفتح الآن.</p>
+            {opensError && <p role="alert" className="text-rose-300 font-bold">{opensError}</p>}
+          </div>
+        )}
+
         <button
           onClick={handleLaunch}
           disabled={!isAllReady || !canOperate || isLaunching}
@@ -215,7 +243,7 @@ export const LaunchGateManager: React.FC<LaunchGateManagerProps> = ({ collaborat
           }`}
         >
           {isLaunching ? <MajalLoader size={16} label="جاري تفعيل الإطلاق…" /> : isAllReady ? <BadgeCheck className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-          <span>{isLaunching ? 'جاري التفعيل…' : canOperate ? 'تحويل المنتج إلى الإطلاق الحي' : 'المشاهدة فقط حسب صلاحيتك'}</span>
+          <span>{isLaunching ? 'جاري التفعيل…' : canOperate ? (opensLocal ? 'جدولة فتح الإطلاق' : 'تحويل المنتج إلى الإطلاق الحي') : 'المشاهدة فقط حسب صلاحيتك'}</span>
         </button>
       </div>
       )}

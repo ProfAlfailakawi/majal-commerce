@@ -1696,6 +1696,20 @@ const migrations = [
         PRIMARY KEY(campaign_id, variant)
       );
     `
+  },
+  {
+    /*
+     * Scheduled launches: a launch may open at a future `starts_at`. The sweeper tells the
+     * waitlist and followers once an hour before and once at opening, claiming each step with a
+     * conditional update. Existing launches are backfilled as already announced, otherwise the
+     * first sweep after deploy would re-announce every past launch.
+     */
+    version: 30,
+    sql: `
+      ALTER TABLE launches ADD COLUMN opens_reminded_at TEXT;
+      ALTER TABLE launches ADD COLUMN open_notified_at TEXT;
+      UPDATE launches SET opens_reminded_at = COALESCE(starts_at, created_at), open_notified_at = COALESCE(starts_at, created_at);
+    `
   }
 ] as const;
 

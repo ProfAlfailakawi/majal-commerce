@@ -22,10 +22,10 @@ const text = (value: unknown, min: number, max: number) =>
   typeof value === 'string' && value.trim().length >= min && value.trim().length <= max ? value.trim() : undefined;
 const HOLDING_STATUSES = ['PENDING_PAYMENT', 'PAID', 'FULFILLED'];
 
-type LaunchRow = { id: string; collaboration_id: string; product_id: string; organization_id: string; status: string; quantity_cap: number | string | null };
+type LaunchRow = { id: string; collaboration_id: string; product_id: string; organization_id: string; status: string; quantity_cap: number | string | null; starts_at: string | null };
 
 async function launchById(db: MajalDatabase, id: string) {
-  return db.prepare('SELECT id, collaboration_id, product_id, organization_id, status, quantity_cap FROM launches WHERE id = ? LIMIT 1').get<LaunchRow>(id);
+  return db.prepare('SELECT id, collaboration_id, product_id, organization_id, status, quantity_cap, starts_at FROM launches WHERE id = ? LIMIT 1').get<LaunchRow>(id);
 }
 
 async function consumedUnits(db: MajalDatabase, launchId: string) {
@@ -205,6 +205,9 @@ export function createCommercePublicRouter(db: MajalDatabase) {
     const consumed = await consumedUnits(db, launch.id);
     res.json({
       launchId: launch.id,
+      // The server's own clock, so the countdown does not drift with the visitor's device clock.
+      startsAt: launch.starts_at ?? null,
+      serverNow: now(),
       unitPriceFils: offer ? Number(offer.selling_price_fils) : null,
       holdMinutes: PAYMENT_HOLD_MINUTES,
       quantityCap: cap,
