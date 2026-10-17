@@ -8,6 +8,8 @@ import { deleteEncryptedObject, getEncryptedJson, googleAccessToken, putEncrypte
 import { appendLedgerEntry } from './ledger';
 import { assertKillSwitchClear } from './kill-switch';
 import { reportError } from './observability';
+import { toLatinDigits } from './latin-digits';
+const toLatinDigitsOpt = (value: string | undefined) => (value === undefined ? undefined : toLatinDigits(value));
 
 const now = () => new Date().toISOString();
 const sha256 = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
@@ -637,7 +639,7 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
         .get<{id:string}>(req.auth!.user.creatorId, req.auth!.user.id);
       if (!ownedProfile) return jsonError(res, 409, 'ارتباط حساب المبدع غير صالح. أعد تسجيل الدخول.', 'CREATOR_IDENTITY_MISMATCH');
 
-      const publicName=text(req.body?.publicName,2,140), category=text(req.body?.category,2,80), description=text(req.body?.shortDescription,5,1500);
+      const publicName=toLatinDigitsOpt(text(req.body?.publicName,2,140)), category=text(req.body?.category,2,80), description=toLatinDigitsOpt(text(req.body?.shortDescription,5,1500));
       const internalName=text(req.body?.internalName,1,140) || publicName;
       const story=text(req.body?.story,0,4000) || '';
       const servingSize=text(req.body?.servingSize,0,120) || '';

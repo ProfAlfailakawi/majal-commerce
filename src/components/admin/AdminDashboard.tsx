@@ -36,16 +36,12 @@ import { SurfaceTabs } from '../common/SurfaceTabs';
 import { EcosystemApprovals } from './EcosystemApprovals';
 import { ShowcaseAdmin } from './ShowcaseAdmin';
 import { AudienceDashboard } from './AudienceDashboard';
-import { REFRESH_MS, useAutoRefresh } from '../../lib/autoRefresh';
-import { IS_DEMO_MODE } from '../../lib/runtime';
 
 const GRANTS_VISIBLE = 8;
 
 export const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'APPROVALS' | 'COMPLIANCE' | 'ACCESS' | 'AUDIENCE' | 'SETTLEMENTS' | 'RISK' | 'AUDIT'>('OVERVIEW');
   const [notice, setNotice] = useState<string | null>(null);
-  // The platform-wide figures come from the server snapshot; re-read it every minute (real mode only).
-  useAutoRefresh(() => { void store.hydrateFromServer(); }, REFRESH_MS, !IS_DEMO_MODE);
 
   const orderTotals = completedOrderTotals(store.orders);
   const totals = {
