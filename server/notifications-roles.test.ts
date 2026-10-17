@@ -58,6 +58,18 @@ test('each role is told only about its own events: jobs, supplier verification a
     assert.deepEqual(await inbox('seeker@n.test'), [], 'the applicant gets nothing');
     assert.deepEqual(await inbox('b@n.test'), [], 'another facility sees nothing');
 
+    // Supplier verification: admins are told of the request, the supplier of the decision, nobody else.
+    await createPublicRegistration(db, { name: 'مورد', email: 'sup@n.test', phone: '+96550000009', password, role: 'CONSUMER' }, { accountType: 'SUPPLIER', supplierCommercialName: 'مورد التغليف', supplierCategory: 'PACKAGING' });
+    const sup = await login('sup@n.test');
+    const submitted = await call(sup, 'POST', '/ecosystem/supplier/submit-verification', { commercialRegistrationNo: 'CR-12345' });
+    assert.equal(submitted.status, 200);
+    assert.ok((await inbox('admin@n.test')).includes('ADMIN_REVIEW|admin-pending:supplier-verification'));
+    assert.deepEqual(await inbox('sup@n.test'), [], 'the supplier is not told about their own request');
+    const supplierId = (await db.prepare("SELECT s.id FROM supplier_profiles s JOIN users u ON u.id=s.user_id WHERE u.email='sup@n.test'").get<{ id: string }>())!.id;
+    assert.equal((await call(admin, 'POST', `/ecosystem/admin/suppliers/${supplierId}/review`, { decision: 'VERIFIED' })).status, 200);
+    assert.deepEqual(await inbox('sup@n.test'), [`VERIFICATION|supplier-review:${supplierId}:VERIFIED`]);
+    assert.deepEqual(await inbox('b@n.test'), [], 'another facility sees nothing');
+
     // Team: the owner is told when a colleague joins; nobody else is.
     const token = randomBytes(24).toString('hex');
     await db.prepare('INSERT INTO organization_invites(id, organization_id, email, role, token_hash, invited_by_user_id, expires_at, created_at) VALUES(?,?,?,?,?,?,?,?)')

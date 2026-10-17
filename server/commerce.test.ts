@@ -212,6 +212,10 @@ test('a review requires a paid order that belongs to the reviewer, and only one 
     assert.equal(duplicate.status, 409);
     assert.equal((await duplicate.json() as { code: string }).code, 'REVIEW_ALREADY_EXISTS');
 
+    const told = await h.db.prepare("SELECT user_id FROM notification_inbox WHERE category='REVIEW' AND dedupe_key='review:lch_c'").all<{ user_id: string }>();
+    assert.equal(told.length, 1, 'the launch\'s stakeholders are told once');
+    const buyerId = (await h.db.prepare('SELECT id FROM users WHERE email=?').get<{ id: string }>('buyer6@commerce.test'))?.id;
+    assert.ok(!told.some(r => r.user_id === buyerId), 'the reviewer is never told about their own review');
     // The public summary exposes ratings but no reviewer identity.
     const publicView = await fetch(`${h.baseUrl}/api/v1/public/launches/lch_c/reviews`);
     const summary = await publicView.json() as { summary: { count: number; taste: number; keepItPercent: number }; reviews: Array<Record<string, unknown>> };
