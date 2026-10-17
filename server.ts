@@ -1,3 +1,4 @@
+import { directHostGuard } from './server/direct-host-guard';
 import express, { NextFunction, Request, Response } from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -331,6 +332,7 @@ async function startServer() {
   // per-client limiter into a single global bucket.
   const trustedProxyHops = resolveTrustProxyHops(process.env.TRUST_PROXY_HOPS, isProduction);
   app.set('trust proxy', trustedProxyHops);
+  app.use(directHostGuard());
   structuredLog('INFO', 'trust_proxy_configured', { hops: trustedProxyHops });
   app.use(requestTelemetry());
   app.use((req, res, next) => {
