@@ -106,3 +106,22 @@ TARGET_DATABASE_URL=postgresql://.../majal_restore \
   وحده حين يرجع.
 - الإقلاع لا ينتظر Redis أكثر من 5 ثوانٍ (`REDIS_CONNECT_TIMEOUT_MS`).
 - للتأكد بعد النشر، في السجلات: `"event":"rate_limit_store","backend":"redis"`.
+
+## قاعدة Neon المجانية: لا تُبقِها مستيقظة
+
+في 18 أكتوبر 2026 أُغلقت القاعدة بخطأ `53000 exceeded the quota` وتوقف الموقع (`DATABASE_STARTUP_FAILED`).
+السبب: مؤقّتات الخادم كانت تستعلم كل 5 ثوانٍ وكل دقيقة ليلاً ونهاراً، وفحص الصحة كل دقيقة يُبقي النسخة
+حيّة، فلا تنام Neon أبداً وتستهلك ساعات الحوسبة المجانية قبل نهاية الشهر.
+
+الإصلاح في `server/idle-aware.ts`: المؤقّتات بسرعتها المعتادة ما دام هناك زوّار حقيقيون
+(غير `/api/live|ready|health`)، وتتباطأ إلى مرّة كل 20 دقيقة حين لا زوّار، مع الاستيقاظ في موعد التذكير
+أو فتح الإطلاق المجدول بالضبط (`msUntilNextLaunchEvent`).
+
+قواعد: لا تضف `setInterval` يستعلم القاعدة؛ استخدم `startAdaptiveLoop`. ولا تجعل فحصاً دورياً يستعلم القاعدة.
+
+**تبديل القاعدة** (الرابط سرّ في Secret Manager، والمخطط يُنشأ وحده عند الإقلاع):
+
+```sh
+printf '%s' 'postgresql://…' | gcloud secrets versions add majal-DATABASE_URL --data-file=- --project tebyan-clean-2026-5f13b
+gcloud run services update majal-app --project tebyan-clean-2026-5f13b --region europe-west2 --update-env-vars REVISION_BUMP=$(date +%s)
+```
