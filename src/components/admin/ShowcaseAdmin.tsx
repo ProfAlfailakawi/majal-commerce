@@ -1,12 +1,26 @@
 import React, { FormEvent, useEffect, useState } from 'react';
 import { BadgeCheck, CalendarRange, Check, ClipboardCopy, ImagePlus, KeyRound, Megaphone, Truck, Pause, Play, Plus, RefreshCw, Store, Trash2, X } from 'lucide-react';
-import { createCampaign, fetchShowcaseOverview, removeCampaignImage, reviewBusiness, reviewDirectorySupplier, rotateReportLink, setCampaignStatus, uploadCampaignImage } from '../../lib/showcaseClient';
+import { createCampaign, fetchShowcaseOverview, removeCampaignImage, reviewBusiness, reviewDirectorySupplier, rotateReportLink, setCampaignStatus, setCampaignTargeting, uploadCampaignImage } from '../../lib/showcaseClient';
 import { upcomingSeasons } from '../../lib/adSeasons';
+import { AD_AUDIENCES, AD_AUDIENCE_LABEL, AD_TOPICS } from '../../lib/adAudience';
 import type { AdCampaign, AdSlot, BusinessListing, DirectorySupplier } from '../../types/majal';
 import { SECTORS, SUPPLIER_CATEGORIES } from '../showcase/sectors';
 
 const SLOTS: Record<AdSlot, string> = { SPONSOR: 'الراعي (حصري)', MARKET: 'السوق', PORTAL: 'بوابات الشركاء' };
 const STATUS: Record<string, string> = { PENDING_REVIEW: 'معلّق', APPROVED: 'معتمد', PAUSED: 'موقوف', REJECTED: 'مرفوض', SOLD: 'تم البيع' };
+/** Toggle chips for "who sees it" (none selected = everyone) and "which category pages". */
+const TargetChips: React.FC<{ audiences: string[]; topics: string[]; disabled?: boolean; onChange: (audiences: string[], topics: string[]) => void }> = ({ audiences, topics, disabled, onChange }) => {
+  const flip = (list: string[], v: string) => (list.includes(v) ? list.filter(x => x !== v) : [...list, v]);
+  const chip = (on: boolean) => `px-2.5 py-1 rounded-full text-xs border transition disabled:opacity-50 ${on ? 'bg-gold-500 text-slate-950 border-gold-300 font-black' : 'bg-white/5 border-white/10 text-slate-300'}`;
+  return (
+    <div className="space-y-2 text-xs">
+      <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="الجمهور"><span className="text-slate-400 me-1">يراه:</span>{audiences.length === 0 && <span className="text-emerald-300">الجميع</span>}
+        {AD_AUDIENCES.map(a => <button type="button" key={a} disabled={disabled} aria-pressed={audiences.includes(a)} onClick={() => onChange(flip(audiences, a), topics)} className={chip(audiences.includes(a))}>{AD_AUDIENCE_LABEL[a]}</button>)}</div>
+      <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="الاهتمام"><span className="text-slate-400 me-1">يتبع صفحات:</span>{topics.length === 0 && <span className="text-emerald-300">أي فئة</span>}
+        {AD_TOPICS.map(t => <button type="button" key={t} disabled={disabled} aria-pressed={topics.includes(t)} onClick={() => onChange(audiences, flip(topics, t))} className={chip(topics.includes(t))}>{t}</button>)}</div>
+    </div>
+  );
+};
 const kuwaitDay = () => new Date(Date.now() + 3 * 3_600_000).toISOString().slice(0, 10);
 const field = 'w-full glass-input rounded-xl px-3 py-2.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300';
 
@@ -16,7 +30,7 @@ export const ShowcaseAdmin: React.FC = () => {
   const [suppliers, setSuppliers] = useState<DirectorySupplier[]>([]);
   const [loading, setLoading] = useState(true), [error, setError] = useState(''), [busy, setBusy] = useState(''), [notice, setNotice] = useState('');
   const [dates, setDates] = useState<Record<string, { s: string; e: string }>>({});
-  const [draft, setDraft] = useState({ company: '', headline: '', tagline: '', linkUrl: 'https://', slot: 'MARKET' as AdSlot, startsOn: '', endsOn: '' });
+  const [draft, setDraft] = useState({ company: '', headline: '', tagline: '', linkUrl: 'https://', slot: 'MARKET' as AdSlot, startsOn: '', endsOn: '', audiences: [] as string[], topics: [] as string[] });
   const load = () => { setLoading(true); fetchShowcaseOverview().then(r => { setListings(r.listings); setCampaigns(r.campaigns); setSuppliers(r.suppliers ?? []); setError(''); }).catch(e => setError(e instanceof Error ? e.message : 'تعذّر التحميل.')).finally(() => setLoading(false)); };
   useEffect(load, []);
   const run = async (key: string, job: () => Promise<unknown>, ok = '') => {
@@ -26,7 +40,7 @@ export const ShowcaseAdmin: React.FC = () => {
   const create = (e: FormEvent) => {
     e.preventDefault();
     void run('create', async () => {
-      const r = await createCampaign({ company: draft.company, headline: draft.headline, tagline: draft.tagline, linkUrl: draft.linkUrl, slot: draft.slot, startsOn: draft.startsOn || null, endsOn: draft.endsOn || null });
+      const r = await createCampaign({ company: draft.company, headline: draft.headline, tagline: draft.tagline, linkUrl: draft.linkUrl, slot: draft.slot, startsOn: draft.startsOn || null, endsOn: draft.endsOn || null, audiences: draft.audiences, topics: draft.topics });
       setNotice(`أُنشئت الحملة كمعلّقة. رابط تقرير الشركة (يظهر مرة واحدة): ${window.location.origin}/?ad-report=${r.reportToken}`);
       setDraft(d => ({ ...d, company: '', headline: '', tagline: '', linkUrl: 'https://' }));
     });
@@ -90,6 +104,7 @@ export const ShowcaseAdmin: React.FC = () => {
               <input required type="url" dir="ltr" aria-label="الرابط" value={draft.linkUrl} onChange={e => setDraft({ ...draft, linkUrl: e.target.value })} className={field} />
               <div className="flex flex-wrap items-center gap-1.5" aria-label="مواسم جاهزة"><CalendarRange className="w-4 h-4 text-gold-300" aria-hidden="true" />{seasons.map(s => <button type="button" key={s.key} onClick={() => setDraft(d => ({ ...d, startsOn: s.startsOn, endsOn: s.endsOn }))} title={`${s.startsOn} → ${s.endsOn}`} className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs hover:border-gold-300/40">{s.label}{s.active ? ' (جارٍ)' : ''}</button>)}</div>
               <div className="grid grid-cols-2 gap-2"><label className="text-xs text-slate-400 space-y-1"><span>من</span><input type="date" value={draft.startsOn} onChange={e => setDraft({ ...draft, startsOn: e.target.value })} className={field} /></label><label className="text-xs text-slate-400 space-y-1"><span>إلى</span><input type="date" value={draft.endsOn} onChange={e => setDraft({ ...draft, endsOn: e.target.value })} className={field} /></label></div>
+              <TargetChips audiences={draft.audiences} topics={draft.topics} onChange={(audiences, topics) => setDraft(d => ({ ...d, audiences, topics }))} />
               <button disabled={busy === 'create'} className="w-full py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black disabled:opacity-50">إنشاء</button>
             </form>
             {campaigns.map(c => {
@@ -99,6 +114,7 @@ export const ShowcaseAdmin: React.FC = () => {
                   <div className="flex justify-between gap-3"><div className="min-w-0"><div className="text-xs text-gold-300 font-black">{c.company} · {SLOTS[c.slot]}</div><h4 className="font-black mt-1">{c.headline}</h4></div><span className={`text-xs px-2 py-1 rounded-full h-fit shrink-0 whitespace-nowrap ${c.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-300' : c.status === 'PENDING_REVIEW' ? 'bg-amber-500/10 text-amber-300' : 'bg-white/10 text-slate-300'}`}>{STATUS[c.status]}</span></div>
                   <div className="text-xs text-slate-400" dir="ltr">{c.linkUrl}</div>
                   <div className="text-xs text-slate-300">ظهور {c.impressions.toLocaleString('ar-EG')} · نقرات {c.clicks.toLocaleString('ar-EG')}{c.contactPhone ? ` · ${c.contactPhone}` : ''}</div>
+                  <TargetChips audiences={c.audiences ?? []} topics={c.topics ?? []} disabled={busy === c.id} onChange={(audiences, topics) => void run(c.id, async () => { const r = await setCampaignTargeting(c.id, audiences, topics); if (r.pausedForReview) setNotice('توسيع الجمهور أعاد الحملة إلى الإيقاف لإعادة الاعتماد.'); })} />
                   <div className="grid grid-cols-2 gap-2"><input type="date" aria-label="من" value={d.s} onChange={e => setDates({ ...dates, [c.id]: { ...d, s: e.target.value } })} className={field} /><input type="date" aria-label="إلى" value={d.e} onChange={e => setDates({ ...dates, [c.id]: { ...d, e: e.target.value } })} className={field} /></div>
                   <div className="flex flex-wrap gap-2 text-xs">
                     <label className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 font-black inline-flex items-center gap-1.5 cursor-pointer focus-within:ring-2 focus-within:ring-gold-300"><ImagePlus className="w-3.5 h-3.5" aria-hidden="true" />{c.hasImage ? 'استبدال الصورة' : 'رفع صورة'}<input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" disabled={busy === c.id} onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void run(c.id, () => uploadCampaignImage(c.id, f), 'رُفعت الصورة.'); }} /></label>

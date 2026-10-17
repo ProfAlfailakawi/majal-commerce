@@ -64,6 +64,12 @@ export default function App() {
   const [adReportToken, setAdReportToken] = useState<string | null>(() => new URLSearchParams(window.location.search).get('ad-report'));
   const [inviteToken, setInviteToken] = useState<string | null>(() => new URLSearchParams(window.location.search).get('invite'));
   const closeInvite = () => { window.history.replaceState(null, '', '/'); setInviteToken(null); };
+  // House cards and other in-page promos ask the app to change surface without owning its state.
+  useEffect(() => {
+    const go = (event: Event) => { const target = (event as CustomEvent<SurfaceType>).detail; if (target) handleSurfaceChange(target); };
+    window.addEventListener('majal:navigate', go);
+    return () => window.removeEventListener('majal:navigate', go);
+  });
   const closeAdReport = () => { window.history.replaceState(null, '', '/'); setAdReportToken(null); };
   const [legalDocument, setLegalDocument] = useState<LegalDocumentId | null>(() => legalDocumentFromPath(window.location.pathname));
 

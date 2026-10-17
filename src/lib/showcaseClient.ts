@@ -35,19 +35,20 @@ export const submitBusiness = (input: BusinessSubmission): Promise<{ id: string;
   IS_DEMO_MODE ? demoShowcase.submitBusiness(input as never) : request('/businesses', { method: 'POST', body: JSON.stringify(input) });
 export const requestAdSlot = (input: AdRequest): Promise<{ id: string; reportToken: string; message: string }> =>
   IS_DEMO_MODE ? demoShowcase.requestAd(input) : request('/ads/requests', { method: 'POST', body: JSON.stringify(input) });
-export const fetchAds = (slot: AdSlot): Promise<{ ads: PublicAd[] }> => IS_DEMO_MODE ? demoShowcase.serve(slot) : request(`/ads/serve?slot=${slot}`);
-export const reportAdImpression = (id: string) => {
+export const fetchAds = (slot: AdSlot, audience: string = 'VISITOR', topic?: string): Promise<{ ads: PublicAd[] }> =>
+  IS_DEMO_MODE ? demoShowcase.serve(slot, audience, topic) : request(`/ads/serve?slot=${slot}&audience=${encodeURIComponent(audience)}${topic ? `&topic=${encodeURIComponent(topic)}` : ''}`);
+export const reportAdImpression = (id: string, audience: string = 'VISITOR') => {
   if (IS_DEMO_MODE) return demoShowcase.event(id, 'impression');
-  void fetch('/api/v1/showcase/ads/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, type: 'impression' }), keepalive: true }).catch(() => undefined);
+  void fetch('/api/v1/showcase/ads/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, type: 'impression', audience }), keepalive: true }).catch(() => undefined);
 };
 /** Clicks go through the server so they are counted and the target is the approved link. */
-export const adClickHref = (id: string, demo = IS_DEMO_MODE) => (demo ? 'https://example.com/demo' : `/api/v1/showcase/ads/click/${encodeURIComponent(id)}`);
+export const adClickHref = (id: string, audience: string = 'VISITOR', demo = IS_DEMO_MODE) => (demo ? 'https://example.com/demo' : `/api/v1/showcase/ads/click/${encodeURIComponent(id)}?a=${encodeURIComponent(audience)}`);
 export const noteDemoAdClick = (id: string) => { if (IS_DEMO_MODE) demoShowcase.event(id, 'click'); };
 
 export const fetchAdReport = (token: string): Promise<AdReport> => request(`/ads/report/${encodeURIComponent(token)}`);
 export interface AdReport {
   campaign: { company: string; headline: string; slot: AdSlot; status: string; startsOn: string | null; endsOn: string | null };
-  totals: { impressions: number; clicks: number }; ctr: number; days: { day: string; impressions: number; clicks: number }[]; note: string;
+  totals: { impressions: number; clicks: number }; audiences?: { audience: string; impressions: number; clicks: number }[]; ctr: number; days: { day: string; impressions: number; clicks: number }[]; note: string;
 }
 
 export const fetchShowcaseOverview = (): Promise<{ listings: BusinessListing[]; campaigns: AdCampaign[]; suppliers: DirectorySupplier[] }> => IS_DEMO_MODE ? demoShowcase.overview() : request('/admin/overview');
@@ -55,7 +56,7 @@ export const reviewBusiness = (id: string, decision: 'APPROVED' | 'REJECTED' | '
   IS_DEMO_MODE ? demoShowcase.reviewBusiness(id, decision, adminNote) : request(`/admin/businesses/${encodeURIComponent(id)}/review`, { method: 'POST', body: JSON.stringify({ decision, adminNote }) });
 export const setCampaignStatus = (id: string, status: 'APPROVED' | 'PAUSED' | 'REJECTED', dates: { startsOn?: string | null; endsOn?: string | null } = {}): Promise<{ campaign: AdCampaign }> =>
   IS_DEMO_MODE ? demoShowcase.setCampaignStatus(id, status, dates) : request(`/admin/campaigns/${encodeURIComponent(id)}/status`, { method: 'POST', body: JSON.stringify({ status, ...dates }) });
-export const createCampaign = (input: { company: string; headline: string; tagline?: string; linkUrl: string; slot: AdSlot; accent?: string; icon?: string; contactPhone?: string; startsOn?: string | null; endsOn?: string | null }): Promise<{ campaign: AdCampaign; reportToken: string }> =>
+export const createCampaign = (input: { company: string; headline: string; tagline?: string; linkUrl: string; slot: AdSlot; accent?: string; icon?: string; contactPhone?: string; startsOn?: string | null; endsOn?: string | null; audiences?: string[]; topics?: string[] }): Promise<{ campaign: AdCampaign; reportToken: string }> =>
   IS_DEMO_MODE ? demoShowcase.requestAd({ ...input, contactPhone: input.contactPhone || '' }).then(r => ({ campaign: {} as AdCampaign, reportToken: r.reportToken })) : request('/admin/campaigns', { method: 'POST', body: JSON.stringify(input) });
 
 /** Image creative: PNG/JPEG/WebP, ≤ 300 KB. The server sniffs the real type and size. */
@@ -83,3 +84,5 @@ export const submitDirectorySupplier = (input: SupplierSubmission): Promise<{ id
   IS_DEMO_MODE ? demoShowcase.submitSupplier(input as never) : request('/suppliers', { method: 'POST', body: JSON.stringify(input) });
 export const reviewDirectorySupplier = (id: string, decision: 'APPROVED' | 'REJECTED', adminNote = ''): Promise<{ supplier: DirectorySupplier }> =>
   IS_DEMO_MODE ? demoShowcase.reviewSupplier(id, decision, adminNote) : request(`/admin/suppliers/${encodeURIComponent(id)}/review`, { method: 'POST', body: JSON.stringify({ decision, adminNote }) });
+export const setCampaignTargeting = (id: string, audiences: string[], topics: string[]): Promise<{ campaign: AdCampaign; pausedForReview: boolean }> =>
+  IS_DEMO_MODE ? demoShowcase.setTargeting(id, audiences, topics) : request(`/admin/campaigns/${encodeURIComponent(id)}/targeting`, { method: 'POST', body: JSON.stringify({ audiences, topics }) });

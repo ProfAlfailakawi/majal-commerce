@@ -1,5 +1,5 @@
 import React, { FormEvent, useCallback, useEffect, useState } from 'react';
-import { Check, Copy, Link2, Pause, Play, Trash2, UserPlus, X } from 'lucide-react';
+import { Check, Copy, Link2, MessageCircle, Pause, Play, Trash2, UserPlus, X } from 'lucide-react';
 import { roleLabel } from '../../lib/permissions';
 import { changeTeamMember, fetchTeam, inviteTeamMember, removeTeamMember, revokeTeamInvite, TEAM_ROLES, type TeamOverview, type TeamRole } from '../../lib/teamClient';
 import type { UserRole } from '../../types/majal';
@@ -45,7 +45,10 @@ export const TeamManager: React.FC = () => {
         <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/[0.06] p-4 space-y-2">
           <div className="text-xs font-black text-emerald-200 flex items-center gap-1.5"><Link2 className="w-4 h-4" aria-hidden="true" />رابط الدعوة — يظهر مرة واحدة، أرسله لزميلك (واتساب مثلًا)</div>
           <div dir="ltr" className="text-xs break-all text-slate-200 select-all">{link}</div>
-          <button type="button" onClick={copy} className="px-3 py-2 rounded-lg bg-white/10 text-xs font-black inline-flex items-center gap-1.5">{copied ? <Check className="w-3.5 h-3.5" aria-hidden="true" /> : <Copy className="w-3.5 h-3.5" aria-hidden="true" />}{copied ? 'نُسخ' : 'نسخ الرابط'}</button>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={copy} className="px-3 py-2 rounded-lg bg-white/10 text-xs font-black inline-flex items-center gap-1.5">{copied ? <Check className="w-3.5 h-3.5" aria-hidden="true" /> : <Copy className="w-3.5 h-3.5" aria-hidden="true" />}{copied ? 'نُسخ' : 'نسخ الرابط'}</button>
+            <a href={`https://wa.me/?text=${encodeURIComponent(`دعوة للانضمام إلى فريقنا في مجال. فعّل حسابك من هنا (الرابط لمرة واحدة وصالح ٧ أيام): ${link}`)}`} target="_blank" rel="noopener noreferrer" className="px-3 py-2 rounded-lg bg-emerald-400 text-slate-950 text-xs font-black inline-flex items-center gap-1.5"><MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />إرسال عبر واتساب</a>
+          </div>
         </div>
       )}
 

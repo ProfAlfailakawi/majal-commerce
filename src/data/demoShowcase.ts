@@ -5,7 +5,7 @@
  */
 import type { AdCampaign, AdSlot, BusinessListing, DirectorySupplier, PublicAd } from '../types/majal';
 
-export const DEMO_SHOWCASE_STORAGE_KEY = 'majal_demo_showcase_v2';
+export const DEMO_SHOWCASE_STORAGE_KEY = 'majal_demo_showcase_v3';
 
 interface DemoShowcaseState { listings: BusinessListing[]; campaigns: AdCampaign[]; suppliers: DirectorySupplier[] }
 
@@ -17,8 +17,8 @@ export function buildDemoShowcase(): DemoShowcaseState {
     id, title, sector, city, summary, highlights, includes, askingPriceKwd, revenueBand, yearsOperating, reason, contactPublic,
     contactPhone: '+96550001234', sellerName: 'بائع تجريبي', status, submittedAt: ago(age), adminNote
   });
-  const c = (id: string, company: string, headline: string, tagline: string, slot: AdSlot, accent: PublicAd['accent'], icon: string, status: AdCampaign['status'], impressions: number, clicks: number, startsOn: string | null = null, endsOn: string | null = null): AdCampaign => ({
-    id, company, headline, tagline, slot, accent, icon, linkUrl: 'https://example.com/demo', status, startsOn, endsOn, createdAt: ago(10), impressions, clicks, contactPhone: '+96550002222'
+  const c = (id: string, company: string, headline: string, tagline: string, slot: AdSlot, accent: PublicAd['accent'], icon: string, status: AdCampaign['status'], impressions: number, clicks: number, startsOn: string | null = null, endsOn: string | null = null, audiences: string[] = [], topics: string[] = []): AdCampaign => ({
+    id, company, headline, tagline, slot, accent, icon, linkUrl: 'https://example.com/demo', status, startsOn, endsOn, createdAt: ago(10), impressions, clicks, contactPhone: '+96550002222', audiences, topics
   });
   const d = (id: string, name: string, category: DirectorySupplier['category'], region: string, description: string, products: string[], minOrder: string, delivers: boolean, status: DirectorySupplier['status'], age: number, contactPublic = true): DirectorySupplier => ({
     id, name, category, region, description, products, minOrder, delivers, contactPublic, contactPhone: '+96560001234', contactName: 'مسؤول تجريبي', status, submittedAt: ago(age)
@@ -46,9 +46,9 @@ export function buildDemoShowcase(): DemoShowcaseState {
     ],
     campaigns: [
       c('ad_demo_1', 'الخليج للتغليف', 'علب أنيقة لمنتجك الغذائي', 'تغليف مخصص بكميات صغيرة للمشاريع الناشئة', 'SPONSOR', 'gold', 'package', 'APPROVED', 4210, 188, dayFrom(-20), dayFrom(40)),
-      c('ad_demo_2', 'دفعتي', 'اقبل الدفع الإلكتروني في دقائق', 'حلول دفع لأصحاب المشاريع الصغيرة', 'MARKET', 'sky', 'credit-card', 'APPROVED', 3120, 96, dayFrom(-12), dayFrom(30)),
+      c('ad_demo_2', 'دفعتي', 'اقبل الدفع الإلكتروني في دقائق', 'حلول دفع لأصحاب المشاريع الصغيرة', 'MARKET', 'sky', 'credit-card', 'APPROVED', 3120, 96, dayFrom(-12), dayFrom(30), ['VISITOR', 'HOST', 'CREATOR']),
       c('ad_demo_3', 'توصيلة', 'توصيل سريع لطلبات مشروعك', 'مناديب موثوقون في كل مناطق الكويت', 'MARKET', 'emerald', 'truck', 'APPROVED', 2740, 131, dayFrom(-8), dayFrom(50)),
-      c('ad_demo_4', 'مطبعة الرقعي', 'ملصقات ومطبوعات بجودة عالية', 'ملصقات منتجات وبطاقات شكر', 'PORTAL', 'rose', 'printer', 'APPROVED', 1480, 52, dayFrom(-3), dayFrom(60)),
+      c('ad_demo_4', 'مطبعة الرقعي', 'ملصقات ومطبوعات بجودة عالية', 'ملصقات منتجات وبطاقات شكر', 'PORTAL', 'rose', 'printer', 'APPROVED', 1480, 52, dayFrom(-3), dayFrom(60), ['CREATOR', 'HOST']),
       c('ad_demo_5', 'بهارات المباركية', 'بهارات طازجة لمطبخك', 'هيل وزعفران بشهادة مصدر', 'PORTAL', 'violet', 'leaf', 'APPROVED', 1190, 47, dayFrom(-1), dayFrom(25)),
       c('ad_demo_6', 'ستوديو لقطة', 'تصوير منتجات يبيع', 'جلسات تصوير للمشاريع الغذائية', 'MARKET', 'gold', 'sparkles', 'PENDING_REVIEW', 0, 0),
     ],
@@ -85,8 +85,10 @@ export const demoShowcase = {
     commit();
     return delay({ id: 'demo', message: 'وصل طلبك. لن يظهر للجمهور قبل مراجعة الإدارة، وهي خدمة مجانية.' });
   },
-  serve(slot: AdSlot) {
-    return delay({ ads: current().campaigns.filter(a => a.slot === slot && live(a)).slice(0, SLOT_CAPACITY[slot]).map(({ id, company, headline, tagline, slot: s, accent, icon }) => ({ id, company, headline, tagline, slot: s, accent, icon })) });
+  serve(slot: AdSlot, audience = 'VISITOR', topic?: string) {
+    const tier = (a: AdCampaign) => (!topic || !a.topics?.length ? 1 : a.topics.includes(topic) ? 0 : 2);
+    const fit = current().campaigns.filter(a => a.slot === slot && live(a) && (!a.audiences?.length || a.audiences.includes(audience))).sort((a, b) => tier(a) - tier(b) || a.impressions - b.impressions);
+    return delay({ ads: fit.slice(0, SLOT_CAPACITY[slot]).map(({ id, company, headline, tagline, slot: s, accent, icon }) => ({ id, company, headline, tagline, slot: s, accent, icon })) });
   },
   event(id: string, type: 'impression' | 'click') {
     const ad = current().campaigns.find(a => a.id === id);
@@ -126,12 +128,20 @@ export const demoShowcase = {
     Object.assign(row, { status: decision, adminNote: adminNote || undefined }); commit();
     return delay({ listing: row });
   },
+  setTargeting(id: string, audiences: string[], topics: string[]) {
+    const ad = current().campaigns.find(x => x.id === id);
+    if (!ad) return Promise.reject(new Error('الحملة غير موجودة.'));
+    const old = ad.audiences ?? [];
+    const widened = ad.status === 'APPROVED' && (!audiences.length ? old.length > 0 : audiences.some(a => old.length > 0 && !old.includes(a)));
+    Object.assign(ad, { audiences, topics, status: widened ? 'PAUSED' : ad.status }); commit();
+    return delay({ campaign: ad, pausedForReview: widened });
+  },
   setCampaignStatus(id: string, status: 'APPROVED' | 'PAUSED' | 'REJECTED', dates: { startsOn?: string | null; endsOn?: string | null } = {}) {
     const s = current(); const ad = s.campaigns.find(x => x.id === id);
     if (!ad) return Promise.reject(new Error('الحملة غير موجودة.'));
     const startsOn = dates.startsOn === undefined ? ad.startsOn : dates.startsOn, endsOn = dates.endsOn === undefined ? ad.endsOn : dates.endsOn;
     if (status === 'APPROVED') {
-      const clashes = s.campaigns.filter(o => o.id !== id && o.slot === ad.slot && o.status === 'APPROVED' && (!o.endsOn || !startsOn || o.endsOn >= startsOn) && (!endsOn || !o.startsOn || endsOn >= o.startsOn)).length;
+      const clashes = s.campaigns.filter(o => o.id !== id && o.slot === ad.slot && o.status === 'APPROVED' && (!o.endsOn || !startsOn || o.endsOn >= startsOn) && (!endsOn || !o.startsOn || endsOn >= o.startsOn) && (!o.audiences?.length || !ad.audiences?.length || o.audiences.some(a => ad.audiences!.includes(a)))).length;
       if (clashes >= SLOT_CAPACITY[ad.slot]) return Promise.reject(new Error(ad.slot === 'SPONSOR' ? 'موقع الراعي حصري وفيه حملة معتمدة في هذه الفترة.' : 'امتلأ هذا الموقع في الفترة المحددة.'));
     }
     Object.assign(ad, { status, startsOn, endsOn }); commit();

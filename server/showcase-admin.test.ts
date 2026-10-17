@@ -185,3 +185,62 @@ test('facility team: owner invites, role changes revoke sessions, tenants stay i
     assert.equal((await h.db.prepare('SELECT COUNT(*) AS n FROM organization_memberships WHERE user_id = ?').get<{ n: number }>(finance.userId))?.n, 0);
   } finally { await h.close(); }
 });
+
+test('smart serving: role targeting, topic priority, even pacing, per-audience capacity and reports', async () => {
+  const h = await harness();
+  try {
+    await createUser(h.db, { name: 'Admin', email: 'admin@smart.test', password, role: 'ADMIN' });
+    const admin = await h.login('admin@smart.test');
+    const make = async (n: number, slot: string, extra: object = {}) => {
+      const r = await h.call(admin, 'POST', '/showcase/admin/campaigns', { ...campaign(n, slot), ...extra });
+      assert.equal(r.status, 201); return await r.json() as { campaign: { id: string }; reportToken: string };
+    };
+    const approve = (id: string, extra: object = {}) => h.call(admin, 'POST', `/showcase/admin/campaigns/${id}/status`, { status: 'APPROVED', ...extra });
+    const serve = async (slot: string, query = '') => ((await (await fetch(`${h.base}/showcase/ads/serve?slot=${slot}${query}`)).json()).ads as { id: string; company: string }[]);
+
+    // Disjoint audiences share an "exclusive" slot; an overlapping one does not.
+    const forHosts = await make(1, 'SPONSOR', { audiences: ['HOST'] });
+    const forCreators = await make(2, 'SPONSOR', { audiences: ['CREATOR'] });
+    const forEveryone = await make(3, 'SPONSOR');
+    assert.equal((await approve(forHosts.campaign.id)).status, 200);
+    assert.equal((await approve(forCreators.campaign.id)).status, 200, 'different audiences do not compete');
+    assert.equal((await approve(forEveryone.campaign.id)).status, 409, 'a campaign for everyone overlaps both');
+    assert.deepEqual((await serve('SPONSOR', '&audience=host')).map(a => a.company), ['شركة 1']);
+    assert.deepEqual((await serve('SPONSOR', '&audience=CREATOR')).map(a => a.company), ['شركة 2']);
+    assert.deepEqual(await serve('SPONSOR', '&audience=CONSUMER'), [], 'nobody targeted shoppers');
+    assert.deepEqual(await serve('SPONSOR'), [], 'no audience means a plain visitor');
+    assert.deepEqual(await serve('SPONSOR', '&audience=HACKER'), [], 'unknown roles fall back to visitor');
+
+    // Narrowing is free; widening an approved campaign sends it back to review.
+    const narrowed = await (await h.call(admin, 'POST', `/showcase/admin/campaigns/${forHosts.campaign.id}/targeting`, { audiences: ['HOST'], topics: ['حلويات'] })).json();
+    assert.equal(narrowed.pausedForReview, false);
+    const widened = await (await h.call(admin, 'POST', `/showcase/admin/campaigns/${forCreators.campaign.id}/targeting`, { audiences: ['CREATOR', 'HOST'] })).json();
+    assert.equal(widened.pausedForReview, true);
+    assert.equal(widened.campaign.status, 'PAUSED');
+    assert.deepEqual(widened.campaign.audiences, ['CREATOR', 'HOST']);
+    assert.equal((await approve(forCreators.campaign.id)).status, 409, 'now it overlaps the host campaign');
+    // Junk in targeting is dropped, not stored.
+    const junk = await (await h.call(admin, 'POST', `/showcase/admin/campaigns/${forCreators.campaign.id}/targeting`, { audiences: ['CREATOR', 'ADMIN', 7], topics: ['x'] })).json();
+    assert.deepEqual([junk.campaign.audiences, junk.campaign.topics], [['CREATOR'], []]);
+
+    // Market (3 slots): topic match first, neutral next, mismatched last; ties go to the least shown today.
+    const m1 = await make(11, 'MARKET'), m2 = await make(12, 'MARKET', { topics: ['مخبوزات'] }), m3 = await make(13, 'MARKET', { topics: ['حلويات'] });
+    for (const m of [m1, m2, m3]) assert.equal((await approve(m.campaign.id)).status, 200);
+    assert.deepEqual((await serve('MARKET', `&topic=${encodeURIComponent('حلويات')}`)).map(a => a.company), ['شركة 13', 'شركة 11', 'شركة 12']);
+    assert.deepEqual((await serve('MARKET', `&topic=${encodeURIComponent('مخبوزات')}`)).map(a => a.company), ['شركة 12', 'شركة 11', 'شركة 13']);
+    assert.equal((await serve('MARKET', `&topic=${encodeURIComponent('غير معروف')}`)).length, 3, 'an unknown topic is ignored');
+
+    // Pacing: with capacity trimmed, the least-shown neutral campaign leads the next rotation.
+    const p1 = await make(21, 'PORTAL'), p2 = await make(22, 'PORTAL');
+    await approve(p1.campaign.id); await approve(p2.campaign.id);
+    for (let i = 0; i < 3; i++) await fetch(`${h.base}/showcase/ads/event`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: p1.campaign.id, type: 'impression', audience: 'HOST' }) });
+    assert.equal((await serve('PORTAL', '&audience=HOST'))[0].company, 'شركة 22', 'the under-delivered campaign goes first');
+
+    // The company sees which roles saw its ad.
+    await fetch(`${h.base}/showcase/ads/event`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: p1.campaign.id, type: 'impression', audience: 'creator' }) });
+    await fetch(`${h.base}/showcase/ads/click/${p1.campaign.id}?a=HOST`, { redirect: 'manual' });
+    const report = await (await fetch(`${h.base}/showcase/ads/report/${p1.reportToken}`)).json();
+    assert.deepEqual(report.audiences.map((a: { audience: string; impressions: number; clicks: number }) => [a.audience, a.impressions, a.clicks]).sort(), [['CREATOR', 1, 0], ['HOST', 3, 1]]);
+    assert.equal(report.totals.impressions, 4);
+  } finally { await h.close(); }
+});

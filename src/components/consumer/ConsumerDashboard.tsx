@@ -253,7 +253,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
         ].map((item, idx) => <div key={idx} className="glass-card rounded-2xl p-4 sm:p-5 border border-white/10"><div className="flex items-center gap-3 sm:block"><span className="shrink-0">{item.icon}</span><h3 className="font-black sm:mt-4">{item.title}</h3></div><p className="text-xs text-slate-400 leading-6 mt-2">{item.text}</p></div>)}
       </section>
 
-      <AdSlot slot="MARKET" />
+      <AdSlot slot="MARKET" topic={featuredProduct?.category} />
 
       <KuwaitiJobs />
 
