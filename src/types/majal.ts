@@ -688,6 +688,8 @@ export interface PublicAd {
   icon: string;
   /** True when an approved creative image exists at /api/v1/showcase/promo/img/:id. */
   hasImage?: boolean;
+  /** Present only while an A/B test runs: which wording this impression shows. */
+  variant?: 'A' | 'B';
 }
 
 export interface AdCampaign extends PublicAd {
@@ -708,6 +710,8 @@ export interface AdCampaign extends PublicAd {
   priceKwd?: number | null;
   paidAt?: string | null;
   billingNote?: string;
+  /** A/B test of a second headline; recommendation only. */
+  variants?: AdVariants;
   phase?: 'pending' | 'scheduled' | 'live' | 'ended' | 'inactive';
   daysLeft?: number | null;
   /** Viewer roles it is shown to (empty = everyone) and marketplace categories it follows (empty = any). */
@@ -737,4 +741,10 @@ export interface DirectorySupplier {
   submittedAt: string;
   /** Set on cards that come from a verified supplier account rather than the free directory. */
   verified?: boolean;
+}
+
+export interface AdVariants {
+  headlineA: string; taglineA: string; headlineB: string; taglineB: string;
+  A: { impressions: number; clicks: number }; B: { impressions: number; clicks: number };
+  verdict: { state: 'not_enough_data'; needed: number } | { state: 'no_difference'; zScore: number } | { state: 'winner'; winner: 'A' | 'B'; liftPercent: number; zScore: number };
 }

@@ -3,11 +3,14 @@
  * sessionStorage like the rest of the demo so an approval made as admin is visible to the
  * public gate straight away. Every company, person and number here is invented.
  */
-import type { AdCampaign, AdSlot, BusinessListing, DirectorySupplier, PublicAd } from '../types/majal';
+import type { AdCampaign, AdSlot, AdVariants, BusinessListing, DirectorySupplier, PublicAd } from '../types/majal';
+import { abVerdict } from '../lib/abTest';
 
-export const DEMO_SHOWCASE_STORAGE_KEY = 'majal_demo_showcase_v5';
+export const DEMO_SHOWCASE_STORAGE_KEY = 'majal_demo_showcase_v6';
 
-interface DemoShowcaseState { listings: BusinessListing[]; campaigns: AdCampaign[]; suppliers: DirectorySupplier[] }
+/** Demo-only bookkeeping for the A/B test of one campaign. */
+interface DemoTest { bHeadline: string; bTagline: string; A: { impressions: number; clicks: number }; B: { impressions: number; clicks: number } }
+interface DemoShowcaseState { tests?: Record<string, DemoTest>; listings: BusinessListing[]; campaigns: AdCampaign[]; suppliers: DirectorySupplier[] }
 
 const ago = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
 const dayFrom = (offset: number) => new Date(Date.now() + 3 * 3_600_000 + offset * 86_400_000).toISOString().slice(0, 10);
@@ -26,6 +29,7 @@ export function buildDemoShowcase(): DemoShowcaseState {
     id, name, category, region, description, products, minOrder, delivers, contactPublic, contactPhone: '+96560001234', contactName: 'مسؤول تجريبي', status, submittedAt: ago(age)
   });
   return {
+    tests: { ad_demo_2: { bHeadline: 'ابدأ قبول الدفع الإلكتروني اليوم', bTagline: 'تفعيل خلال ٢٤ ساعة', A: { impressions: 1840, clicks: 61 }, B: { impressions: 1795, clicks: 104 } } },
     suppliers: [
       d('sdir_demo_1', 'الندى للتغليف الغذائي', 'PACKAGING', 'الري', 'علب وأكياس وأغطية للأغذية بكميات صغيرة للمشاريع الناشئة وطباعة اسم المشروع.', ['علب كرتون', 'أكياس ورقية', 'أغطية'], '٢٠٠ قطعة', true, 'APPROVED', 5),
       d('sdir_demo_2', 'بهارات الديرة', 'SPICES', 'المباركية', 'بهارات مطحونة طازجة وخلطات كويتية جاهزة بشهادة مصدر لكل دفعة.', ['هيل', 'زعفران', 'خلطة مجبوس'], '١ كغ', true, 'APPROVED', 7),
@@ -80,6 +84,13 @@ const withPhase = (c: AdCampaign): AdCampaign => {
   return { ...c, phase, daysLeft };
 };
 
+const withVariants = (c: AdCampaign): AdCampaign => {
+  const t = current().tests?.[c.id];
+  if (!t) return c;
+  const variants: AdVariants = { headlineA: c.headline, taglineA: c.tagline, headlineB: t.bHeadline, taglineB: t.bTagline, A: t.A, B: t.B, verdict: abVerdict(t.A, t.B) };
+  return { ...c, variants };
+};
+
 export const demoShowcase = {
   businesses() {
     return delay({ listings: current().listings.filter(x => x.status === 'APPROVED').map(x => ({ ...x, sellerName: undefined, adminNote: undefined, contactPhone: x.contactPublic ? x.contactPhone : undefined })) });
@@ -98,11 +109,21 @@ export const demoShowcase = {
   serve(slot: AdSlot, audience = 'VISITOR', topic?: string) {
     const tier = (a: AdCampaign) => (!topic || !a.topics?.length ? 1 : a.topics.includes(topic) ? 0 : 2);
     const fit = current().campaigns.filter(a => a.slot === slot && live(a) && (!a.audiences?.length || a.audiences.includes(audience))).sort((a, b) => tier(a) - tier(b) || a.impressions - b.impressions);
-    return delay({ ads: fit.slice(0, SLOT_CAPACITY[slot]).map(({ id, company, headline, tagline, slot: s, accent, icon, hasImage }) => ({ id, company, headline, tagline, slot: s, accent, icon, hasImage })) });
+    const tests = current().tests ?? {};
+    return delay({ ads: fit.slice(0, SLOT_CAPACITY[slot]).map(({ id, company, headline, tagline, slot: s, accent, icon, hasImage }) => {
+      const t = tests[id];
+      const variant = t ? (Math.random() < 0.5 ? 'A' as const : 'B' as const) : undefined;
+      return { id, company, headline: variant === 'B' ? t.bHeadline : headline, tagline: variant === 'B' ? t.bTagline : tagline, slot: s, accent, icon, hasImage, ...(variant ? { variant } : {}) };
+    }) });
   },
-  event(id: string, type: 'impression' | 'click') {
+  event(id: string, type: 'impression' | 'click', variant?: 'A' | 'B') {
     const ad = current().campaigns.find(a => a.id === id);
-    if (ad && live(ad)) { if (type === 'click') ad.clicks += 1; else ad.impressions += 1; commit(); }
+    if (ad && live(ad)) {
+      if (type === 'click') ad.clicks += 1; else ad.impressions += 1;
+      const t = current().tests?.[id];
+      if (t && variant) t[variant][type === 'click' ? 'clicks' : 'impressions'] += 1;
+      commit();
+    }
   },
   requestAd(input: { company: string; headline: string; tagline?: string; linkUrl: string; contactPhone: string; slot?: AdSlot; accent?: string; icon?: string; audiences?: string[]; topics?: string[] }) {
     current().campaigns.unshift({ id: `ad_demo_${Date.now()}`, company: input.company, headline: input.headline, tagline: input.tagline || '', slot: input.slot || 'MARKET', accent: (input.accent as PublicAd['accent']) || 'gold', icon: input.icon || 'megaphone', linkUrl: input.linkUrl, status: 'PENDING_REVIEW', startsOn: null, endsOn: null, createdAt: new Date().toISOString(), impressions: 0, clicks: 0, contactPhone: input.contactPhone, audiences: input.audiences || [], topics: input.topics || [] });
@@ -130,7 +151,7 @@ export const demoShowcase = {
   overview() {
     const s = current();
     const rank = (x: string) => (x === 'PENDING_REVIEW' ? 0 : x === 'APPROVED' ? 1 : 2);
-    return delay({ suppliers: [...s.suppliers].sort((a, b) => rank(a.status) - rank(b.status)), listings: [...s.listings].sort((a, b) => rank(a.status) - rank(b.status)), campaigns: [...s.campaigns].sort((a, b) => rank(a.status) - rank(b.status)).map(c => withPhase(c)) });
+    return delay({ suppliers: [...s.suppliers].sort((a, b) => rank(a.status) - rank(b.status)), listings: [...s.listings].sort((a, b) => rank(a.status) - rank(b.status)), campaigns: [...s.campaigns].sort((a, b) => rank(a.status) - rank(b.status)).map(c => withVariants(withPhase(c))) });
   },
   reviewBusiness(id: string, decision: 'APPROVED' | 'REJECTED' | 'SOLD', adminNote = '') {
     const row = current().listings.find(x => x.id === id);
@@ -138,10 +159,13 @@ export const demoShowcase = {
     Object.assign(row, { status: decision, adminNote: adminNote || undefined }); commit();
     return delay({ listing: row });
   },
-  editCampaign(id: string, input: { company: string; headline: string; tagline?: string; linkUrl: string; slot: AdSlot; accent?: string; icon?: string }) {
+  editCampaign(id: string, input: { company: string; headline: string; tagline?: string; linkUrl: string; slot: AdSlot; accent?: string; icon?: string; bHeadline?: string; bTagline?: string }) {
     const ad = current().campaigns.find(x => x.id === id);
     if (!ad) return Promise.reject(new Error('الحملة غير موجودة.'));
     const retarget = ad.status === 'APPROVED' && (input.linkUrl !== ad.linkUrl || input.slot !== ad.slot);
+    const tests = (current().tests ??= {});
+    const reworded = input.headline !== ad.headline || (input.tagline || '') !== ad.tagline || (input.bHeadline || '') !== (tests[id]?.bHeadline || '') || (input.bTagline || '') !== (tests[id]?.bTagline || '');
+    if (input.bHeadline && input.bHeadline.length >= 4) { if (reworded || !tests[id]) tests[id] = { bHeadline: input.bHeadline, bTagline: input.bTagline || ad.tagline, A: { impressions: 0, clicks: 0 }, B: { impressions: 0, clicks: 0 } }; } else delete tests[id];
     Object.assign(ad, { company: input.company, headline: input.headline, tagline: input.tagline || '', linkUrl: input.linkUrl, slot: input.slot, accent: (input.accent as PublicAd['accent']) || ad.accent, icon: input.icon || ad.icon, status: retarget ? 'PAUSED' : ad.status });
     commit();
     return delay({ campaign: ad, pausedForReview: retarget });

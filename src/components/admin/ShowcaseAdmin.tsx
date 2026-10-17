@@ -14,6 +14,34 @@ const PHASE: Record<string, { label: string; cls: string }> = {
   live: { label: 'تعمل الآن', cls: 'bg-emerald-500/10 text-emerald-300' }, ended: { label: 'انتهت', cls: 'bg-slate-500/20 text-slate-300' }, inactive: { label: 'متوقفة', cls: 'bg-white/10 text-slate-300' },
 };
 
+const pct = (c: number, i: number) => (i ? `${((c / i) * 100).toLocaleString('ar-EG', { maximumFractionDigits: 1 })}٪` : '٠٪');
+/** Results of a running A/B test with the verdict in words; applying a winner is a manual, explicit step. */
+const VariantsPanel: React.FC<{ c: AdCampaign; busy: boolean; onApply: (headline: string, tagline: string) => void }> = ({ c, busy, onApply }) => {
+  const v = c.variants;
+  if (!v) return null;
+  const rows = [{ k: 'أ', h: v.headlineA, t: v.taglineA, s: v.A, key: 'A' as const }, { k: 'ب', h: v.headlineB, t: v.taglineB, s: v.B, key: 'B' as const }];
+  const verdict = v.verdict;
+  return (
+    <div className="rounded-xl border border-gold-300/20 bg-gold-500/[0.04] p-3 space-y-2" aria-label="نتيجة اختبار A/B">
+      <div className="text-xs font-black text-gold-200">اختبار A/B</div>
+      {rows.map(r => (
+        <div key={r.key} className={`rounded-lg border px-2.5 py-2 text-xs space-y-0.5 ${verdict.state === 'winner' && verdict.winner === r.key ? 'border-emerald-400/40 bg-emerald-500/10' : 'border-white/10 bg-white/[0.03]'}`}>
+          <div className="flex justify-between gap-2"><strong className="truncate">{r.k}: {r.h}</strong><span className="shrink-0 text-slate-300">{pct(r.s.clicks, r.s.impressions)}</span></div>
+          <div className="text-slate-400">{r.s.impressions.toLocaleString('ar-EG')} ظهور · {r.s.clicks.toLocaleString('ar-EG')} نقرة</div>
+        </div>
+      ))}
+      <p className="text-xs leading-5 text-slate-200">
+        {verdict.state === 'not_enough_data' && `يلزم ${verdict.needed.toLocaleString('ar-EG')} ظهور لكل نسخة قبل الحكم.`}
+        {verdict.state === 'no_difference' && 'لا فرق واضح بين النسختين حتى الآن.'}
+        {verdict.state === 'winner' && `النسخة ${verdict.winner === 'A' ? 'أ' : 'ب'} تتفوق بنسبة ${verdict.liftPercent.toLocaleString('ar-EG')}٪ — توصية فقط.`}
+      </p>
+      {verdict.state === 'winner' && (
+        <button type="button" disabled={busy} onClick={() => { const w = rows.find(r => r.key === verdict.winner)!; onApply(w.h, w.t); }} className="w-full py-2 rounded-lg bg-emerald-400 text-slate-950 text-xs font-black disabled:opacity-50">اعتمد النسخة الفائزة وأنهِ الاختبار</button>
+      )}
+    </div>
+  );
+};
+
 const BILLING_LABEL = { UNSET: 'بانتظار السعر والدفع', PAID: 'مدفوعة', COMPLIMENTARY: 'ضيافة' } as const;
 
 /** The commercial side: agreed price and payment (made outside the app). Approval needs this first. */
@@ -37,7 +65,7 @@ const BillingEditor: React.FC<{ c: AdCampaign; busy: boolean; onSave: (billing: 
 
 /** Change what a campaign says or where it sits. A new link or slot on an approved campaign pauses it for review. */
 const CampaignEditor: React.FC<{ c: AdCampaign; busy: boolean; onSave: (input: Parameters<typeof editCampaign>[1]) => void }> = ({ c, busy, onSave }) => {
-  const [f, setF] = useState({ company: c.company, headline: c.headline, tagline: c.tagline, linkUrl: c.linkUrl, slot: c.slot as AdSlot, accent: c.accent as string, icon: c.icon });
+  const [f, setF] = useState({ company: c.company, headline: c.headline, tagline: c.tagline, linkUrl: c.linkUrl, slot: c.slot as AdSlot, accent: c.accent as string, icon: c.icon, bHeadline: c.variants?.headlineB ?? '', bTagline: c.variants?.taglineB ?? '' });
   const k = 'w-full glass-input rounded-xl px-3 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300';
   return (
     <details className="rounded-xl border border-white/10 bg-white/[0.02]">
@@ -49,6 +77,12 @@ const CampaignEditor: React.FC<{ c: AdCampaign; busy: boolean; onSave: (input: P
         </div>
         <input aria-label="العنوان" required minLength={4} maxLength={70} value={f.headline} onChange={e => setF({ ...f, headline: e.target.value })} className={k} />
         <input aria-label="السطر التوضيحي" maxLength={120} value={f.tagline} onChange={e => setF({ ...f, tagline: e.target.value })} className={k} />
+        <div className="rounded-xl border border-dashed border-gold-300/25 p-2.5 space-y-2">
+          <div className="text-[11px] font-black text-gold-200">اختبار A/B — نسخة ثانية من النص (اختياري)</div>
+          <input aria-label="عنوان النسخة ب" maxLength={70} placeholder="عنوان النسخة (ب)" value={f.bHeadline} onChange={e => setF({ ...f, bHeadline: e.target.value })} className={k} />
+          {f.bHeadline && <input aria-label="سطر النسخة ب" maxLength={120} placeholder="سطر توضيحي للنسخة (ب)" value={f.bTagline} onChange={e => setF({ ...f, bTagline: e.target.value })} className={k} />}
+          <p className="text-[11px] text-slate-400 leading-5">يُعرض كل إعلان بإحدى النسختين عشوائيًا. تعديل أي نص يبدأ اختبارًا جديدًا. الحكم يحتاج ٥٠٠ ظهور لكل نسخة، والنتيجة توصية فقط.</p>
+        </div>
         <input aria-label="الرابط" required type="url" dir="ltr" value={f.linkUrl} onChange={e => setF({ ...f, linkUrl: e.target.value })} className={k} />
         <div className="flex flex-wrap items-center gap-2">{AD_ACCENT_KEYS.map(a => <button type="button" key={a} aria-label={`لون ${a}`} aria-pressed={f.accent === a} onClick={() => setF({ ...f, accent: a })} className={`w-6 h-6 rounded-full ${AD_ACCENT_DOT[a]} ${f.accent === a ? 'ring-2 ring-offset-2 ring-gold-300 ring-offset-transparent' : 'opacity-60'}`} />)}
           <span className="w-px h-5 bg-white/10" />{AD_ICON_KEYS.map(i => <button type="button" key={i} aria-label={`أيقونة ${i}`} aria-pressed={f.icon === i} onClick={() => setF({ ...f, icon: i })} className={`w-8 h-8 rounded-lg border grid place-items-center ${f.icon === i ? 'bg-gold-500/20 border-gold-300/60 text-gold-200' : 'bg-white/5 border-white/10 text-slate-300'}`}><AdIcon name={i} className="w-3.5 h-3.5" /></button>)}</div>
@@ -180,6 +214,7 @@ export const ShowcaseAdmin: React.FC = () => {
                   {c.phase === 'live' && c.daysLeft !== null && c.daysLeft !== undefined && c.daysLeft <= 7 && <div className="text-xs text-amber-300 font-black">تنتهي {c.daysLeft === 0 ? 'اليوم' : `بعد ${c.daysLeft.toLocaleString('ar-EG')} أيام`} — تواصل للتجديد</div>}
                   {c.phase === 'ended' && <div className="text-xs text-slate-400">انتهت مدتها. عدّل التواريخ واعتمد من جديد للتجديد.</div>}
                   <div className="text-xs text-slate-300">ظهور {c.impressions.toLocaleString('ar-EG')} · نقرات {c.clicks.toLocaleString('ar-EG')}{c.contactPhone ? ` · ${c.contactPhone}` : ''}</div>
+                  <VariantsPanel c={c} busy={busy === c.id} onApply={(headline, tagline) => void run(c.id, async () => { await editCampaign(c.id, { company: c.company, headline, tagline, linkUrl: c.linkUrl, slot: c.slot, accent: c.accent, icon: c.icon }); setNotice('طُبّقت النسخة الفائزة وانتهى الاختبار.'); })} />
                   <BillingEditor c={c} busy={busy === c.id} onSave={(billing, price, note) => void run(c.id, async () => { const r = await setCampaignBilling(c.id, billing, price, note); if (r.pausedForReview) setNotice('إلغاء حالة الدفع أوقف الحملة.'); })} />
                   <CampaignEditor c={c} busy={busy === c.id} onSave={input => void run(c.id, async () => { const r = await editCampaign(c.id, input); if (r.pausedForReview) setNotice('تغيير الرابط أو الموقع أوقف الحملة لإعادة اعتمادها.'); })} />
                   <TargetChips audiences={c.audiences ?? []} topics={c.topics ?? []} disabled={busy === c.id} onChange={(audiences, topics) => void run(c.id, async () => { const r = await setCampaignTargeting(c.id, audiences, topics); if (r.pausedForReview) setNotice('توسيع الجمهور أعاد الحملة إلى الإيقاف لإعادة الاعتماد.'); })} />

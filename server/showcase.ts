@@ -6,6 +6,7 @@ import express from 'express';
 import { MajalDatabase, withTransaction } from './database';
 import { creativeProblem, readImageMeta } from './image-meta';
 import { createOrCoalesceNotification } from './notifications';
+import { abVerdict, type VariantCount } from '../src/lib/abTest';
 
 /*
  * Showcase: (1) a free "business for sale" gate and (2) sponsor campaigns.
@@ -28,7 +29,7 @@ export const AD_ICONS = ['megaphone', 'store', 'coffee', 'truck', 'package', 'sp
 export const SLOT_CAPACITY: Record<(typeof AD_SLOTS)[number], number> = { SPONSOR: 1, MARKET: 3, PORTAL: 3 };
 
 /** Everything but the (large) image payload. */
-const CAMPAIGN_COLUMNS = 'audiences_json,topics_json,price_kwd,billing,paid_at,billing_note,id,company,headline,tagline,link_url,slot,accent,icon,contact_phone,status,starts_on,ends_on,admin_note,created_at,updated_at,image_mime';
+const CAMPAIGN_COLUMNS = 'b_headline,b_tagline,audiences_json,topics_json,price_kwd,billing,paid_at,billing_note,id,company,headline,tagline,link_url,slot,accent,icon,contact_phone,status,starts_on,ends_on,admin_note,created_at,updated_at,image_mime';
 const now = () => new Date().toISOString();
 const text = (value: unknown, min = 1, max = 500) => {
   if (typeof value !== 'string') return undefined;
@@ -80,6 +81,7 @@ type CampaignRow = {
   contact_phone: string; status: string; starts_on: string | null; ends_on: string | null; admin_note: string; created_at: string; updated_at: string;
   image_mime: string | null; image_data?: string | null;
   audiences_json?: string; topics_json?: string;
+  b_headline?: string | null; b_tagline?: string | null;
   price_kwd?: number | string | null; billing?: string; paid_at?: string | null; billing_note?: string;
 };
 type SupplierDirRow = {
@@ -107,7 +109,9 @@ const supplierBase = (row: SupplierDirRow) => ({
 /** Same privacy rule as listings: the contact name and notes stay private, the phone needs consent. */
 const supplierPublic = (row: SupplierDirRow) => ({ ...supplierBase(row), ...(Number(row.contact_public) === 1 ? { contactPhone: row.contact_phone } : {}) });
 const supplierAdmin = (row: SupplierDirRow) => ({ ...supplierBase(row), contactName: row.contact_name, contactPhone: row.contact_phone, adminNote: row.admin_note || undefined, reviewedAt: row.reviewed_at });
-const adPublic = (row: CampaignRow) => ({ id: row.id, company: row.company, headline: row.headline, tagline: row.tagline, slot: row.slot, accent: row.accent, icon: row.icon, hasImage: !!row.image_mime });
+const hasTest = (row: CampaignRow) => !!row.b_headline;
+/** `variant` is only set while a test runs, so a plain campaign's payload is unchanged. */
+const adPublic = (row: CampaignRow, variant?: 'A' | 'B') => ({ id: row.id, company: row.company, headline: variant === 'B' && row.b_headline ? row.b_headline : row.headline, tagline: variant === 'B' && row.b_headline ? (row.b_tagline ?? row.tagline) : row.tagline, ...(variant ? { variant } : {}), slot: row.slot, accent: row.accent, icon: row.icon, hasImage: !!row.image_mime });
 const targetingOf = (row: CampaignRow) => ({ audiences: parseList(row.audiences_json ?? '[]'), topics: parseList(row.topics_json ?? '[]') });
 const campaignAdmin = (row: CampaignRow, stat?: { impressions: number; clicks: number }, week?: { impressions: number; clicks: number }) => ({
   ...adPublic(row), ...targetingOf(row), priceKwd: row.price_kwd === null || row.price_kwd === undefined ? null : Number(row.price_kwd), billing: row.billing ?? 'UNSET', paidAt: row.paid_at ?? null, billingNote: row.billing_note || undefined, phase: phaseOf(row, kuwaitToday()), daysLeft: daysLeft(row, kuwaitToday()), linkUrl: row.link_url, contactPhone: row.contact_phone || undefined, status: row.status,
@@ -167,6 +171,20 @@ async function weekFor(db: MajalDatabase, ids: string[]) {
   for (const row of rows) map.set(row.campaign_id, { impressions: Number(row.impressions), clicks: Number(row.clicks) });
   return map;
 }
+const toVariant = (v: unknown): 'A' | 'B' | undefined => (v === 'A' || v === 'B' ? v : undefined);
+async function bumpVariant(db: MajalDatabase, id: string, variant: 'A' | 'B', field: 'impressions' | 'clicks') {
+  const column = field === 'clicks' ? 'clicks' : 'impressions';
+  await db.prepare(`INSERT INTO ad_variant_stats(campaign_id, variant, ${column}) VALUES(?,?,1)
+    ON CONFLICT(campaign_id, variant) DO UPDATE SET ${column} = ad_variant_stats.${column} + 1`).run(id, variant);
+}
+async function variantsFor(db: MajalDatabase, row: CampaignRow) {
+  if (!hasTest(row)) return undefined;
+  const rows = await db.prepare('SELECT variant, impressions, clicks FROM ad_variant_stats WHERE campaign_id=?').all<{ variant: string; impressions: number | string; clicks: number | string }>(row.id);
+  const pick = (v: string): VariantCount => { const r = rows.find(x => x.variant === v); return { impressions: Number(r?.impressions ?? 0), clicks: Number(r?.clicks ?? 0) }; };
+  const A = pick('A'), B = pick('B');
+  return { headlineA: row.headline, taglineA: row.tagline, headlineB: row.b_headline!, taglineB: row.b_tagline ?? row.tagline, A, B, verdict: abVerdict(A, B) };
+}
+
 async function bump(db: MajalDatabase, id: string, field: 'impressions' | 'clicks', audience: string) {
   const column = field === 'clicks' ? 'clicks' : 'impressions';
   await db.prepare(`INSERT INTO ad_daily_stats(campaign_id, day, ${column}) VALUES(?,?,1)
@@ -290,14 +308,19 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
     const topic = oneOf(req.query.topic, AD_TOPICS);
     const picked = await pickFor(db, rows.filter(row => isLive(row, today)), audienceOf(req.query.audience), topic, SLOT_CAPACITY[slot]);
     res.setHeader('Cache-Control', 'no-store');
-    res.json({ ads: picked.map(adPublic) });
+    // While a test runs each impression is assigned to A or B at random, 50/50.
+    res.json({ ads: picked.map(row => adPublic(row, hasTest(row) ? (Math.random() < 0.5 ? 'A' : 'B') : undefined)) });
   });
 
   router.post('/promo/event', publicLimit(240, 60_000, 'event'), async (req, res) => {
     const id = text(req.body?.id, 4, 80);
     if (!id || req.body?.type !== 'impression') return res.status(204).end();
     const row = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=? LIMIT 1`).get<CampaignRow>(id);
-    if (row && isLive(row, kuwaitToday())) await bump(db, id, 'impressions', audienceOf(req.body?.audience));
+    if (row && isLive(row, kuwaitToday())) {
+      await bump(db, id, 'impressions', audienceOf(req.body?.audience));
+      const variant = toVariant(req.body?.variant);
+      if (variant && hasTest(row)) await bumpVariant(db, id, variant, 'impressions');
+    }
     res.status(204).end();
   });
 
@@ -306,6 +329,8 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
     const row = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=? LIMIT 1`).get<CampaignRow>(req.params.id);
     if (!row || !isLive(row, kuwaitToday())) return res.redirect(302, '/');
     await bump(db, row.id, 'clicks', audienceOf(req.query.a));
+    const variant = toVariant(req.query.v);
+    if (variant && hasTest(row)) await bumpVariant(db, row.id, variant, 'clicks');
     const target = new URL(row.link_url);
     if (![...target.searchParams.keys()].some(key => key.startsWith('utm_'))) {
       target.searchParams.set('utm_source', 'majal');
@@ -357,6 +382,7 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
       campaign: { company: row.company, headline: row.headline, slot: row.slot, status: row.status, phase: phaseOf(row, kuwaitToday()), daysLeft: daysLeft(row, kuwaitToday()), startsOn: row.starts_on, endsOn: row.ends_on },
       audiences: (await db.prepare('SELECT audience, impressions, clicks FROM ad_audience_stats WHERE campaign_id=? ORDER BY impressions DESC').all<{ audience: string; impressions: number | string; clicks: number | string }>(row.id))
         .map(a => ({ audience: a.audience, impressions: Number(a.impressions), clicks: Number(a.clicks) })),
+      variants: await variantsFor(db, row),
       totals: total, ctr: total.impressions ? Math.round((total.clicks / total.impressions) * 1000) / 10 : 0,
       days: days.map(d => ({ day: d.day, impressions: Number(d.impressions), clicks: Number(d.clicks) })).reverse(),
       note: 'الظهور يُعدّ مرة لكل متصفح لكل جلسة بعد أن يُرى الإعلان فعلًا. لا نحفظ عنوان IP ولا هوية الزائر.'
@@ -374,7 +400,8 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
     const ids = campaigns.map(c => c.id);
     const [stats, week] = await Promise.all([statsFor(db, ids), weekFor(db, ids)]);
     const suppliers = await db.prepare("SELECT * FROM supplier_directory WHERE status IN ('PENDING_REVIEW','APPROVED') ORDER BY CASE status WHEN 'PENDING_REVIEW' THEN 0 ELSE 1 END, submitted_at DESC LIMIT 300").all<SupplierDirRow>();
-    res.json({ suppliers: suppliers.map(supplierAdmin), listings: listings.map(listingAdmin), campaigns: campaigns.map(c => campaignAdmin(c, stats.get(c.id), week.get(c.id))) });
+    const withVariants = await Promise.all(campaigns.map(async c => ({ ...campaignAdmin(c, stats.get(c.id), week.get(c.id)), variants: await variantsFor(db, c) })));
+    res.json({ suppliers: suppliers.map(supplierAdmin), listings: listings.map(listingAdmin), campaigns: withVariants });
   });
 
   router.post('/admin/businesses/:id/review', authenticated, csrfProtected, async (req: AuthenticatedRequest, res) => {
@@ -495,15 +522,22 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
     const slot = oneOf(req.body?.slot, AD_SLOTS);
     if (!company || !headline || !link || !slot) return jsonError(res, 400, 'أكمل الشركة والعنوان ورابط https عامًا والموقع.', 'INVALID_CAMPAIGN');
     const retarget = before.status === 'APPROVED' && (link !== before.link_url || slot !== before.slot);
+    // Variant B: an optional second headline (and tagline) to test against the first; empty headline ends the test.
+    const bHeadline = text(req.body?.bHeadline, 4, 70) ?? null;
+    const bTagline = bHeadline ? (text(req.body?.bTagline, 0, 120) ?? null) : null;
+    const tagline = text(req.body?.tagline, 0, 120) ?? '';
+    // New wording means a new experiment: old counters would compare different ads.
+    const reworded = headline !== before.headline || tagline !== before.tagline || bHeadline !== (before.b_headline ?? null) || bTagline !== (before.b_tagline ?? null);
     await withTransaction(db, async tx => {
-      await tx.prepare('UPDATE ad_campaigns SET company=?,headline=?,tagline=?,link_url=?,slot=?,accent=?,icon=?,status=?,updated_at=? WHERE id=?').run(
-        company, headline, text(req.body?.tagline, 0, 120) ?? '', link, slot, oneOf(req.body?.accent, AD_ACCENTS) ?? before.accent,
-        oneOf(req.body?.icon, AD_ICONS) ?? before.icon, retarget ? 'PAUSED' : before.status, now(), before.id
+      await tx.prepare('UPDATE ad_campaigns SET company=?,headline=?,tagline=?,link_url=?,slot=?,accent=?,icon=?,b_headline=?,b_tagline=?,status=?,updated_at=? WHERE id=?').run(
+        company, headline, tagline, link, slot, oneOf(req.body?.accent, AD_ACCENTS) ?? before.accent,
+        oneOf(req.body?.icon, AD_ICONS) ?? before.icon, bHeadline, bTagline, retarget ? 'PAUSED' : before.status, now(), before.id
       );
+      if (reworded) await tx.prepare('DELETE FROM ad_variant_stats WHERE campaign_id=?').run(before.id);
       await audit(tx, req, 'AD_CAMPAIGN_EDITED', 'AD_CAMPAIGN', before.id, { slot, pausedForReview: retarget });
     });
     const row = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=?`).get<CampaignRow>(before.id);
-    res.json({ campaign: campaignAdmin(row!), pausedForReview: retarget });
+    res.json({ campaign: { ...campaignAdmin(row!), variants: await variantsFor(db, row!) }, pausedForReview: retarget });
   });
 
   router.post('/admin/campaigns/:id/targeting', authenticated, csrfProtected, async (req: AuthenticatedRequest, res) => {
