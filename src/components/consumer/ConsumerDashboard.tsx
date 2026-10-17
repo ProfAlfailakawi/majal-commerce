@@ -27,6 +27,7 @@ import { commerceClient } from '../../lib/commerceClient';
 import { domainClient } from '../../lib/domainClient';
 import { IS_DEMO_MODE } from '../../lib/runtime';
 import { DnaDraw, DnaRing } from '../dna/DnaKit';
+import { publicProductImage } from '../../lib/productImage';
 
 interface ConsumerDashboardProps {
   onSurfaceChange: (surface: SurfaceType) => void;
@@ -142,7 +143,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
     return (
       <article key={launch.id} className="glass-card rounded-3xl border border-white/10 overflow-hidden flex flex-col hover:-translate-y-1 transition-transform">
         <div className="relative h-40 sm:h-52">
-          <ProductImage src={product?.mediaUrls[0]} alt={launch.title} loading="lazy" className="w-full h-full object-cover" />
+          <ProductImage src={publicProductImage(product)} alt={launch.title} loading="lazy" className="w-full h-full object-cover" />
           <div className="majal-art-scrim absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
           <div className="absolute top-3 start-3 px-2.5 py-1 rounded-full bg-slate-950/75 border border-white/10 text-xs text-gold-300 font-black">{({ LIMITED_DROP: 'إطلاق محدود', TRIAL_PERIOD: 'فترة تجريبية', PERMANENT_MENU: 'قائمة دائمة', SEASONAL: 'موسمي' } as Record<string, string>)[launch.launchType] ?? launch.launchType}</div>
           <div className="majal-art-title absolute bottom-4 start-4 end-4"><div className="text-xs text-emerald-300 font-black line-clamp-1">{creator?.displayName} × {host?.commercialName}</div><h3 className="font-black text-white mt-1 leading-snug line-clamp-2">{product?.publicName || launch.title}</h3></div>
@@ -192,7 +193,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
           {featured && featuredProduct && (
             <div className="rounded-[28px] overflow-hidden bg-slate-950/50 border border-white/10 shadow-2xl">
               <div className="relative h-72">
-                <ProductImage src={featuredProduct.mediaUrls[0]} alt={featuredProduct.publicName} fetchPriority="high" markSize={96} className="w-full h-full object-cover" />
+                <ProductImage src={publicProductImage(featuredProduct)} alt={featuredProduct.publicName} fetchPriority="high" markSize={96} className="w-full h-full object-cover" />
                 <div className="majal-art-scrim absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
                 <div className="absolute top-4 start-4 px-3 py-1.5 rounded-full bg-slate-950/75 backdrop-blur text-gold-300 border border-gold-300/20 text-xs font-black">{formatKwd(featured.sellingPriceKwd)}</div>
                 <div className="majal-art-title absolute bottom-5 start-5 end-5">

@@ -65,6 +65,8 @@ function seedJobs(): KuwaitiJobPost[] {
     j('job_demo_7', 'SUPPLIER', DEMO_SUPPLIER_ID, 'مؤسسة الخليج لمواد التغليف', 'مندوب/ة مبيعات للمطابخ المركزية', 'المبيعات', 'FULL_TIME', 'العاصمة', 'متابعة طلبات التغليف من المطابخ والمخابز الشريكة في مجال.', ['رخصة قيادة سارية'], 500, 650, 'PENDING_REVIEW', 2),
     j('job_demo_8', 'SUPPLIER', DEMO_SUPPLIER_ID, 'مؤسسة الخليج لمواد التغليف', 'أمين/ة مستودع', 'المستودع', 'FULL_TIME', 'الري', 'إدارة مخزون الكرتون والملصقات.', ['خبرة مخازن'], 420, 500, 'REJECTED', 20, 'يرجى توضيح ساعات العمل وبدل الورديات قبل إعادة الإرسال.'),
     j('job_demo_9', 'SUPPLIER', 'sup_demo_3', 'بهارات السوق المباركية', 'مسؤول/ة جودة ومصادر البهارات', 'الجودة', 'FULL_TIME', 'المباركية', 'فحص شهادات المصدر لكل دفعة ومطابقتها قبل الشحن.', ['بكالوريوس علوم'], 700, 950, 'PENDING_REVIEW', 1),
+    j('job_demo_10', 'SUPPLIER', 'sup_demo_3', 'بهارات السوق المباركية', 'موظف/ة مبيعات ومعارض', 'المبيعات', 'PART_TIME', 'المباركية', 'عرض البهارات ومزيجات المبدعين للزوار وتسجيل الطلبات المسبقة.', ['مهارة تواصل', 'معرفة بالبهارات الكويتية'], 300, 400, 'APPROVED', 8),
+    j('job_demo_11', 'HOST', 'hb_demo_2', 'مخبز السالمية الحديث', 'مساعد/ة خدمة عملاء وطلبات', 'الخدمة', 'FULL_TIME', 'السالمية', 'استلام الطلبات المسبقة للإصدارات المحدودة ومتابعة التسليم.', ['لباقة في التعامل', 'استخدام الحاسب'], 450, 550, 'APPROVED', 10),
   ];
 }
 
@@ -80,6 +82,8 @@ function seedApplications(): KuwaitiJobApplication[] {
     a('app_demo_6', 'job_demo_6', 'سارة البلوشي', 'sara.b@demo.majal.test', '+965 9745 3319', 'مصممة جرافيك، صممت هويات لخمسة مشاريع أغذية منزلية.', 5, 'SHORTLISTED', 10),
     a('app_demo_7', 'job_demo_6', 'خالد العجمي', 'khaled@demo.majal.test', '+965 5561 0043', 'مصمم تغليف مستقل، أجيد التجهيز للطباعة.', 3, 'SUBMITTED', 6),
     a('app_demo_8', 'job_demo_5', 'حصة الفضلي', 'hessa@demo.majal.test', '+965 6012 8874', 'باريستا معتمدة، خبرة سنتين في مقهى مختص.', 2, 'HIRED', 11),
+    a('app_demo_9', 'job_demo_5', 'بدر العتيبي', 'bader@demo.majal.test', '+965 5540 7721', 'باريستا بخبرة سنة في كافيه مختص بالقهوة العربية.', 1, 'SUBMITTED', 3),
+    a('app_demo_10', 'job_demo_11', 'دانة الحمدان', 'dana@demo.majal.test', '+965 9988 2210', 'خدمة عملاء في محل حلويات، أتقن تنسيق الطلبات المسبقة.', 2, 'SUBMITTED', 2),
   ];
 }
 
@@ -94,7 +98,7 @@ export function buildDemoEcosystem(): DemoEcosystemState {
   return { suppliers: seedSuppliers(), offerings: seedOfferings(), jobs: seedJobs(), applications: seedApplications() };
 }
 
-export const DEMO_ECOSYSTEM_STORAGE_KEY = 'majal_demo_ecosystem_v1';
+export const DEMO_ECOSYSTEM_STORAGE_KEY = 'majal_demo_ecosystem_v2';
 const STORAGE_KEY = DEMO_ECOSYSTEM_STORAGE_KEY;
 
 /* Kept in the same tab-scoped sessionStorage as the rest of the demo, so an
