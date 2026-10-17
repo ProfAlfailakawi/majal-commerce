@@ -137,7 +137,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       items.push('طلب التوثيق قيد مراجعة الإدارة. سنخبرك فور اعتماده.');
       items.push('وصل طلب توظيف جديد على إعلانك في بوابة التوظيف.');
     }
-    if (activeUser.role === 'CONSUMER') {
+    if (activeUser.role === 'CONSUMER' && activeUser.accountType !== 'SUPPLIER') {
       items.push('طلبك قيد التجهيز. سنخبرك عند جاهزيته.');
       items.push('قيّم طلبك الأخير لتساعد غيرك على الاختيار.');
     }
