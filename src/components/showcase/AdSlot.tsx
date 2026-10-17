@@ -126,7 +126,10 @@ export const AdSlot: React.FC<{ slot: AdSlotType; topic?: string; className?: st
   }
   return (
     <aside aria-label="إعلانات الشركاء" className={`grid gap-3 sm:grid-cols-2 xl:grid-cols-3 ${className}`}>
-      {(slot === 'PORTAL' ? visible.slice(0, 2) : visible).map(ad => <AdCard key={ad.id} ad={ad} audience={audience} compact={compactSlot} onHide={() => hide(ad.id)} />)}
+      {(slot === 'PORTAL' ? visible.slice(0, 2) : visible).map((ad, i) => (
+        // On phones a portal shows one sponsor line, not a stack above the page's own content.
+        <div key={ad.id} className={slot === 'PORTAL' && i > 0 ? 'hidden sm:block' : ''}><AdCard ad={ad} audience={audience} compact={compactSlot} onHide={() => hide(ad.id)} /></div>
+      ))}
     </aside>
   );
 };

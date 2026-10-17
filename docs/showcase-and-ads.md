@@ -37,8 +37,15 @@ Three related surfaces. All three keep the rule used by the jobs board: **nothin
 - Deliberately clean: no ad strip on this surface, search + category chips, platform-drawn category art, WhatsApp/call buttons.
 - Table `supplier_directory` (migration 24).
 
+## 5. Audience dashboard and partner kit
+- **Measured, anonymous, aggregate** (`server/audience.ts`, migration 26): the client reports "this browser opened page X as role Y" at most once per browser per page per day (`localStorage`), plus one *first page today* flag that makes the unique-browsers-per-day counter. Stored as day × page × role counters only; no IP, user id, cookie value or fingerprint. Administrator visits are never reported, and demo mode reports nothing. Browsers that block storage can be counted more than once.
+- **Admin → «لوحة الجمهور»**: browsers today / 7 / 30 days, page views, 30-day trend, busiest weekday, split by role and by page, real platform counts (creators, verified facilities and suppliers, live launches, open jobs, businesses for sale, directory suppliers), gate performance (opens and contact taps with the five most-viewed listings/suppliers), ad totals and slot load, and partner-link management. In demo mode the page shows generated numbers and says so.
+- **Partner kit** (`/?partners=<token>`): the same real figures as a clean page for a company (traffic, who visits and where, who they would sit beside, slots and availability, targeting options, free and no-prices statement, request form). One private link; only its hash is stored; rotating it kills the old one. Nothing personal is exposed.
+- Measurement starts the day it ships and does not backfill; the pages say so.
+
 ## Data
-Migrations 22–24: `business_listings`, `ad_campaigns`, `ad_daily_stats`, `organization_invites`, `supplier_directory`, plus `ad_campaigns.image_mime/image_data`. Admin actions are written to `domain_audit_events`.
+Migrations 22–26: `business_listings`, `ad_campaigns`, `ad_daily_stats`, `organization_invites`, `supplier_directory`, `audience_daily`, `gate_events`, `partner_kit`, plus `ad_campaigns.image_mime/image_data`. Admin actions are written to `domain_audit_events`.
 
 ## Tests
+All server suites run on in-memory SQLite by default and on a throw-away PostgreSQL database when `TEST_DATABASE_URL` is set (`server/test-db.ts`); both were run green for this module. Also `server/audience.test.ts`.
 `server/showcase.test.ts`, `server/showcase-admin.test.ts` (real admin and owner sessions: review, capacity, creatives, token rotation, tenant isolation, session revocation), `server/team.test.ts`, `src/lib/adSeasons.test.ts`.

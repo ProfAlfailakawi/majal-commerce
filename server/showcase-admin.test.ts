@@ -3,7 +3,7 @@ import test from 'node:test';
 import { randomBytes } from 'node:crypto';
 import express from 'express';
 import { AddressInfo } from 'node:net';
-import { openMajalDatabase } from './database';
+import { openTestDatabase } from './test-db';
 import { createAuthRouter, createPublicRegistration, createUser } from './auth';
 import { createShowcaseRouter, kuwaitToday } from './showcase';
 import { createTeamRouter } from './team';
@@ -16,7 +16,7 @@ const password = `${randomBytes(12).toString('base64url')}-Aa1!`;
 interface Session { cookie: string; csrf: string }
 
 async function harness() {
-  const db = await openMajalDatabase({ filename: ':memory:' });
+  const db = await openTestDatabase();
   const app = express();
   app.use(express.json());
   app.use('/api/v1/auth', createAuthRouter(db, config));
@@ -182,7 +182,7 @@ test('facility team: owner invites, role changes revoke sessions, tenants stay i
     assert.equal((await h.call(ownerA, 'POST', `/team/members/${finance.userId}/remove`)).status, 200);
     const gone = await h.db.prepare('SELECT role, host_business_id FROM users WHERE id = ?').get<{ role: string; host_business_id: string | null }>(finance.userId);
     assert.deepEqual({ role: gone?.role, org: gone?.host_business_id }, { role: 'CONSUMER', org: null });
-    assert.equal((await h.db.prepare('SELECT COUNT(*) AS n FROM organization_memberships WHERE user_id = ?').get<{ n: number }>(finance.userId))?.n, 0);
+    assert.equal(Number((await h.db.prepare('SELECT COUNT(*) AS n FROM organization_memberships WHERE user_id = ?').get<{ n: number }>(finance.userId))?.n), 0);
   } finally { await h.close(); }
 });
 

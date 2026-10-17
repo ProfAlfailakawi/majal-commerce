@@ -1625,6 +1625,37 @@ const migrations = [
         PRIMARY KEY(campaign_id, audience)
       );
     `
+  },
+  {
+    /*
+     * Audience measurement. Anonymous by construction: a visit is a (day, page, role) counter,
+     * "unique browsers" is a counter bumped once per browser per day by the client, and nothing
+     * stores an IP, user id or cookie. gate_events counts opens/contact taps per listing or supplier.
+     * partner_kit holds the hash of the one private link given to companies.
+     */
+    version: 26,
+    sql: `
+      CREATE TABLE IF NOT EXISTS audience_daily (
+        day TEXT NOT NULL,
+        surface TEXT NOT NULL,
+        audience TEXT NOT NULL,
+        visits INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY(day, surface, audience)
+      );
+      CREATE TABLE IF NOT EXISTS gate_events (
+        day TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        ref_id TEXT NOT NULL,
+        total INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY(day, kind, ref_id)
+      );
+      CREATE TABLE IF NOT EXISTS partner_kit (
+        id TEXT PRIMARY KEY,
+        token_hash TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        rotated_at TEXT
+      );
+    `
   }
 ] as const;
 

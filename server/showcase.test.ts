@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import express from 'express';
 import { AddressInfo } from 'node:net';
-import { openMajalDatabase } from './database';
+import { openTestDatabase } from './test-db';
 import { createShowcaseRouter, kuwaitToday, publicHttpsUrl } from './showcase';
 
 const config = {
@@ -10,8 +10,8 @@ const config = {
   encryptionKey: 'test-encryption-key-that-is-long-enough-12345', sessionHours: 8, cookieName: 'majal_session', csrfCookieName: 'majal_csrf'
 };
 
-async function withApp(run: (base: string, db: Awaited<ReturnType<typeof openMajalDatabase>>) => Promise<void>) {
-  const db = await openMajalDatabase({ filename: ':memory:' });
+async function withApp(run: (base: string, db: Awaited<ReturnType<typeof openTestDatabase>>) => Promise<void>) {
+  const db = await openTestDatabase();
   const app = express();
   app.use(express.json());
   app.use('/api/v1/showcase', createShowcaseRouter(db, config));
@@ -46,7 +46,7 @@ test('invalid or unconfirmed submissions are rejected and honeypot hits are sile
     assert.equal((await post(`${base}/businesses`, { ...listing, termsAccepted: false })).status, 400);
     assert.equal((await post(`${base}/businesses`, { ...listing, askingPriceKwd: -5 })).status, 400);
     assert.equal((await post(`${base}/businesses`, { ...listing, website: 'http://spam.example' })).status, 201);
-    assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM business_listings').get<{ n: number }>())?.n, 0);
+    assert.equal(Number((await db.prepare('SELECT COUNT(*) AS n FROM business_listings').get<{ n: number }>())?.n), 0);
   });
 });
 
@@ -97,7 +97,7 @@ test('supplier directory: hidden until approved, phone only with consent, invali
     assert.equal((await post(`${base}/suppliers`, { ...supplier, termsAccepted: false })).status, 400);
     assert.equal((await post(`${base}/suppliers`, { ...supplier, contactPhone: 'x' })).status, 400);
     assert.equal((await post(`${base}/suppliers`, { ...supplier, website: 'spam' })).status, 201);
-    assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM supplier_directory').get<{ n: number }>())?.n, 0, 'honeypot writes nothing');
+    assert.equal(Number((await db.prepare('SELECT COUNT(*) AS n FROM supplier_directory').get<{ n: number }>())?.n), 0, 'honeypot writes nothing');
     assert.equal((await post(`${base}/suppliers`, { ...supplier, products: ['علب', 'أكياس'], delivers: true })).status, 201);
     assert.deepEqual((await (await fetch(`${base}/suppliers`)).json()).suppliers, []);
     await db.prepare("UPDATE supplier_directory SET status='APPROVED', reviewed_at=?").run(new Date().toISOString());
