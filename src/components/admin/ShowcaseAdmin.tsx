@@ -21,6 +21,17 @@ const TargetChips: React.FC<{ audiences: string[]; topics: string[]; disabled?: 
     </div>
   );
 };
+/** Pending items always show; decided ones fold behind a toggle so the review queue stays short. */
+function useFolded<T extends { status: string }>(rows: T[], keep = 3) {
+  const [all, setAll] = useState(false);
+  const pending = rows.filter(r => r.status === 'PENDING_REVIEW'), rest = rows.filter(r => r.status !== 'PENDING_REVIEW');
+  const shown = all ? rows : [...pending, ...rest.slice(0, Math.max(0, keep - pending.length))];
+  const hidden = rows.length - shown.length;
+  const toggle = hidden > 0 || all
+    ? <button type="button" onClick={() => setAll(v => !v)} className="w-full py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black">{all ? 'إخفاء المعالَج' : `عرض الكل (${hidden.toLocaleString('ar-EG')} أخرى)`}</button>
+    : null;
+  return { shown, toggle };
+}
 const kuwaitDay = () => new Date(Date.now() + 3 * 3_600_000).toISOString().slice(0, 10);
 const field = 'w-full glass-input rounded-xl px-3 py-2.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300';
 
@@ -48,12 +59,13 @@ export const ShowcaseAdmin: React.FC = () => {
   const seasons = upcomingSeasons(kuwaitDay());
   const weekly = (c: AdCampaign) => `ملخص أسبوع حملة «${c.headline}» (${c.company}) في مجال:\nظهور: ${(c.weekImpressions ?? 0).toLocaleString('ar-EG')}\nنقرات: ${(c.weekClicks ?? 0).toLocaleString('ar-EG')}\nالإجمالي: ظهور ${c.impressions.toLocaleString('ar-EG')} · نقرات ${c.clicks.toLocaleString('ar-EG')}${c.endsOn ? `\nتنتهي: ${c.endsOn}` : ''}`;
   const copy = async (text: string, ok: string) => { try { await navigator.clipboard.writeText(text); setNotice(ok); } catch { setNotice(text); } };
+  const sup = useFolded(suppliers), lis = useFolded(listings), cam = useFolded(campaigns, 4);
   const pendingListings = listings.filter(l => l.status === 'PENDING_REVIEW').length, pendingAds = campaigns.filter(c => c.status === 'PENDING_REVIEW').length;
 
   return (
     <div className="space-y-6">
       <section className="glass-panel rounded-3xl p-5 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3"><span className="w-11 h-11 rounded-2xl bg-gold-500/10 border border-gold-300/20 grid place-items-center"><Megaphone className="w-5 h-5 text-gold-300" aria-hidden="true" /></span><div><h2 className="font-black text-lg">المشاريع المعروضة والإعلانات</h2><p className="text-xs text-slate-400 mt-1">{pendingListings} مشروع و{pendingAds} حملة و{suppliers.filter(s => s.status === 'PENDING_REVIEW').length} مورد بانتظار القرار</p></div></div>
+        <div className="flex items-center gap-3"><span className="w-11 h-11 rounded-2xl bg-gold-500/10 border border-gold-300/20 grid place-items-center"><Megaphone className="w-5 h-5 text-gold-300" aria-hidden="true" /></span><div><h2 className="font-black text-lg">المشاريع المعروضة والإعلانات</h2><p className="text-xs text-slate-400 mt-1">{pendingListings.toLocaleString('ar-EG')} مشروع و{pendingAds.toLocaleString('ar-EG')} حملة و{suppliers.filter(s => s.status === 'PENDING_REVIEW').length.toLocaleString('ar-EG')} مورد بانتظار القرار</p></div></div>
         <button type="button" onClick={load} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black flex items-center gap-2"><RefreshCw className="w-4 h-4" aria-hidden="true" />تحديث</button>
       </section>
       {error && <div role="alert" className="p-4 rounded-2xl bg-rose-500/10 border border-rose-400/20 text-xs text-rose-200">{error}</div>}
@@ -62,7 +74,7 @@ export const ShowcaseAdmin: React.FC = () => {
         <>
         <section className="space-y-3" aria-labelledby="dir-admin-title">
           <div className="flex items-center gap-2"><Truck className="w-5 h-5 text-gold-300" aria-hidden="true" /><h3 id="dir-admin-title" className="font-black">دليل الموردين</h3></div>
-          {suppliers.length ? <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">{suppliers.map(s => (
+          {suppliers.length ? <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">{sup.shown.map(s => (
             <article key={s.id} className="glass-card rounded-2xl p-4 border border-white/10 space-y-2.5">
               <div className="flex justify-between gap-3"><div className="min-w-0"><div className="text-xs text-gold-300 font-black">{SUPPLIER_CATEGORIES[s.category]?.label} · {s.region}</div><h4 className="font-black mt-0.5 truncate">{s.name}</h4></div><span className={`text-xs px-2 py-1 rounded-full h-fit shrink-0 ${s.status === 'PENDING_REVIEW' ? 'bg-amber-500/10 text-amber-300' : 'bg-emerald-500/10 text-emerald-300'}`}>{STATUS[s.status]}</span></div>
               <p className="text-xs text-slate-400 leading-6 line-clamp-2">{s.description}</p>
@@ -71,13 +83,13 @@ export const ShowcaseAdmin: React.FC = () => {
                 {s.status !== 'APPROVED' && <button disabled={busy === s.id} onClick={() => run(s.id, () => reviewDirectorySupplier(s.id, 'APPROVED'))} className="flex-1 py-2 rounded-xl bg-emerald-400 text-slate-950 text-xs font-black disabled:opacity-40 flex items-center justify-center gap-1.5"><Check className="w-4 h-4" aria-hidden="true" />اعتماد ونشر</button>}
                 <button disabled={busy === s.id} onClick={() => run(s.id, () => reviewDirectorySupplier(s.id, 'REJECTED', 'يحتاج تعديلًا قبل النشر.'))} className="px-4 py-2 rounded-xl bg-rose-500/10 border border-rose-400/20 text-rose-300 text-xs font-black flex items-center gap-1"><X className="w-4 h-4" aria-hidden="true" />{s.status === 'APPROVED' ? 'إخفاء' : 'رفض'}</button>
               </div>
-            </article>))}</div>
+            </article>))}{sup.toggle && <div className="md:col-span-2 xl:col-span-3">{sup.toggle}</div>}</div>
             : <div className="rounded-2xl p-6 border border-dashed border-white/10 text-center text-xs text-slate-400">لا توجد طلبات موردين.</div>}
         </section>
         <div className="grid xl:grid-cols-2 gap-6">
           <section className="space-y-3">
             <div className="flex items-center gap-2"><Store className="w-5 h-5 text-gold-300" aria-hidden="true" /><h3 className="font-black">مشاريع للبيع</h3></div>
-            {listings.length ? listings.map(l => (
+            {listings.length ? lis.shown.map(l => (
               <article key={l.id} className="glass-card rounded-2xl p-5 border border-white/10 space-y-3">
                 <div className="flex justify-between gap-3"><div className="min-w-0"><div className="text-xs text-gold-300 font-black">{SECTORS[l.sector]?.label} · {l.city}</div><h4 className="font-black mt-1">{l.title}</h4></div><span className={`text-xs px-2 py-1 rounded-full h-fit shrink-0 whitespace-nowrap ${l.status === 'PENDING_REVIEW' ? 'bg-amber-500/10 text-amber-300' : 'bg-emerald-500/10 text-emerald-300'}`}>{STATUS[l.status]}</span></div>
                 <p className="text-xs text-slate-400 leading-6 line-clamp-3">{l.summary}</p>
@@ -89,6 +101,7 @@ export const ShowcaseAdmin: React.FC = () => {
                 </div>
               </article>
             )) : <div className="rounded-2xl p-6 border border-dashed border-white/10 text-center text-xs text-slate-400"><BadgeCheck className="w-6 h-6 mx-auto text-gold-300 mb-2" aria-hidden="true" />لا توجد مشاريع.</div>}
+          {lis.toggle}
           </section>
 
           <section className="space-y-3">
@@ -107,7 +120,7 @@ export const ShowcaseAdmin: React.FC = () => {
               <TargetChips audiences={draft.audiences} topics={draft.topics} onChange={(audiences, topics) => setDraft(d => ({ ...d, audiences, topics }))} />
               <button disabled={busy === 'create'} className="w-full py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black disabled:opacity-50">إنشاء</button>
             </form>
-            {campaigns.map(c => {
+            {cam.shown.map(c => {
               const d = dates[c.id] ?? { s: c.startsOn ?? '', e: c.endsOn ?? '' };
               return (
                 <article key={c.id} className="glass-card rounded-2xl p-5 border border-white/10 space-y-3">
@@ -130,6 +143,7 @@ export const ShowcaseAdmin: React.FC = () => {
                 </article>
               );
             })}
+          {cam.toggle}
           </section>
         </div>
         </>
