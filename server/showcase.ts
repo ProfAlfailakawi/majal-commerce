@@ -5,7 +5,7 @@ import { AuthConfig, AuthenticatedRequest, requireAuth, requireCsrf } from './au
 import express from 'express';
 import { MajalDatabase, withTransaction } from './database';
 import { creativeProblem, readImageMeta } from './image-meta';
-import { createOrCoalesceNotification } from './notifications';
+import { notifyAdmins } from './notify';
 import { abVerdict, type VariantCount } from '../src/lib/abTest';
 
 /*
@@ -122,22 +122,6 @@ const campaignAdmin = (row: CampaignRow, stat?: { impressions: number; clicks: n
 const pick = <T extends string>(value: unknown, list: readonly T[], max = 10): T[] =>
   Array.isArray(value) ? [...new Set(value.filter((v): v is T => typeof v === 'string' && (list as readonly string[]).includes(v)))].slice(0, max) : [];
 const audienceOf = (value: unknown) => oneOf(typeof value === 'string' ? value.toUpperCase() : '', AD_AUDIENCES) ?? 'VISITOR';
-
-/**
- * A public submission must not wait unseen: every active administrator gets one inbox item per kind
- * (repeats coalesce into a counter). A failure here never fails the submitter's request.
- */
-async function notifyAdmins(db: MajalDatabase, kind: 'business' | 'supplier' | 'ad', title: string) {
-  try {
-    const admins = await db.prepare("SELECT id FROM users WHERE role IN ('ADMIN','SUPER_ADMIN') AND status='ACTIVE' LIMIT 20").all<{ id: string }>();
-    for (const a of admins) {
-      await createOrCoalesceNotification(db, {
-        userId: a.id, category: 'SHOWCASE_REVIEW', priority: 'SOON', title, body: 'بانتظار قرارك في تبويب الاعتمادات.',
-        actionLabel: 'افتح الاعتمادات', actionSurface: 'ADMIN', dedupeKey: `showcase-pending:${kind}`
-      });
-    }
-  } catch { /* the submission already succeeded */ }
-}
 
 /** Where a campaign is in time, independent of its review status. */
 const phaseOf = (row: Pick<CampaignRow, 'status' | 'starts_on' | 'ends_on'>, today: string) => {

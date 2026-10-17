@@ -6,6 +6,8 @@ import { releaseOrderReservation } from './checkout';
 import { appendLedgerEntry } from './ledger';
 import { isKillSwitchEngaged } from './kill-switch';
 
+import { SURFACE, launchParties, notify } from './notify';
+
 export type PaymentIntentStatus =
   | 'PENDING_PROVIDER'
   | 'REDIRECT_REQUIRED'
@@ -410,6 +412,24 @@ const allowedTransitions: Record<PaymentIntentStatus, PaymentIntentStatus[]> = {
 };
 
 export async function applyVerifiedPaymentEvent(db: MajalDatabase, event: VerifiedPaymentEvent, rawBody: Buffer) {
+  const result = await applyVerifiedPaymentEventInner(db, event, rawBody);
+  // Told after the transaction commits, and only for the first delivery: a replayed webhook is a duplicate.
+  if (!('duplicate' in result && result.duplicate) && event.status === 'PAID') {
+    try {
+      const intentId = (result as { intentId?: string }).intentId;
+      const order = intentId ? await db.prepare('SELECT launch_id FROM orders WHERE payment_intent_id = ? LIMIT 1').get<{ launch_id: string }>(intentId) : undefined;
+      const parties = order ? await launchParties(db, order.launch_id) : undefined;
+      if (parties) {
+        const input = { category: 'ORDER', priority: 'SOON' as const, title: 'طلب جديد مدفوع', body: `وصل طلب مدفوع على «${parties.title}».`, entityType: 'LAUNCH', entityId: parties.launchId, dedupeKey: `orders-paid:${parties.launchId}` };
+        await notify(db, parties.hostUsers, { ...input, actionLabel: 'افتح الطلبات', actionSurface: SURFACE.host });
+        await notify(db, [parties.creatorUser], { ...input, actionLabel: 'افتح مساحتك', actionSurface: SURFACE.creator });
+      }
+    } catch { /* a notification failure must never undo or fail a captured payment */ }
+  }
+  return result;
+}
+
+async function applyVerifiedPaymentEventInner(db: MajalDatabase, event: VerifiedPaymentEvent, rawBody: Buffer) {
   return withTransaction(db, async tx => {
     const payloadHash = createHash('sha256').update(rawBody).digest('hex');
     const receipt = await tx.prepare(`

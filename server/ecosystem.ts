@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { Response, Router } from 'express';
 import { AuthConfig, AuthenticatedRequest, requireAuth, requireCsrf } from './auth';
 import { MajalDatabase, withTransaction } from './database';
+import { SURFACE, HOST_DECIDERS, notify, notifyAdmins, orgMemberIds } from './notify';
 
 const now = () => new Date().toISOString();
 const text = (value: unknown, min = 1, max = 500) => {
@@ -241,6 +242,7 @@ export function createEcosystemRouter(db: MajalDatabase, authConfig: AuthConfig)
     await db.prepare("UPDATE supplier_profiles SET commercial_registration_no=?,verification_status='PENDING',admin_note='',updated_at=? WHERE id=?")
       .run(registration, updatedAt, supplier.id);
     await audit(db, req, 'SUPPLIER_VERIFICATION_SUBMITTED', 'SUPPLIER', supplier.id, supplier, { verificationStatus: 'PENDING' });
+    await notifyAdmins(db, 'supplier-verification', 'طلب توثيق مورد جديد', 'مورد أرسل بيانات السجل التجاري للمراجعة.');
     const updated = await db.prepare('SELECT * FROM supplier_profiles WHERE id=?').get<SupplierRow>(supplier.id);
     res.json({ supplier: supplierOwner(updated!) });
   });
@@ -293,6 +295,7 @@ export function createEcosystemRouter(db: MajalDatabase, authConfig: AuthConfig)
     );
     const row = await db.prepare('SELECT * FROM job_posts WHERE id=?').get<JobRow>(id);
     await audit(db, req, 'KUWAIT_JOB_SUBMITTED', 'JOB_POST', id, undefined, row, employer.type === 'HOST' ? employer.id : null);
+    await notifyAdmins(db, 'job', 'إعلان وظيفة ينتظر المراجعة', `${employer.name}: ${title}`);
     res.status(201).json({ job: jobPublic(row!), message: 'أُرسل الإعلان للإدارة. لن يظهر للباحثين عن عمل قبل الموافقة.' });
   });
 
@@ -335,6 +338,12 @@ export function createEcosystemRouter(db: MajalDatabase, authConfig: AuthConfig)
       if (String(error).includes('UNIQUE') || String(error).includes('duplicate')) return jsonError(res, 409, 'سبق أن قدمت على هذه الوظيفة.', 'ALREADY_APPLIED');
       throw error;
     }
+    {
+      const targets = job.employer_type === 'HOST'
+        ? await orgMemberIds(db, job.employer_id, HOST_DECIDERS)
+        : [(await db.prepare('SELECT user_id FROM supplier_profiles WHERE id=?').get<{ user_id: string }>(job.employer_id))?.user_id].filter((x): x is string => !!x);
+      await notify(db, targets, { category: 'JOB_APPLICATION', priority: 'SOON', title: 'طلب توظيف جديد', body: `تقدّم باحث عن عمل على وظيفة «${job.title}».`, actionLabel: 'افتح الوظائف', actionSurface: job.employer_type === 'HOST' ? SURFACE.host : SURFACE.supplier, entityType: 'JOB_POST', entityId: job.id, dedupeKey: `job-app:${job.id}` }, req.auth!.user.id);
+    }
     await audit(db, req, 'KUWAIT_JOB_APPLIED', 'JOB_APPLICATION', id, undefined, { jobId: job.id });
     res.status(201).json({ id, status: 'SUBMITTED', note: 'الإقرار لا يعني أن المنصة تحققت من الجنسية. التحقق الرسمي يحتاج تكاملًا معتمدًا.' });
   });
@@ -363,6 +372,7 @@ export function createEcosystemRouter(db: MajalDatabase, authConfig: AuthConfig)
       await audit(tx, req, 'SUPPLIER_REVIEWED', 'SUPPLIER', before.id, before, { decision, adminNote });
     });
     const updated = await db.prepare('SELECT * FROM supplier_profiles WHERE id=?').get<SupplierRow>(before.id);
+    await notify(db, [before.user_id], { category: 'VERIFICATION', priority: 'NOW', title: decision === 'VERIFIED' ? 'تم توثيق حسابك كمورد' : decision === 'NEEDS_ACTION' ? 'طلب التوثيق يحتاج تعديلًا' : 'تم إيقاف حساب المورد', body: adminNote || (decision === 'VERIFIED' ? 'صرت ظاهرًا كمورد موثّق.' : 'راجع ملاحظات الإدارة.'), actionLabel: 'افتح بوابة المورد', actionSurface: SURFACE.supplier, entityType: 'SUPPLIER', entityId: before.id, dedupeKey: `supplier-review:${before.id}:${decision}` }, req.auth!.user.id);
     res.json({ supplier: supplierOwner(updated!) });
   });
 
@@ -381,6 +391,7 @@ export function createEcosystemRouter(db: MajalDatabase, authConfig: AuthConfig)
       await audit(tx, req, 'KUWAIT_JOB_REVIEWED', 'JOB_POST', before.id, before, { decision, adminNote });
     });
     const updated = await db.prepare('SELECT * FROM job_posts WHERE id=?').get<JobRow>(before.id);
+    await notify(db, [before.created_by_user_id], { category: 'JOB_REVIEW', priority: 'NOW', title: decision === 'APPROVED' ? 'اعتُمد إعلان وظيفتك' : 'رُفض إعلان وظيفتك', body: adminNote || `«${before.title}»`, actionLabel: 'افتح الوظائف', actionSurface: before.employer_type === 'HOST' ? SURFACE.host : SURFACE.supplier, entityType: 'JOB_POST', entityId: before.id, dedupeKey: `job-review:${before.id}:${decision}` }, req.auth!.user.id);
     res.json({ job: jobPublic(updated!) });
   });
 

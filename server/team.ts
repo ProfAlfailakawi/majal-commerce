@@ -3,6 +3,7 @@ import { Response, Router } from 'express';
 import { rateLimit as expressRateLimit } from 'express-rate-limit';
 import { AuthConfig, AuthenticatedRequest, AuthRole, createUser, normalizeEmail, requireAuth, requireCsrf, validatePassword } from './auth';
 import { MajalDatabase, withTransaction } from './database';
+import { SURFACE, notify, orgMemberIds } from './notify';
 
 /*
  * Facility team self-service. The HOST_OWNER invites colleagues by a private one-time link,
@@ -78,6 +79,7 @@ export function createTeamRouter(db: MajalDatabase, authConfig: AuthConfig) {
       if (error instanceof Error && error.message === 'INVITE_USED') return jsonError(res, 409, 'استُخدمت هذه الدعوة.', 'INVITE_USED');
       throw error;
     }
+    await notify(db, await orgMemberIds(db, row.organization_id, ['HOST_OWNER']), { category: 'TEAM', priority: 'SOON', title: 'انضم عضو جديد لفريقك', body: `${name} قبل الدعوة وفُعّل حسابه.`, actionLabel: 'افتح الفريق', actionSurface: SURFACE.host, entityType: 'ORGANIZATION', entityId: row.organization_id, dedupeKey: `team-joined:${row.id}` });
     res.status(201).json({ message: 'تم تفعيل حسابك. سجّل الدخول بالبريد وكلمة المرور.' });
   });
 

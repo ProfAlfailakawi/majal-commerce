@@ -1,4 +1,5 @@
 import { notifyCreatorFollowers } from './commerce-ops';
+import { SURFACE, HOST_PRODUCT, collaborationSides, creatorUserId, notify, orgMemberIds } from './notify';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { Response, Router } from 'express';
 import { AuthConfig, AuthenticatedRequest, requireAuth, requireCsrf, requireRoles } from './auth';
@@ -701,6 +702,10 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
         await audit(tx,req,'RECIPE_ACCESS_REQUESTED','RECIPE_ACCESS_GRANT',id,undefined,{productId,level,purpose,collaborationId:collab.id},org);
         return {id,status:'REQUESTED',disclosureLevel:level,collaborationId:collab.id};
       }));
+      if (result.status === 'REQUESTED') {
+        const name = (await db.prepare('SELECT public_name FROM products WHERE id=?').get<{public_name:string}>(productId))?.public_name ?? 'منتجك';
+        await notify(db, [await creatorUserId(db, product.creator_id)], { category: 'RECIPE_ACCESS', priority: 'NOW', title: 'طلب وصول جديد لوصفتك', body: `منشأة تطلب مستوى إفصاح ${level} على «${name}».`, actionLabel: 'راجع الطلب', actionSurface: SURFACE.creator, entityType: 'PRODUCT', entityId: productId, dedupeKey: `recipe-access:${productId}:${org}` }, req.auth!.user.id);
+      }
       res.status(201).json(result);
     }catch(e){handleDomainError(res,e)}
   });
@@ -718,6 +723,7 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
           .run(updated,String(grant.product_id),String(grant.organization_id));
         await audit(tx,req,'RECIPE_ACCESS_APPROVED','RECIPE_ACCESS_GRANT',req.params.id,grant,{level,expires},String(grant.organization_id));
       });
+      await notify(db, await orgMemberIds(db, String(grant.organization_id), HOST_PRODUCT), { category: 'RECIPE_ACCESS', priority: 'NOW', title: 'وافق المبدع على طلب الوصول', body: `صار بإمكانكم الاطلاع على الوصفة بمستوى إفصاح ${level} لمدة ${days} يومًا.`, actionLabel: 'افتح المنشأة', actionSurface: SURFACE.host, entityType: 'PRODUCT', entityId: String(grant.product_id), dedupeKey: `recipe-access-granted:${req.params.id}` }, req.auth!.user.id);
       res.json({id:req.params.id,status:'APPROVED',disclosureLevel:level,expiresAt:expires});
     }catch(e){handleDomainError(res,e)}
   });
@@ -725,7 +731,7 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
   router.post('/recipe-access/:id/revoke', async (req: AuthenticatedRequest,res)=>{
     try { const grant=await db.prepare('SELECT * FROM recipe_access_grants WHERE id=?').get<Record<string,unknown>>(req.params.id); if(!grant)return jsonError(res,404,'الإذن غير موجود.','NOT_FOUND');
       if(!isCreator(req,String(grant.creator_id)))return jsonError(res,403,'الإلغاء للمبدع المالك فقط.','FORBIDDEN');
-      await db.prepare("UPDATE recipe_access_grants SET status='REVOKED', updated_at=? WHERE id=? AND status<>'REVOKED'").run(now(),req.params.id); await audit(db,req,'RECIPE_ACCESS_REVOKED','RECIPE_ACCESS_GRANT',req.params.id,grant,{status:'REVOKED'},String(grant.organization_id)); res.json({id:req.params.id,status:'REVOKED'});
+      await db.prepare("UPDATE recipe_access_grants SET status='REVOKED', updated_at=? WHERE id=? AND status<>'REVOKED'").run(now(),req.params.id); await audit(db,req,'RECIPE_ACCESS_REVOKED','RECIPE_ACCESS_GRANT',req.params.id,grant,{status:'REVOKED'},String(grant.organization_id)); await notify(db, await orgMemberIds(db, String(grant.organization_id), HOST_PRODUCT), { category: 'RECIPE_ACCESS', priority: 'NOW', title: 'سحب المبدع إذن الوصفة', body: 'لم يعد بإمكانكم الاطلاع على الوصفة. راجعوا التعاون إن لزم.', actionLabel: 'افتح المنشأة', actionSurface: SURFACE.host, entityType: 'PRODUCT', entityId: String(grant.product_id), dedupeKey: `recipe-access-revoked:${req.params.id}` }, req.auth!.user.id); res.json({id:req.params.id,status:'REVOKED'});
     }catch(e){handleDomainError(res,e)}
   });
 
@@ -740,7 +746,13 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
         await tx.prepare("INSERT INTO offer_versions(id,collaboration_id,version_number,sender_user_id,selling_price_fils,creator_royalty_basis_points,platform_fee_basis_points,status,terms_json,created_at) VALUES(?,?,?,?,?,?,?,'PENDING',?,?)")
           .run(id,col.id,version,req.auth!.user.id,price,royalty,platform,JSON.stringify(terms),created);
         await tx.prepare("UPDATE collaborations SET stage='OFFER_SENT', version=version+1, updated_at=? WHERE id=?").run(created,col.id); await audit(tx,req,'OFFER_CREATED','OFFER',id,undefined,terms,col.organization_id); return{id,version,status:'PENDING',...terms};
-      })); res.status(201).json(result);
+      }));
+      {
+        const sides = await collaborationSides(db, col.id);
+        const fromCreator = isCreator(req, col.creator_id);
+        if (sides) await notify(db, fromCreator ? sides.hostUsers : [sides.creatorUser], { category: 'OFFER', priority: 'NOW', title: fromCreator ? 'عرض مقابل من المبدع' : 'عرض تجاري جديد', body: 'وصلك عرض بشروط جديدة ينتظر قرارك.', actionLabel: 'راجع العرض', actionSurface: fromCreator ? SURFACE.host : SURFACE.creator, entityType: 'COLLABORATION', entityId: col.id, dedupeKey: `offer:${col.id}` }, req.auth!.user.id);
+      }
+      res.status(201).json(result);
     }catch(e){handleDomainError(res,e)}
   });
 
@@ -760,7 +772,9 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
           return version;
         });
         return{offerId:offer.id,contractId,versionNumber:nextVersion,status:'PENDING_SIGNATURES',documentSha256:receipt.plaintextSha256};
-      }); res.json(result);
+      });
+      await notify(db, [offer.sender_user_id], { category: 'OFFER', priority: 'NOW', title: 'قُبل عرضك', body: 'جُهّز العقد وينتظر التوقيع بالهوية الرقمية.', actionLabel: 'افتح العقد', actionSurface: isCreator(req, col.creator_id) ? SURFACE.creator : SURFACE.host, entityType: 'COLLABORATION', entityId: col.id, dedupeKey: `offer-accepted:${offer.id}` }, req.auth!.user.id);
+      res.json(result);
     }catch(e){handleDomainError(res,e)}
   });
 
@@ -769,7 +783,17 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
       const paci=await db.prepare("SELECT id,user_id,status,purpose,expires_at,provider_reference FROM paci_auth_requests WHERE id=? AND user_id=?").get<{id:string;user_id:string;status:string;purpose:string;expires_at:string;provider_reference:string|null}>(paciId,req.auth!.user.id); if(!paci||paci.status!=='VERIFIED'||new Date(paci.expires_at).getTime()<Date.now()||!paci.purpose.toUpperCase().includes('CONTRACT'))return jsonError(res,409,'تحقق PACI غير صالح للتوقيع الحالي.','PACI_NOT_VERIFIED');
       const evidence=sha256(canonical({contractId:contract.id,documentSha256:contract.document_sha256,userId:req.auth!.user.id,side,paciReference:paci.provider_reference,signedAt:now()})), signatureId=`sig_${randomUUID()}`, signedAt=now();
       await withTransaction(db,async tx=>{ await tx.prepare('INSERT INTO contract_signatures(id,contract_id,signer_user_id,signer_side,paci_request_id,document_sha256,signature_evidence_sha256,signed_at) VALUES(?,?,?,?,?,?,?,?)').run(signatureId,contract.id,req.auth!.user.id,side,paci.id,contract.document_sha256,evidence,signedAt); if(side==='CREATOR')await tx.prepare('UPDATE contract_versions SET creator_paci_request_id=? WHERE id=?').run(paci.id,contract.id); else await tx.prepare('UPDATE contract_versions SET host_paci_request_id=? WHERE id=?').run(paci.id,contract.id); const count=await tx.prepare('SELECT COUNT(*) AS c FROM contract_signatures WHERE contract_id=?').get<{c:number|string}>(contract.id); if(Number(count?.c)===2){await tx.prepare("UPDATE contract_versions SET status='FULLY_SIGNED' WHERE id=?").run(contract.id);await tx.prepare("UPDATE collaborations SET stage='SIGNED', version=version+1, updated_at=? WHERE id=?").run(signedAt,col.id);} await audit(tx,req,'CONTRACT_SIGNED','CONTRACT',contract.id,contract,{side,evidence},col.organization_id); });
-      const updated=await db.prepare('SELECT status FROM contract_versions WHERE id=?').get<{status:string}>(contract.id); res.json({contractId:contract.id,signatureId,side,status:updated?.status,evidenceSha256:evidence,signedAt});
+      const updated=await db.prepare('SELECT status FROM contract_versions WHERE id=?').get<{status:string}>(contract.id); {
+        const sides = await collaborationSides(db, col.id);
+        if (sides) {
+          const full = updated?.status === 'FULLY_SIGNED';
+          const toCreator = side === 'HOST' || full, toHost = side === 'CREATOR' || full;
+          const input = { category: 'CONTRACT', priority: 'NOW' as const, title: full ? 'العقد موقّع من الطرفين' : 'وقّع الطرف الآخر العقد', body: full ? 'اكتمل التوقيع. يمكن متابعة بوابة الإطلاق.' : 'ينتظر توقيعك بالهوية الرقمية.', actionLabel: 'افتح العقد', entityType: 'CONTRACT', entityId: contract.id, dedupeKey: `contract:${contract.id}:${full ? 'done' : side}` };
+          if (toCreator) await notify(db, [sides.creatorUser], { ...input, actionSurface: SURFACE.creator }, req.auth!.user.id);
+          if (toHost) await notify(db, sides.hostUsers, { ...input, actionSurface: SURFACE.host }, req.auth!.user.id);
+        }
+      }
+      res.json({contractId:contract.id,signatureId,side,status:updated?.status,evidenceSha256:evidence,signedAt});
     }catch(e){handleDomainError(res,e)}
   });
 
@@ -782,15 +806,15 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
   });
 
   router.post('/collaborations/:id/launch/activate', async (req: AuthenticatedRequest,res)=>{
-    try{const col=await collaboration(db,req.params.id);if(!col||!isHost(req,col.organization_id))return jsonError(res,403,'لا تملك صلاحية التفعيل.','FORBIDDEN');const gate=await launchGate(db,col);if(!gate.allRequirementsPassed)return res.status(409).json({error:'بوابة الإطلاق غير مكتملة.',code:'LAUNCH_GATE_INCOMPLETE',gate});const start=now();const updated=await db.prepare("UPDATE launches SET status='LIVE',starts_at=?,updated_at=? WHERE collaboration_id=? AND status<>'LIVE'").run(start,start,col.id);if(!updated.changes)return jsonError(res,409,'الإطلاق غير مجهز أو مفعل مسبقًا.','LAUNCH_STATE_CONFLICT');await db.prepare("UPDATE collaborations SET stage='LIVE_TRIAL',version=version+1,updated_at=? WHERE id=?").run(start,col.id);await audit(db,req,'LAUNCH_ACTIVATED','COLLABORATION',col.id,undefined,{startsAt:start},col.organization_id);const activated=await db.prepare('SELECT id FROM launches WHERE collaboration_id=?').get<{id:string}>(col.id);if(activated)void notifyCreatorFollowers(db,activated.id).catch(()=>undefined);res.json({collaborationId:col.id,status:'LIVE',startsAt:start,gate});}catch(e){handleDomainError(res,e)}
+    try{const col=await collaboration(db,req.params.id);if(!col||!isHost(req,col.organization_id))return jsonError(res,403,'لا تملك صلاحية التفعيل.','FORBIDDEN');const gate=await launchGate(db,col);if(!gate.allRequirementsPassed)return res.status(409).json({error:'بوابة الإطلاق غير مكتملة.',code:'LAUNCH_GATE_INCOMPLETE',gate});const start=now();const updated=await db.prepare("UPDATE launches SET status='LIVE',starts_at=?,updated_at=? WHERE collaboration_id=? AND status<>'LIVE'").run(start,start,col.id);if(!updated.changes)return jsonError(res,409,'الإطلاق غير مجهز أو مفعل مسبقًا.','LAUNCH_STATE_CONFLICT');await db.prepare("UPDATE collaborations SET stage='LIVE_TRIAL',version=version+1,updated_at=? WHERE id=?").run(start,col.id);await audit(db,req,'LAUNCH_ACTIVATED','COLLABORATION',col.id,undefined,{startsAt:start},col.organization_id);const activated=await db.prepare('SELECT id FROM launches WHERE collaboration_id=?').get<{id:string}>(col.id);if(activated)void notifyCreatorFollowers(db,activated.id).catch(()=>undefined);await notify(db,[await creatorUserId(db,col.creator_id)],{category:'LAUNCH',priority:'NOW',title:'إطلاقك صار حيًّا',body:'بدأ البيع. تابع الطلبات من لوحتك.',actionLabel:'افتح مساحتك',actionSurface:SURFACE.creator,entityType:'COLLABORATION',entityId:col.id,dedupeKey:`launch-live:${col.id}`},req.auth!.user.id);res.json({collaborationId:col.id,status:'LIVE',startsAt:start,gate});}catch(e){handleDomainError(res,e)}
   });
 
   router.post('/settlements/:creatorId/approve', requireRoles('ADMIN','SUPER_ADMIN'), async (req: AuthenticatedRequest,res)=>{
-    try{await assertKillSwitchClear(db,'SETTLEMENTS');const result=await withIdempotency(db,req,'SETTLEMENT_APPROVE',async()=>withTransaction(db,async tx=>{const rows=await tx.prepare("SELECT id,amount_fils FROM accruals WHERE creator_id=? AND status='ELIGIBLE'").all<{id:string;amount_fils:number|string}>(req.params.creatorId);if(!rows.length)throw Object.assign(new Error('NO_ELIGIBLE_ACCRUALS'),{status:409});const total=rows.reduce((s,r)=>s+Number(r.amount_fils),0),id=`stl_${randomUUID()}`,created=now();await tx.prepare("INSERT INTO settlement_batches(id,creator_id,total_fils,status,created_at,updated_at) VALUES(?,?,?,'APPROVED',?,?)").run(id,req.params.creatorId,total,created,created);await tx.prepare("UPDATE accruals SET status='LOCKED',settlement_batch_id=?,updated_at=? WHERE creator_id=? AND status='ELIGIBLE'").run(id,created,req.params.creatorId);await audit(tx,req,'SETTLEMENT_APPROVED','SETTLEMENT_BATCH',id,undefined,{totalFils:total});return{id,totalFils:total,status:'APPROVED'};}));res.status(201).json(result);}catch(e){handleDomainError(res,e)}
+    try{await assertKillSwitchClear(db,'SETTLEMENTS');const result=await withIdempotency(db,req,'SETTLEMENT_APPROVE',async()=>withTransaction(db,async tx=>{const rows=await tx.prepare("SELECT id,amount_fils FROM accruals WHERE creator_id=? AND status='ELIGIBLE'").all<{id:string;amount_fils:number|string}>(req.params.creatorId);if(!rows.length)throw Object.assign(new Error('NO_ELIGIBLE_ACCRUALS'),{status:409});const total=rows.reduce((s,r)=>s+Number(r.amount_fils),0),id=`stl_${randomUUID()}`,created=now();await tx.prepare("INSERT INTO settlement_batches(id,creator_id,total_fils,status,created_at,updated_at) VALUES(?,?,?,'APPROVED',?,?)").run(id,req.params.creatorId,total,created,created);await tx.prepare("UPDATE accruals SET status='LOCKED',settlement_batch_id=?,updated_at=? WHERE creator_id=? AND status='ELIGIBLE'").run(id,created,req.params.creatorId);await audit(tx,req,'SETTLEMENT_APPROVED','SETTLEMENT_BATCH',id,undefined,{totalFils:total});return{id,totalFils:total,status:'APPROVED'};}));await notify(db,[await creatorUserId(db,req.params.creatorId)],{category:'SETTLEMENT',priority:'NOW',title:'اعتُمدت دفعة مستحقاتك',body:`المبلغ ${(Number(result.totalFils)/1000).toFixed(3)} د.ك بانتظار التحويل.`,actionLabel:'افتح مستحقاتك',actionSurface:SURFACE.creator,entityType:'SETTLEMENT',entityId:result.id,dedupeKey:`settlement-approved:${result.id}`});res.status(201).json(result);}catch(e){handleDomainError(res,e)}
   });
 
   router.post('/internal/settlements/:id/paid', requireRoles('ADMIN','SUPER_ADMIN'), async (req: AuthenticatedRequest,res)=>{
-    try{await assertKillSwitchClear(db,'SETTLEMENTS');const expected=process.env.SETTLEMENT_RECONCILIATION_SECRET?.trim();if(!expected||expected.length<32||req.header('x-reconciliation-secret')!==expected)return jsonError(res,403,'تأكيد الدفع يتطلب قناة تسوية موثقة.','RECONCILIATION_REQUIRED');const ref=text(req.body?.providerReference,4,200);if(!ref)return jsonError(res,400,'مرجع المزود مطلوب.','PROVIDER_REFERENCE_REQUIRED');const result=await applySettlementPaid(db,req.params.id,ref,(tx,batch)=>audit(tx,req,'SETTLEMENT_PAID','SETTLEMENT_BATCH',req.params.id,batch,{providerReference:ref}));res.json({id:req.params.id,status:result.status,providerReference:ref,applied:result.applied});}catch(e){handleDomainError(res,e)}
+    try{await assertKillSwitchClear(db,'SETTLEMENTS');const expected=process.env.SETTLEMENT_RECONCILIATION_SECRET?.trim();if(!expected||expected.length<32||req.header('x-reconciliation-secret')!==expected)return jsonError(res,403,'تأكيد الدفع يتطلب قناة تسوية موثقة.','RECONCILIATION_REQUIRED');const ref=text(req.body?.providerReference,4,200);if(!ref)return jsonError(res,400,'مرجع المزود مطلوب.','PROVIDER_REFERENCE_REQUIRED');const result=await applySettlementPaid(db,req.params.id,ref,(tx,batch)=>audit(tx,req,'SETTLEMENT_PAID','SETTLEMENT_BATCH',req.params.id,batch,{providerReference:ref}));if(result.applied){const batch=await db.prepare('SELECT creator_id,total_fils FROM settlement_batches WHERE id=?').get<{creator_id:string;total_fils:number|string}>(req.params.id);if(batch)await notify(db,[await creatorUserId(db,batch.creator_id)],{category:'SETTLEMENT',priority:'NOW',title:'تم تحويل مستحقاتك',body:`حُوّل ${(Number(batch.total_fils)/1000).toFixed(3)} د.ك. مرجع الدفعة محفوظ في سجلك.`,actionLabel:'افتح مستحقاتك',actionSurface:SURFACE.creator,entityType:'SETTLEMENT',entityId:req.params.id,dedupeKey:`settlement-paid:${req.params.id}`});}res.json({id:req.params.id,status:result.status,providerReference:ref,applied:result.applied});}catch(e){handleDomainError(res,e)}
   });
 
   // 1. Secret recipe seal: public commitment only; salt stays in encrypted storage.
