@@ -43,17 +43,33 @@ async function request<T>(url: string, init: RequestInit = {}) {
   return payload as T;
 }
 
+// The session cookie is HttpOnly, and in production there is no readable CSRF cookie, so a
+// localStorage flag records that a session was started in this browser.
+const sessionHintKey = 'majal_session_hint';
+
+function setSessionHint(on: boolean) {
+  try {
+    if (on) localStorage.setItem(sessionHintKey, '1');
+    else localStorage.removeItem(sessionHintKey);
+  } catch { /* storage unavailable: the probe below simply runs every load */ }
+}
+
 function rememberSession(session: AuthSession) {
   csrfToken = session.csrfToken;
+  setSessionHint(true);
   return session;
 }
 
-// The CSRF cookie is readable by script and is issued and cleared together with the
-// HttpOnly session cookie. With neither present there is no session to restore, so a
-// first-time visitor skips the probe instead of logging a 401 on every page load.
+// With no hint there is no session to restore, so a first-time visitor skips the probe
+// instead of logging a 401 on every page load. A storage failure falls back to probing.
 function hasSessionHint() {
   if (typeof document === 'undefined') return true;
-  return /(?:^|;\s*)(?:__Host-)?majal_csrf=/.test(document.cookie);
+  if (/(?:^|;\s*)(?:__Host-)?majal_csrf=/.test(document.cookie)) return true;
+  try {
+    return localStorage.getItem(sessionHintKey) === '1';
+  } catch {
+    return true;
+  }
 }
 
 export async function restoreAuthSession() {
@@ -66,6 +82,7 @@ export async function restoreAuthSession() {
   } catch (error) {
     if (error instanceof AuthApiError && error.status === 401) {
       csrfToken = null;
+      setSessionHint(false);
       return null;
     }
     throw error;
@@ -123,6 +140,7 @@ export async function register(input: {
 export async function logout() {
   await request<void>('/api/v1/auth/logout', { method: 'POST' });
   csrfToken = null;
+  setSessionHint(false);
 }
 
 export function beginMfaEnrollment() {

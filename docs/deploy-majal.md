@@ -112,20 +112,24 @@ Settings → Secrets and variables → Actions → **Variables** (لا Secrets):
 الورك-فلو يقبل `workflow_dispatch`: شغّله يدويًا من تبويب Actions بعد ضبط
 المتغيّرين، وراقب النتيجة قبل أن تعتمد على النشر التلقائي.
 
-## النطاق المجاني `majal.web.app`
+## النطاق الرسمي `majal.web.app`
 
-موقع Firebase Hosting باسم `majal` في المشروع نفسه (`tebyan-clean-2026-5f13b`)، ويحوّل
-كل مسار (302) إلى رابط الخدمة على Cloud Run مع بقاء المسار والاستعلام.
+موقع Firebase Hosting باسم `majal` في المشروع نفسه، يمرّر كل الطلبات (rewrite) إلى
+خدمة `majal-app` على Cloud Run، فيبقى الرابط `majal.web.app` ظاهراً للمستخدم.
 
-**لماذا تحويل وليس إعادة كتابة (rewrite) إلى Cloud Run؟** Firebase Hosting يحذف كل
-الكعكات عدا `__session` عند الوساطة، بينما الجلسة هنا `__Host-majal_session` و`__Host-majal_csrf`.
-الوساطة كانت ستكسر تسجيل الدخول. فالتسجيل يتمّ على نطاق `run.app` بعد التحويل.
+**قيد حاكم:** Firebase Hosting لا يمرّر إلى Cloud Run إلا كعكة واحدة اسمها `__session`.
+لذلك جلسة الإنتاج هي `__session` (HttpOnly) وحدها، ورمز CSRF مشتق منها (HMAC) ويصل الصفحة
+في استجابتي `/login` و`/me` لا في كعكة ثانية. **لا تُعد `__Host-` للجلسة ولا تضف كعكة ثانية
+يعتمد عليها الخادم**، فالدخول عبر الدومين سينكسر بصمت (يحرسه `auth-hosting-cookie.test.ts`).
 
-النشر يدوي مرة واحدة (الإعداد ثابت، لا يتغيّر مع الشيفرة):
+متغير الخدمة `APP_URL=https://majal.web.app` يحدد رابط العودة من بوابة الدفع.
+
+نشر إعداد الدومين (ثابت، لا يتغيّر مع الشيفرة):
 
 ```sh
 firebase deploy --only hosting:majal --project tebyan-clean-2026-5f13b
 ```
 
 **قاعدة البيانات** هي Neon (PostgreSQL خارجي) لا Cloud SQL، فسكربتات `setup-backups.sh`
-و`setup-redis.sh` لا تنطبق كما هي؛ النسخ الاحتياطي من لوحة Neon (الاستعادة لأي لحظة).
+و`setup-redis.sh` لا تنطبق؛ النسخ الاحتياطي من لوحة Neon. الأسرار الثلاثة في Secret Manager
+باسم `majal-<NAME>`.
