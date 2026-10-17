@@ -353,7 +353,7 @@ export class Store {
           shortDescription: String(p.shortDescription || p.short_description || ''),
           story: String(p.story || ''),
           status: (p.status || 'ACTIVE') as any,
-          mediaUrls: Array.isArray(p.media) ? p.media : (Array.isArray(p.mediaUrls) ? p.mediaUrls : ['https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&auto=format&fit=crop&q=80']),
+          mediaUrls: Array.isArray(p.media) ? p.media : (Array.isArray(p.mediaUrls) ? p.mediaUrls : ['/dishes/placeholder.svg']),
           generalIngredients: Array.isArray(p.generalIngredients) ? p.generalIngredients : [],
           allergens: Array.isArray(p.allergens) ? p.allergens : [],
           dietaryTags: Array.isArray(p.dietaryTags) ? p.dietaryTags : [],
