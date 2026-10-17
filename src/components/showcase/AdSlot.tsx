@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Gift, CreditCard, Leaf, Megaphone, Package, Printer, ShoppingBag, Sparkles, Store, Truck, Coffee, Utensils, ExternalLink, X, Tag } from 'lucide-react';
 import { adClickHref, adImageSrc, fetchAds, noteDemoAdClick, reportAdImpression } from '../../lib/showcaseClient';
-import { IS_DEMO_MODE } from '../../lib/runtime';
 import { audienceOf, type AdAudience } from '../../lib/adAudience';
 import { store } from '../../lib/store';
 import type { AdAccent, AdSlot as AdSlotType, PublicAd, SurfaceType } from '../../types/majal';
@@ -61,8 +60,8 @@ const AdCard: React.FC<{ ad: PublicAd; audience: AdAudience; compact?: boolean; 
     <div ref={ref} className="relative group min-w-0">
       <a href={adClickHref(ad.id, audience)} target="_blank" rel="sponsored noopener noreferrer" onClick={() => noteDemoAdClick(ad.id)}
         className={`flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] ${compact ? 'px-3 py-2' : 'p-4'} pe-10 transition ${tone.ring} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300 min-w-0`}>
-        {ad.hasImage && !IS_DEMO_MODE
-          ? <img src={adImageSrc(ad.id)} alt="" loading="lazy" decoding="async" className={`shrink-0 rounded-xl object-cover border border-white/10 ${compact ? 'w-9 h-9' : 'w-14 h-14'}`} />
+        {ad.hasImage
+          ? <img src={adImageSrc(ad.id)} alt="" loading="lazy" decoding="async" className={`shrink-0 rounded-xl object-cover border border-white/10 ${compact ? 'w-9 h-9' : 'w-16 h-16'}`} />
           : <span className={`shrink-0 grid place-items-center rounded-xl border ${tone.chip} ${compact ? 'w-9 h-9' : 'w-11 h-11'}`}><Icon className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} ${tone.text}`} /></span>}
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2 text-xs">

@@ -73,7 +73,8 @@ export const uploadCampaignImage = async (id: string, file: File): Promise<{ wid
 export const removeCampaignImage = (id: string) => IS_DEMO_MODE ? Promise.resolve({ ok: true }) : request<{ ok: boolean }>(`/admin/campaigns/${encodeURIComponent(id)}/image/remove`, { method: 'POST' });
 export const rotateReportLink = (id: string): Promise<{ reportToken: string }> =>
   IS_DEMO_MODE ? Promise.resolve({ reportToken: 'demo-report-token-not-real' }) : request(`/admin/campaigns/${encodeURIComponent(id)}/rotate-report`, { method: 'POST' });
-export const adImageSrc = (id: string) => `/api/v1/showcase/promo/img/${encodeURIComponent(id)}`;
+/** Real creatives come from the server; the demo ships a few illustrations under /promo-demo. */
+export const adImageSrc = (id: string) => (IS_DEMO_MODE ? `/promo-demo/${encodeURIComponent(id)}.svg` : `/api/v1/showcase/promo/img/${encodeURIComponent(id)}`);
 
 export interface SupplierSubmission {
   name: string; category: string; region: string; description: string; contactName: string; contactPhone: string;

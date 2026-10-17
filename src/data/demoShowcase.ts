@@ -5,7 +5,7 @@
  */
 import type { AdCampaign, AdSlot, BusinessListing, DirectorySupplier, PublicAd } from '../types/majal';
 
-export const DEMO_SHOWCASE_STORAGE_KEY = 'majal_demo_showcase_v4';
+export const DEMO_SHOWCASE_STORAGE_KEY = 'majal_demo_showcase_v5';
 
 interface DemoShowcaseState { listings: BusinessListing[]; campaigns: AdCampaign[]; suppliers: DirectorySupplier[] }
 
@@ -19,6 +19,7 @@ export function buildDemoShowcase(): DemoShowcaseState {
   });
   const c = (id: string, company: string, headline: string, tagline: string, slot: AdSlot, accent: PublicAd['accent'], icon: string, status: AdCampaign['status'], impressions: number, clicks: number, startsOn: string | null = null, endsOn: string | null = null, audiences: string[] = [], topics: string[] = []): AdCampaign => ({
     id, company, headline, tagline, slot, accent, icon, linkUrl: 'https://example.com/demo', status, startsOn, endsOn, createdAt: ago(10), impressions, clicks, contactPhone: '+96550002222', audiences, topics,
+    hasImage: ['ad_demo_1', 'ad_demo_2', 'ad_demo_3', 'ad_demo_4'].includes(id),
     billing: status === 'APPROVED' ? 'PAID' : 'UNSET', priceKwd: status === 'APPROVED' ? (slot === 'SPONSOR' ? 400 : slot === 'MARKET' ? 250 : 150) : null, paidAt: status === 'APPROVED' ? ago(9) : null
   });
   const d = (id: string, name: string, category: DirectorySupplier['category'], region: string, description: string, products: string[], minOrder: string, delivers: boolean, status: DirectorySupplier['status'], age: number, contactPublic = true): DirectorySupplier => ({
@@ -97,7 +98,7 @@ export const demoShowcase = {
   serve(slot: AdSlot, audience = 'VISITOR', topic?: string) {
     const tier = (a: AdCampaign) => (!topic || !a.topics?.length ? 1 : a.topics.includes(topic) ? 0 : 2);
     const fit = current().campaigns.filter(a => a.slot === slot && live(a) && (!a.audiences?.length || a.audiences.includes(audience))).sort((a, b) => tier(a) - tier(b) || a.impressions - b.impressions);
-    return delay({ ads: fit.slice(0, SLOT_CAPACITY[slot]).map(({ id, company, headline, tagline, slot: s, accent, icon }) => ({ id, company, headline, tagline, slot: s, accent, icon })) });
+    return delay({ ads: fit.slice(0, SLOT_CAPACITY[slot]).map(({ id, company, headline, tagline, slot: s, accent, icon, hasImage }) => ({ id, company, headline, tagline, slot: s, accent, icon, hasImage })) });
   },
   event(id: string, type: 'impression' | 'click') {
     const ad = current().campaigns.find(a => a.id === id);
