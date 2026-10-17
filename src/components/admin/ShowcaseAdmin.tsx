@@ -1,6 +1,6 @@
 import React, { FormEvent, useEffect, useState } from 'react';
 import { BadgeCheck, CalendarRange, Check, ClipboardCopy, ImagePlus, KeyRound, Megaphone, Truck, Pause, Play, Plus, RefreshCw, Store, Trash2, X } from 'lucide-react';
-import { createCampaign, fetchShowcaseOverview, removeCampaignImage, reviewBusiness, editCampaign, reviewDirectorySupplier, rotateReportLink, setCampaignStatus, setCampaignTargeting, uploadCampaignImage } from '../../lib/showcaseClient';
+import { createCampaign, fetchShowcaseOverview, removeCampaignImage, reviewBusiness, editCampaign, reviewDirectorySupplier, rotateReportLink, setCampaignBilling, setCampaignStatus, setCampaignTargeting, uploadCampaignImage } from '../../lib/showcaseClient';
 import { upcomingSeasons } from '../../lib/adSeasons';
 import { AD_AUDIENCES, AD_AUDIENCE_LABEL, AD_TOPICS } from '../../lib/adAudience';
 import type { AdCampaign, AdSlot, BusinessListing, DirectorySupplier } from '../../types/majal';
@@ -12,6 +12,27 @@ const STATUS: Record<string, string> = { PENDING_REVIEW: 'معلّق', APPROVED:
 const PHASE: Record<string, { label: string; cls: string }> = {
   pending: { label: 'بانتظار الاعتماد', cls: 'bg-amber-500/10 text-amber-300' }, scheduled: { label: 'مجدولة', cls: 'bg-sky-500/10 text-sky-300' },
   live: { label: 'تعمل الآن', cls: 'bg-emerald-500/10 text-emerald-300' }, ended: { label: 'انتهت', cls: 'bg-slate-500/20 text-slate-300' }, inactive: { label: 'متوقفة', cls: 'bg-white/10 text-slate-300' },
+};
+
+const BILLING_LABEL = { UNSET: 'بانتظار السعر والدفع', PAID: 'مدفوعة', COMPLIMENTARY: 'ضيافة' } as const;
+
+/** The commercial side: agreed price and payment (made outside the app). Approval needs this first. */
+const BillingEditor: React.FC<{ c: AdCampaign; busy: boolean; onSave: (billing: 'UNSET' | 'PAID' | 'COMPLIMENTARY', price: number | null, note: string) => void }> = ({ c, busy, onSave }) => {
+  const [billing, setBilling] = useState<'UNSET' | 'PAID' | 'COMPLIMENTARY'>(c.billing ?? 'UNSET');
+  const [price, setPrice] = useState(c.priceKwd ? String(c.priceKwd) : ''), [note, setNote] = useState(c.billingNote ?? '');
+  const k = 'w-full glass-input rounded-xl px-3 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300';
+  return (
+    <details className="rounded-xl border border-white/10 bg-white/[0.02]" open={c.billing === 'UNSET' && c.status === 'PENDING_REVIEW'}>
+      <summary className="cursor-pointer px-3 py-2 text-xs font-black flex items-center justify-between gap-2"><span>السعر والدفع</span><span className={c.billing === 'PAID' ? 'text-emerald-300' : c.billing === 'COMPLIMENTARY' ? 'text-slate-300' : 'text-amber-300'}>{BILLING_LABEL[c.billing ?? 'UNSET']}{c.billing === 'PAID' && c.priceKwd ? ` · ${c.priceKwd.toLocaleString('ar-EG')} د.ك` : ''}</span></summary>
+      <form className="p-3 space-y-2" onSubmit={e => { e.preventDefault(); onSave(billing, price ? Number(price) : null, note); }}>
+        <select aria-label="حالة الدفع" value={billing} onChange={e => setBilling(e.target.value as typeof billing)} className={k}>{(Object.keys(BILLING_LABEL) as (keyof typeof BILLING_LABEL)[]).map(b => <option key={b} value={b}>{BILLING_LABEL[b]}</option>)}</select>
+        {billing === 'PAID' && <input aria-label="المبلغ المدفوع بالدينار" inputMode="numeric" pattern="\d*" dir="ltr" placeholder="المبلغ (د.ك)" value={price} onChange={e => setPrice(e.target.value.replace(/\D/g, ''))} className={k} />}
+        <input aria-label="ملاحظة الدفع" maxLength={300} placeholder="مرجع التحويل أو سبب الضيافة" value={note} onChange={e => setNote(e.target.value)} className={k} />
+        <p className="text-[11px] text-slate-400 leading-5">الدفع يتم خارج التطبيق (تحويل أو فاتورة). لا تُعتمد الحملة قبل تسجيل الدفع أو الضيافة.</p>
+        <button disabled={busy} className="w-full py-2 rounded-xl bg-gold-500 text-slate-950 text-xs font-black disabled:opacity-50">حفظ</button>
+      </form>
+    </details>
+  );
 };
 
 /** Change what a campaign says or where it sits. A new link or slot on an approved campaign pauses it for review. */
@@ -159,6 +180,7 @@ export const ShowcaseAdmin: React.FC = () => {
                   {c.phase === 'live' && c.daysLeft !== null && c.daysLeft !== undefined && c.daysLeft <= 7 && <div className="text-xs text-amber-300 font-black">تنتهي {c.daysLeft === 0 ? 'اليوم' : `بعد ${c.daysLeft.toLocaleString('ar-EG')} أيام`} — تواصل للتجديد</div>}
                   {c.phase === 'ended' && <div className="text-xs text-slate-400">انتهت مدتها. عدّل التواريخ واعتمد من جديد للتجديد.</div>}
                   <div className="text-xs text-slate-300">ظهور {c.impressions.toLocaleString('ar-EG')} · نقرات {c.clicks.toLocaleString('ar-EG')}{c.contactPhone ? ` · ${c.contactPhone}` : ''}</div>
+                  <BillingEditor c={c} busy={busy === c.id} onSave={(billing, price, note) => void run(c.id, async () => { const r = await setCampaignBilling(c.id, billing, price, note); if (r.pausedForReview) setNotice('إلغاء حالة الدفع أوقف الحملة.'); })} />
                   <CampaignEditor c={c} busy={busy === c.id} onSave={input => void run(c.id, async () => { const r = await editCampaign(c.id, input); if (r.pausedForReview) setNotice('تغيير الرابط أو الموقع أوقف الحملة لإعادة اعتمادها.'); })} />
                   <TargetChips audiences={c.audiences ?? []} topics={c.topics ?? []} disabled={busy === c.id} onChange={(audiences, topics) => void run(c.id, async () => { const r = await setCampaignTargeting(c.id, audiences, topics); if (r.pausedForReview) setNotice('توسيع الجمهور أعاد الحملة إلى الإيقاف لإعادة الاعتماد.'); })} />
                   <div className="grid grid-cols-2 gap-2"><input type="date" aria-label="من" value={d.s} onChange={e => setDates({ ...dates, [c.id]: { ...d, s: e.target.value } })} className={field} /><input type="date" aria-label="إلى" value={d.e} onChange={e => setDates({ ...dates, [c.id]: { ...d, e: e.target.value } })} className={field} /></div>
@@ -169,7 +191,7 @@ export const ShowcaseAdmin: React.FC = () => {
                     <button type="button" disabled={busy === c.id} onClick={() => { if (window.confirm('سيتوقف رابط التقرير الحالي. متابعة؟')) void run(c.id, async () => { const r = await rotateReportLink(c.id); setNotice(`رابط التقرير الجديد (يظهر مرة واحدة): ${window.location.origin}/?ad-report=${r.reportToken}`); }); }} className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 font-black inline-flex items-center gap-1.5"><KeyRound className="w-3.5 h-3.5" aria-hidden="true" />رابط تقرير جديد</button>
                   </div>
                   <div className="flex gap-2">
-                    {c.status !== 'APPROVED' && <button disabled={busy === c.id} onClick={() => run(c.id, () => setCampaignStatus(c.id, 'APPROVED', { startsOn: d.s || null, endsOn: d.e || null }))} className="flex-1 py-2.5 rounded-xl bg-emerald-400 text-slate-950 text-xs font-black disabled:opacity-40 flex items-center justify-center gap-1.5"><Play className="w-4 h-4" aria-hidden="true" />اعتماد</button>}
+                    {c.status !== 'APPROVED' && <button disabled={busy === c.id || (c.billing ?? 'UNSET') === 'UNSET'} title={(c.billing ?? 'UNSET') === 'UNSET' ? 'سجّل السعر والدفع أولًا' : undefined} onClick={() => run(c.id, () => setCampaignStatus(c.id, 'APPROVED', { startsOn: d.s || null, endsOn: d.e || null }))} className="flex-1 py-2.5 rounded-xl bg-emerald-400 text-slate-950 text-xs font-black disabled:opacity-40 flex items-center justify-center gap-1.5"><Play className="w-4 h-4" aria-hidden="true" />اعتماد</button>}
                     {c.status === 'APPROVED' && <button disabled={busy === c.id} onClick={() => run(c.id, () => setCampaignStatus(c.id, 'PAUSED'))} className="flex-1 py-2.5 rounded-xl bg-amber-500/10 border border-amber-400/20 text-amber-300 text-xs font-black flex items-center justify-center gap-1.5"><Pause className="w-4 h-4" aria-hidden="true" />إيقاف</button>}
                     {c.status !== 'REJECTED' && <button disabled={busy === c.id} onClick={() => run(c.id, () => setCampaignStatus(c.id, 'REJECTED'))} className="px-4 py-2.5 rounded-xl bg-rose-500/10 border border-rose-400/20 text-rose-300 text-xs font-black">رفض</button>}
                   </div>

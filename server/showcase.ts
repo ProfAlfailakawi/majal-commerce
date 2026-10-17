@@ -28,7 +28,7 @@ export const AD_ICONS = ['megaphone', 'store', 'coffee', 'truck', 'package', 'sp
 export const SLOT_CAPACITY: Record<(typeof AD_SLOTS)[number], number> = { SPONSOR: 1, MARKET: 3, PORTAL: 3 };
 
 /** Everything but the (large) image payload. */
-const CAMPAIGN_COLUMNS = 'audiences_json,topics_json,id,company,headline,tagline,link_url,slot,accent,icon,contact_phone,status,starts_on,ends_on,admin_note,created_at,updated_at,image_mime';
+const CAMPAIGN_COLUMNS = 'audiences_json,topics_json,price_kwd,billing,paid_at,billing_note,id,company,headline,tagline,link_url,slot,accent,icon,contact_phone,status,starts_on,ends_on,admin_note,created_at,updated_at,image_mime';
 const now = () => new Date().toISOString();
 const text = (value: unknown, min = 1, max = 500) => {
   if (typeof value !== 'string') return undefined;
@@ -80,6 +80,7 @@ type CampaignRow = {
   contact_phone: string; status: string; starts_on: string | null; ends_on: string | null; admin_note: string; created_at: string; updated_at: string;
   image_mime: string | null; image_data?: string | null;
   audiences_json?: string; topics_json?: string;
+  price_kwd?: number | string | null; billing?: string; paid_at?: string | null; billing_note?: string;
 };
 type SupplierDirRow = {
   id: string; name: string; category: string; region: string; description: string; products_json: string; min_order: string;
@@ -109,7 +110,7 @@ const supplierAdmin = (row: SupplierDirRow) => ({ ...supplierBase(row), contactN
 const adPublic = (row: CampaignRow) => ({ id: row.id, company: row.company, headline: row.headline, tagline: row.tagline, slot: row.slot, accent: row.accent, icon: row.icon, hasImage: !!row.image_mime });
 const targetingOf = (row: CampaignRow) => ({ audiences: parseList(row.audiences_json ?? '[]'), topics: parseList(row.topics_json ?? '[]') });
 const campaignAdmin = (row: CampaignRow, stat?: { impressions: number; clicks: number }, week?: { impressions: number; clicks: number }) => ({
-  ...adPublic(row), ...targetingOf(row), phase: phaseOf(row, kuwaitToday()), daysLeft: daysLeft(row, kuwaitToday()), linkUrl: row.link_url, contactPhone: row.contact_phone || undefined, status: row.status,
+  ...adPublic(row), ...targetingOf(row), priceKwd: row.price_kwd === null || row.price_kwd === undefined ? null : Number(row.price_kwd), billing: row.billing ?? 'UNSET', paidAt: row.paid_at ?? null, billingNote: row.billing_note || undefined, phase: phaseOf(row, kuwaitToday()), daysLeft: daysLeft(row, kuwaitToday()), linkUrl: row.link_url, contactPhone: row.contact_phone || undefined, status: row.status,
   startsOn: row.starts_on, endsOn: row.ends_on, adminNote: row.admin_note || undefined, createdAt: row.created_at,
   impressions: stat?.impressions ?? 0, clicks: stat?.clicks ?? 0, weekImpressions: week?.impressions ?? 0, weekClicks: week?.clicks ?? 0
 });
@@ -329,7 +330,7 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
     );
     // The requester keeps this private link; it is the only way to see the campaign's numbers.
     await notifyAdmins(db, 'ad', 'طلب إعلان جديد بانتظار المراجعة');
-    res.status(201).json({ id, reportToken: token, message: 'وصل طلب الإعلان. لا يظهر قبل اعتماد الإدارة وتحديد المدة. احتفظ برابط التقرير.' });
+    res.status(201).json({ id, reportToken: token, message: 'وصل طلب الإعلان. سنتواصل معك على رقمك لنتفق على الموقع والمدة والسعر قبل النشر. احتفظ برابط التقرير.' });
   });
 
   // The creative is served only while its campaign is live, as an inert image: nosniff and a
@@ -435,6 +436,7 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
     const ends = req.body?.endsOn === undefined ? { value: before.ends_on, valid: true } : optionalDay(req.body.endsOn);
     if (!starts.valid || !ends.valid || (starts.value && ends.value && ends.value < starts.value)) return jsonError(res, 400, 'تواريخ الحملة غير صالحة.', 'INVALID_DATES');
     if (status === 'APPROVED') {
+      if ((before.billing ?? 'UNSET') === 'UNSET') return jsonError(res, 409, 'سجّل السعر المتفق عليه وحالة الدفع قبل الاعتماد.', 'PAYMENT_REQUIRED');
       if (ends.value && ends.value < kuwaitToday()) return jsonError(res, 409, 'تاريخ انتهاء الحملة مضى.', 'CAMPAIGN_ENDED');
       const slot = before.slot as (typeof AD_SLOTS)[number];
       const others = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE status='APPROVED' AND slot=? AND id<>?`).all<CampaignRow>(slot, before.id);
@@ -459,6 +461,32 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
    * Edit what a campaign says and where it sits. Changing the link or the slot of an approved
    * campaign pauses it: the approval was for the old target, so it is reviewed again.
    */
+  /**
+   * Record the commercial side of a campaign: the agreed price and whether it was paid (payment itself
+   * happens outside the app). COMPLIMENTARY is the explicit way to host one without payment. Un-setting
+   * billing on an approved campaign pauses it.
+   */
+  router.post('/admin/campaigns/:id/billing', authenticated, csrfProtected, async (req: AuthenticatedRequest, res) => {
+    if (!isAdmin(req)) return jsonError(res, 403, 'للإدارة فقط.', 'ADMIN_REQUIRED');
+    const before = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=? LIMIT 1`).get<CampaignRow>(req.params.id);
+    if (!before) return jsonError(res, 404, 'الحملة غير موجودة.', 'NOT_FOUND');
+    const billing = oneOf(req.body?.billing, ['UNSET', 'PAID', 'COMPLIMENTARY'] as const);
+    if (!billing) return jsonError(res, 400, 'حالة الدفع غير صالحة.', 'INVALID_BILLING');
+    const raw = req.body?.priceKwd;
+    const price = raw === null || raw === undefined || raw === '' ? null : Number(raw);
+    if (price !== null && (!Number.isInteger(price) || price < 0 || price > 10_000_000)) return jsonError(res, 400, 'السعر غير صالح.', 'INVALID_PRICE');
+    if (billing === 'PAID' && !(price && price > 0)) return jsonError(res, 400, 'سجّل المبلغ المدفوع.', 'PRICE_REQUIRED');
+    const at = now(), paidAt = billing === 'PAID' ? (before.paid_at && before.billing === 'PAID' ? before.paid_at : at) : null;
+    const pause = before.status === 'APPROVED' && billing === 'UNSET';
+    await withTransaction(db, async tx => {
+      await tx.prepare('UPDATE ad_campaigns SET billing=?, price_kwd=?, paid_at=?, billing_note=?, status=?, updated_at=? WHERE id=?')
+        .run(billing, billing === 'COMPLIMENTARY' ? 0 : price, paidAt, text(req.body?.note, 0, 300) ?? '', pause ? 'PAUSED' : before.status, at, before.id);
+      await audit(tx, req, 'AD_CAMPAIGN_BILLING', 'AD_CAMPAIGN', before.id, { billing, priceKwd: price, pausedForReview: pause });
+    });
+    const row = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=?`).get<CampaignRow>(before.id);
+    res.json({ campaign: campaignAdmin(row!), pausedForReview: pause });
+  });
+
   router.post('/admin/campaigns/:id/edit', authenticated, csrfProtected, async (req: AuthenticatedRequest, res) => {
     if (!isAdmin(req)) return jsonError(res, 403, 'للإدارة فقط.', 'ADMIN_REQUIRED');
     const before = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=? LIMIT 1`).get<CampaignRow>(req.params.id);

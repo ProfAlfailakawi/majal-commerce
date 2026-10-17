@@ -163,6 +163,7 @@ export function createAudienceRouter(db: MajalDatabase, authConfig: AuthConfig) 
     res.json({
       traffic, facts, slots, gates,
       ads: { impressions, clicks, ctr: impressions ? Math.round((clicks / impressions) * 1000) / 10 : 0, liveCampaigns: slots.reduce((a, s) => a + s.live, 0) },
+      revenue: await revenueSummary(db),
       kit: kit ? { exists: true, createdAt: kit.created_at, rotatedAt: kit.rotated_at } : { exists: false }
     });
   });
@@ -217,4 +218,16 @@ async function gateSummary(db: MajalDatabase, since: string) {
     topListings: await top(['listing_open', 'listing_contact'], 'business_listings', 'title'),
     topSuppliers: await top(['supplier_contact'], 'supplier_directory', 'name')
   };
+}
+
+/** What advertisers have paid (owner-only dashboard). Prices are whole KWD; payment happens outside the app. */
+async function revenueSummary(db: MajalDatabase) {
+  const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
+  const [paid30, paidTotal, awaitingBilling, complimentary] = await Promise.all([
+    count(db, "SELECT COALESCE(SUM(price_kwd),0) AS n FROM ad_campaigns WHERE billing='PAID' AND paid_at >= ?", since),
+    count(db, "SELECT COALESCE(SUM(price_kwd),0) AS n FROM ad_campaigns WHERE billing='PAID'"),
+    count(db, "SELECT COUNT(*) AS n FROM ad_campaigns WHERE billing='UNSET' AND status='PENDING_REVIEW'"),
+    count(db, "SELECT COUNT(*) AS n FROM ad_campaigns WHERE billing='COMPLIMENTARY'"),
+  ]);
+  return { paid30, paidTotal, awaitingBilling, complimentary };
 }

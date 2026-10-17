@@ -85,7 +85,8 @@ test('admin reviews listings and campaigns; slot capacity, creatives and report 
     const ids: string[] = [];
     for (const [n, slot] of [[1, 'SPONSOR'], [2, 'SPONSOR'], [3, 'MARKET'], [4, 'MARKET'], [5, 'MARKET'], [6, 'MARKET']] as const) {
       const r = await h.call(admin, 'POST', '/showcase/admin/campaigns', campaign(n, slot));
-      assert.equal(r.status, 201); ids.push((await r.json()).campaign.id);
+      assert.equal(r.status, 201); const id = (await r.json()).campaign.id; ids.push(id);
+      assert.equal((await h.call(admin, 'POST', `/showcase/admin/campaigns/${id}/billing`, { billing: 'COMPLIMENTARY' })).status, 200);
     }
     const approve = (i: number, extra: object = {}) => h.call(admin, 'POST', `/showcase/admin/campaigns/${ids[i]}/status`, { status: 'APPROVED', ...extra });
     assert.equal((await approve(0, { endsOn: '2098-12-31' })).status, 200);
@@ -193,7 +194,9 @@ test('smart serving: role targeting, topic priority, even pacing, per-audience c
     const admin = await h.login('admin@smart.test');
     const make = async (n: number, slot: string, extra: object = {}) => {
       const r = await h.call(admin, 'POST', '/showcase/admin/campaigns', { ...campaign(n, slot), ...extra });
-      assert.equal(r.status, 201); return await r.json() as { campaign: { id: string }; reportToken: string };
+      assert.equal(r.status, 201); const made = await r.json() as { campaign: { id: string }; reportToken: string };
+      assert.equal((await h.call(admin, 'POST', `/showcase/admin/campaigns/${made.campaign.id}/billing`, { billing: 'COMPLIMENTARY' })).status, 200);
+      return made;
     };
     const approve = (id: string, extra: object = {}) => h.call(admin, 'POST', `/showcase/admin/campaigns/${id}/status`, { status: 'APPROVED', ...extra });
     const serve = async (slot: string, query = '') => ((await (await fetch(`${h.base}/showcase/promo/serve?slot=${slot}${query}`)).json()).ads as { id: string; company: string }[]);
@@ -267,6 +270,8 @@ test('admins are told about every public submission; campaign phases and edits b
     let c = (await overview()).find(x => x.id === ad.id)!;
     assert.deepEqual([c.slot, c.audiences, c.topics, c.accent, c.icon, c.phase], ['PORTAL', ['HOST'], ['حلويات'], 'sky', 'package', 'pending']);
     const dayPlus = (n: number) => kuwaitToday(new Date(Date.now() + n * 86_400_000));
+    assert.equal((await h.call(admin, 'POST', `/showcase/admin/campaigns/${ad.id}/status`, { status: 'APPROVED', startsOn: dayPlus(2), endsOn: dayPlus(9) })).status, 409, 'no approval before billing is recorded');
+    assert.equal((await h.call(admin, 'POST', `/showcase/admin/campaigns/${ad.id}/billing`, { billing: 'PAID', priceKwd: 150, note: 'تحويل بنكي' })).status, 200);
     assert.equal((await h.call(admin, 'POST', `/showcase/admin/campaigns/${ad.id}/status`, { status: 'APPROVED', startsOn: dayPlus(2), endsOn: dayPlus(9) })).status, 200);
     c = (await overview()).find(x => x.id === ad.id)!;
     assert.deepEqual([c.phase, c.daysLeft], ['scheduled', 9]);
@@ -286,5 +291,42 @@ test('admins are told about every public submission; campaign phases and edits b
     const moved = await (await edit({ linkUrl: 'https://example.com/other' })).json();
     assert.deepEqual([moved.pausedForReview, moved.campaign.status], [true, 'PAUSED']);
     assert.deepEqual((await (await fetch(`${h.base}/showcase/promo/serve?slot=PORTAL&audience=HOST`)).json()).ads, [], 'a paused campaign stops serving');
+  } finally { await h.close(); }
+});
+
+test('sponsorship is paid: billing is recorded per campaign, validated, audited, and gates approval', async () => {
+  const h = await harness();
+  try {
+    await createUser(h.db, { name: 'Owner', email: 'owner@bill.test', password, role: 'SUPER_ADMIN' });
+    await createUser(h.db, { name: 'Buyer', email: 'buyer@bill.test', password, role: 'CONSUMER' });
+    const owner = await h.login('owner@bill.test'), buyer = await h.login('buyer@bill.test');
+    const created = await (await h.call(owner, 'POST', '/showcase/admin/campaigns', campaign(1, 'MARKET'))).json();
+    const id = created.campaign.id as string;
+    const bill = (body: object) => h.call(owner, 'POST', `/showcase/admin/campaigns/${id}/billing`, body);
+    const approve = () => h.call(owner, 'POST', `/showcase/admin/campaigns/${id}/status`, { status: 'APPROVED' });
+    assert.equal(created.campaign.billing, 'UNSET');
+    assert.equal((await h.call(buyer, 'POST', `/showcase/admin/campaigns/${id}/billing`, { billing: 'PAID', priceKwd: 100 })).status, 403);
+    assert.equal((await approve()).status, 409);
+    assert.equal((await (await approve()).json()).code, 'PAYMENT_REQUIRED');
+    assert.equal((await bill({ billing: 'PAID' })).status, 400, 'paid needs an amount');
+    assert.equal((await bill({ billing: 'PAID', priceKwd: -5 })).status, 400);
+    assert.equal((await bill({ billing: 'PAID', priceKwd: 12.5 })).status, 400, 'whole dinars only');
+    assert.equal((await bill({ billing: 'MAYBE' })).status, 400);
+    const paid = await (await bill({ billing: 'PAID', priceKwd: 250, note: 'تحويل رقم 123' })).json();
+    assert.deepEqual([paid.campaign.billing, paid.campaign.priceKwd, paid.campaign.billingNote], ['PAID', 250, 'تحويل رقم 123']);
+    assert.ok(paid.campaign.paidAt);
+    assert.equal((await approve()).status, 200);
+    assert.equal((await (await fetch(`${h.base}/showcase/promo/serve?slot=MARKET`)).json()).ads.length, 1);
+    // Prices and billing never reach the public.
+    const served = JSON.stringify(await (await fetch(`${h.base}/showcase/promo/serve?slot=MARKET`)).json());
+    assert.ok(!/priceKwd|billing|250|123/.test(served));
+    assert.ok(!JSON.stringify(await (await fetch(`${h.base}/showcase/promo/report/${created.reportToken}`)).json()).match(/priceKwd|billing|250/), 'the company report does not echo billing either');
+    // Re-saving PAID keeps the original payment date; un-setting pauses an approved campaign.
+    const again = await (await bill({ billing: 'PAID', priceKwd: 250 })).json();
+    assert.equal(again.campaign.paidAt, paid.campaign.paidAt);
+    const unset = await (await bill({ billing: 'UNSET' })).json();
+    assert.deepEqual([unset.pausedForReview, unset.campaign.status, unset.campaign.priceKwd], [true, 'PAUSED', null]);
+    assert.equal((await bill({ billing: 'COMPLIMENTARY', note: 'ضيافة' })).status, 200, 'explicit complimentary hosting is allowed');
+    assert.equal((await approve()).status, 200);
   } finally { await h.close(); }
 });

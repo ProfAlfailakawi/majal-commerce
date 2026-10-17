@@ -703,6 +703,11 @@ export interface AdCampaign extends PublicAd {
   weekImpressions?: number;
   weekClicks?: number;
   /** Where it is in time regardless of review status; `daysLeft` counts to the end date. */
+  /** Commercial side (admin only): agreed whole-KWD price and whether it was paid (payment happens outside the app). */
+  billing?: 'UNSET' | 'PAID' | 'COMPLIMENTARY';
+  priceKwd?: number | null;
+  paidAt?: string | null;
+  billingNote?: string;
   phase?: 'pending' | 'scheduled' | 'live' | 'ended' | 'inactive';
   daysLeft?: number | null;
   /** Viewer roles it is shown to (empty = everyone) and marketplace categories it follows (empty = any). */

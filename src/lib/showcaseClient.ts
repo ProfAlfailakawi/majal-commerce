@@ -88,3 +88,5 @@ export const setCampaignTargeting = (id: string, audiences: string[], topics: st
   IS_DEMO_MODE ? demoShowcase.setTargeting(id, audiences, topics) : request(`/admin/campaigns/${encodeURIComponent(id)}/targeting`, { method: 'POST', body: JSON.stringify({ audiences, topics }) });
 export const editCampaign = (id: string, input: { company: string; headline: string; tagline?: string; linkUrl: string; slot: AdSlot; accent?: string; icon?: string }): Promise<{ campaign: AdCampaign; pausedForReview: boolean }> =>
   IS_DEMO_MODE ? demoShowcase.editCampaign(id, input) : request(`/admin/campaigns/${encodeURIComponent(id)}/edit`, { method: 'POST', body: JSON.stringify(input) });
+export const setCampaignBilling = (id: string, billing: 'UNSET' | 'PAID' | 'COMPLIMENTARY', priceKwd: number | null, note = ''): Promise<{ campaign: AdCampaign; pausedForReview: boolean }> =>
+  IS_DEMO_MODE ? demoShowcase.setBilling(id, billing, priceKwd, note) : request(`/admin/campaigns/${encodeURIComponent(id)}/billing`, { method: 'POST', body: JSON.stringify({ billing, priceKwd, note }) });

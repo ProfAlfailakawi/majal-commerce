@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowRight, BadgeCheck, BriefcaseBusiness, CalendarCheck, ChefHat, Eye, Factory, Gift, Handshake, Megaphone, Rocket, ShieldCheck, Sparkles, Store, Target, Truck, Users } from 'lucide-react';
+import { ArrowRight, BadgeCheck, BriefcaseBusiness, CalendarCheck, ChefHat, Eye, Factory, Handshake, Megaphone, Rocket, ShieldCheck, Sparkles, Store, Target, Truck, Users } from 'lucide-react';
 import { fetchPartnerKit, type PartnerKit } from '../../lib/audienceClient';
 import { MajalMark } from '../brand/MajalMark';
 import { ShareBars, TrendBars, WeekdayBars } from './charts';
@@ -46,9 +46,9 @@ export const PartnerKitPage: React.FC<{ token: string; onClose: () => void }> = 
       <section className="glass-panel majal-grain rounded-[28px] p-6 sm:p-10 border border-white/10 relative overflow-hidden text-center sm:text-start space-y-5">
         <div className="majal-glow -top-[14rem] -end-[14rem] w-[34rem] h-[34rem]" style={{ '--glow': 'rgba(199,165,91,0.12)' } as React.CSSProperties} />
         <div className="relative z-10 space-y-4 max-w-2xl">
-          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card border border-emerald-400/25 text-emerald-300 text-xs font-black"><Gift className="w-4 h-4" aria-hidden="true" />مجاني: خدمة منا بلا أي مقابل</span>
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card border border-emerald-400/25 text-emerald-300 text-xs font-black"><BadgeCheck className="w-4 h-4" aria-hidden="true" />أرقام حقيقية ومجهولة</span>
           <h1 className="text-3xl sm:text-4xl font-black leading-tight">اعرض شركتك أمام <span className="majal-wordmark">مجتمع مجال</span></h1>
-          <p className="text-sm sm:text-base text-slate-300 leading-7">مبدعون ومنشآت وموردون ومتسوقون يتحركون من الفكرة إلى المنتج في مكان واحد. هذه أرقامنا الحقيقية، مجهولة بالكامل، وما نعرضه عليك بلا رسوم ولا عمولة.</p>
+          <p className="text-sm sm:text-base text-slate-300 leading-7">مبدعون ومنشآت وموردون ومتسوقون يتحركون من الفكرة إلى المنتج في مكان واحد. هذه أرقامنا الحقيقية، مجهولة بالكامل. السعر حسب الموقع والمدة والجمهور، ونتفق عليه معك قبل النشر.</p>
           <button type="button" onClick={() => setForm(true)} className="px-6 py-3.5 rounded-2xl bg-gold-500 hover:bg-gold-400 text-slate-950 font-black text-sm inline-flex items-center gap-2"><Megaphone className="w-4 h-4" aria-hidden="true" />اطلب مساحة إعلانية</button>
         </div>
       </section>
@@ -105,7 +105,7 @@ export const PartnerKitPage: React.FC<{ token: string; onClose: () => void }> = 
 
       <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-xs text-slate-300 leading-7 space-y-1.5">
         <h2 className="font-black text-sm flex items-center gap-2 text-slate-100"><BadgeCheck className="w-4 h-4 text-emerald-300" aria-hidden="true" />شروطنا بوضوح</h2>
-        <p>• مجاني: لا رسوم ولا عمولة، وهو خدمة من مجال لأصحاب الأعمال.</p>
+        <p>• الإعلان خدمة مدفوعة: السعر حسب الموقع والمدة والجمهور، نتفق عليه معك مسبقًا، ولا يُنشر شيء قبل الاتفاق.</p>
         <p>• كل إعلان بوسم «إعلان»، ويمر على الإدارة قبل الظهور، ويقودك إلى رابط https عام تعتمده الإدارة.</p>
         <p>• الأرقام مجهولة: لا نحفظ IP ولا اسمًا ولا هوية. المتصفح الواحد يُحسب مرة يوميًا لكل صفحة.</p>
         <p>• {since ? `القياس بدأ يوم ${since} ولا يرجع للماضي.` : 'القياس بدأ حديثًا.'}{young ? ' الأرقام ما زالت في أيامها الأولى، وستنمو مع الوقت.' : ''}</p>
