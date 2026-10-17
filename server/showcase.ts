@@ -16,6 +16,10 @@ import { creativeProblem, readImageMeta } from './image-meta';
 
 export const BUSINESS_SECTORS = ['CAFE', 'RESTAURANT', 'BAKERY', 'CLOUD_KITCHEN', 'RETAIL', 'ONLINE_STORE', 'SALON', 'SERVICES', 'PRODUCTION', 'OTHER'] as const;
 export const SUPPLIER_CATEGORIES = ['INGREDIENTS', 'PRODUCE', 'MEAT', 'SPICES', 'PACKAGING', 'PRINTING', 'EQUIPMENT', 'DELIVERY', 'OTHER'] as const;
+/** Who is looking: derived by the client from the signed-in role (or VISITOR); never from a profile. */
+export const AD_AUDIENCES = ['VISITOR', 'CONSUMER', 'CREATOR', 'HOST', 'SUPPLIER'] as const;
+/** What the page is about: the product categories the marketplace already uses. */
+export const AD_TOPICS = ['حلويات', 'مخبوزات', 'مشروبات', 'وجبات', 'صلصات', 'مقبلات'] as const;
 export const AD_SLOTS = ['SPONSOR', 'MARKET', 'PORTAL'] as const;
 export const AD_ACCENTS = ['gold', 'emerald', 'sky', 'rose', 'violet'] as const;
 export const AD_ICONS = ['megaphone', 'store', 'coffee', 'truck', 'package', 'sparkles', 'utensils', 'shopping-bag', 'printer', 'credit-card', 'leaf', 'gift'] as const;
@@ -23,7 +27,7 @@ export const AD_ICONS = ['megaphone', 'store', 'coffee', 'truck', 'package', 'sp
 export const SLOT_CAPACITY: Record<(typeof AD_SLOTS)[number], number> = { SPONSOR: 1, MARKET: 3, PORTAL: 3 };
 
 /** Everything but the (large) image payload. */
-const CAMPAIGN_COLUMNS = 'id,company,headline,tagline,link_url,slot,accent,icon,contact_phone,status,starts_on,ends_on,admin_note,created_at,updated_at,image_mime';
+const CAMPAIGN_COLUMNS = 'audiences_json,topics_json,id,company,headline,tagline,link_url,slot,accent,icon,contact_phone,status,starts_on,ends_on,admin_note,created_at,updated_at,image_mime';
 const now = () => new Date().toISOString();
 const text = (value: unknown, min = 1, max = 500) => {
   if (typeof value !== 'string') return undefined;
@@ -74,6 +78,7 @@ type CampaignRow = {
   id: string; company: string; headline: string; tagline: string; link_url: string; slot: string; accent: string; icon: string;
   contact_phone: string; status: string; starts_on: string | null; ends_on: string | null; admin_note: string; created_at: string; updated_at: string;
   image_mime: string | null; image_data?: string | null;
+  audiences_json?: string; topics_json?: string;
 };
 type SupplierDirRow = {
   id: string; name: string; category: string; region: string; description: string; products_json: string; min_order: string;
@@ -101,11 +106,16 @@ const supplierBase = (row: SupplierDirRow) => ({
 const supplierPublic = (row: SupplierDirRow) => ({ ...supplierBase(row), ...(Number(row.contact_public) === 1 ? { contactPhone: row.contact_phone } : {}) });
 const supplierAdmin = (row: SupplierDirRow) => ({ ...supplierBase(row), contactName: row.contact_name, contactPhone: row.contact_phone, adminNote: row.admin_note || undefined, reviewedAt: row.reviewed_at });
 const adPublic = (row: CampaignRow) => ({ id: row.id, company: row.company, headline: row.headline, tagline: row.tagline, slot: row.slot, accent: row.accent, icon: row.icon, hasImage: !!row.image_mime });
+const targetingOf = (row: CampaignRow) => ({ audiences: parseList(row.audiences_json ?? '[]'), topics: parseList(row.topics_json ?? '[]') });
 const campaignAdmin = (row: CampaignRow, stat?: { impressions: number; clicks: number }, week?: { impressions: number; clicks: number }) => ({
-  ...adPublic(row), linkUrl: row.link_url, contactPhone: row.contact_phone || undefined, status: row.status,
+  ...adPublic(row), ...targetingOf(row), linkUrl: row.link_url, contactPhone: row.contact_phone || undefined, status: row.status,
   startsOn: row.starts_on, endsOn: row.ends_on, adminNote: row.admin_note || undefined, createdAt: row.created_at,
   impressions: stat?.impressions ?? 0, clicks: stat?.clicks ?? 0, weekImpressions: week?.impressions ?? 0, weekClicks: week?.clicks ?? 0
 });
+
+const pick = <T extends string>(value: unknown, list: readonly T[], max = 10): T[] =>
+  Array.isArray(value) ? [...new Set(value.filter((v): v is T => typeof v === 'string' && (list as readonly string[]).includes(v)))].slice(0, max) : [];
+const audienceOf = (value: unknown) => oneOf(typeof value === 'string' ? value.toUpperCase() : '', AD_AUDIENCES) ?? 'VISITOR';
 
 const isLive = (row: Pick<CampaignRow, 'status' | 'starts_on' | 'ends_on'>, today: string) =>
   row.status === 'APPROVED' && (!row.starts_on || row.starts_on <= today) && (!row.ends_on || row.ends_on >= today);
@@ -128,10 +138,42 @@ async function weekFor(db: MajalDatabase, ids: string[]) {
   for (const row of rows) map.set(row.campaign_id, { impressions: Number(row.impressions), clicks: Number(row.clicks) });
   return map;
 }
-async function bump(db: MajalDatabase, id: string, field: 'impressions' | 'clicks') {
+async function bump(db: MajalDatabase, id: string, field: 'impressions' | 'clicks', audience: string) {
   const column = field === 'clicks' ? 'clicks' : 'impressions';
   await db.prepare(`INSERT INTO ad_daily_stats(campaign_id, day, ${column}) VALUES(?,?,1)
     ON CONFLICT(campaign_id, day) DO UPDATE SET ${column} = ad_daily_stats.${column} + 1`).run(id, kuwaitToday());
+  await db.prepare(`INSERT INTO ad_audience_stats(campaign_id, audience, ${column}) VALUES(?,?,1)
+    ON CONFLICT(campaign_id, audience) DO UPDATE SET ${column} = ad_audience_stats.${column} + 1`).run(id, audience);
+}
+
+const audienceMatches = (row: CampaignRow, audience: string) => {
+  const { audiences } = targetingOf(row);
+  return !audiences.length || audiences.includes(audience);
+};
+/** Two campaigns compete for a slot only if some viewer role could see both. */
+const audiencesOverlap = (a: CampaignRow, b: CampaignRow) => {
+  const x = targetingOf(a).audiences, y = targetingOf(b).audiences;
+  return !x.length || !y.length || x.some(v => y.includes(v));
+};
+
+/**
+ * Smart pick for one viewer: only campaigns that suit their role; those matching the page's topic
+ * first, topic-neutral ones next, mismatched topics last; within a tier the campaign that has been
+ * shown least today goes first, so delivery stays even instead of the oldest campaign always winning.
+ */
+async function pickFor(db: MajalDatabase, rows: CampaignRow[], audience: string, topic: string | undefined, limit: number) {
+  const eligible = rows.filter(r => audienceMatches(r, audience));
+  if (eligible.length <= 1) return eligible.slice(0, limit);
+  const shown = new Map<string, number>();
+  const stats = await db.prepare(`SELECT campaign_id, impressions FROM ad_daily_stats WHERE day = ? AND campaign_id IN (${eligible.map(() => '?').join(',')})`)
+    .all<{ campaign_id: string; impressions: number | string }>(kuwaitToday(), ...eligible.map(r => r.id));
+  for (const s of stats) shown.set(s.campaign_id, Number(s.impressions));
+  const tier = (r: CampaignRow) => {
+    const topics = targetingOf(r).topics;
+    if (!topic || !topics.length) return 1;
+    return topics.includes(topic) ? 0 : 2;
+  };
+  return [...eligible].sort((a, b) => tier(a) - tier(b) || (shown.get(a.id) ?? 0) - (shown.get(b.id) ?? 0) || a.created_at.localeCompare(b.created_at)).slice(0, limit);
 }
 
 async function audit(db: MajalDatabase, req: AuthenticatedRequest, action: string, entityType: string, entityId: string, after?: unknown) {
@@ -211,17 +253,19 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
   router.get('/ads/serve', publicLimit(300, 60_000, 'serve'), async (req, res) => {
     const slot = oneOf(typeof req.query.slot === 'string' ? req.query.slot.toUpperCase() : '', AD_SLOTS);
     if (!slot) return jsonError(res, 400, 'موقع الإعلان غير معروف.', 'INVALID_SLOT');
-    const rows = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE status='APPROVED' AND slot=? ORDER BY created_at ASC LIMIT 20`).all<CampaignRow>(slot);
+    const rows = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE status='APPROVED' AND slot=? ORDER BY created_at ASC LIMIT 40`).all<CampaignRow>(slot);
     const today = kuwaitToday();
+    const topic = oneOf(req.query.topic, AD_TOPICS);
+    const picked = await pickFor(db, rows.filter(row => isLive(row, today)), audienceOf(req.query.audience), topic, SLOT_CAPACITY[slot]);
     res.setHeader('Cache-Control', 'no-store');
-    res.json({ ads: rows.filter(row => isLive(row, today)).slice(0, SLOT_CAPACITY[slot]).map(adPublic) });
+    res.json({ ads: picked.map(adPublic) });
   });
 
   router.post('/ads/event', publicLimit(240, 60_000, 'event'), async (req, res) => {
     const id = text(req.body?.id, 4, 80);
     if (!id || req.body?.type !== 'impression') return res.status(204).end();
     const row = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=? LIMIT 1`).get<CampaignRow>(id);
-    if (row && isLive(row, kuwaitToday())) await bump(db, id, 'impressions');
+    if (row && isLive(row, kuwaitToday())) await bump(db, id, 'impressions', audienceOf(req.body?.audience));
     res.status(204).end();
   });
 
@@ -229,7 +273,7 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
   router.get('/ads/click/:id', publicLimit(120, 60_000, 'click'), async (req, res) => {
     const row = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=? LIMIT 1`).get<CampaignRow>(req.params.id);
     if (!row || !isLive(row, kuwaitToday())) return res.redirect(302, '/');
-    await bump(db, row.id, 'clicks');
+    await bump(db, row.id, 'clicks', audienceOf(req.query.a));
     const target = new URL(row.link_url);
     if (![...target.searchParams.keys()].some(key => key.startsWith('utm_'))) {
       target.searchParams.set('utm_source', 'majal');
@@ -277,6 +321,8 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
     const total = days.reduce((acc, d) => ({ impressions: acc.impressions + Number(d.impressions), clicks: acc.clicks + Number(d.clicks) }), { impressions: 0, clicks: 0 });
     res.json({
       campaign: { company: row.company, headline: row.headline, slot: row.slot, status: row.status, startsOn: row.starts_on, endsOn: row.ends_on },
+      audiences: (await db.prepare('SELECT audience, impressions, clicks FROM ad_audience_stats WHERE campaign_id=? ORDER BY impressions DESC').all<{ audience: string; impressions: number | string; clicks: number | string }>(row.id))
+        .map(a => ({ audience: a.audience, impressions: Number(a.impressions), clicks: Number(a.clicks) })),
       totals: total, ctr: total.impressions ? Math.round((total.clicks / total.impressions) * 1000) / 10 : 0,
       days: days.map(d => ({ day: d.day, impressions: Number(d.impressions), clicks: Number(d.clicks) })).reverse(),
       note: 'الظهور يُعدّ مرة لكل متصفح لكل جلسة بعد أن يُرى الإعلان فعلًا. لا نحفظ عنوان IP ولا هوية الزائر.'
@@ -334,10 +380,11 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
     if (!company || !headline || !link || !slot) return jsonError(res, 400, 'أكمل الشركة والعنوان ورابط https عامًا والموقع.', 'INVALID_CAMPAIGN');
     if (!starts.valid || !ends.valid || (starts.value && ends.value && ends.value < starts.value)) return jsonError(res, 400, 'تواريخ الحملة غير صالحة.', 'INVALID_DATES');
     const id = `ad_${randomUUID()}`, at = now(), token = randomBytes(24).toString('hex');
-    await db.prepare(`INSERT INTO ad_campaigns(id,company,headline,tagline,link_url,slot,accent,icon,contact_phone,status,starts_on,ends_on,report_token_hash,created_at,updated_at)
-      VALUES(?,?,?,?,?,?,?,?,?,'PENDING_REVIEW',?,?,?,?,?)`).run(
+    await db.prepare(`INSERT INTO ad_campaigns(id,company,headline,tagline,link_url,slot,accent,icon,contact_phone,status,starts_on,ends_on,report_token_hash,audiences_json,topics_json,created_at,updated_at)
+      VALUES(?,?,?,?,?,?,?,?,?,'PENDING_REVIEW',?,?,?,?,?,?,?)`).run(
       id, company, headline, text(req.body?.tagline, 0, 120) ?? '', link, slot, oneOf(req.body?.accent, AD_ACCENTS) ?? 'gold',
-      oneOf(req.body?.icon, AD_ICONS) ?? 'megaphone', phoneOf(req.body?.contactPhone) ?? '', starts.value, ends.value, sha(token), at, at
+      oneOf(req.body?.icon, AD_ICONS) ?? 'megaphone', phoneOf(req.body?.contactPhone) ?? '', starts.value, ends.value, sha(token),
+      JSON.stringify(pick(req.body?.audiences, AD_AUDIENCES)), JSON.stringify(pick(req.body?.topics, AD_TOPICS)), at, at
     );
     await audit(db, req, 'AD_CAMPAIGN_CREATED', 'AD_CAMPAIGN', id, { company, slot });
     const row = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=?`).get<CampaignRow>(id);
@@ -358,7 +405,7 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
       if (ends.value && ends.value < kuwaitToday()) return jsonError(res, 409, 'تاريخ انتهاء الحملة مضى.', 'CAMPAIGN_ENDED');
       const slot = before.slot as (typeof AD_SLOTS)[number];
       const others = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE status='APPROVED' AND slot=? AND id<>?`).all<CampaignRow>(slot, before.id);
-      const clashes = others.filter(o => overlaps(o, { starts_on: starts.value, ends_on: ends.value })).length;
+      const clashes = others.filter(o => overlaps(o, { starts_on: starts.value, ends_on: ends.value }) && audiencesOverlap(o, before)).length;
       if (clashes >= SLOT_CAPACITY[slot]) return jsonError(res, 409, slot === 'SPONSOR' ? 'موقع الراعي حصري وفيه حملة معتمدة في هذه الفترة.' : 'امتلأ هذا الموقع في الفترة المحددة.', 'SLOT_FULL');
     }
     const adminNote = text(req.body?.adminNote, 0, 1000) ?? '', at = now();
@@ -369,6 +416,25 @@ export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) 
     const row = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=?`).get<CampaignRow>(before.id);
     const stats = await statsFor(db, [before.id]);
     res.json({ campaign: campaignAdmin(row!, stats.get(before.id)) });
+  });
+
+  /**
+   * Retargeting an approved campaign could silently overfill a slot, so an approved campaign
+   * goes back to review (PAUSED) when its audiences widen; narrowing is always safe.
+   */
+  router.post('/admin/campaigns/:id/targeting', authenticated, csrfProtected, async (req: AuthenticatedRequest, res) => {
+    if (!isAdmin(req)) return jsonError(res, 403, 'للإدارة فقط.', 'ADMIN_REQUIRED');
+    const before = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=? LIMIT 1`).get<CampaignRow>(req.params.id);
+    if (!before) return jsonError(res, 404, 'الحملة غير موجودة.', 'NOT_FOUND');
+    const audiences = pick(req.body?.audiences, AD_AUDIENCES), topics = pick(req.body?.topics, AD_TOPICS);
+    const old = targetingOf(before).audiences;
+    const widened = before.status === 'APPROVED' && (!audiences.length ? old.length > 0 : audiences.some(a => old.length > 0 && !old.includes(a)));
+    await withTransaction(db, async tx => {
+      await tx.prepare(`UPDATE ad_campaigns SET audiences_json=?, topics_json=?, status=?, updated_at=? WHERE id=?`).run(JSON.stringify(audiences), JSON.stringify(topics), widened ? 'PAUSED' : before.status, now(), before.id);
+      await audit(tx, req, 'AD_CAMPAIGN_TARGETING', 'AD_CAMPAIGN', before.id, { audiences, topics, pausedForReview: widened });
+    });
+    const row = await db.prepare(`SELECT ${CAMPAIGN_COLUMNS} FROM ad_campaigns WHERE id=?`).get<CampaignRow>(before.id);
+    res.json({ campaign: campaignAdmin(row!), pausedForReview: widened });
   });
 
   router.post('/admin/campaigns/:id/image', authenticated, csrfProtected, express.raw({ type: () => true, limit: '400kb' }), async (req: AuthenticatedRequest, res) => {

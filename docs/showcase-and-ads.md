@@ -17,14 +17,17 @@ Three related surfaces. All three keep the rule used by the jobs board: **nothin
 - Every card is labelled «إعلان». Impressions count once per browser session after the card is ≥ 50 % visible for one second. Counters are per day with no IP and no user id (`ad_daily_stats`).
 - Company report: `/?ad-report=<token>` (JSON at `/ads/report/:token`). The token is the identity; only its SHA-256 is stored. It is shown once at creation (or when the requester submits), and an admin can issue a new one, which kills the old.
 - Ready-made windows (Ramadan, Eid al-Fitr, national days, summer, back to school) fill the date fields from `src/lib/adSeasons.ts`. Hijri dates use the Umm al-Qura calendar and may differ by a day from local sighting, so the admin sees and can edit them.
-- Not ported from the schedule repo's ads system: A/B creatives, seasonal/college targeting, quality scoring of pixels, partner-kit page, scheduled e-mail. They need audience data this platform does not collect yet.
+- **Smart, profile-free targeting** (this platform has no colleges or demographics): the only thing known about a viewer is their *role*, sent as one word (`VISITOR | CONSUMER | CREATOR | HOST | SUPPLIER`; administrators browse as visitors so previews never skew numbers). A campaign names the roles it suits (empty = everyone) and the marketplace categories it follows (empty = any). Ranking per request: topic match first, neutral next, mismatched last; ties go to the campaign shown least today, so delivery stays even. Slot capacity is counted **per audience**: a creators-only and a hosts-only campaign can share the "exclusive" sponsor slot, but a campaign for everyone overlaps both. Widening the audience of an approved campaign sends it back to review (paused); narrowing never does.
+- Politeness: each browser stops asking for ads after 60 impressions a day and can hide any single ad (✕, remembered locally). When no sponsor fits a market/portal slot, one of our own free gates is shown instead (labelled «من مجال», role-aware: shoppers → sell a business, hosts/creators/suppliers → supplier directory). The sponsor strip never shows house promotion.
+- Company reports include a per-role breakdown of who saw the ad.
+- Not ported from the schedule repo's ads system: A/B creatives, college targeting, pixel-quality scoring, partner-kit page, scheduled e-mail.
 
 ## 3. Facility team self-service
 - `HOST_OWNER` only. Roles an owner can hand out: operations, chef, finance, marketing, support (never owner). Maximum 25 members + pending invites.
 - `POST /api/v1/team/invites` → one-time link `/?invite=<token>` valid 7 days (hash stored, shown once). Re-inviting the same address replaces the older link. Addresses that already have an account are refused.
 - The invitee sets name + password on the accept page; the invite is consumed by a conditional update, so a replay or double submit loses.
 - Role change / suspend / remove run in a transaction and delete the member's sessions. A removed member keeps their account (history, audit) as a plain consumer with no tenant. Owners cannot edit themselves, and a member of another organisation is reported as not found.
-- Links are copied and sent by the owner (e.g. WhatsApp); there is no outbound e-mail provider yet.
+- Invitations are **links only, by design**: the owner copies the link or sends it with the WhatsApp button (a `wa.me` link the owner's own phone opens). The platform sends no e-mail or SMS for invitations.
 
 ## 4. Free supplier directory (`DIRECTORY` surface)
 - Same pattern as the business gate: `POST /api/v1/showcase/suppliers` (no account, 5/hour, honeypot, terms), admin reviews in *Approvals*, public `GET /suppliers` returns approved entries only; the contact name and notes stay private and the phone shows only with consent.

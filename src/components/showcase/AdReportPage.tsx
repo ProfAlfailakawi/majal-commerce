@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ArrowRight, Eye, MousePointerClick, Percent } from 'lucide-react';
 import { fetchAdReport, type AdReport } from '../../lib/showcaseClient';
 import { MajalMark } from '../brand/MajalMark';
+import { AD_AUDIENCE_LABEL, type AdAudience } from '../../lib/adAudience';
 
 const SLOT_LABEL = { SPONSOR: 'شريط الراعي', MARKET: 'السوق', PORTAL: 'بوابات الشركاء' } as const;
 const STATUS_LABEL: Record<string, string> = { PENDING_REVIEW: 'بانتظار الاعتماد', APPROVED: 'معتمدة', PAUSED: 'موقوفة', REJECTED: 'غير معتمدة' };
@@ -36,6 +37,17 @@ export const AdReportPage: React.FC<{ token: string; onClose: () => void }> = ({
               <div className="flex items-end gap-1 h-32" role="img" aria-label="الظهور اليومي">
                 {report.days.map(d => <div key={d.day} title={`${d.day}: ${d.impressions}`} className="flex-1 rounded-t bg-gold-400/70 min-h-[2px]" style={{ height: `${(d.impressions / max) * 100}%` }} />)}
               </div>
+            </section>
+          )}
+          {report.audiences && report.audiences.length > 0 && (
+            <section className="glass-panel rounded-3xl border border-white/10 p-5 space-y-3">
+              <h3 className="text-sm font-black">من شاهد إعلانك</h3>
+              {report.audiences.map(a => (
+                <div key={a.audience} className="space-y-1">
+                  <div className="flex justify-between text-xs"><span>{AD_AUDIENCE_LABEL[a.audience as AdAudience] ?? a.audience}</span><span className="text-slate-400">{a.impressions.toLocaleString('ar-EG')} ظهور · {a.clicks.toLocaleString('ar-EG')} نقرة</span></div>
+                  <div className="h-2 rounded-full bg-white/10 overflow-hidden"><div className="h-full bg-emerald-400/80" style={{ width: `${Math.max(2, (a.impressions / Math.max(1, report.totals.impressions)) * 100)}%` }} /></div>
+                </div>
+              ))}
             </section>
           )}
           <p className="text-xs text-slate-400 leading-6">{report.note}</p>

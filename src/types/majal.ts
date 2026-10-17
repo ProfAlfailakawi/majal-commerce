@@ -702,6 +702,9 @@ export interface AdCampaign extends PublicAd {
   clicks: number;
   weekImpressions?: number;
   weekClicks?: number;
+  /** Viewer roles it is shown to (empty = everyone) and marketplace categories it follows (empty = any). */
+  audiences?: string[];
+  topics?: string[];
 }
 
 /* ───────── Free supplier directory ───────── */

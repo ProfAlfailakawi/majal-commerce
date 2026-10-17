@@ -1606,6 +1606,25 @@ const migrations = [
       );
       CREATE INDEX IF NOT EXISTS idx_supplier_directory_status ON supplier_directory(status, category, submitted_at DESC, id);
     `
+  },
+  {
+    /*
+     * Context targeting for sponsor campaigns. There is no demographic profile on this
+     * platform and none is collected: a campaign names the viewer *roles* and page *topics*
+     * it suits, and the per-audience counters let a company see which roles saw it.
+     */
+    version: 25,
+    sql: `
+      ALTER TABLE ad_campaigns ADD COLUMN audiences_json TEXT NOT NULL DEFAULT '[]';
+      ALTER TABLE ad_campaigns ADD COLUMN topics_json TEXT NOT NULL DEFAULT '[]';
+      CREATE TABLE IF NOT EXISTS ad_audience_stats (
+        campaign_id TEXT NOT NULL REFERENCES ad_campaigns(id) ON DELETE CASCADE,
+        audience TEXT NOT NULL,
+        impressions INTEGER NOT NULL DEFAULT 0,
+        clicks INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY(campaign_id, audience)
+      );
+    `
   }
 ] as const;
 
