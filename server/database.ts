@@ -1680,6 +1680,21 @@ const migrations = [
       ALTER TABLE ad_campaigns ADD COLUMN paid_at TEXT;
       ALTER TABLE ad_campaigns ADD COLUMN billing_note TEXT NOT NULL DEFAULT '';
     `
+  },
+  {
+    /* Optional second wording (variant B) per campaign, with its own impression/click counters. */
+    version: 29,
+    sql: `
+      ALTER TABLE ad_campaigns ADD COLUMN b_headline TEXT;
+      ALTER TABLE ad_campaigns ADD COLUMN b_tagline TEXT;
+      CREATE TABLE IF NOT EXISTS ad_variant_stats (
+        campaign_id TEXT NOT NULL REFERENCES ad_campaigns(id) ON DELETE CASCADE,
+        variant TEXT NOT NULL CHECK(variant IN ('A','B')),
+        impressions INTEGER NOT NULL DEFAULT 0,
+        clicks INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY(campaign_id, variant)
+      );
+    `
   }
 ] as const;
 

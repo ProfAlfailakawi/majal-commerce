@@ -330,3 +330,60 @@ test('sponsorship is paid: billing is recorded per campaign, validated, audited,
     assert.equal((await approve()).status, 200);
   } finally { await h.close(); }
 });
+
+test('A/B test: a second headline is served 50/50, counted per variant, reported with a verdict, and reset when reworded', async () => {
+  const h = await harness();
+  try {
+    await createUser(h.db, { name: 'Admin', email: 'admin@ab.test', password, role: 'ADMIN' });
+    const admin = await h.login('admin@ab.test');
+    const created = await (await h.call(admin, 'POST', '/showcase/admin/campaigns', campaign(1, 'MARKET'))).json();
+    const id = created.campaign.id as string;
+    const send = (path: string, body: object) => h.call(admin, 'POST', `/showcase/admin/campaigns/${id}${path}`, body);
+    assert.equal((await send('/billing', { billing: 'COMPLIMENTARY' })).status, 200);
+    assert.equal((await send('/status', { status: 'APPROVED' })).status, 200);
+    const serve = async () => ((await (await fetch(`${h.base}/showcase/promo/serve?slot=MARKET`)).json()).ads as { headline: string; tagline: string; variant?: 'A' | 'B' }[])[0];
+    const edit = (extra: object) => send('/edit', { company: 'شركة 1', headline: 'العنوان الأول للإعلان', linkUrl: 'https://example.com/1', slot: 'MARKET', ...extra });
+
+    // No test yet: no variant marker in the payload.
+    assert.equal((await serve()).variant, undefined);
+    assert.equal((await edit({ bHeadline: 'ب' })).status, 200, 'a too-short B headline just means no test');
+    assert.equal((await serve()).variant, undefined);
+
+    const started = await (await edit({ bHeadline: 'العنوان الثاني الأقوى', bTagline: 'سطر ثانٍ' })).json();
+    assert.equal(started.campaign.variants.verdict.state, 'not_enough_data');
+    const seen = new Set<string>();
+    for (let i = 0; i < 60; i++) {
+      const ad = await serve();
+      seen.add(ad.variant!);
+      assert.equal(ad.headline, ad.variant === 'B' ? 'العنوان الثاني الأقوى' : 'العنوان الأول للإعلان');
+      if (ad.variant === 'B') assert.equal(ad.tagline, 'سطر ثانٍ');
+    }
+    assert.deepEqual([...seen].sort(), ['A', 'B'], 'both variants are served');
+
+    // Counting through the public endpoints (rate-limited, so a handful); unknown variants and junk are ignored.
+    const event = (variant: unknown) => fetch(`${h.base}/showcase/promo/event`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, type: 'impression', variant }) });
+    for (let i = 0; i < 3; i++) await event('A');
+    await event('B'); await event('Z');
+    await fetch(`${h.base}/showcase/promo/click/${id}?v=B`, { redirect: 'manual' });
+    await fetch(`${h.base}/showcase/promo/click/${id}?v=nope`, { redirect: 'manual' });
+    const early = (await (await h.call(admin, 'GET', '/showcase/admin/overview')).json()).campaigns.find((c: { id: string }) => c.id === id);
+    assert.deepEqual([early.variants.A, early.variants.B], [{ impressions: 3, clicks: 0 }, { impressions: 1, clicks: 1 }]);
+    // A realistic volume goes straight into the counters so the verdict can be checked.
+    await h.db.prepare("UPDATE ad_variant_stats SET impressions=1000, clicks=40 WHERE campaign_id=? AND variant='A'").run(id);
+    await h.db.prepare("UPDATE ad_variant_stats SET impressions=1000, clicks=70 WHERE campaign_id=? AND variant='B'").run(id);
+    const overview = (await (await h.call(admin, 'GET', '/showcase/admin/overview')).json()).campaigns.find((c: { id: string }) => c.id === id);
+    assert.deepEqual([overview.variants.A, overview.variants.B], [{ impressions: 1000, clicks: 40 }, { impressions: 1000, clicks: 70 }]);
+    assert.equal(overview.variants.verdict.state, 'winner');
+    assert.equal(overview.variants.verdict.winner, 'B');
+    assert.equal(overview.variants.verdict.liftPercent, 75);
+    const report = await (await fetch(`${h.base}/showcase/promo/report/${created.reportToken}`)).json();
+    assert.equal(report.variants.verdict.winner, 'B');
+
+    // Rewording starts a fresh experiment; clearing B ends it.
+    const reworded = await (await edit({ bHeadline: 'عنوان ثانٍ جديد' })).json();
+    assert.deepEqual([reworded.campaign.variants.A, reworded.campaign.variants.B], [{ impressions: 0, clicks: 0 }, { impressions: 0, clicks: 0 }]);
+    const ended = await (await edit({})).json();
+    assert.equal(ended.campaign.variants, undefined);
+    assert.equal((await serve()).variant, undefined);
+  } finally { await h.close(); }
+});

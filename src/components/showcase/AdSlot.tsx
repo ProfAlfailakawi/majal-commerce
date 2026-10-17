@@ -34,7 +34,7 @@ const countShown = () => write(dayKey(), String(Number(read(dayKey()) || 0) + 1)
 
 /** Counts one impression per browser session, and only once the card is at least half on screen for a second. */
 const seen = new Set<string>();
-function useImpression(id: string, audience: AdAudience, enabled: boolean) {
+function useImpression(id: string, audience: AdAudience, enabled: boolean, variant?: 'A' | 'B') {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const node = ref.current;
@@ -43,22 +43,22 @@ function useImpression(id: string, audience: AdAudience, enabled: boolean) {
     const observer = new IntersectionObserver(([entry]) => {
       window.clearTimeout(timer);
       if (entry?.isIntersecting && entry.intersectionRatio >= 0.5 && document.visibilityState === 'visible') {
-        timer = window.setTimeout(() => { if (!seen.has(id)) { seen.add(id); countShown(); reportAdImpression(id, audience); } observer.disconnect(); }, 1000);
+        timer = window.setTimeout(() => { if (!seen.has(id)) { seen.add(id); countShown(); reportAdImpression(id, audience, variant); } observer.disconnect(); }, 1000);
       }
     }, { threshold: [0.5] });
     observer.observe(node);
     return () => { window.clearTimeout(timer); observer.disconnect(); };
-  }, [id, audience, enabled]);
+  }, [id, audience, enabled, variant]);
   return ref;
 }
 
 const AdCard: React.FC<{ ad: PublicAd; audience: AdAudience; compact?: boolean; onHide?: () => void }> = ({ ad, audience, compact, onHide }) => {
-  const ref = useImpression(ad.id, audience, true);
+  const ref = useImpression(ad.id, audience, true, ad.variant);
   const tone = TONES[ad.accent] ?? TONES.gold;
   const Icon = ICONS[ad.icon] ?? Megaphone;
   return (
     <div ref={ref} className="relative group min-w-0">
-      <a href={adClickHref(ad.id, audience)} target="_blank" rel="sponsored noopener noreferrer" onClick={() => noteDemoAdClick(ad.id)}
+      <a href={adClickHref(ad.id, audience, ad.variant)} target="_blank" rel="sponsored noopener noreferrer" onClick={() => noteDemoAdClick(ad.id, ad.variant)}
         className={`flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] ${compact ? 'px-3 py-2' : 'p-4'} pe-10 transition ${tone.ring} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300 min-w-0`}>
         {ad.hasImage
           ? <img src={adImageSrc(ad.id)} alt="" loading="lazy" decoding="async" className={`shrink-0 rounded-xl object-cover border border-white/10 ${compact ? 'w-9 h-9' : 'w-16 h-16'}`} />

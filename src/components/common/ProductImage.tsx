@@ -18,8 +18,9 @@ interface ProductImageProps {
  */
 export const ProductImage: React.FC<ProductImageProps> = ({ src, alt, className = '', loading, fetchPriority, markSize = 56 }) => {
   const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   // A new source deserves a fresh attempt; a failure belongs to the previous one.
-  useEffect(() => { setFailed(false); }, [src]);
+  useEffect(() => { setFailed(false); setLoaded(false); }, [src]);
   if (!src || failed) {
     return (
       <div role="img" aria-label={alt} className={`majal-plate grid place-items-center overflow-hidden ${className}`}>
@@ -27,5 +28,14 @@ export const ProductImage: React.FC<ProductImageProps> = ({ src, alt, className 
       </div>
     );
   }
-  return <img src={src} alt={alt} loading={loading} decoding="async" fetchPriority={fetchPriority} onError={() => setFailed(true)} className={className} />;
+  // While the picture travels, the element itself shows the brand plate with a soft shimmer; once decoded
+  // it eases in. Images already in cache fire onLoad immediately, so nothing flickers on revisit.
+  return (
+    <img
+      src={src} alt={alt} loading={loading} decoding="async" fetchPriority={fetchPriority}
+      ref={node => { if (node?.complete && node.naturalWidth > 0 && !loaded) setLoaded(true); }}
+      onLoad={() => setLoaded(true)} onError={() => setFailed(true)}
+      className={`${className} ${loaded ? 'majal-img-in' : 'majal-img-loading'}`}
+    />
+  );
 };

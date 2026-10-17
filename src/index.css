@@ -1207,3 +1207,20 @@ body:has(.majal-ai-fab) footer { padding-bottom: 4.5rem; }
 @media (prefers-reduced-motion: reduce) {
   .animate-in { animation: none; }
 }
+
+
+/* Product pictures: shimmering plate while loading, gentle ease-in once decoded. */
+@keyframes majal-img-in { from { opacity: 0; transform: scale(1.02); } to { opacity: 1; transform: none; } }
+@keyframes majal-img-shimmer { from { background-position: 200% 0, 0 0; } to { background-position: -200% 0, 0 0; } }
+.majal-img-in { animation: majal-img-in 380ms ease-out both; }
+.majal-img-loading {
+  background-image:
+    linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.22) 50%, transparent 70%),
+    linear-gradient(135deg, #e8c880 0%, #c7a55b 55%, #a98741 100%);
+  background-size: 200% 100%, 100% 100%;
+  animation: majal-img-shimmer 1.4s linear infinite;
+}
+:root[data-theme='contrast'] .majal-img-loading { background: #000; animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .majal-img-in, .majal-img-loading { animation: none; }
+}

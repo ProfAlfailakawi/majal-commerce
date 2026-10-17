@@ -5,7 +5,7 @@ import { databaseHealth, openMajalDatabase } from './database';
 test('database migrations create the auth, payment, PACI and notification boundaries', async () => {
   const db = await openMajalDatabase({ filename: ':memory:' });
   try {
-    assert.deepEqual(await databaseHealth(db), { ready: true, schemaVersion: 28, dialect: 'sqlite' });
+    assert.deepEqual(await databaseHealth(db), { ready: true, schemaVersion: 29, dialect: 'sqlite' });
     const tables = (await db.prepare(`SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name`).all()).map(row => String(row.name));
     for (const required of [
       'users',
@@ -38,6 +38,7 @@ test('database migrations create the auth, payment, PACI and notification bounda
       'gate_events',
       'partner_kit',
       'ad_audience_stats',
+      'ad_variant_stats',
       'supplier_directory',
       'product_reviews',
       'moderation_actions'
