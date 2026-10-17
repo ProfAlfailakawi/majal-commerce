@@ -140,28 +140,8 @@ const REVIEW_COMMENTS = [
 
 const IPS = ['10.0.0.12', '10.0.0.34', '10.0.0.51', '10.0.0.77', '10.0.0.91'];
 
-function demoUsers(creators: CreatorProfile[], hosts: HostBusiness[]): User[] {
+function demoUsers(): User[] {
   const base = clone(INITIAL_USERS);
-  const creatorUsers: User[] = creators.slice(1).map((creator, index) => ({
-    id: creator.userId,
-    name: creator.displayName,
-    email: `creator${index + 2}@demo.majal.test`,
-    phone: `+965 5${String(1000000 + index * 7919).slice(0, 7)}`,
-    role: 'CREATOR',
-    status: 'ACTIVE',
-    creatorId: creator.id,
-    lastLoginAt: ago(index % 9),
-  }));
-  const hostUsers: User[] = hosts.slice(1).map((host, index) => ({
-    id: `usr_host_${index + 2}`,
-    name: `مدير ${host.commercialName}`,
-    email: `host${index + 2}@demo.majal.test`,
-    phone: `+965 6${String(2000000 + index * 4211).slice(0, 7)}`,
-    role: 'HOST_OWNER',
-    status: 'ACTIVE',
-    hostBusinessId: host.id,
-    lastLoginAt: ago((index + 3) % 11),
-  }));
   // The supplier portal is its own surface; without a supplier identity in the
   // switcher it was unreachable in demo. Its profile lives in demoEcosystem.ts.
   const supplierUser: User = {
@@ -175,7 +155,9 @@ function demoUsers(creators: CreatorProfile[], hosts: HostBusiness[]): User[] {
     status: 'ACTIVE',
     lastLoginAt: ago(1),
   };
-  return [...base, supplierUser, ...creatorUsers, ...hostUsers];
+  // One identity per role in the switcher: the extra creators and facilities stay as marketplace data
+  // (cards, products, launches) but are not separate logins, which only crowded the menu.
+  return [...base, supplierUser];
 }
 
 function demoCreators(): CreatorProfile[] {
@@ -1040,7 +1022,7 @@ export function buildDemoUniverse(): DemoUniverse {
   cached = {
     ...workbench,
     ...deals,
-    users: demoUsers(creators, hosts),
+    users: demoUsers(),
     creators,
     hosts,
     products,
