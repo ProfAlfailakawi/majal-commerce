@@ -31,7 +31,7 @@ export const InviteAcceptPage: React.FC<{ token: string; onDone: () => void }> =
           <p className="text-sm leading-7">دُعيت للانضمام إلى <strong className="text-gold-300">{info.organizationName}</strong> بدور <strong>{roleLabel(info.role as UserRole)}</strong>.</p>
           <div dir="ltr" className="text-xs text-slate-400 text-start">{info.email}</div>
           <label className="block text-xs font-black space-y-1.5"><span>اسمك</span><input required minLength={2} maxLength={120} value={name} onChange={e => setName(e.target.value)} className={field} autoComplete="name" /></label>
-          <label className="block text-xs font-black space-y-1.5"><span>كلمة المرور (١٢ حرفًا على الأقل)</span><input required type="password" minLength={12} value={password} onChange={e => setPassword(e.target.value)} className={field} autoComplete="new-password" dir="ltr" /></label>
+          <label className="block text-xs font-black space-y-1.5"><span>كلمة المرور (12 حرفًا على الأقل)</span><input required type="password" minLength={12} value={password} onChange={e => setPassword(e.target.value)} className={field} autoComplete="new-password" dir="ltr" /></label>
           {error && <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-400/20 text-xs text-rose-200">{error}</div>}
           <button disabled={busy} className="w-full py-3 rounded-xl bg-gold-500 text-slate-950 text-sm font-black disabled:opacity-50">{busy ? 'جارٍ التفعيل…' : 'فعّل حسابي'}</button>
           <p className="text-xs text-slate-400 flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-emerald-300" aria-hidden="true" />صلاحياتك تتبع دورك فقط داخل هذه المنشأة.</p>

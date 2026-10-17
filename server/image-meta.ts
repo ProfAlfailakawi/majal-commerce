@@ -36,10 +36,10 @@ export function readImageMeta(buf: Buffer): ImageMeta | undefined {
 /** Why a creative is unusable, or undefined when it is fine. */
 export function creativeProblem(meta: ImageMeta | undefined, bytes: number): string | undefined {
   if (!meta) return 'الملف ليس صورة PNG أو JPEG أو WebP صالحة.';
-  if (bytes > 300_000) return 'حجم الصورة يتجاوز ٣٠٠ كيلوبايت.';
-  if (meta.width < 160 || meta.height < 160) return 'الصورة صغيرة؛ الحد الأدنى ١٦٠×١٦٠ بكسل.';
+  if (bytes > 300_000) return 'حجم الصورة يتجاوز 300 كيلوبايت.';
+  if (meta.width < 160 || meta.height < 160) return 'الصورة صغيرة؛ الحد الأدنى 160×160 بكسل.';
   if (meta.width > 4000 || meta.height > 4000) return 'أبعاد الصورة كبيرة جدًا.';
   const ratio = meta.width / meta.height;
-  if (ratio < 0.5 || ratio > 4) return 'نسبة العرض إلى الارتفاع غير مناسبة (بين ١:٢ و٤:١).';
+  if (ratio < 0.5 || ratio > 4) return 'نسبة العرض إلى الارتفاع غير مناسبة (بين 1:2 و4:1).';
   return undefined;
 }

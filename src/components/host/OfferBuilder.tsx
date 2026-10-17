@@ -66,7 +66,7 @@ export const OfferBuilder: React.FC<OfferBuilderProps> = ({ collaboration }) => 
         </div>
 
         <div>
-          <label className="block text-slate-300 font-bold mb-1">نسبة حقوق المبدع (٪):</label>
+          <label className="block text-slate-300 font-bold mb-1">نسبة حقوق المبدع (%):</label>
           <input
             type="number"
             step="0.5"

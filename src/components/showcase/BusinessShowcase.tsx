@@ -13,7 +13,7 @@ import { SECTORS, SECTOR_KEYS } from './sectors';
 import { AdSlot as AdSlotView, AdPreview, AdIcon, AD_ACCENT_DOT, AD_ACCENT_KEYS, AD_ICON_KEYS } from './AdSlot';
 
 /** Asking prices are whole dinars; formatKwd's three decimals would read as fils. */
-const formatKwd = (kwd: number) => `${kwd.toLocaleString('ar-EG')} د.ك`;
+const formatKwd = (kwd: number) => `${kwd.toLocaleString('ar-KW-u-nu-latn')} د.ك`;
 const forSale = { one: 'مشروع واحد', two: 'مشروعان', few: 'مشاريع', many: 'مشروعًا' };
 const fieldClass = 'w-full glass-input rounded-xl px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300';
 const waLink = (phone: string, title: string) => `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(`مرحبًا، أنا مهتم بمشروعك المعروض في مجال: ${title}`)}`;
@@ -88,7 +88,7 @@ const SubmitForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             <label className="block text-xs font-black space-y-1.5"><span>المدينة / المنطقة</span><input required maxLength={80} value={f.city} onChange={e => set('city', e.target.value)} className={fieldClass} /></label>
             <label className="block text-xs font-black space-y-1.5"><span>السعر المطلوب (د.ك) — اختياري</span><input inputMode="numeric" pattern="\d*" value={f.price} onChange={e => set('price', e.target.value.replace(/\D/g, ''))} className={fieldClass} dir="ltr" /></label>
             <label className="block text-xs font-black space-y-1.5"><span>سنوات التشغيل — اختياري</span><input inputMode="numeric" pattern="\d*" value={f.years} onChange={e => set('years', e.target.value.replace(/\D/g, ''))} className={fieldClass} dir="ltr" /></label>
-            <label className="block text-xs font-black space-y-1.5"><span>الدخل الشهري التقريبي — اختياري</span><input maxLength={60} value={f.revenueBand} onChange={e => set('revenueBand', e.target.value)} className={fieldClass} placeholder="٣–٤ آلاف د.ك" /></label>
+            <label className="block text-xs font-black space-y-1.5"><span>الدخل الشهري التقريبي — اختياري</span><input maxLength={60} value={f.revenueBand} onChange={e => set('revenueBand', e.target.value)} className={fieldClass} placeholder="3–4 آلاف د.ك" /></label>
           </div>
           <label className="block text-xs font-black space-y-1.5"><span>وصف مختصر</span><textarea required minLength={20} maxLength={1200} rows={3} value={f.summary} onChange={e => set('summary', e.target.value)} className={fieldClass} /></label>
           <label className="block text-xs font-black space-y-1.5"><span>أبرز المميزات (افصل بفاصلة)</span><input value={f.highlights} onChange={e => set('highlights', e.target.value)} className={fieldClass} placeholder="زبائن ثابتون، عقد ساري" /></label>
@@ -142,7 +142,7 @@ export const AdRequestForm: React.FC<{ onClose: () => void }> = ({ onClose }) =>
           <p className="text-xs text-slate-300 leading-6">الإعلان خدمة مدفوعة: نتواصل معك على رقمك لنتفق على الموقع والمدة والسعر، ثم يُعتمد وينشر بعد الاتفاق. كل إعلان يحمل وسم «إعلان»، ولا يظهر شيء قبل اعتماد الإدارة.</p>
           <AdPreview ad={{ company: f.company, headline: f.headline, tagline: f.tagline, accent: f.accent, icon: f.icon }} />
           <label className="block text-xs font-black space-y-1.5"><span>اسم الشركة</span><input required maxLength={80} value={f.company} onChange={e => set('company', e.target.value)} className={fieldClass} /></label>
-          <label className="block text-xs font-black space-y-1.5"><span>عنوان الإعلان ({(70 - f.headline.length).toLocaleString('ar-EG')} حرفًا متبقيًا)</span><input required minLength={4} maxLength={70} value={f.headline} onChange={e => set('headline', e.target.value)} className={fieldClass} /></label>
+          <label className="block text-xs font-black space-y-1.5"><span>عنوان الإعلان ({(70 - f.headline.length).toLocaleString('ar-KW-u-nu-latn')} حرفًا متبقيًا)</span><input required minLength={4} maxLength={70} value={f.headline} onChange={e => set('headline', e.target.value)} className={fieldClass} /></label>
           <label className="block text-xs font-black space-y-1.5"><span>سطر توضيحي — اختياري</span><input maxLength={120} value={f.tagline} onChange={e => set('tagline', e.target.value)} className={fieldClass} /></label>
           <label className="block text-xs font-black space-y-1.5"><span>رابط الوجهة (https)</span><input required type="url" value={f.linkUrl} onChange={e => set('linkUrl', e.target.value)} className={fieldClass} dir="ltr" /></label>
           <label className="block text-xs font-black space-y-1.5"><span>رقم التواصل</span><input required type="tel" maxLength={24} value={f.phone} onChange={e => set('phone', e.target.value)} className={fieldClass} dir="ltr" /></label>

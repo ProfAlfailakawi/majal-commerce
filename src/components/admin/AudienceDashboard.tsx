@@ -3,6 +3,7 @@ import { BriefcaseBusiness, Check, ChefHat, Clock3, Copy, Eye, Factory, Handshak
 import { fetchAudienceOverview, rotatePartnerKit, type AudienceOverview } from '../../lib/audienceClient';
 import { ShareBars, TrendBars, WeekdayBars } from '../showcase/charts';
 import { AUDIENCE_TONE, SLOT_LABEL, SURFACE_LABEL, audienceLabel, num } from '../showcase/audienceLabels';
+import { clockLabel, useAutoRefresh } from '../../lib/autoRefresh';
 
 const Kpi: React.FC<{ icon: React.ReactNode; label: string; value: string; hint?: string; tone?: string }> = ({ icon, label, value, hint, tone = 'text-gold-300' }) => (
   <div className="glass-card rounded-2xl border border-white/10 p-4 space-y-1.5">
@@ -21,8 +22,11 @@ const Panel: React.FC<{ title: string; sub?: string; children: React.ReactNode; 
 export const AudienceDashboard: React.FC = () => {
   const [data, setData] = useState<AudienceOverview | null>(null);
   const [error, setError] = useState(''), [busy, setBusy] = useState(false), [link, setLink] = useState(''), [copied, setCopied] = useState(false);
-  const load = useCallback(() => { fetchAudienceOverview().then(d => { setData(d); setError(''); }).catch(e => setError(e instanceof Error ? e.message : 'تعذّر التحميل.')); }, []);
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const load = useCallback(() => { fetchAudienceOverview().then(d => { setData(d); setError(''); setUpdatedAt(new Date()); }).catch(e => setError(e instanceof Error ? e.message : 'تعذّر التحميل.')); }, []);
   useEffect(load, [load]);
+  // Numbers stay within a minute of the server while the tab is open.
+  useAutoRefresh(load);
 
   const rotate = async () => {
     if (data?.kit.exists && !window.confirm('سيتوقف رابط الشراكة الحالي عن العمل. متابعة؟')) return;
@@ -34,7 +38,7 @@ export const AudienceDashboard: React.FC = () => {
 
   if (!data) return error ? <div role="alert" className="p-4 rounded-2xl bg-rose-500/10 border border-rose-400/20 text-sm text-rose-200">{error}</div> : <div role="status" className="py-12 text-center text-sm text-slate-400">جارٍ تحميل لوحة الجمهور…</div>;
   const t = data.traffic, f = data.facts, g = data.gates;
-  const since = t.measuringSince ? new Date(`${t.measuringSince}T00:00:00Z`).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) : null;
+  const since = t.measuringSince ? new Date(`${t.measuringSince}T00:00:00Z`).toLocaleDateString('ar-KW-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) : null;
 
   return (
     <div className="space-y-6">
@@ -45,6 +49,7 @@ export const AudienceDashboard: React.FC = () => {
         </div>
         <div className="flex items-center gap-2">
           {data.demo && <span className="px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-400/20 text-xs font-black text-amber-300">أرقام تجريبية مولّدة</span>}
+          {updatedAt && <span className="text-xs text-slate-400 tabular-nums" role="status">يتحدث تلقائيًا كل دقيقة · آخر تحديث <bdi dir="ltr">{clockLabel(updatedAt)}</bdi></span>}
           <button type="button" onClick={load} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black flex items-center gap-2"><RefreshCw className="w-4 h-4" aria-hidden="true" />تحديث</button>
         </div>
       </section>
@@ -52,14 +57,14 @@ export const AudienceDashboard: React.FC = () => {
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
         <Kpi icon={<Eye className="w-4 h-4" aria-hidden="true" />} label="داخلون اليوم" value={num(t.totals.browsersToday)} hint="متصفحات مختلفة" />
-        <Kpi icon={<TrendingUp className="w-4 h-4" aria-hidden="true" />} label="آخر ٧ أيام" value={num(t.totals.browsers7)} hint="متصفحات مختلفة (مجموع الأيام)" tone="text-emerald-300" />
-        <Kpi icon={<Users className="w-4 h-4" aria-hidden="true" />} label="آخر ٣٠ يومًا" value={num(t.totals.browsers30)} hint="مجموع داخلين يوميًا" tone="text-sky-300" />
-        <Kpi icon={<MousePointerClick className="w-4 h-4" aria-hidden="true" />} label="مشاهدات الصفحات" value={num(t.totals.views30)} hint="٣٠ يومًا" tone="text-fuchsia-300" />
+        <Kpi icon={<TrendingUp className="w-4 h-4" aria-hidden="true" />} label="آخر 7 أيام" value={num(t.totals.browsers7)} hint="متصفحات مختلفة (مجموع الأيام)" tone="text-emerald-300" />
+        <Kpi icon={<Users className="w-4 h-4" aria-hidden="true" />} label="آخر 30 يومًا" value={num(t.totals.browsers30)} hint="مجموع داخلين يوميًا" tone="text-sky-300" />
+        <Kpi icon={<MousePointerClick className="w-4 h-4" aria-hidden="true" />} label="مشاهدات الصفحات" value={num(t.totals.views30)} hint="30 يومًا" tone="text-fuchsia-300" />
       </div>
 
       <div className="grid xl:grid-cols-[1.6fr_1fr] gap-6">
         <Panel title="الداخلون يوميًا" sub="كل عمود متصفح دخل مجال في ذلك اليوم (مرة واحدة). الأخضر هو اليوم.">
-          <TrendBars points={t.daily.map(d => ({ day: d.day, value: d.browsers }))} label="عدد الداخلين يوميًا خلال ٣٠ يومًا" />
+          <TrendBars points={t.daily.map(d => ({ day: d.day, value: d.browsers }))} label="عدد الداخلين يوميًا خلال 30 يومًا" />
         </Panel>
         <Panel title="أيام الذروة" sub="يوم الأسبوع الأكثر دخولًا يظهر بالأخضر.">
           <WeekdayBars values={t.weekday} />
@@ -70,7 +75,7 @@ export const AudienceDashboard: React.FC = () => {
         <Panel title="من يدخل؟" sub="مشاهدات الصفحات حسب نوع الزائر (دوره فقط، لا هويته).">
           <ShareBars rows={t.byAudience.map(a => ({ key: a.key, label: audienceLabel(a.key), value: a.visits, tone: AUDIENCE_TONE[a.key] }))} />
         </Panel>
-        <Panel title="إلى أين يذهبون؟" sub="مشاهدات كل صفحة خلال ٣٠ يومًا.">
+        <Panel title="إلى أين يذهبون؟" sub="مشاهدات كل صفحة خلال 30 يومًا.">
           <ShareBars rows={t.bySurface.map(s => ({ key: s.key, label: SURFACE_LABEL[s.key] ?? s.key, value: s.visits }))} />
         </Panel>
       </div>
@@ -89,7 +94,7 @@ export const AudienceDashboard: React.FC = () => {
       </Panel>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        <Panel title="البوابات المجانية" sub="فتحات التفاصيل ونقرات التواصل (٣٠ يومًا).">
+        <Panel title="البوابات المجانية" sub="فتحات التفاصيل ونقرات التواصل (30 يومًا).">
           <div className="grid grid-cols-3 gap-3 text-center">
             {[{ l: 'فتح مشروع', v: g.listingOpens }, { l: 'تواصل مع بائع', v: g.listingContacts }, { l: 'تواصل مع مورد', v: g.supplierContacts }].map(x => (
               <div key={x.l} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3"><div className="text-xl font-black tabular-nums">{num(x.v)}</div><div className="text-xs text-slate-400 mt-0.5">{x.l}</div></div>
@@ -101,10 +106,10 @@ export const AudienceDashboard: React.FC = () => {
             </div>
           ))}
         </Panel>
-        <Panel title="الإعلانات والإيراد" sub="مجمل الحملات (٣٠ يومًا)، ما دفعه المعلنون، وامتلاء المواقع الآن.">
-          <div className="grid grid-cols-2 gap-3 text-center">{[{ l: 'مدفوع (٣٠ يومًا)', v: `${num(data.revenue.paid30)} د.ك`, tone: 'text-emerald-300' }, { l: 'إجمالي المدفوع', v: `${num(data.revenue.paidTotal)} د.ك`, tone: 'text-gold-300' }, { l: 'طلبات بانتظار السعر', v: num(data.revenue.awaitingBilling), tone: 'text-amber-300' }, { l: 'حملات ضيافة', v: num(data.revenue.complimentary), tone: 'text-slate-300' }].map(x => <div key={x.l} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3"><div className={`text-xl font-black tabular-nums ${x.tone}`}>{x.v}</div><div className="text-xs text-slate-400 mt-0.5">{x.l}</div></div>)}</div>
+        <Panel title="الإعلانات والإيراد" sub="مجمل الحملات (30 يومًا)، ما دفعه المعلنون، وامتلاء المواقع الآن.">
+          <div className="grid grid-cols-2 gap-3 text-center">{[{ l: 'مدفوع (30 يومًا)', v: `${num(data.revenue.paid30)} د.ك`, tone: 'text-emerald-300' }, { l: 'إجمالي المدفوع', v: `${num(data.revenue.paidTotal)} د.ك`, tone: 'text-gold-300' }, { l: 'طلبات بانتظار السعر', v: num(data.revenue.awaitingBilling), tone: 'text-amber-300' }, { l: 'حملات ضيافة', v: num(data.revenue.complimentary), tone: 'text-slate-300' }].map(x => <div key={x.l} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3"><div className={`text-xl font-black tabular-nums ${x.tone}`}>{x.v}</div><div className="text-xs text-slate-400 mt-0.5">{x.l}</div></div>)}</div>
           <div className="grid grid-cols-3 gap-3 text-center">
-            {[{ l: 'ظهور', v: num(data.ads.impressions) }, { l: 'نقرات', v: num(data.ads.clicks) }, { l: 'نسبة النقر', v: `${num(data.ads.ctr)}٪` }].map(x => <div key={x.l} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3"><div className="text-xl font-black tabular-nums">{x.v}</div><div className="text-xs text-slate-400 mt-0.5">{x.l}</div></div>)}
+            {[{ l: 'ظهور', v: num(data.ads.impressions) }, { l: 'نقرات', v: num(data.ads.clicks) }, { l: 'نسبة النقر', v: `${num(data.ads.ctr)}%` }].map(x => <div key={x.l} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3"><div className="text-xl font-black tabular-nums">{x.v}</div><div className="text-xs text-slate-400 mt-0.5">{x.l}</div></div>)}
           </div>
           <div className="space-y-2.5">{data.slots.map(s => (
             <div key={s.slot} className="space-y-1"><div className="flex justify-between text-xs"><span className="font-bold flex items-center gap-1.5"><Megaphone className="w-3.5 h-3.5 text-gold-300" aria-hidden="true" />{SLOT_LABEL[s.slot]}</span><span className={s.live >= s.capacity ? 'text-amber-300' : 'text-emerald-300'}>{num(s.live)} / {num(s.capacity)}{s.live >= s.capacity ? ' ممتلئ' : ' متاح'}</span></div>
@@ -116,7 +121,7 @@ export const AudienceDashboard: React.FC = () => {
       <Panel title="رابط الشراكة للشركات" sub="صفحة جميلة بأرقامك الحقيقية ترسلها لأي شركة. الرابط خاص، وتجديده يوقف القديم.">
         <div className="flex flex-wrap items-center gap-3">
           <button type="button" disabled={busy} onClick={rotate} className="px-5 py-3 rounded-xl bg-gold-500 text-slate-950 text-sm font-black flex items-center gap-2 disabled:opacity-50"><KeyRound className="w-4 h-4" aria-hidden="true" />{data.kit.exists ? 'تجديد الرابط' : 'إنشاء الرابط'}</button>
-          {data.kit.exists && <span className="text-xs text-slate-400 flex items-center gap-1.5"><Clock3 className="w-3.5 h-3.5" aria-hidden="true" />{data.kit.rotatedAt ? 'جُدّد' : 'أُنشئ'} {new Date(data.kit.rotatedAt ?? data.kit.createdAt ?? Date.now()).toLocaleDateString('ar-EG')} — الرابط الحالي لا يمكن عرضه ثانية، جدّده للحصول على رابط جديد.</span>}
+          {data.kit.exists && <span className="text-xs text-slate-400 flex items-center gap-1.5"><Clock3 className="w-3.5 h-3.5" aria-hidden="true" />{data.kit.rotatedAt ? 'جُدّد' : 'أُنشئ'} {new Date(data.kit.rotatedAt ?? data.kit.createdAt ?? Date.now()).toLocaleDateString('ar-KW-u-nu-latn')} — الرابط الحالي لا يمكن عرضه ثانية، جدّده للحصول على رابط جديد.</span>}
         </div>
         {link && (
           <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/[0.06] p-4 space-y-2">

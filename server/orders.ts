@@ -6,6 +6,7 @@ import { appendLedgerEntry } from './ledger';
 import { PaymentRegistry } from './payments';
 import { SURFACE, launchParties, notify } from './notify';
 import { PAYMENT_HOLD_MINUTES, normalizeKuwaitPhone, organizationBranches, parseSlots, parseZones, releaseOrderReservation, reserveBranchStock } from './checkout';
+import { toLatinDigits } from './latin-digits';
 
 /*
  * دورة الشراء: طلب → نية دفع → (webhook) مدفوع → استحقاق المبدع → تسوية.
@@ -305,7 +306,7 @@ export function createOrdersRouter(db: MajalDatabase, authConfig: AuthConfig, pa
     const value = integer(req.body?.valueRating, 1, 5);
     const portion = integer(req.body?.portionRating, 1, 5);
     const keepIt = req.body?.keepItVote === true;
-    const comment = typeof req.body?.comment === 'string' ? req.body.comment.trim().slice(0, 1_000) : '';
+    const comment = typeof req.body?.comment === 'string' ? toLatinDigits(req.body.comment.trim().slice(0, 1_000)) : '';
 
     if (!orderId) return jsonError(res, 400, 'معرّف الطلب غير صالح.', 'INVALID_ORDER');
     if (!taste || !value || !portion) return jsonError(res, 400, 'التقييم يجب أن يكون بين 1 و5 في كل المحاور.', 'INVALID_RATING');

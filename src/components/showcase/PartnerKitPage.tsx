@@ -7,6 +7,7 @@ import { AUDIENCE_TONE, SLOT_LABEL, SURFACE_LABEL, audienceLabel, num } from './
 import { AdRequestForm } from './BusinessShowcase';
 import { AD_AUDIENCES, AD_AUDIENCE_LABEL, AD_TOPICS } from '../../lib/adAudience';
 import { usePrivatePage } from '../../lib/privatePage';
+import { useAutoRefresh } from '../../lib/autoRefresh';
 
 const SLOT_NOTE: Record<string, string> = {
   SPONSOR: 'شريط ثابت أسفل القائمة، لشركة واحدة لكل جمهور في الفترة.',
@@ -26,6 +27,7 @@ export const PartnerKitPage: React.FC<{ token: string; onClose: () => void }> = 
   const [error, setError] = useState(''), [form, setForm] = useState(false);
   usePrivatePage();
   useEffect(() => { fetchPartnerKit(token).then(setKit).catch(e => setError(e instanceof Error ? e.message : 'الرابط غير صالح.')); }, [token]);
+  useAutoRefresh(() => { fetchPartnerKit(token).then(setKit).catch(() => undefined); });
 
   if (!kit) return (
     <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-4">
@@ -33,7 +35,7 @@ export const PartnerKitPage: React.FC<{ token: string; onClose: () => void }> = 
     </div>
   );
   const t = kit.traffic, f = kit.facts;
-  const since = t.measuringSince ? new Date(`${t.measuringSince}T00:00:00Z`).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) : null;
+  const since = t.measuringSince ? new Date(`${t.measuringSince}T00:00:00Z`).toLocaleDateString('ar-KW-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) : null;
   const young = t.daily.filter(d => d.browsers > 0).length < 7;
 
   return (
@@ -55,13 +57,13 @@ export const PartnerKitPage: React.FC<{ token: string; onClose: () => void }> = 
       {kit.demo && <p className="text-xs text-amber-200 bg-amber-500/10 border border-amber-400/20 rounded-xl p-3">هذه النسخة تجريبية: الأرقام مولّدة للعرض وليست مقاسة.</p>}
 
       <section aria-label="أرقام الدخول" className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[{ icon: Eye, l: 'داخلون اليوم', v: t.totals.browsersToday, c: 'text-gold-300' }, { icon: Users, l: 'آخر ٧ أيام', v: t.totals.browsers7, c: 'text-emerald-300' }, { icon: CalendarCheck, l: 'آخر ٣٠ يومًا', v: t.totals.browsers30, c: 'text-sky-300' }, { icon: Sparkles, l: 'مشاهدات الصفحات', v: t.totals.views30, c: 'text-fuchsia-300' }].map(k => (
+        {[{ icon: Eye, l: 'داخلون اليوم', v: t.totals.browsersToday, c: 'text-gold-300' }, { icon: Users, l: 'آخر 7 أيام', v: t.totals.browsers7, c: 'text-emerald-300' }, { icon: CalendarCheck, l: 'آخر 30 يومًا', v: t.totals.browsers30, c: 'text-sky-300' }, { icon: Sparkles, l: 'مشاهدات الصفحات', v: t.totals.views30, c: 'text-fuchsia-300' }].map(k => (
           <div key={k.l} className="glass-card rounded-2xl border border-white/10 p-4 space-y-1.5"><div className={`flex items-center gap-2 text-xs font-black ${k.c}`}><k.icon className="w-4 h-4" aria-hidden="true" />{k.l}</div><div className="text-3xl font-black tabular-nums">{num(k.v)}</div></div>
         ))}
       </section>
 
       <section className="grid lg:grid-cols-[1.6fr_1fr] gap-6">
-        <div className="glass-panel rounded-3xl border border-white/10 p-5 space-y-3"><h2 className="font-black">الداخلون يوميًا</h2><TrendBars points={t.daily.map(d => ({ day: d.day, value: d.browsers }))} label="عدد الداخلين يوميًا خلال ٣٠ يومًا" /></div>
+        <div className="glass-panel rounded-3xl border border-white/10 p-5 space-y-3"><h2 className="font-black">الداخلون يوميًا</h2><TrendBars points={t.daily.map(d => ({ day: d.day, value: d.browsers }))} label="عدد الداخلين يوميًا خلال 30 يومًا" /></div>
         <div className="glass-panel rounded-3xl border border-white/10 p-5 space-y-3"><h2 className="font-black">أفضل أيام الأسبوع</h2><WeekdayBars values={t.weekday} /></div>
       </section>
 

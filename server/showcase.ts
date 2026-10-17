@@ -7,6 +7,7 @@ import { MajalDatabase, withTransaction } from './database';
 import { creativeProblem, readImageMeta } from './image-meta';
 import { notifyAdmins } from './notify';
 import { abVerdict, type VariantCount } from '../src/lib/abTest';
+import { latinDigitsBody } from './latin-digits';
 
 /*
  * Showcase: (1) a free "business for sale" gate and (2) sponsor campaigns.
@@ -228,6 +229,7 @@ const publicLimit = (limit: number, windowMs: number, scope: string) => expressR
 
 export function createShowcaseRouter(db: MajalDatabase, authConfig: AuthConfig) {
   const router = Router();
+  router.use(latinDigitsBody);
 
   /* ───────── public: businesses for sale ───────── */
   router.get('/businesses', publicLimit(120, 60_000, 'read'), async (_req, res) => {

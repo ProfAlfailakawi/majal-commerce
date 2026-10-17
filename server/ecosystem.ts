@@ -3,6 +3,7 @@ import { Response, Router } from 'express';
 import { AuthConfig, AuthenticatedRequest, requireAuth, requireCsrf } from './auth';
 import { MajalDatabase, withTransaction } from './database';
 import { SURFACE, HOST_DECIDERS, notify, notifyAdmins, orgMemberIds } from './notify';
+import { latinDigitsBody } from './latin-digits';
 
 const now = () => new Date().toISOString();
 const text = (value: unknown, min = 1, max = 500) => {
@@ -202,6 +203,7 @@ async function employerContext(db: MajalDatabase, req: AuthenticatedRequest) {
 
 export function createEcosystemRouter(db: MajalDatabase, authConfig: AuthConfig) {
   const router = Router();
+  router.use(latinDigitsBody);
 
   // Public discovery exposes only approved/verified records. No tenant owner ids, contacts,
   // registry numbers, applications, or admin notes are sent to anonymous callers.
