@@ -10,8 +10,8 @@ import test from 'node:test';
  * walks the source so a new string or locale cannot quietly bring them back.
  */
 
-// The server's input normaliser has to *recognise* Arabic-Indic digits to convert them.
-const ALLOWED = new Set(['server/ai-intelligence.ts']);
+// The server's input normalisers have to *recognise* Arabic-Indic digits to convert them.
+const ALLOWED = new Set(['server/ai-intelligence.ts', 'server/latin-digits.ts']);
 const ARABIC_INDIC = /[٠-٩۰-۹٪٫٬]/;
 // Only formatting calls: a language setting such as `lang: 'ar'` is not a number format.
 const ARABIC_LOCALE = /(?:toLocale\w*|Intl\.\w+)\(\s*['"`]ar[A-Za-z0-9-]*['"`]/g;
