@@ -158,9 +158,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE" \
-                  --project "$GCP_PROJECT_ID" --region "$GCP_REGION" \
-                  --format='value(status.url)')"
+          # الرابط الافتراضي run.app معطّل؛ الخدمة تُقدَّم عبر Firebase Hosting فقط.
+          URL="https://majal.web.app"
           echo "URL: $URL"
           CODE="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL/")"
           echo "HTTP $CODE"
