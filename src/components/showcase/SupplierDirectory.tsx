@@ -4,6 +4,7 @@ import { BadgeCheck, ChevronLeft, Clock3, Gift, MapPin, MessageCircle, Package, 
 import type { DirectorySupplier, SupplierCategory, SurfaceType } from '../../types/majal';
 import { fetchDirectorySuppliers, submitDirectorySupplier } from '../../lib/showcaseClient';
 import { fetchPublicEcosystem } from '../../lib/ecosystemClient';
+import { reportGateEvent } from '../../lib/audienceClient';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { SupplierArt } from './SupplierArt';
 import { SUPPLIER_CATEGORIES, SUPPLIER_CATEGORY_KEYS, categoryFromText } from './sectors';
@@ -30,8 +31,8 @@ const SupplierCard: React.FC<{ s: DirectorySupplier }> = ({ s }) => (
       <div className="mt-auto pt-1">
         {s.contactPhone ? (
           <div className="flex gap-2">
-            <a href={waLink(s.contactPhone, s.name)} target="_blank" rel="noopener noreferrer" className="flex-1 py-2.5 rounded-xl bg-emerald-400 text-slate-950 text-xs font-black flex items-center justify-center gap-1.5"><MessageCircle className="w-4 h-4" aria-hidden="true" />واتساب</a>
-            <a href={`tel:${s.contactPhone}`} aria-label={`اتصال بـ ${s.name}`} className="px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center"><Phone className="w-4 h-4" aria-hidden="true" /></a>
+            <a href={waLink(s.contactPhone, s.name)} onClick={() => reportGateEvent('supplier_contact', s.id)} target="_blank" rel="noopener noreferrer" className="flex-1 py-2.5 rounded-xl bg-emerald-400 text-slate-950 text-xs font-black flex items-center justify-center gap-1.5"><MessageCircle className="w-4 h-4" aria-hidden="true" />واتساب</a>
+            <a href={`tel:${s.contactPhone}`} onClick={() => reportGateEvent('supplier_contact', s.id)} aria-label={`اتصال بـ ${s.name}`} className="px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center"><Phone className="w-4 h-4" aria-hidden="true" /></a>
           </div>
         ) : <div className="text-xs text-slate-400 rounded-xl bg-white/[0.03] border border-white/10 px-3 py-2.5">{s.verified ? 'حساب موثّق ولم يعرض رقمه للعامة بعد.' : 'المورد لم يعرض رقمه للعامة.'}</div>}
       </div>

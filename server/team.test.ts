@@ -3,7 +3,7 @@ import test from 'node:test';
 import { createHash, randomBytes } from 'node:crypto';
 import express from 'express';
 import { AddressInfo } from 'node:net';
-import { openMajalDatabase } from './database';
+import { openTestDatabase } from './test-db';
 import { createPublicRegistration } from './auth';
 import { createTeamRouter } from './team';
 
@@ -15,7 +15,7 @@ const password = `${randomBytes(12).toString('base64url')}-Aa1!`;
 const sha = (v: string) => createHash('sha256').update(v).digest('hex');
 
 test('an invited colleague joins the owner\'s organization with exactly the invited role, once', async () => {
-  const db = await openMajalDatabase({ filename: ':memory:' });
+  const db = await openTestDatabase();
   const app = express();
   app.use(express.json());
   app.use('/api/v1/team', createTeamRouter(db, config));

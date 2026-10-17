@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { BadgeCheck, Banknote, CalendarClock, ChevronLeft, Eye, FileUp, Gift, Handshake, Info, Layers, Megaphone, MapPin, MessageCircle, Phone, ShieldCheck, Store, TrendingUp, X } from 'lucide-react';
 import type { BusinessListing, BusinessSector, SurfaceType } from '../../types/majal';
 import { fetchBusinesses, requestAdSlot, submitBusiness } from '../../lib/showcaseClient';
+import { reportGateEvent } from '../../lib/audienceClient';
 import { arCount } from '../../lib/arPlural';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { SectorArt } from './SectorArt';
@@ -105,7 +106,7 @@ const SubmitForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   );
 };
 
-const AdRequestForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+export const AdRequestForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [f, setF] = useState({ company: '', headline: '', tagline: '', linkUrl: 'https://', phone: '', website: '' });
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [done, setDone] = useState<{ message: string; token: string } | null>(null);
   const set = (k: keyof typeof f, v: string) => setF(prev => ({ ...prev, [k]: v }));
@@ -198,7 +199,7 @@ export const BusinessShowcase: React.FC<{ onSurfaceChange: (surface: SurfaceType
           )}
         </div>
         {loading ? <div role="status" className="text-xs text-slate-300 py-6">جارٍ تحميل المشاريع…</div> : shown.length ? (
-          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">{shown.map(item => <ListingCard key={item.id} item={item} onOpen={() => setOpen(item)} />)}</div>
+          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">{shown.map(item => <ListingCard key={item.id} item={item} onOpen={() => { reportGateEvent('listing_open', item.id); setOpen(item); }} />)}</div>
         ) : (
           <div className="rounded-3xl border border-dashed border-white/15 p-10 text-center space-y-3"><Layers className="w-8 h-8 mx-auto text-gold-300" aria-hidden="true" /><p className="text-sm text-slate-300">لا توجد مشاريع معروضة الآن. كن أول من يعرض مشروعه.</p><button type="button" onClick={() => setForm('sell')} className="px-5 py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black">اعرض مشروعك</button></div>
         )}
@@ -240,8 +241,8 @@ export const BusinessShowcase: React.FC<{ onSurfaceChange: (surface: SurfaceType
           <div className="mt-5 space-y-3">
             {open.contactPhone ? (
               <div className="flex flex-wrap gap-2">
-                <a href={waLink(open.contactPhone, open.title)} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-[10rem] py-3 rounded-xl bg-emerald-400 text-slate-950 text-sm font-black flex items-center justify-center gap-2"><MessageCircle className="w-4 h-4" aria-hidden="true" />واتساب</a>
-                <a href={`tel:${open.contactPhone}`} dir="ltr" className="flex-1 min-w-[10rem] py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-black flex items-center justify-center gap-2"><Phone className="w-4 h-4" aria-hidden="true" />{open.contactPhone}</a>
+                <a href={waLink(open.contactPhone, open.title)} onClick={() => reportGateEvent('listing_contact', open.id)} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-[10rem] py-3 rounded-xl bg-emerald-400 text-slate-950 text-sm font-black flex items-center justify-center gap-2"><MessageCircle className="w-4 h-4" aria-hidden="true" />واتساب</a>
+                <a href={`tel:${open.contactPhone}`} onClick={() => reportGateEvent('listing_contact', open.id)} dir="ltr" className="flex-1 min-w-[10rem] py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-black flex items-center justify-center gap-2"><Phone className="w-4 h-4" aria-hidden="true" />{open.contactPhone}</a>
               </div>
             ) : <p className="text-xs text-amber-200 bg-amber-500/10 border border-amber-400/20 rounded-xl p-3 leading-6">اختار البائع إخفاء رقمه. لا يظهر للجمهور.</p>}
             <p className="text-xs text-slate-400 leading-6">اعتماد الإعلان لا يعني التحقق من البيانات. تحقّق بنفسك قبل أي دفع.</p>
