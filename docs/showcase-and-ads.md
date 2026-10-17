@@ -2,6 +2,8 @@
 
 Three related surfaces. All three keep the rule used by the jobs board: **nothing a visitor submits is public until an administrator approves it.**
 
+> **Everything here is free, on purpose.** Sellers, suppliers, sponsors and team invitations cost nothing and carry no commission; the pages say so openly. The reason is stated too: these are services that introduce people to the platform. There are no prices, invoices or payment fields anywhere in this module, and none should be added without a new decision.
+
 ## 1. Businesses for sale (`SHOWCASE` surface)
 - Free, no account. `POST /api/v1/showcase/businesses` (5 per hour per client, honeypot field `website`, explicit terms checkbox).
 - Seller name and phone are stored; the public API never returns the name, and returns the phone only when the seller ticked *contactPublic*.
