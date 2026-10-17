@@ -7,6 +7,7 @@ import { SurfaceTabs } from '../common/SurfaceTabs';
 import { JobComposer } from '../jobs/JobComposer';
 import { JobApplicationsButton } from '../jobs/JobApplications';
 import { DnaStepper, DnaStep } from '../dna/DnaKit';
+import { AdSlot } from '../showcase/AdSlot';
 
 export const SupplierPortal: React.FC = () => {
   const [tab,setTab]=useState<'OVERVIEW'|'SUPPLY'|'JOBS'>('OVERVIEW');
@@ -37,6 +38,7 @@ export const SupplierPortal: React.FC = () => {
   ];
 
   return <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7 text-slate-100">
+    <AdSlot slot="PORTAL" />
     <section className="majal-hero glass-panel rounded-[28px] p-6 md:p-8 border border-white/10 relative overflow-hidden"><div className="absolute inset-y-0 start-0 w-72 bg-gradient-to-l from-emerald-500/10 to-transparent pointer-events-none"/><div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-5"><div className="flex items-center gap-4 min-w-0"><div className="w-16 h-16 shrink-0 rounded-3xl bg-emerald-500/10 border border-emerald-400/20 grid place-items-center"><Truck className="w-8 h-8 text-emerald-300"/></div><div className="min-w-0"><div className="flex items-center gap-2 flex-wrap"><span className={`px-2.5 py-1 rounded-full border text-xs font-black ${verified?'bg-emerald-500/10 border-emerald-400/20 text-emerald-300':'bg-amber-500/10 border-amber-400/20 text-amber-300'}`}>{verified?'مورد معتمد':'ملف المورد قيد التأهيل'}</span><span className="text-xs text-slate-400">مساحة المورد</span></div><h1 className="text-2xl md:text-3xl font-black mt-2">{supplier.commercialName}</h1><p className="text-sm text-slate-400 mt-2">{supplier.category} — مساحة توريد مستقلة، بدون خلطها بهوية المبدع أو المنشأة.</p></div></div><button onClick={()=>setShowJob(true)} className="lg:shrink-0 whitespace-nowrap px-5 py-3 rounded-2xl bg-emerald-400 text-slate-950 text-xs font-black flex items-center gap-2"><BriefcaseBusiness className="w-4 h-4"/>إعلان وظيفة كويتية</button></div></section>
     {notice&&<div className="rounded-2xl p-4 bg-white/5 border border-white/10 text-xs text-slate-300">{notice}</div>}
     <SurfaceTabs tabs={[{id:'OVERVIEW' as const,label:'نظرة عامة',icon:<Building2 className="w-4 h-4"/>},{id:'SUPPLY' as const,label:'التوريد',icon:<Boxes className="w-4 h-4"/>,count:offerings.length},{id:'JOBS' as const,label:'التوظيف الكويتي',icon:<BriefcaseBusiness className="w-4 h-4"/>,count:pendingJobs}]} active={tab} onChange={setTab} tone="emerald" label="أقسام مساحة المورد"/>

@@ -34,6 +34,7 @@ import { EmptyState } from '../common/EmptyState';
 import { completedOrderTotals } from '../../lib/money';
 import { SurfaceTabs } from '../common/SurfaceTabs';
 import { EcosystemApprovals } from './EcosystemApprovals';
+import { ShowcaseAdmin } from './ShowcaseAdmin';
 
 const GRANTS_VISIBLE = 8;
 
@@ -205,7 +206,7 @@ export const AdminDashboard: React.FC = () => {
         </section>
       )}
 
-      {activeTab === 'APPROVALS' && <EcosystemApprovals />}
+      {activeTab === 'APPROVALS' && <div className="space-y-10"><EcosystemApprovals /><ShowcaseAdmin /></div>}
 
       {activeTab === 'COMPLIANCE' && (
         <section className="glass-panel rounded-3xl p-6 border border-white/10 space-y-4">

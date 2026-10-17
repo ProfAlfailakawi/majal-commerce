@@ -13,6 +13,8 @@ import { createPaciCallbackHandler, createPaciRegistry, createPaciRouter } from 
 import { createPaymentRegistry, createPaymentRouter, createPaymentWebhookHandler } from './server/payments';
 import { createDomainRouter } from './server/domain';
 import { createEcosystemRouter } from './server/ecosystem';
+import { createShowcaseRouter } from './server/showcase';
+import { createTeamRouter } from './server/team';
 import { createAdvancedRouter } from './server/advanced';
 import { createOrdersRouter, createPublicReviewsRouter } from './server/orders';
 import { createModerationRouter } from './server/moderation';
@@ -148,6 +150,8 @@ async function initializeApplication(app: express.Express) {
   app.use('/api/v1/paci', createPaciRouter(db, authConfig, paciRegistry));
   app.use('/api/v1/domain', createDomainRouter(db, authConfig));
   app.use('/api/v1/ecosystem', createEcosystemRouter(db, authConfig));
+  app.use('/api/v1/showcase', createShowcaseRouter(db, authConfig));
+  app.use('/api/v1/team', createTeamRouter(db, authConfig));
   app.use('/api/v1/advanced', createAdvancedRouter(db, authConfig));
   app.use('/api/v1/orders', createOrdersRouter(db, authConfig, paymentRegistry));
   // قائمة الحسابات الإدارية قراءة فقط ومحصورة بالسوبر أدمن؛ حدّ إضافي يمنع كشطها.

@@ -11,7 +11,8 @@ import {
   LayoutPanelTop,
   BadgeCheck,
   Eye,
-  Route
+  Route,
+  Tag
 } from 'lucide-react';
 import { SurfaceType, UserRole } from '../../types/majal';
 import { store } from '../../lib/store';
@@ -202,6 +203,14 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
       </div>
 
       <JourneyInfographic hold={overture.mounted} />
+
+      <section aria-labelledby="landing-showcase" className="rounded-3xl border border-gold-300/20 bg-gold-500/[0.05] p-6 sm:p-8 grid md:grid-cols-[1fr_auto] gap-5 items-center">
+        <div className="space-y-2">
+          <h2 id="landing-showcase" className="text-lg sm:text-xl font-black flex items-center gap-2"><Tag className="w-5 h-5 text-gold-300" aria-hidden="true" />عندك مشروع تبي تبيعه؟</h2>
+          <p className="text-xs sm:text-sm text-slate-300 leading-7 max-w-2xl">بوابة مجانية بلا عمولة: ارفع طلبك برقم تواصلك، نعتمده، ويظهر لجمهور مجال في بطاقة واضحة.</p>
+        </div>
+        <button type="button" onClick={() => onSurfaceChange('SHOWCASE')} className="px-6 py-3.5 rounded-2xl bg-gold-500 hover:bg-gold-400 text-slate-950 font-black text-sm flex items-center justify-center gap-2">تصفّح المشاريع المعروضة<ChevronLeft className="w-4 h-4" aria-hidden="true" /></button>
+      </section>
 
       <div className="grid md:grid-cols-5 gap-5">
         {[
