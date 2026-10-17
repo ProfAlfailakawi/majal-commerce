@@ -30,10 +30,11 @@ import { MajalPulse } from './MajalPulse';
 import { PlatformPolicyCenter } from './PlatformPolicyCenter';
 import { PredictiveInterventionRadar } from './PredictiveInterventionRadar';
 import { IS_DEMO_MODE } from '../../lib/runtime';
-import { completedOrderTotals } from '../../lib/money';
 import { SurfaceTabs } from '../common/SurfaceTabs';
 import { Avatar } from '../common/Avatar';
 import { DnaFlash } from '../dna/DnaKit';
+import { kwdFromFils, useAdminMetrics } from '../../lib/adminMetrics';
+import { MetricsStatus } from './MetricsStatus';
 
 /** Icon + two-word label + optional state. The long sentence stays available as a tooltip. */
 const InfoChip: React.FC<{ icon: React.ReactNode; label: string; status?: string; hint?: string }> = ({ icon, label, status, hint }) => (
@@ -50,12 +51,13 @@ export const SuperAdminDashboard: React.FC = () => {
   useEffect(() => store.subscribe(() => setTick(t => t + 1)), []);
   const [activeTab, setActiveTab] = useState<'COMMAND' | 'PERMISSIONS' | 'LIQUIDITY' | 'TRUST' | 'SYSTEM' | 'AUDIT'>('COMMAND');
 
-  const orderTotals = completedOrderTotals(store.orders);
+  const { metrics: platform, error: metricsError, real: metricsReal } = useAdminMetrics();
+  const dash = (value: string) => (platform ? value : '—');
   const metrics = {
-    gmv: orderTotals.salesKwd,
-    platform: orderTotals.platformFeesKwd,
-    live: store.launches.filter(l => ['LIVE', 'PERMANENT'].includes(l.status)).length,
-    signed: store.contracts.filter(c => c.status === 'FULLY_SIGNED').length
+    gmv: dash(kwdFromFils(platform?.sales.grossFils ?? 0)),
+    platform: dash(kwdFromFils(platform?.sales.platformFeeFils ?? 0)),
+    live: dash(String(platform?.launches.live ?? 0)),
+    signed: dash(String(platform?.contracts.fullySigned ?? 0))
   };
 
   useEffect(() => { if (activeTab === 'PERMISSIONS' && !IS_DEMO_MODE) void store.loadManageableUsers(); }, [activeTab]);
@@ -82,13 +84,14 @@ export const SuperAdminDashboard: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-3 w-full xl:w-auto xl:min-w-[320px]">
-            <div className="majal-stat rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">إجمالي المبيعات (د.ك، طلبات مكتملة)</div><div className="majal-numeral mt-2 text-2xl font-black text-gold-300 font-mono">{metrics.gmv.toFixed(3)}</div></div>
-            <div className="majal-stat rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">رسوم مجال (د.ك)</div><div className="majal-numeral mt-2 text-2xl font-black text-emerald-300 font-mono">{metrics.platform.toFixed(3)}</div></div>
+            <div className="majal-stat rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">إجمالي المبيعات (د.ك، طلبات مكتملة)</div><div className="majal-numeral mt-2 text-2xl font-black text-gold-300 font-mono">{metrics.gmv}</div></div>
+            <div className="majal-stat rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">رسوم مجال (د.ك)</div><div className="majal-numeral mt-2 text-2xl font-black text-emerald-300 font-mono">{metrics.platform}</div></div>
             <div className="majal-stat rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">إطلاقات حيّة</div><div className="majal-numeral mt-2 text-2xl font-black text-sky-300 font-mono">{metrics.live}</div></div>
             <div className="majal-stat rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">عقود موقعة</div><div className="majal-numeral mt-2 text-2xl font-black text-fuchsia-300 font-mono">{metrics.signed}</div></div>
           </div>
         </div>
       </section>
+      <MetricsStatus metrics={platform} error={metricsError} real={metricsReal} />
 
       <SurfaceTabs
         tabs={[
