@@ -2,16 +2,13 @@
   "hosting": {
     "site": "majal",
     "public": "hosting",
-    "redirects": [
+    "rewrites": [
       {
-        "source": "/",
-        "destination": "https://majal-app-522016905178.europe-west2.run.app/",
-        "type": 302
-      },
-      {
-        "source": "/:path*",
-        "destination": "https://majal-app-522016905178.europe-west2.run.app/:path*",
-        "type": 302
+        "source": "**",
+        "run": {
+          "serviceId": "majal-app",
+          "region": "europe-west2"
+        }
       }
     ]
   }

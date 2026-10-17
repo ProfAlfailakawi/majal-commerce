@@ -254,15 +254,29 @@ function cookieOptions(config: AuthConfig, httpOnly: boolean, maxAgeSeconds: num
   ].join('; ');
 }
 
+// Firebase Hosting forwards only the `__session` cookie to Cloud Run, so production keeps a
+// single HttpOnly session cookie. The CSRF token is derived from the session token (see
+// csrfTokenFor) and handed to the page in the /login and /me responses instead of a second
+// cookie; outside production the readable CSRF cookie is still issued.
 function setSessionCookies(res: Response, config: AuthConfig, token: string, csrfToken: string, expiresAt: string) {
   const maxAgeSeconds = Math.max(0, (new Date(expiresAt).getTime() - Date.now()) / 1000);
   res.append('Set-Cookie', `${config.cookieName}=${encodeURIComponent(token)}; ${cookieOptions(config, true, maxAgeSeconds)}`);
-  res.append('Set-Cookie', `${config.csrfCookieName}=${encodeURIComponent(csrfToken)}; ${cookieOptions(config, false, maxAgeSeconds)}`);
+  if (!config.production) {
+    res.append('Set-Cookie', `${config.csrfCookieName}=${encodeURIComponent(csrfToken)}; ${cookieOptions(config, false, maxAgeSeconds)}`);
+  }
 }
 
 function clearSessionCookies(res: Response, config: AuthConfig) {
   res.append('Set-Cookie', `${config.cookieName}=; ${cookieOptions(config, true, 0)}`);
   res.append('Set-Cookie', `${config.csrfCookieName}=; ${cookieOptions(config, false, 0)}`);
+  if (config.production) {
+    // Retire the cookies issued before the move to `__session`.
+    res.append('Set-Cookie', `__Host-majal_session=; ${cookieOptions(config, true, 0)}`);
+  }
+}
+
+function csrfTokenFor(config: AuthConfig, sessionToken: string) {
+  return createHmac('sha256', config.sessionSecret).update(`csrf:${sessionToken}`).digest('base64url');
 }
 
 function publicUser(row: UserRow): SessionUser {
@@ -315,7 +329,7 @@ export function createAuthConfig(production: boolean): AuthConfig {
     sessionSecret: configuredSessionSecret || randomBytes(32).toString('base64url'),
     encryptionKey: configuredEncryptionKey,
     sessionHours: Number.isFinite(sessionHours) && sessionHours >= 1 && sessionHours <= 72 ? sessionHours : 8,
-    cookieName: production ? '__Host-majal_session' : 'majal_session',
+    cookieName: production ? '__session' : 'majal_session',
     csrfCookieName: production ? '__Host-majal_csrf' : 'majal_csrf'
   };
 }
@@ -516,7 +530,7 @@ export async function createPublicRegistration(
 
 async function createSession(db: MajalDatabase, config: AuthConfig, req: Request, user: UserRow) {
   const token = randomBytes(32).toString('base64url');
-  const csrfToken = randomBytes(32).toString('base64url');
+  const csrfToken = csrfTokenFor(config, token);
   const tokenHash = sha256(token);
   const now = new Date();
   const expiresAt = new Date(now.getTime() + config.sessionHours * 60 * 60_000).toISOString();
@@ -652,10 +666,10 @@ export function requireCsrf(config: AuthConfig) {
     // browsers intentionally attach the header only to mutations. Keep reads authenticated,
     // but do not reject them for lacking a CSRF token.
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method.toUpperCase())) return next();
-    const cookies = parseCookies(req.header('cookie'));
-    const cookieToken = cookies.get(config.csrfCookieName);
+    // The header token must hash to the one stored for this session. The token is derived
+    // from the HttpOnly session token, so a cross-site request cannot know it.
     const headerToken = req.header('x-csrf-token');
-    if (!cookieToken || !headerToken || !safeTextEqual(cookieToken, headerToken) || !safeTextEqual(sha256(headerToken), req.auth.csrfHash)) {
+    if (!headerToken || !safeTextEqual(sha256(headerToken), req.auth.csrfHash)) {
       return jsonError(res, 403, 'رمز حماية الطلب غير صالح.', 'CSRF_REJECTED');
     }
     next();
@@ -985,7 +999,8 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
   });
 
   router.get('/me', authenticated, async (req: AuthenticatedRequest, res) => {
-    const csrfToken = parseCookies(req.header('cookie')).get(config.csrfCookieName);
+    const sessionToken = parseCookies(req.header('cookie')).get(config.cookieName);
+    const csrfToken = sessionToken ? csrfTokenFor(config, sessionToken) : undefined;
     if (!csrfToken || !req.auth || !safeTextEqual(sha256(csrfToken), req.auth.csrfHash)) {
       return jsonError(res, 401, 'تعذّر استعادة جلسة الحماية.', 'SESSION_INVALID');
     }
