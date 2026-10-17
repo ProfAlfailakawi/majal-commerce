@@ -26,8 +26,14 @@ Three related surfaces. All three keep the rule used by the jobs board: **nothin
 - Role change / suspend / remove run in a transaction and delete the member's sessions. A removed member keeps their account (history, audit) as a plain consumer with no tenant. Owners cannot edit themselves, and a member of another organisation is reported as not found.
 - Links are copied and sent by the owner (e.g. WhatsApp); there is no outbound e-mail provider yet.
 
+## 4. Free supplier directory (`DIRECTORY` surface)
+- Same pattern as the business gate: `POST /api/v1/showcase/suppliers` (no account, 5/hour, honeypot, terms), admin reviews in *Approvals*, public `GET /suppliers` returns approved entries only; the contact name and notes stay private and the phone shows only with consent.
+- The page also lists verified supplier *accounts* from the ecosystem (`موثّق في مجال` badge, no phone). Free entries are explicitly "formal review only": no claim about quality or prices.
+- Deliberately clean: no ad strip on this surface, search + category chips, platform-drawn category art, WhatsApp/call buttons.
+- Table `supplier_directory` (migration 24).
+
 ## Data
-Migrations 22–23: `business_listings`, `ad_campaigns`, `ad_daily_stats`, `organization_invites`, plus `ad_campaigns.image_mime/image_data`. Admin actions are written to `domain_audit_events`.
+Migrations 22–24: `business_listings`, `ad_campaigns`, `ad_daily_stats`, `organization_invites`, `supplier_directory`, plus `ad_campaigns.image_mime/image_data`. Admin actions are written to `domain_audit_events`.
 
 ## Tests
 `server/showcase.test.ts`, `server/showcase-admin.test.ts` (real admin and owner sessions: review, capacity, creatives, token rotation, tenant isolation, session revocation), `server/team.test.ts`, `src/lib/adSeasons.test.ts`.

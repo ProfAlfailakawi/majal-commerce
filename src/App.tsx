@@ -22,6 +22,7 @@ const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard').th
 const SuperAdminDashboard = lazy(() => import('./components/admin/SuperAdminDashboard').then(module => ({ default: module.SuperAdminDashboard })));
 const BusinessShowcase = lazy(() => import('./components/showcase/BusinessShowcase').then(module => ({ default: module.BusinessShowcase })));
 const InviteAcceptPage = lazy(() => import('./components/common/InviteAcceptPage').then(module => ({ default: module.InviteAcceptPage })));
+const SupplierDirectory = lazy(() => import('./components/showcase/SupplierDirectory').then(module => ({ default: module.SupplierDirectory })));
 const AdReportPage = lazy(() => import('./components/showcase/AdReportPage').then(module => ({ default: module.AdReportPage })));
 const AiAssistantDrawer = lazy(() => import('./components/common/AiAssistantDrawer').then(module => ({ default: module.AiAssistantDrawer })));
 const IntegrationHubModal = lazy(() => import('./components/common/IntegrationHubModal').then(module => ({ default: module.IntegrationHubModal })));
@@ -199,12 +200,13 @@ export default function App() {
 
         <ExperienceGuide activeSurface={activeSurface} onSurfaceChange={handleSurfaceChange} />
 
-        {!adReportToken && !inviteToken && !legalDocument && <AdSlot slot="SPONSOR" />}
+        {!adReportToken && !inviteToken && !legalDocument && activeSurface !== 'DIRECTORY' && <AdSlot slot="SPONSOR" />}
 
         <main id="main-content" tabIndex={-1} className="animate-in fade-in duration-300 flex-1 pb-[4.5rem] sm:pb-10 outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
           <Suspense fallback={<SurfaceFallback />}>
             {inviteToken ? <InviteAcceptPage token={inviteToken} onDone={closeInvite} /> : adReportToken ? <AdReportPage token={adReportToken} onClose={closeAdReport} /> : legalDocument ? <LegalCenter initialDocument={legalDocument} onBack={closeLegal} /> : <>
               {activeSurface === 'PUBLIC' && <PublicLanding onSurfaceChange={handleSurfaceChange} />}
+              {activeSurface === 'DIRECTORY' && <SupplierDirectory onSurfaceChange={handleSurfaceChange} />}
               {activeSurface === 'SHOWCASE' && <BusinessShowcase onSurfaceChange={handleSurfaceChange} />}
               {activeSurface === 'CONSUMER' && <ConsumerDashboard onSurfaceChange={handleSurfaceChange} />}
               {activeSurface === 'CREATOR' && <CreatorPortal />}

@@ -91,6 +91,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     const all: { id: SurfaceType; labelAr: string; icon: React.ReactNode }[] = [
       { id: 'PUBLIC', labelAr: 'عن مجال', icon: <Globe className="w-4 h-4" /> },
       { id: 'SHOWCASE', labelAr: 'مشاريع للبيع', icon: <Tag className="w-4 h-4" /> },
+      { id: 'DIRECTORY', labelAr: 'دليل الموردين', icon: <Truck className="w-4 h-4" /> },
       { id: 'CONSUMER', labelAr: 'السوق', icon: <Store className="w-4 h-4" /> },
       { id: 'CREATOR', labelAr: 'المبدعون', icon: <Sparkles className="w-4 h-4" /> },
       { id: 'HOST', labelAr: 'المنشآت', icon: <Factory className="w-4 h-4" /> },
@@ -99,12 +100,12 @@ export const Navbar: React.FC<NavbarProps> = ({
       { id: 'SUPER_ADMIN', labelAr: 'السوبر أدمن', icon: <Crown className="w-4 h-4" /> }
     ];
 
-    if (activeUser.role === 'SUPER_ADMIN') return all.filter(s => ['PUBLIC', 'SHOWCASE', 'CONSUMER', 'ADMIN', 'SUPER_ADMIN'].includes(s.id));
-    if (activeUser.role === 'ADMIN') return all.filter(s => ['PUBLIC', 'SHOWCASE', 'CONSUMER', 'ADMIN'].includes(s.id));
-    if (activeUser.role === 'CREATOR') return all.filter(s => ['PUBLIC', 'SHOWCASE', 'CONSUMER', 'CREATOR'].includes(s.id));
-    if (activeUser.role.startsWith('HOST_')) return all.filter(s => ['PUBLIC', 'SHOWCASE', 'CONSUMER', 'HOST'].includes(s.id));
-    if (activeUser.accountType === 'SUPPLIER') return all.filter(s => ['PUBLIC', 'SHOWCASE', 'CONSUMER', 'SUPPLIER'].includes(s.id));
-    return all.filter(s => ['PUBLIC', 'SHOWCASE', 'CONSUMER'].includes(s.id));
+    if (activeUser.role === 'SUPER_ADMIN') return all.filter(s => ['PUBLIC', 'SHOWCASE', 'DIRECTORY', 'CONSUMER', 'ADMIN', 'SUPER_ADMIN'].includes(s.id));
+    if (activeUser.role === 'ADMIN') return all.filter(s => ['PUBLIC', 'SHOWCASE', 'DIRECTORY', 'CONSUMER', 'ADMIN'].includes(s.id));
+    if (activeUser.role === 'CREATOR') return all.filter(s => ['PUBLIC', 'SHOWCASE', 'DIRECTORY', 'CONSUMER', 'CREATOR'].includes(s.id));
+    if (activeUser.role.startsWith('HOST_')) return all.filter(s => ['PUBLIC', 'SHOWCASE', 'DIRECTORY', 'CONSUMER', 'HOST'].includes(s.id));
+    if (activeUser.accountType === 'SUPPLIER') return all.filter(s => ['PUBLIC', 'SHOWCASE', 'DIRECTORY', 'CONSUMER', 'SUPPLIER'].includes(s.id));
+    return all.filter(s => ['PUBLIC', 'SHOWCASE', 'DIRECTORY', 'CONSUMER'].includes(s.id));
   }, [activeUser.role, activeUser.accountType]);
 
   const demoNotifications = useMemo(() => {

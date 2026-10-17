@@ -1,9 +1,9 @@
 import React, { FormEvent, useEffect, useState } from 'react';
-import { BadgeCheck, CalendarRange, Check, ClipboardCopy, ImagePlus, KeyRound, Megaphone, Pause, Play, Plus, RefreshCw, Store, Trash2, X } from 'lucide-react';
-import { createCampaign, fetchShowcaseOverview, removeCampaignImage, reviewBusiness, rotateReportLink, setCampaignStatus, uploadCampaignImage } from '../../lib/showcaseClient';
+import { BadgeCheck, CalendarRange, Check, ClipboardCopy, ImagePlus, KeyRound, Megaphone, Truck, Pause, Play, Plus, RefreshCw, Store, Trash2, X } from 'lucide-react';
+import { createCampaign, fetchShowcaseOverview, removeCampaignImage, reviewBusiness, reviewDirectorySupplier, rotateReportLink, setCampaignStatus, uploadCampaignImage } from '../../lib/showcaseClient';
 import { upcomingSeasons } from '../../lib/adSeasons';
-import type { AdCampaign, AdSlot, BusinessListing } from '../../types/majal';
-import { SECTORS } from '../showcase/sectors';
+import type { AdCampaign, AdSlot, BusinessListing, DirectorySupplier } from '../../types/majal';
+import { SECTORS, SUPPLIER_CATEGORIES } from '../showcase/sectors';
 
 const SLOTS: Record<AdSlot, string> = { SPONSOR: 'الراعي (حصري)', MARKET: 'السوق', PORTAL: 'بوابات الشركاء' };
 const STATUS: Record<string, string> = { PENDING_REVIEW: 'معلّق', APPROVED: 'معتمد', PAUSED: 'موقوف', REJECTED: 'مرفوض', SOLD: 'تم البيع' };
@@ -13,10 +13,11 @@ const field = 'w-full glass-input rounded-xl px-3 py-2.5 text-xs focus-visible:o
 export const ShowcaseAdmin: React.FC = () => {
   const [listings, setListings] = useState<BusinessListing[]>([]);
   const [campaigns, setCampaigns] = useState<AdCampaign[]>([]);
+  const [suppliers, setSuppliers] = useState<DirectorySupplier[]>([]);
   const [loading, setLoading] = useState(true), [error, setError] = useState(''), [busy, setBusy] = useState(''), [notice, setNotice] = useState('');
   const [dates, setDates] = useState<Record<string, { s: string; e: string }>>({});
   const [draft, setDraft] = useState({ company: '', headline: '', tagline: '', linkUrl: 'https://', slot: 'MARKET' as AdSlot, startsOn: '', endsOn: '' });
-  const load = () => { setLoading(true); fetchShowcaseOverview().then(r => { setListings(r.listings); setCampaigns(r.campaigns); setError(''); }).catch(e => setError(e instanceof Error ? e.message : 'تعذّر التحميل.')).finally(() => setLoading(false)); };
+  const load = () => { setLoading(true); fetchShowcaseOverview().then(r => { setListings(r.listings); setCampaigns(r.campaigns); setSuppliers(r.suppliers ?? []); setError(''); }).catch(e => setError(e instanceof Error ? e.message : 'تعذّر التحميل.')).finally(() => setLoading(false)); };
   useEffect(load, []);
   const run = async (key: string, job: () => Promise<unknown>, ok = '') => {
     setBusy(key); setError(''); setNotice('');
@@ -38,12 +39,27 @@ export const ShowcaseAdmin: React.FC = () => {
   return (
     <div className="space-y-6">
       <section className="glass-panel rounded-3xl p-5 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3"><span className="w-11 h-11 rounded-2xl bg-gold-500/10 border border-gold-300/20 grid place-items-center"><Megaphone className="w-5 h-5 text-gold-300" aria-hidden="true" /></span><div><h2 className="font-black text-lg">المشاريع المعروضة والإعلانات</h2><p className="text-xs text-slate-400 mt-1">{pendingListings} مشروع و{pendingAds} حملة بانتظار القرار</p></div></div>
+        <div className="flex items-center gap-3"><span className="w-11 h-11 rounded-2xl bg-gold-500/10 border border-gold-300/20 grid place-items-center"><Megaphone className="w-5 h-5 text-gold-300" aria-hidden="true" /></span><div><h2 className="font-black text-lg">المشاريع المعروضة والإعلانات</h2><p className="text-xs text-slate-400 mt-1">{pendingListings} مشروع و{pendingAds} حملة و{suppliers.filter(s => s.status === 'PENDING_REVIEW').length} مورد بانتظار القرار</p></div></div>
         <button type="button" onClick={load} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black flex items-center gap-2"><RefreshCw className="w-4 h-4" aria-hidden="true" />تحديث</button>
       </section>
       {error && <div role="alert" className="p-4 rounded-2xl bg-rose-500/10 border border-rose-400/20 text-xs text-rose-200">{error}</div>}
       {notice && <div role="status" className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 text-xs text-emerald-200 break-all">{notice}</div>}
       {loading ? <div className="text-center py-10 text-sm text-slate-400">جارٍ التحميل…</div> : (
+        <>
+        <section className="space-y-3" aria-labelledby="dir-admin-title">
+          <div className="flex items-center gap-2"><Truck className="w-5 h-5 text-gold-300" aria-hidden="true" /><h3 id="dir-admin-title" className="font-black">دليل الموردين</h3></div>
+          {suppliers.length ? <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">{suppliers.map(s => (
+            <article key={s.id} className="glass-card rounded-2xl p-4 border border-white/10 space-y-2.5">
+              <div className="flex justify-between gap-3"><div className="min-w-0"><div className="text-xs text-gold-300 font-black">{SUPPLIER_CATEGORIES[s.category]?.label} · {s.region}</div><h4 className="font-black mt-0.5 truncate">{s.name}</h4></div><span className={`text-xs px-2 py-1 rounded-full h-fit shrink-0 ${s.status === 'PENDING_REVIEW' ? 'bg-amber-500/10 text-amber-300' : 'bg-emerald-500/10 text-emerald-300'}`}>{STATUS[s.status]}</span></div>
+              <p className="text-xs text-slate-400 leading-6 line-clamp-2">{s.description}</p>
+              <div className="text-xs text-slate-400">{s.contactName} · <span dir="ltr">{s.contactPhone}</span> · {s.contactPublic ? 'الرقم يظهر' : 'الرقم مخفي'}</div>
+              <div className="flex gap-2">
+                {s.status !== 'APPROVED' && <button disabled={busy === s.id} onClick={() => run(s.id, () => reviewDirectorySupplier(s.id, 'APPROVED'))} className="flex-1 py-2 rounded-xl bg-emerald-400 text-slate-950 text-xs font-black disabled:opacity-40 flex items-center justify-center gap-1.5"><Check className="w-4 h-4" aria-hidden="true" />اعتماد ونشر</button>}
+                <button disabled={busy === s.id} onClick={() => run(s.id, () => reviewDirectorySupplier(s.id, 'REJECTED', 'يحتاج تعديلًا قبل النشر.'))} className="px-4 py-2 rounded-xl bg-rose-500/10 border border-rose-400/20 text-rose-300 text-xs font-black flex items-center gap-1"><X className="w-4 h-4" aria-hidden="true" />{s.status === 'APPROVED' ? 'إخفاء' : 'رفض'}</button>
+              </div>
+            </article>))}</div>
+            : <div className="rounded-2xl p-6 border border-dashed border-white/10 text-center text-xs text-slate-400">لا توجد طلبات موردين.</div>}
+        </section>
         <div className="grid xl:grid-cols-2 gap-6">
           <section className="space-y-3">
             <div className="flex items-center gap-2"><Store className="w-5 h-5 text-gold-300" aria-hidden="true" /><h3 className="font-black">مشاريع للبيع</h3></div>
@@ -100,6 +116,7 @@ export const ShowcaseAdmin: React.FC = () => {
             })}
           </section>
         </div>
+        </>
       )}
     </div>
   );

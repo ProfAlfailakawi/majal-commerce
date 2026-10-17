@@ -3,11 +3,11 @@
  * sessionStorage like the rest of the demo so an approval made as admin is visible to the
  * public gate straight away. Every company, person and number here is invented.
  */
-import type { AdCampaign, AdSlot, BusinessListing, PublicAd } from '../types/majal';
+import type { AdCampaign, AdSlot, BusinessListing, DirectorySupplier, PublicAd } from '../types/majal';
 
-export const DEMO_SHOWCASE_STORAGE_KEY = 'majal_demo_showcase_v1';
+export const DEMO_SHOWCASE_STORAGE_KEY = 'majal_demo_showcase_v2';
 
-interface DemoShowcaseState { listings: BusinessListing[]; campaigns: AdCampaign[] }
+interface DemoShowcaseState { listings: BusinessListing[]; campaigns: AdCampaign[]; suppliers: DirectorySupplier[] }
 
 const ago = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
 const dayFrom = (offset: number) => new Date(Date.now() + 3 * 3_600_000 + offset * 86_400_000).toISOString().slice(0, 10);
@@ -20,7 +20,21 @@ export function buildDemoShowcase(): DemoShowcaseState {
   const c = (id: string, company: string, headline: string, tagline: string, slot: AdSlot, accent: PublicAd['accent'], icon: string, status: AdCampaign['status'], impressions: number, clicks: number, startsOn: string | null = null, endsOn: string | null = null): AdCampaign => ({
     id, company, headline, tagline, slot, accent, icon, linkUrl: 'https://example.com/demo', status, startsOn, endsOn, createdAt: ago(10), impressions, clicks, contactPhone: '+96550002222'
   });
+  const d = (id: string, name: string, category: DirectorySupplier['category'], region: string, description: string, products: string[], minOrder: string, delivers: boolean, status: DirectorySupplier['status'], age: number, contactPublic = true): DirectorySupplier => ({
+    id, name, category, region, description, products, minOrder, delivers, contactPublic, contactPhone: '+96560001234', contactName: 'مسؤول تجريبي', status, submittedAt: ago(age)
+  });
   return {
+    suppliers: [
+      d('sdir_demo_1', 'الندى للتغليف الغذائي', 'PACKAGING', 'الري', 'علب وأكياس وأغطية للأغذية بكميات صغيرة للمشاريع الناشئة وطباعة اسم المشروع.', ['علب كرتون', 'أكياس ورقية', 'أغطية'], '٢٠٠ قطعة', true, 'APPROVED', 5),
+      d('sdir_demo_2', 'بهارات الديرة', 'SPICES', 'المباركية', 'بهارات مطحونة طازجة وخلطات كويتية جاهزة بشهادة مصدر لكل دفعة.', ['هيل', 'زعفران', 'خلطة مجبوس'], '١ كغ', true, 'APPROVED', 7),
+      d('sdir_demo_3', 'مزرعة الوفرة', 'PRODUCE', 'الوفرة', 'خضار وأعشاب طازجة تُقطف يوم التوريد وتصل مبرّدة للمطابخ والمخابز.', ['أعشاب', 'خضار ورقية', 'طماطم'], '١٠ كغ', true, 'APPROVED', 9),
+      d('sdir_demo_4', 'مطبعة الرقعي للملصقات', 'PRINTING', 'حولي', 'ملصقات منتجات وبطاقات شكر وقوائم بجودة عالية وتسليم سريع.', ['ملصقات', 'بطاقات', 'قوائم'], '١٠٠ قطعة', false, 'APPROVED', 11),
+      d('sdir_demo_5', 'لحوم الخليج الطازجة', 'MEAT', 'الشويخ', 'دجاج ولحوم مبرّدة مرخّصة مع سلسلة تبريد موثقة وتقطيع حسب الطلب.', ['دجاج', 'لحم غنم', 'لحم بقر'], '٥ كغ', true, 'APPROVED', 14),
+      d('sdir_demo_6', 'مخزن الطحين الأول', 'INGREDIENTS', 'الجهراء', 'طحين وسكر وسمن وزيوت بالجملة والتجزئة بأسعار ثابتة للمخابز.', ['طحين', 'سكر', 'سمن', 'زيت'], '٢٥ كغ', true, 'APPROVED', 16),
+      d('sdir_demo_7', 'معدات المطبخ المركزي', 'EQUIPMENT', 'الشويخ الصناعية', 'أفران وعجانات وأدوات استانلس للمطابخ والمخابز مع صيانة.', ['أفران', 'عجانات', 'أدوات'], 'حسب الطلب', false, 'APPROVED', 20),
+      d('sdir_demo_8', 'توصيلة للمطابخ', 'DELIVERY', 'الكويت', 'مناديب بسيارات مبرّدة لتوصيل طلبات المشاريع الغذائية في كل المناطق.', ['توصيل مبرّد', 'توصيل سريع'], 'توصيلة واحدة', true, 'APPROVED', 23),
+      d('sdir_demo_9', 'ورق وعلب الرميثية', 'PACKAGING', 'الرميثية', 'علب هدايا وتغليف حلويات. بانتظار مراجعة الإدارة.', ['علب هدايا'], '٥٠ قطعة', false, 'PENDING_REVIEW', 1),
+    ],
     listings: [
       l('biz_demo_1', 'مقهى مختص في حولي — جاهز للتشغيل', 'CAFE', 'حولي', 'مقهى بتصميم عصري وعقد إيجار ساري وقاعدة زبائن ثابتة، يشمل معدات التحميص والتحضير.', ['زبائن ثابتون', 'موقع على شارع رئيسي', 'فريق مدرّب'], ['معدات كاملة', 'العلامة التجارية', 'حسابات التواصل'], 38000, '٤–٦ آلاف د.ك شهريًا', 3, 'انتقال المالك للعمل خارج الكويت', 'APPROVED', 6),
       l('biz_demo_2', 'مطبخ سحابي للوجبات البيتية', 'CLOUD_KITCHEN', 'الفروانية', 'مطبخ توصيل فقط على ثلاث منصات، بوصفات معتمدة وتدفق طلبات يومي.', ['٣ منصات توصيل', 'وصفات موثقة', 'بلا إيجار صالة'], ['وصفات', 'حسابات المنصات', 'معدات المطبخ'], 22000, '٣–٤ آلاف د.ك شهريًا', 2, 'التفرغ لمشروع آخر', 'APPROVED', 9),
@@ -83,10 +97,28 @@ export const demoShowcase = {
     commit();
     return delay({ id: 'demo', reportToken: 'demo-report-token-not-real', message: 'وصل طلب الإعلان. لا يظهر قبل اعتماد الإدارة وتحديد المدة.' });
   },
+  suppliers() {
+    return delay({ suppliers: current().suppliers.filter(x => x.status === 'APPROVED').map(x => ({ ...x, contactName: undefined, adminNote: undefined, contactPhone: x.contactPublic ? x.contactPhone : undefined })) });
+  },
+  submitSupplier(input: Partial<DirectorySupplier> & { contactName: string; contactPhone: string }) {
+    current().suppliers.unshift({
+      id: `sdir_demo_${Date.now()}`, name: input.name || '', category: input.category || 'OTHER', region: input.region || '', description: input.description || '',
+      products: input.products || [], minOrder: input.minOrder || '', delivers: !!input.delivers, contactPublic: !!input.contactPublic,
+      contactPhone: input.contactPhone, contactName: input.contactName, status: 'PENDING_REVIEW', submittedAt: new Date().toISOString(),
+    });
+    commit();
+    return delay({ id: 'demo', message: 'وصل طلبك. لن يظهر قبل مراجعة الإدارة، والتسجيل مجاني.' });
+  },
+  reviewSupplier(id: string, decision: 'APPROVED' | 'REJECTED', adminNote = '') {
+    const row = current().suppliers.find(x => x.id === id);
+    if (!row) return Promise.reject(new Error('المورد غير موجود.'));
+    Object.assign(row, { status: decision, adminNote: adminNote || undefined }); commit();
+    return delay({ supplier: row });
+  },
   overview() {
     const s = current();
     const rank = (x: string) => (x === 'PENDING_REVIEW' ? 0 : x === 'APPROVED' ? 1 : 2);
-    return delay({ listings: [...s.listings].sort((a, b) => rank(a.status) - rank(b.status)), campaigns: [...s.campaigns].sort((a, b) => rank(a.status) - rank(b.status)) });
+    return delay({ suppliers: [...s.suppliers].sort((a, b) => rank(a.status) - rank(b.status)), listings: [...s.listings].sort((a, b) => rank(a.status) - rank(b.status)), campaigns: [...s.campaigns].sort((a, b) => rank(a.status) - rank(b.status)) });
   },
   reviewBusiness(id: string, decision: 'APPROVED' | 'REJECTED' | 'SOLD', adminNote = '') {
     const row = current().listings.find(x => x.id === id);

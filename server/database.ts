@@ -1580,6 +1580,32 @@ const migrations = [
       ALTER TABLE ad_campaigns ADD COLUMN image_mime TEXT;
       ALTER TABLE ad_campaigns ADD COLUMN image_data TEXT;
     `
+  },
+  {
+    /* Free supplier directory: public submissions, admin approved, phone only with consent. */
+    version: 24,
+    sql: `
+      CREATE TABLE IF NOT EXISTS supplier_directory (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        region TEXT NOT NULL,
+        description TEXT NOT NULL,
+        products_json TEXT NOT NULL DEFAULT '[]',
+        min_order TEXT NOT NULL DEFAULT '',
+        delivers INTEGER NOT NULL DEFAULT 0 CHECK(delivers IN (0, 1)),
+        contact_name TEXT NOT NULL,
+        contact_phone TEXT NOT NULL,
+        contact_public INTEGER NOT NULL DEFAULT 0 CHECK(contact_public IN (0, 1)),
+        status TEXT NOT NULL DEFAULT 'PENDING_REVIEW' CHECK(status IN ('PENDING_REVIEW','APPROVED','REJECTED')),
+        admin_note TEXT NOT NULL DEFAULT '',
+        reviewed_by_user_id TEXT REFERENCES users(id) ON DELETE RESTRICT,
+        submitted_at TEXT NOT NULL,
+        reviewed_at TEXT,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_supplier_directory_status ON supplier_directory(status, category, submitted_at DESC, id);
+    `
   }
 ] as const;
 

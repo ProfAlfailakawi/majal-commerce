@@ -69,6 +69,18 @@ test('admin reviews listings and campaigns; slot capacity, creatives and report 
     await h.call(admin, 'POST', `/showcase/admin/businesses/${listingId}/review`, { decision: 'SOLD' });
     assert.equal((await (await fetch(`${h.base}/showcase/businesses`)).json()).listings.length, 0);
 
+    // Supplier directory: pending → approve → public; reject hides again.
+    const sup = await fetch(`${h.base}/showcase/suppliers`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'مورد تجريبي', category: 'SPICES', region: 'المباركية', description: 'بهارات مطحونة بحسب الطلب.', contactName: 'سعد', contactPhone: '50002222', termsAccepted: true }) });
+    const { id: supId } = await sup.json();
+    assert.equal((await h.call(buyer, 'POST', `/showcase/admin/suppliers/${supId}/review`, { decision: 'APPROVED' })).status, 403);
+    assert.equal((await h.call(admin, 'POST', `/showcase/admin/suppliers/${supId}/review`, { decision: 'X' })).status, 400);
+    assert.equal((await h.call(admin, 'POST', '/showcase/admin/suppliers/nope/review', { decision: 'APPROVED' })).status, 404);
+    assert.equal((await (await h.call(admin, 'GET', '/showcase/admin/overview')).json()).suppliers[0].contactName, 'سعد');
+    assert.equal((await h.call(admin, 'POST', `/showcase/admin/suppliers/${supId}/review`, { decision: 'APPROVED' })).status, 200);
+    assert.equal((await (await fetch(`${h.base}/showcase/suppliers`)).json()).suppliers.length, 1);
+    await h.call(admin, 'POST', `/showcase/admin/suppliers/${supId}/review`, { decision: 'REJECTED' });
+    assert.equal((await (await fetch(`${h.base}/showcase/suppliers`)).json()).suppliers.length, 0);
+
     // Sponsor slot is exclusive; market holds three.
     const ids: string[] = [];
     for (const [n, slot] of [[1, 'SPONSOR'], [2, 'SPONSOR'], [3, 'MARKET'], [4, 'MARKET'], [5, 'MARKET'], [6, 'MARKET']] as const) {
