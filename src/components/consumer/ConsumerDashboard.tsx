@@ -22,6 +22,8 @@ import { Avatar } from '../common/Avatar';
 import { ProductImage } from '../common/ProductImage';
 import { KuwaitiJobs } from '../jobs/KuwaitiJobs';
 import { DropCheckout } from './DropCheckout';
+import { LaunchCountdown } from './LaunchCountdown';
+import { UpcomingDropStrip } from './UpcomingDropStrip';
 import { formatKwd } from '../../lib/money';
 import { commerceClient } from '../../lib/commerceClient';
 import { domainClient } from '../../lib/domainClient';
@@ -56,7 +58,13 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
   const [, setTick] = useState(0);
   useEffect(() => store.subscribe(() => setTick(t => t + 1)), []);
 
-  const launches = store.launches.filter(l => l.status === 'LIVE' || l.status === 'PERMANENT');
+  // Scheduled launches are visible before they open. Open ones lead; the soonest upcoming one
+  // gets its own countdown strip, and the rest follow in the grid with a compact timer.
+  const live = store.launches.filter(l => l.status === 'LIVE' || l.status === 'PERMANENT');
+  const isUpcoming = (l: Launch) => Date.parse(l.startDate) > Date.now();
+  const openLaunches = live.filter(l => !isUpcoming(l));
+  const upcomingLaunches = live.filter(isUpcoming).sort((a, b) => Date.parse(a.startDate) - Date.parse(b.startDate));
+  const launches = [...openLaunches, ...upcomingLaunches];
   const [selectedLaunch, setSelectedLaunch] = useState<Launch | null>(null);
   const [followedCreators, setFollowedCreators] = useState<string[]>([]);
   const [followMessage, setFollowMessage] = useState('');
@@ -146,7 +154,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
         <div className="relative h-40 sm:h-52">
           <ProductImage src={publicProductImage(product)} alt={launch.title} loading="lazy" className="w-full h-full object-cover" />
           <div className="majal-art-scrim absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
-          <div className="absolute top-3 start-3 px-2.5 py-1 rounded-full bg-slate-950/75 border border-white/10 text-xs text-gold-300 font-black">{({ LIMITED_DROP: 'إطلاق محدود', TRIAL_PERIOD: 'فترة تجريبية', PERMANENT_MENU: 'قائمة دائمة', SEASONAL: 'موسمي' } as Record<string, string>)[launch.launchType] ?? launch.launchType}</div>
+          <div className="absolute top-3 start-3 px-2.5 py-1 rounded-full bg-slate-950/75 border border-white/10 text-xs text-gold-300 font-black">{isUpcoming(launch) ? 'ينفتح قريبًا' : ({ LIMITED_DROP: 'إطلاق محدود', TRIAL_PERIOD: 'فترة تجريبية', PERMANENT_MENU: 'قائمة دائمة', SEASONAL: 'موسمي' } as Record<string, string>)[launch.launchType] ?? launch.launchType}</div>
           <div className="majal-art-title absolute bottom-4 start-4 end-4"><div className="text-xs text-emerald-300 font-black line-clamp-1">{creator?.displayName} × {host?.commercialName}</div><h3 className="font-black text-white mt-1 leading-snug line-clamp-2">{product?.publicName || launch.title}</h3></div>
         </div>
         <div className="p-5 flex flex-col gap-4 flex-1">
@@ -158,7 +166,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
             </div>
           )}
           <div className="mt-auto"><div className="flex justify-between text-xs text-slate-400 mb-1"><span>{capped ? `تم بيع ${launch.unitsSold} من ${launch.quantityCapUnits}` : `${launch.unitsSold} مبيعة`}</span><span>{capped ? `${progress}% من الكمية` : 'متاح باستمرار'}</span></div><DnaDraw draw={`consumer-sold:${launch.id}`} className="h-2 bg-white/5 rounded-full overflow-hidden" style={{ ['--draw-dur' as string]: '400ms' } as React.CSSProperties}>{capped ? <div className="h-full bg-gradient-to-l from-gold-500 to-emerald-400 rounded-full dna-draw-bar" style={{ width: `${progress}%` }} /> : <div className="h-full w-full bg-gradient-to-l from-emerald-500/30 to-emerald-400/30 rounded-full" />}</DnaDraw></div>
-          <div className="flex items-center justify-between"><div><div className="text-xs text-slate-400">السعر</div><div className="font-black text-gold-300">{formatKwd(launch.sellingPriceKwd)}</div></div><button type="button" onClick={() => setSelectedLaunch(launch)} className="px-4 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-slate-950 text-xs font-black transition-colors">شاهد واطلب</button></div>
+          <div className="flex items-center justify-between"><div><div className="text-xs text-slate-400">{isUpcoming(launch) ? 'يفتح بعد' : 'السعر'}</div><div className="font-black text-gold-300">{isUpcoming(launch) ? <LaunchCountdown opensAt={launch.startDate} compact onOpen={() => setTick(t => t + 1)} /> : formatKwd(launch.sellingPriceKwd)}</div></div><button type="button" onClick={() => setSelectedLaunch(launch)} className="px-4 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-slate-950 text-xs font-black transition-colors">{isUpcoming(launch) ? 'ذكّرني' : 'شاهد واطلب'}</button></div>
         </div>
       </article>
     );
@@ -224,6 +232,8 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
           )}
         </div>
       </section>
+
+      {upcomingLaunches[0] && <UpcomingDropStrip launch={upcomingLaunches[0]} onOpenLaunch={setSelectedLaunch} onOpened={() => setTick(t => t + 1)} />}
 
       <section className="space-y-5">
         <div className="flex items-center justify-between gap-4"><div><h2 className="text-2xl font-black">الإطلاقات الحالية</h2><p className="text-xs text-slate-400 mt-1">منتجات محدودة، تجريبية، موسمية أو مرشحة للدخول الدائم.</p></div><div className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-400 whitespace-nowrap shrink-0">{arCount(launches.length, AR.launch)}</div></div>

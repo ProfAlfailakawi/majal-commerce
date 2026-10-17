@@ -40,7 +40,7 @@ export const domainClient = {
   signContract: (contractId: string, paciRequestId: string) => request<any>(`/api/v1/domain/contracts/${encodeURIComponent(contractId)}/sign`, { method:'POST', body: JSON.stringify({ paciRequestId }) }),
   prepareLaunch: (collaborationId: string) => request<any>(`/api/v1/domain/collaborations/${encodeURIComponent(collaborationId)}/launch`, { method:'POST', body:'{}' }),
   setLaunchGate: (collaborationId: string, key: string, value: boolean, evidence: unknown = {}) => request<any>(`/api/v1/domain/collaborations/${encodeURIComponent(collaborationId)}/launch-gate/${encodeURIComponent(key)}`, { method:'PUT', body: JSON.stringify({ value, evidence }) }),
-  activateLaunch: (collaborationId: string) => request<any>(`/api/v1/domain/collaborations/${encodeURIComponent(collaborationId)}/launch/activate`, { method:'POST', body:'{}' }),
+  activateLaunch: (collaborationId: string, opensAt?: string) => request<any>(`/api/v1/domain/collaborations/${encodeURIComponent(collaborationId)}/launch/activate`, { method:'POST', body: JSON.stringify(opensAt ? { opensAt } : {}) }),
   approveSettlement: (creatorId: string) => request<any>(`/api/v1/domain/settlements/${encodeURIComponent(creatorId)}/approve`, { method:'POST', body:'{}' }, 'settlement'),
 
   // دورة الشراء والتقييم. السعر يُحسب على الخادم من العرض المعتمد، فلا يُرسل من هنا إطلاقاً.

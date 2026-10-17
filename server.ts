@@ -18,6 +18,7 @@ import { createTeamRouter } from './server/team';
 import { createAudienceRouter } from './server/audience';
 import { createAdvancedRouter } from './server/advanced';
 import { createOrdersRouter, createPublicReviewsRouter } from './server/orders';
+import { sweepLaunchSchedule } from './server/launch-schedule';
 import { createModerationRouter } from './server/moderation';
 import { createCommercePublicRouter, createCommerceRouter } from './server/commerce-ops';
 import { expireStaleHolds } from './server/checkout';
@@ -310,10 +311,13 @@ async function initializeApplication(app: express.Express) {
   // Pending-payment holds release their reserved stock once the payment window elapses.
   const holdTimer = setInterval(() => { expireStaleHolds(db).catch(error => reportError('hold_sweeper_failed', error, {})); }, 60_000);
   holdTimer.unref();
+  // Scheduled launches: remind the waitlist an hour ahead and announce the opening.
+  const launchTimer = setInterval(() => { sweepLaunchSchedule(db).catch(error => reportError('launch_schedule_sweeper_failed', error, {})); }, 60_000);
+  launchTimer.unref();
   return {
     db,
     shutdown: async () => {
-      stopDeliveryWorker(); clearInterval(cleanupTimer); clearInterval(holdTimer); await closeRateLimitStore(); await db.close();
+      stopDeliveryWorker(); clearInterval(cleanupTimer); clearInterval(holdTimer); clearInterval(launchTimer); await closeRateLimitStore(); await db.close();
     }
   };
 }

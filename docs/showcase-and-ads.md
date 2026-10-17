@@ -70,8 +70,15 @@ Producers live in the routes and write to `notification_inbox` through `server/n
 
 Covered by `server/notifications-roles.test.ts` (jobs and team, including that other roles and other facilities see nothing); the rest are exercised through their route suites.
 
+## 7. Scheduled launches (limited drops with a countdown)
+- A facility owner or operations lead can open a ready launch **now** (as before) or **at a future time**: `POST /api/v1/domain/collaborations/:id/launch/activate` with `{ "opensAt": "<ISO>" }`, between 2 minutes and 60 days ahead (Kuwait wall-clock input in the UI, stored as UTC). A scheduled launch is `LIVE` with a future `starts_at`.
+- Until it opens it is visible but not orderable: `POST /orders` already refuses with `LAUNCH_NOT_STARTED`. The consumer page shows the soonest one in its own strip with a live countdown, the others get a compact timer, and the checkout dialog swaps "pay" for "remind me" (the existing waitlist). The countdown uses the **server's clock** (`serverNow` from `checkout-options`) so a wrong device clock does not open it early or late.
+- Announcements (`server/launch-schedule.ts`, run every minute next to the stock-hold sweeper): **one hour before** and **at opening**, to the waitlist and to creator followers who opted in, each person once even if on both lists. Each step is claimed with a conditional update on `opens_reminded_at` / `open_notified_at` (migration 30), so two instances or a restart never repeat it. Migration 30 marks every existing launch as already announced, and the sweeper ignores launches that opened more than 24 hours ago, so deploying never re-announces old launches. Launches opened immediately keep the previous behaviour (followers told at activation).
+- Delivery is the in-app bell. The waitlist's WhatsApp consent is unchanged: the facility still sends WhatsApp itself from its waitlist view; the platform sends none.
+- Demo: one limited drop in the demo marketplace opens a day from now so the states can be seen. Tests: `src/lib/countdown.test.ts`, `server/launch-schedule.test.ts` (windows, once-only, no re-announcing), `server/launch-opening.test.ts` (route: scheduling, refusal before opening, exposed times, announcements).
+
 ## Data
-Migrations 22–29: `business_listings`, `ad_campaigns`, `ad_daily_stats`, `organization_invites`, `supplier_directory`, `audience_daily`, `gate_events`, `partner_kit`, plus `ad_campaigns.image_mime/image_data`. Admin actions are written to `domain_audit_events`.
+Migrations 22–30: `business_listings`, `ad_campaigns`, `ad_daily_stats`, `organization_invites`, `supplier_directory`, `audience_daily`, `gate_events`, `partner_kit`, plus `ad_campaigns.image_mime/image_data`. Admin actions are written to `domain_audit_events`.
 
 ## Tests
 All server suites run on in-memory SQLite by default and on a throw-away PostgreSQL database when `TEST_DATABASE_URL` is set (`server/test-db.ts`); both were run green for this module. Also `server/audience.test.ts`.

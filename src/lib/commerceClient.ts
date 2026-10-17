@@ -11,7 +11,7 @@ export interface CheckoutBranch {
   pickupSlots: { id: string; label: string; available: boolean }[];
   remainingUnits: number | null; orderingOpen: boolean;
 }
-export interface CheckoutOptions { launchId: string; unitPriceFils: number | null; holdMinutes: number; quantityCap: number | null; remainingUnits: number | null; branches: CheckoutBranch[] }
+export interface CheckoutOptions { launchId: string; startsAt?: string | null; serverNow?: string; unitPriceFils: number | null; holdMinutes: number; quantityCap: number | null; remainingUnits: number | null; branches: CheckoutBranch[] }
 export interface TrustItem { key: string; labelAr: string; status: 'PASS' | 'EXPIRING' | 'DECLARED' | 'PENDING_REVIEW' | 'EXPIRED' | 'MISSING'; expiresAt: string | null; detail: string }
 export interface TrustChecklist { launchId: string; items: TrustItem[]; allPassed: boolean; checkedAt: string }
 export interface PlaceOrderInput { launchId: string; units: number; contactPhone: string; branchId?: string; fulfillmentType: 'PICKUP' | 'DELIVERY'; deliveryZoneId?: string; pickupSlotId?: string }
