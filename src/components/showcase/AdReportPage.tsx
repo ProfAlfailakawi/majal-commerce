@@ -3,6 +3,7 @@ import { ArrowRight, Eye, MousePointerClick, Percent } from 'lucide-react';
 import { fetchAdReport, type AdReport } from '../../lib/showcaseClient';
 import { MajalMark } from '../brand/MajalMark';
 import { AD_AUDIENCE_LABEL, type AdAudience } from '../../lib/adAudience';
+import { usePrivatePage } from '../../lib/privatePage';
 
 const SLOT_LABEL = { SPONSOR: 'شريط الراعي', MARKET: 'السوق', PORTAL: 'بوابات الشركاء' } as const;
 const STATUS_LABEL: Record<string, string> = { PENDING_REVIEW: 'بانتظار الاعتماد', APPROVED: 'معتمدة', PAUSED: 'موقوفة', REJECTED: 'غير معتمدة' };
@@ -11,6 +12,7 @@ const STATUS_LABEL: Record<string, string> = { PENDING_REVIEW: 'بانتظار �
 export const AdReportPage: React.FC<{ token: string; onClose: () => void }> = ({ token, onClose }) => {
   const [report, setReport] = useState<AdReport | null>(null);
   const [error, setError] = useState('');
+  usePrivatePage();
   useEffect(() => { fetchAdReport(token).then(setReport).catch(e => setError(e instanceof Error ? e.message : 'تعذّر تحميل التقرير.')); }, [token]);
   const max = Math.max(1, ...(report?.days.map(d => d.impressions) ?? [1]));
   return (

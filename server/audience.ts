@@ -21,7 +21,8 @@ export const GATE_KINDS = ['listing_open', 'listing_contact', 'supplier_contact'
 
 const sha = (v: string) => createHash('sha256').update(v).digest('hex');
 const jsonError = (res: Response, status: number, message: string, code: string) => res.status(status).json({ error: message, code });
-const isAdmin = (req: AuthenticatedRequest) => ['ADMIN', 'SUPER_ADMIN'].includes(req.auth?.user.role || '');
+/** The audience dashboard and the partner link are the owner's marketing tools: SUPER_ADMIN only, not ordinary administrators. */
+const isOwner = (req: AuthenticatedRequest) => req.auth?.user.role === 'SUPER_ADMIN';
 const oneOf = <T extends string>(v: unknown, list: readonly T[]): T | undefined => (typeof v === 'string' && (list as readonly string[]).includes(v) ? (v as T) : undefined);
 const dayMinus = (n: number) => kuwaitToday(new Date(Date.now() - n * 86_400_000));
 
@@ -126,7 +127,7 @@ export function createAudienceRouter(db: MajalDatabase, authConfig: AuthConfig) 
   const csrfProtected = requireCsrf(authConfig);
 
   router.get('/admin/overview', authenticated, async (req: AuthenticatedRequest, res) => {
-    if (!isAdmin(req)) return jsonError(res, 403, 'هذه الصفحة للإدارة فقط.', 'ADMIN_REQUIRED');
+    if (!isOwner(req)) return jsonError(res, 403, 'لوحة الجمهور لمالك المنصة فقط.', 'OWNER_REQUIRED');
     const since = dayMinus(29);
     const [traffic, facts, kit, ads, slots] = await Promise.all([
       trafficSummary(db), platformFacts(db),
@@ -145,7 +146,7 @@ export function createAudienceRouter(db: MajalDatabase, authConfig: AuthConfig) 
 
   /** Creates the partner link, or replaces it (the old one stops working). The token is shown once. */
   router.post('/admin/kit/rotate', authenticated, csrfProtected, async (req: AuthenticatedRequest, res) => {
-    if (!isAdmin(req)) return jsonError(res, 403, 'للإدارة فقط.', 'ADMIN_REQUIRED');
+    if (!isOwner(req)) return jsonError(res, 403, 'لمالك المنصة فقط.', 'OWNER_REQUIRED');
     const token = randomBytes(24).toString('hex'), at = new Date().toISOString();
     await db.prepare(`INSERT INTO partner_kit(id, token_hash, created_at) VALUES('main',?,?)
       ON CONFLICT(id) DO UPDATE SET token_hash = excluded.token_hash, rotated_at = excluded.created_at`).run(sha(token), at);
