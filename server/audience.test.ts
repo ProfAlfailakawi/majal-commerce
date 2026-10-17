@@ -109,3 +109,25 @@ test('partner kit: private token, rotation kills the old link, nothing personal 
     assert.equal((await fetch(`${h.base}/audience/partners/${next}`)).status, 200);
   } finally { await h.close(); }
 });
+
+test('seller and supplier get a private report link with their own opens and contact taps', async () => {
+  const h = await harness();
+  try {
+    const listing = await (await h.post('/showcase/businesses', { title: 'مقهى للبيع', sector: 'CAFE', city: 'حولي', summary: 'مقهى بعقد ساري ومعدات كاملة وزبائن ثابتين.', sellerName: 'سالم', contactPhone: '50001234', termsAccepted: true, contactPublic: true })).json();
+    const supplier = await (await h.post('/showcase/suppliers', { name: 'مورد', category: 'SPICES', region: 'المباركية', description: 'بهارات مطحونة بحسب الطلب.', contactName: 'سعد', contactPhone: '50002222', termsAccepted: true })).json();
+    assert.match(listing.reportToken, /^[0-9a-f]{48}$/);
+    assert.match(supplier.reportToken, /^[0-9a-f]{48}$/);
+    assert.ok(!JSON.stringify(await (await fetch(`${h.base}/showcase/businesses`)).json()).includes(listing.reportToken));
+    await h.db.prepare("UPDATE business_listings SET status='APPROVED', reviewed_at=?").run(new Date().toISOString());
+    await h.db.prepare("UPDATE supplier_directory SET status='APPROVED', reviewed_at=?").run(new Date().toISOString());
+    for (const [kind, id] of [['listing_open', listing.id], ['listing_open', listing.id], ['listing_contact', listing.id], ['supplier_contact', supplier.id]]) await h.post('/audience/gate-event', { kind, id });
+    const l = await (await fetch(`${h.base}/audience/gate-report/${listing.reportToken}`)).json();
+    assert.deepEqual([l.kind, l.title, l.totals], ['listing', 'مقهى للبيع', { opens: 2, contacts: 1 }]);
+    assert.equal(l.daily.length, 30);
+    const s = await (await fetch(`${h.base}/audience/gate-report/${supplier.reportToken}`)).json();
+    assert.deepEqual([s.kind, s.totals], ['supplier', { opens: 0, contacts: 1 }]);
+    assert.ok(!JSON.stringify(l).match(/50001234|سالم/), 'no personal data in the report');
+    assert.equal((await fetch(`${h.base}/audience/gate-report/${'f'.repeat(48)}`)).status, 404);
+    assert.equal((await fetch(`${h.base}/audience/gate-report/short`)).status, 404);
+  } finally { await h.close(); }
+});

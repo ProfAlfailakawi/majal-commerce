@@ -83,7 +83,7 @@ export const demoShowcase = {
       sellerName: input.sellerName, status: 'PENDING_REVIEW', submittedAt: at,
     });
     commit();
-    return delay({ id: 'demo', message: 'وصل طلبك. لن يظهر للجمهور قبل مراجعة الإدارة، وهي خدمة مجانية.' });
+    return delay({ id: 'demo', reportToken: 'demo-report-token-not-real', message: 'وصل طلبك. لن يظهر للجمهور قبل مراجعة الإدارة، وهي خدمة مجانية.' });
   },
   serve(slot: AdSlot, audience = 'VISITOR', topic?: string) {
     const tier = (a: AdCampaign) => (!topic || !a.topics?.length ? 1 : a.topics.includes(topic) ? 0 : 2);
@@ -109,7 +109,7 @@ export const demoShowcase = {
       contactPhone: input.contactPhone, contactName: input.contactName, status: 'PENDING_REVIEW', submittedAt: new Date().toISOString(),
     });
     commit();
-    return delay({ id: 'demo', message: 'وصل طلبك. لن يظهر قبل مراجعة الإدارة، والتسجيل مجاني.' });
+    return delay({ id: 'demo', reportToken: 'demo-report-token-not-real', message: 'وصل طلبك. لن يظهر قبل مراجعة الإدارة، والتسجيل مجاني.' });
   },
   reviewSupplier(id: string, decision: 'APPROVED' | 'REJECTED', adminNote = '') {
     const row = current().suppliers.find(x => x.id === id);

@@ -23,6 +23,7 @@ const SuperAdminDashboard = lazy(() => import('./components/admin/SuperAdminDash
 const BusinessShowcase = lazy(() => import('./components/showcase/BusinessShowcase').then(module => ({ default: module.BusinessShowcase })));
 const InviteAcceptPage = lazy(() => import('./components/common/InviteAcceptPage').then(module => ({ default: module.InviteAcceptPage })));
 const SupplierDirectory = lazy(() => import('./components/showcase/SupplierDirectory').then(module => ({ default: module.SupplierDirectory })));
+const GateReportPage = lazy(() => import('./components/showcase/GateReportPage').then(module => ({ default: module.GateReportPage })));
 const PartnerKitPage = lazy(() => import('./components/showcase/PartnerKitPage').then(module => ({ default: module.PartnerKitPage })));
 const AdReportPage = lazy(() => import('./components/showcase/AdReportPage').then(module => ({ default: module.AdReportPage })));
 const AiAssistantDrawer = lazy(() => import('./components/common/AiAssistantDrawer').then(module => ({ default: module.AiAssistantDrawer })));
@@ -67,6 +68,8 @@ export default function App() {
   const [adReportToken, setAdReportToken] = useState<string | null>(() => new URLSearchParams(window.location.search).get('ad-report'));
   const [inviteToken, setInviteToken] = useState<string | null>(() => new URLSearchParams(window.location.search).get('invite'));
   const [partnerToken, setPartnerToken] = useState<string | null>(() => new URLSearchParams(window.location.search).get('partners'));
+  const [gateToken, setGateToken] = useState<string | null>(() => new URLSearchParams(window.location.search).get('my-report'));
+  const closeGateReport = () => { window.history.replaceState(null, '', '/'); setGateToken(null); };
   const closePartners = () => { window.history.replaceState(null, '', '/'); setPartnerToken(null); };
   const closeInvite = () => { window.history.replaceState(null, '', '/'); setInviteToken(null); };
   // House cards and other in-page promos ask the app to change surface without owning its state.
@@ -94,10 +97,10 @@ export default function App() {
 
   // Anonymous audience measurement: one report per browser per page per day, role only (see lib/audienceClient).
   useEffect(() => {
-    if (authStatus === 'LOADING' || adReportToken || inviteToken || partnerToken || legalDocument) return;
+    if (authStatus === 'LOADING' || adReportToken || inviteToken || partnerToken || gateToken || legalDocument) return;
     const user = store.activeUser;
     reportPageView(activeSurface, audienceOf(user), user.role === 'ADMIN' || user.role === 'SUPER_ADMIN');
-  }, [activeSurface, authStatus, adReportToken, inviteToken, partnerToken, legalDocument]);
+  }, [activeSurface, authStatus, adReportToken, inviteToken, partnerToken, gateToken, legalDocument]);
 
   // The first-run introduction. It is held back until the session question is settled:
   // opening it over a still-resolving auth state would show a returning operator the
@@ -216,13 +219,13 @@ export default function App() {
           onOpenSecurity={() => setShowSecurity(true)}
         />
 
-        {!partnerToken && !adReportToken && !inviteToken && <ExperienceGuide activeSurface={activeSurface} onSurfaceChange={handleSurfaceChange} />}
+        {!gateToken && !partnerToken && !adReportToken && !inviteToken && <ExperienceGuide activeSurface={activeSurface} onSurfaceChange={handleSurfaceChange} />}
 
-        {!adReportToken && !inviteToken && !partnerToken && !legalDocument && !['DIRECTORY', 'CREATOR', 'HOST', 'SUPPLIER'].includes(activeSurface) && <AdSlot slot="SPONSOR" />}
+        {!adReportToken && !inviteToken && !partnerToken && !gateToken && !legalDocument && !['DIRECTORY', 'CREATOR', 'HOST', 'SUPPLIER'].includes(activeSurface) && <AdSlot slot="SPONSOR" />}
 
         <main id="main-content" tabIndex={-1} className="animate-in fade-in duration-300 flex-1 pb-[4.5rem] sm:pb-10 outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
           <Suspense fallback={<SurfaceFallback />}>
-            {partnerToken ? <PartnerKitPage token={partnerToken} onClose={closePartners} /> : inviteToken ? <InviteAcceptPage token={inviteToken} onDone={closeInvite} /> : adReportToken ? <AdReportPage token={adReportToken} onClose={closeAdReport} /> : legalDocument ? <LegalCenter initialDocument={legalDocument} onBack={closeLegal} /> : <>
+            {gateToken ? <GateReportPage token={gateToken} onClose={closeGateReport} /> : partnerToken ? <PartnerKitPage token={partnerToken} onClose={closePartners} /> : inviteToken ? <InviteAcceptPage token={inviteToken} onDone={closeInvite} /> : adReportToken ? <AdReportPage token={adReportToken} onClose={closeAdReport} /> : legalDocument ? <LegalCenter initialDocument={legalDocument} onBack={closeLegal} /> : <>
               {activeSurface === 'PUBLIC' && <PublicLanding onSurfaceChange={handleSurfaceChange} />}
               {activeSurface === 'DIRECTORY' && <SupplierDirectory onSurfaceChange={handleSurfaceChange} />}
               {activeSurface === 'SHOWCASE' && <BusinessShowcase onSurfaceChange={handleSurfaceChange} />}

@@ -112,6 +112,29 @@ export function createAudienceRouter(db: MajalDatabase, authConfig: AuthConfig) 
     res.status(204).end();
   });
 
+  /* A seller's / supplier's own private numbers: how many opened and contacted, by day. */
+  router.get('/gate-report/:token', limit(60, 60_000, 'gate-report'), async (req, res) => {
+    const token = typeof req.params.token === 'string' ? req.params.token : '';
+    if (token.length < 20 || token.length > 200) return jsonError(res, 404, 'التقرير غير موجود.', 'NOT_FOUND');
+    const hash = sha(token);
+    const listing = await db.prepare('SELECT id, title AS name, status FROM business_listings WHERE report_token_hash=?').get<{ id: string; name: string; status: string }>(hash);
+    const supplier = listing ? undefined : await db.prepare('SELECT id, name, status FROM supplier_directory WHERE report_token_hash=?').get<{ id: string; name: string; status: string }>(hash);
+    const row = listing ?? supplier;
+    if (!row) return jsonError(res, 404, 'التقرير غير موجود.', 'NOT_FOUND');
+    const since = dayMinus(29);
+    const events = await db.prepare('SELECT day, kind, total FROM gate_events WHERE ref_id=? AND day >= ?').all<{ day: string; kind: string; total: number | string }>(row.id, since);
+    const perDay = new Map<string, { opens: number; contacts: number }>();
+    for (let i = 29; i >= 0; i--) perDay.set(dayMinus(i), { opens: 0, contacts: 0 });
+    for (const e of events) { const d = perDay.get(e.day); if (d) { if (e.kind.endsWith('_contact')) d.contacts += Number(e.total); else d.opens += Number(e.total); } }
+    const daily = [...perDay.entries()].map(([day, v]) => ({ day, ...v }));
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({
+      kind: listing ? 'listing' : 'supplier', title: row.name, status: row.status,
+      totals: { opens: daily.reduce((a, d) => a + d.opens, 0), contacts: daily.reduce((a, d) => a + d.contacts, 0) }, daily,
+      note: 'يُحسب كل متصفح مرة واحدة في اليوم، ولا نحفظ هوية الزائر. القياس يبدأ من اعتماد الإعلان.'
+    });
+  });
+
   /* The private partner kit: aggregate figures for a company deciding whether to advertise. */
   router.get('/partners/:token', limit(60, 60_000, 'kit'), async (req, res) => {
     const token = typeof req.params.token === 'string' ? req.params.token : '';

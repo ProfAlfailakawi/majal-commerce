@@ -1656,6 +1656,16 @@ const migrations = [
         rotated_at TEXT
       );
     `
+  },
+  {
+    /* A private report link for each seller / supplier who submits to the free gates (hash only). */
+    version: 27,
+    sql: `
+      ALTER TABLE business_listings ADD COLUMN report_token_hash TEXT;
+      ALTER TABLE supplier_directory ADD COLUMN report_token_hash TEXT;
+      CREATE INDEX IF NOT EXISTS idx_business_listings_report ON business_listings(report_token_hash);
+      CREATE INDEX IF NOT EXISTS idx_supplier_directory_report ON supplier_directory(report_token_hash);
+    `
   }
 ] as const;
 

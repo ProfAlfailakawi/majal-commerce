@@ -7,6 +7,7 @@ import { reportGateEvent } from '../../lib/audienceClient';
 import { arCount } from '../../lib/arPlural';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { SectorArt } from './SectorArt';
+import { PrivateLinkNote } from './PrivateLinkNote';
 import { SECTORS, SECTOR_KEYS } from './sectors';
 import { AdSlot } from './AdSlot';
 
@@ -54,7 +55,7 @@ const ListingCard: React.FC<{ item: BusinessListing; onOpen: () => void }> = ({ 
 
 const SubmitForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [f, setF] = useState({ title: '', sector: 'CAFE' as BusinessSector, city: '', summary: '', price: '', years: '', revenueBand: '', highlights: '', includes: '', reason: '', sellerName: '', phone: '', contactPublic: true, terms: false, website: '' });
-  const [busy, setBusy] = useState(false), [error, setError] = useState(''), [done, setDone] = useState('');
+  const [busy, setBusy] = useState(false), [error, setError] = useState(''), [done, setDone] = useState(''), [token, setToken] = useState('');
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF(prev => ({ ...prev, [k]: v }));
   const split = (v: string) => v.split(/[،,\n]/).map(x => x.trim()).filter(Boolean);
   const submit = async (e: FormEvent) => {
@@ -65,7 +66,7 @@ const SubmitForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         contactPublic: f.contactPublic, termsAccepted: f.terms, highlights: split(f.highlights), includes: split(f.includes),
         askingPriceKwd: f.price ? Number(f.price) : null, yearsOperating: f.years ? Number(f.years) : null, revenueBand: f.revenueBand, reason: f.reason, website: f.website,
       });
-      setDone(r.message);
+      setDone(r.message); setToken(r.reportToken ?? '');
     } catch (err) { setError(err instanceof Error ? err.message : 'تعذّر إرسال الطلب.'); } finally { setBusy(false); }
   };
   return (
@@ -74,6 +75,7 @@ const SubmitForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <div className="mt-6 space-y-4 text-center py-4">
           <BadgeCheck className="w-12 h-12 mx-auto text-emerald-300" aria-hidden="true" />
           <p role="status" className="text-sm text-slate-200 leading-7">{done}</p>
+          {token && <PrivateLinkNote token={token} />}
           <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-xl bg-gold-500 text-slate-950 text-sm font-black">تم</button>
         </div>
       ) : (

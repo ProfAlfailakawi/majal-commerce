@@ -102,3 +102,17 @@ export const fetchAudienceOverview = (): Promise<AudienceOverview> => IS_DEMO_MO
 export const rotatePartnerKit = (): Promise<{ token: string }> => IS_DEMO_MODE ? Promise.resolve({ token: 'demo-partner-kit-token-not-real' }) : request('/admin/kit/rotate', { method: 'POST', body: '{}' });
 export const fetchPartnerKit = (token: string): Promise<PartnerKit> =>
   IS_DEMO_MODE ? Promise.resolve({ traffic: demoTraffic(), facts: demoFacts, slots: demoSlots, free: true, demo: true }) : request(`/partners/${encodeURIComponent(token)}`);
+
+/* ───────── a seller's / supplier's own private numbers ───────── */
+export interface GateReport {
+  kind: 'listing' | 'supplier'; title: string; status: string;
+  totals: { opens: number; contacts: number };
+  daily: { day: string; opens: number; contacts: number }[]; note: string; demo?: boolean;
+}
+export const fetchGateReport = (token: string): Promise<GateReport> => {
+  if (IS_DEMO_MODE) {
+    const daily = demoTraffic().daily.map((d, i) => ({ day: d.day, opens: Math.round(d.browsers / 9) + (i % 3), contacts: i % 4 === 0 ? 2 : i % 5 === 0 ? 1 : 0 }));
+    return Promise.resolve({ kind: 'listing', title: 'مشروعك التجريبي', status: 'APPROVED', totals: { opens: daily.reduce((a, d) => a + d.opens, 0), contacts: daily.reduce((a, d) => a + d.contacts, 0) }, daily, note: 'أرقام تجريبية مولّدة للعرض.', demo: true });
+  }
+  return request(`/gate-report/${encodeURIComponent(token)}`);
+};
