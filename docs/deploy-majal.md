@@ -111,3 +111,21 @@ Settings → Secrets and variables → Actions → **Variables** (لا Secrets):
 
 الورك-فلو يقبل `workflow_dispatch`: شغّله يدويًا من تبويب Actions بعد ضبط
 المتغيّرين، وراقب النتيجة قبل أن تعتمد على النشر التلقائي.
+
+## النطاق المجاني `majal.web.app`
+
+موقع Firebase Hosting باسم `majal` في المشروع نفسه (`tebyan-clean-2026-5f13b`)، ويحوّل
+كل مسار (302) إلى رابط الخدمة على Cloud Run مع بقاء المسار والاستعلام.
+
+**لماذا تحويل وليس إعادة كتابة (rewrite) إلى Cloud Run؟** Firebase Hosting يحذف كل
+الكعكات عدا `__session` عند الوساطة، بينما الجلسة هنا `__Host-majal_session` و`__Host-majal_csrf`.
+الوساطة كانت ستكسر تسجيل الدخول. فالتسجيل يتمّ على نطاق `run.app` بعد التحويل.
+
+النشر يدوي مرة واحدة (الإعداد ثابت، لا يتغيّر مع الشيفرة):
+
+```sh
+firebase deploy --only hosting:majal --project tebyan-clean-2026-5f13b
+```
+
+**قاعدة البيانات** هي Neon (PostgreSQL خارجي) لا Cloud SQL، فسكربتات `setup-backups.sh`
+و`setup-redis.sh` لا تنطبق كما هي؛ النسخ الاحتياطي من لوحة Neon (الاستعادة لأي لحظة).
