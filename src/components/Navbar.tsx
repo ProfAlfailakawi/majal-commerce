@@ -133,6 +133,14 @@ export const Navbar: React.FC<NavbarProps> = ({
       if (expiring) items.push(`${expiring} مستند امتثال يحتاج تجديدًا أو مراجعة.`);
       if (approvedPayments) items.push(`${approvedPayments} دفعة معتمدة بانتظار تأكيد الدفع الخارجي.`);
     }
+    if (activeUser.accountType === 'SUPPLIER') {
+      items.push('طلب التوثيق قيد مراجعة الإدارة. سنخبرك فور اعتماده.');
+      items.push('وصل طلب توظيف جديد على إعلانك في بوابة التوظيف.');
+    }
+    if (activeUser.role === 'CONSUMER' && activeUser.accountType !== 'SUPPLIER') {
+      items.push('طلبك قيد التجهيز. سنخبرك عند جاهزيته.');
+      items.push('قيّم طلبك الأخير لتساعد غيرك على الاختيار.');
+    }
     if (!items.length) items.push('لا توجد إجراءات حرجة معلقة لحسابك الآن.');
     return items.slice(0, 6);
   }, [activeUser.id, activeUser.role, store.auditLogs.length, store.recipeGrants.length, store.settlements.length]);
@@ -379,14 +387,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               {showRoleDropdown && (
                 <div role="menu" aria-label="تبديل هوية العرض المحلية" className="fixed inset-x-3 top-[4.5rem] sm:absolute sm:inset-x-auto sm:top-auto sm:end-0 mt-2 sm:w-80 max-w-[calc(100vw-1.5rem)] bg-ink-700 sm:bg-ink-700 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 text-xs text-slate-200 max-h-[calc(100dvh-6rem)] sm:max-h-[70dvh] overflow-y-auto overscroll-contain">
                   <div className="px-2 py-2 text-xs text-slate-400 font-bold border-b border-white/10 mb-1">
-                    تبديل أدوار العرض — مبدع / مالك منشأة / أدمن / سوبر أدمن
+                    هوية العرض: مبدع · منشأة · مورد · أدمن · سوبر أدمن
                   </div>
                   {/* On phones the demo chip is a plain badge; its two actions live here. */}
                   <div className="sm:hidden grid grid-cols-2 gap-2 p-1 pb-2 mb-1 border-b border-white/10">
                     <button type="button" onClick={() => resetDemoData()} className="min-h-11 flex items-center justify-center gap-2 rounded-xl bg-amber-500/10 border border-amber-400/30 text-amber-200 text-sm font-bold"><RefreshCw className="w-4 h-4" aria-hidden="true" />إعادة التعيين</button>
                     <button type="button" onClick={() => exitDemoMode()} className="min-h-11 flex items-center justify-center gap-2 rounded-xl bg-white/5 border border-white/10 text-slate-200 text-sm font-bold"><LogOut className="w-4 h-4" aria-hidden="true" />خروج من العرض</button>
                   </div>
-                  {store.users.map(u => (
+                  {store.users.filter(u => !u.role.startsWith('HOST_') || u.role === 'HOST_OWNER').map(u => (
                     <button
                       key={u.id}
                       disabled={u.status === 'SUSPENDED'}

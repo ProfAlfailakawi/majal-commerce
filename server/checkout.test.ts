@@ -230,6 +230,10 @@ test('expired holds and failed payments release reserved stock; PAID keeps it', 
     assert.equal(paid?.status, 'PAID');
     assert.equal(paid?.hold_expires_at, null);
     assert.equal(await reserved(), 1);
+    // The first paid order tells the facility's money roles and the creator, once, and nobody else.
+    const told = await h.db.prepare("SELECT user_id, dedupe_key FROM notification_inbox WHERE category='ORDER'").all<{ user_id: string; dedupe_key: string }>();
+    assert.ok(told.length >= 1 && told.every(r => r.dedupe_key === 'orders-paid:lch_k'), JSON.stringify(told));
+    assert.ok(!told.some(r => r.user_id === buyer.userId), 'the buyer is not told about their own payment');
   } finally { await h.close(); }
 });
 

@@ -84,6 +84,7 @@ type PgQueryClient = { query(sql: string, params?: unknown[]): Promise<PgQueryRe
 type PgPoolLike = PgQueryClient & {
   connect(): Promise<PgQueryClient & { release(): void }>;
   end(): Promise<void>;
+  on(event: 'error', listener: (error: Error) => void): unknown;
 };
 
 function postgresPlaceholders(sql: string) {
@@ -1768,6 +1769,10 @@ export async function openMajalDatabase(options: OpenDatabaseOptions = {}): Prom
       statement_timeout: Math.min(60_000, Math.max(1_000, Number(process.env.PG_STATEMENT_TIMEOUT_MS || 15_000) || 15_000)),
       ...(ssl === undefined ? {} : { ssl })
     });
+    // An idle connection that the server drops (failover, restart, a forced DROP DATABASE) emits
+    // 'error' on the pool; with no listener Node treats it as an uncaught exception and kills the
+    // process. The pool discards that client and opens a fresh one on the next query.
+    pool.on('error', error => console.warn(`[postgres] idle connection dropped: ${error.message}`));
     const db = new PostgresMajalDatabase(pool, pool);
     // Hold a session-level advisory lock on a dedicated connection for the whole
     // migration so concurrent replicas serialize instead of racing the DDL.

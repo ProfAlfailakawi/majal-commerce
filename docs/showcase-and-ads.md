@@ -25,7 +25,8 @@ Three related surfaces. All three keep the rule used by the jobs board: **nothin
 - **Smart, profile-free targeting** (this platform has no colleges or demographics): the only thing known about a viewer is their *role*, sent as one word (`VISITOR | CONSUMER | CREATOR | HOST | SUPPLIER`; administrators browse as visitors so previews never skew numbers). A campaign names the roles it suits (empty = everyone) and the marketplace categories it follows (empty = any). Ranking per request: topic match first, neutral next, mismatched last; ties go to the campaign shown least today, so delivery stays even. Slot capacity is counted **per audience**: a creators-only and a hosts-only campaign can share the "exclusive" sponsor slot, but a campaign for everyone overlaps both. Widening the audience of an approved campaign sends it back to review (paused); narrowing never does.
 - Politeness: each browser stops asking for ads after 60 impressions a day and can hide any single ad (✕, remembered locally). When no sponsor fits a market/portal slot, one of our own free gates is shown instead (labelled «من مجال», role-aware: shoppers → sell a business, hosts/creators/suppliers → supplier directory). The sponsor strip never shows house promotion.
 - Company reports include a per-role breakdown of who saw the ad.
-- Not ported from the schedule repo's ads system: A/B creatives, college targeting, pixel-quality scoring, partner-kit page, scheduled e-mail.
+- **A/B test** (migration 29): a campaign may carry a second headline/tagline (`b_headline`, `b_tagline`); impressions and clicks are counted per variant (`ad_variant_stats`). `src/lib/abTest.ts` runs a two-proportion z-test once each variant has 500 impressions and only *recommends* a winner; nothing switches automatically.
+- Not ported from the schedule repo's ads system: college targeting, pixel-quality scoring, partner-kit page, scheduled e-mail.
 
 ## 3. Facility team self-service
 - `HOST_OWNER` only. Roles an owner can hand out: operations, chef, finance, marketing, support (never owner). Maximum 25 members + pending invites.
@@ -47,8 +48,30 @@ Three related surfaces. All three keep the rule used by the jobs board: **nothin
 - **Seller / supplier report** (`/?my-report=<token>`): whoever submits a business or supplier receives, once, a private link (hash stored) to a page with their own opens, contact taps and 30-day trend; no personal data of visitors, `noindex`. Migration 27.
 - Measurement starts the day it ships and does not backfill; the pages say so.
 
+## 6. Notifications by role
+Producers live in the routes and write to `notification_inbox` through `server/notify.ts` (recipients come from the database, never from the request; the actor is excluded; repeated events coalesce on a dedupe key; a failure to notify never fails the action). The bell shows the inbox; email/push still need providers linked.
+
+| Event | Told |
+|---|---|
+| Public ad / business / supplier submission, job submission, supplier verification request | admins (`ADMIN_REVIEW`, `admin-pending:<kind>`) |
+| Recipe access requested | the creator |
+| Recipe access approved / revoked | facility owner, ops, chef |
+| Offer sent / counter-offer | the other side |
+| Offer accepted | the offer's sender |
+| Contract signed / fully signed | the other side / both |
+| Launch live | the creator |
+| First paid order of a launch | facility money roles + creator |
+| Verified customer review | facility + creator |
+| Settlement approved / paid | the creator |
+| Job approved or rejected | whoever posted it |
+| Job application | the employer (facility deciders or supplier owner) |
+| Supplier verification decision | the supplier |
+| Colleague joined by invite | facility owner |
+
+Covered by `server/notifications-roles.test.ts` (jobs and team, including that other roles and other facilities see nothing); the rest are exercised through their route suites.
+
 ## Data
-Migrations 22–28: `business_listings`, `ad_campaigns`, `ad_daily_stats`, `organization_invites`, `supplier_directory`, `audience_daily`, `gate_events`, `partner_kit`, plus `ad_campaigns.image_mime/image_data`. Admin actions are written to `domain_audit_events`.
+Migrations 22–29: `business_listings`, `ad_campaigns`, `ad_daily_stats`, `organization_invites`, `supplier_directory`, `audience_daily`, `gate_events`, `partner_kit`, plus `ad_campaigns.image_mime/image_data`. Admin actions are written to `domain_audit_events`.
 
 ## Tests
 All server suites run on in-memory SQLite by default and on a throw-away PostgreSQL database when `TEST_DATABASE_URL` is set (`server/test-db.ts`); both were run green for this module. Also `server/audience.test.ts`.
