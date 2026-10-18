@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Wallet, ArrowDownRight, CheckCircle2, FileSpreadsheet, ShieldCheck, Clock3, ChevronDown } from 'lucide-react';
 import { shortRef } from '../../lib/displayRef';
 import { store } from '../../lib/store';
+import type { Accrual } from '../../types/majal';
+import { IS_DEMO_MODE } from '../../lib/runtime';
+import { commerceClient } from '../../lib/commerceClient';
 import { EmptyState } from '../common/EmptyState';
 import { ShareDonut } from '../common/ShareDonut';
 import { CapGrid } from '../common/CapGrid';
@@ -9,15 +12,41 @@ import { PayoutStatement } from './PayoutStatement';
 
 export const CreatorEarnings: React.FC = () => {
   const currentCreatorId = store.activeUser.creatorId || '';
-  const creatorAccruals = store.accruals.filter(a => a.creatorId === currentCreatorId);
+  // Outside demo mode the browser store holds no order ledger: the server statement is the
+  // source of truth. Reading the (empty) store showed 0.000 beside a statement worth hundreds.
+  const [serverAccruals, setServerAccruals] = useState<Accrual[] | null>(null);
+  useEffect(() => {
+    if (IS_DEMO_MODE) return;
+    let active = true;
+    commerceClient.statement().then(statement => {
+      if (!active) return;
+      setServerAccruals(statement.lines.map(line => ({
+        id: line.accrualId,
+        creatorId: currentCreatorId,
+        collaborationId: '',
+        orderId: line.orderId,
+        grossSaleKwd: line.grossFils / 1000,
+        royaltyRatePercent: line.grossFils > 0 ? Math.round((line.creatorPayoutFils / line.grossFils) * 1000) / 10 : 0,
+        accruedAmountKwd: line.creatorPayoutFils / 1000,
+        settlementStatus: line.stage === 'PAID' ? 'PAID' : line.stage === 'APPROVED' ? 'SETTLEMENT_LOCKED' : 'SETTLEMENT_ELIGIBLE',
+        createdAt: line.orderedAt
+      })));
+    }).catch(() => { if (active) setServerAccruals([]); });
+    return () => { active = false; };
+  }, [currentCreatorId]);
+  const creatorAccruals = IS_DEMO_MODE ? store.accruals.filter(a => a.creatorId === currentCreatorId) : (serverAccruals ?? []);
   const creatorSettlements = store.settlements.filter(s => s.creatorId === currentCreatorId);
 
   const eligible = creatorAccruals.filter(a => a.settlementStatus === 'SETTLEMENT_ELIGIBLE').reduce((sum, a) => sum + a.accruedAmountKwd, 0);
   const locked = creatorAccruals.filter(a => a.settlementStatus === 'SETTLEMENT_LOCKED').reduce((sum, a) => sum + a.accruedAmountKwd, 0);
-  const paid = creatorSettlements.filter(s => s.status === 'PAID').reduce((sum, s) => sum + s.totalAmountKwd, 0);
+  const paid = IS_DEMO_MODE
+    ? creatorSettlements.filter(s => s.status === 'PAID').reduce((sum, s) => sum + s.totalAmountKwd, 0)
+    : creatorAccruals.filter(a => a.settlementStatus === 'PAID').reduce((sum, a) => sum + a.accruedAmountKwd, 0);
   const totals = { eligible, locked, paid, lifetime: eligible + locked + paid };
 
   const [exported, setExported] = useState(false);
+  const [shown, setShown] = useState(25);
+  const visibleAccruals = creatorAccruals.slice(0, shown);
 
   const handleDownloadStatement = () => {
     const rows = [
@@ -90,7 +119,7 @@ export const CreatorEarnings: React.FC = () => {
       <section className="glass-panel rounded-3xl border border-white/10 p-6 space-y-4">
         <div className="flex items-center justify-between border-b border-white/10 pb-3"><h3 className="font-black">تفاصيل الحقوق حسب الطلب</h3><span className="text-xs text-slate-400">{creatorAccruals.length} سجلات</span></div>
         <div className="md:hidden"><CapGrid className="grid grid-cols-1 gap-2.5 text-xs">
-          {creatorAccruals.map(a => {
+          {visibleAccruals.map(a => {
             const [label, cls] = statusLabel(a.settlementStatus);
             const barW = maxGross > 0 ? Math.max(8, (a.grossSaleKwd / maxGross) * 100) : 0;
             const shareW = a.grossSaleKwd > 0 ? Math.min(100, (a.accruedAmountKwd / a.grossSaleKwd) * 100) : 0;
@@ -123,7 +152,7 @@ export const CreatorEarnings: React.FC = () => {
           <table className="mobile-cards mc-compact w-full text-start md:min-w-[760px]">
             <thead><tr className="border-b border-white/10 text-slate-400"><th className="py-3 px-3">الطلب</th><th className="py-3 px-3">التاريخ</th><th className="py-3 px-3">المبيعات</th><th className="py-3 px-3">النسبة</th><th className="py-3 px-3">حق المبدع</th><th className="py-3 px-3">الحالة</th></tr></thead>
             <tbody className="divide-y divide-white/5">
-              {creatorAccruals.map(a => {
+              {visibleAccruals.map(a => {
                 const [label, cls] = statusLabel(a.settlementStatus);
                 const barW = maxGross > 0 ? Math.max(8, (a.grossSaleKwd / maxGross) * 100) : 0;
                 const shareW = a.grossSaleKwd > 0 ? Math.min(100, (a.accruedAmountKwd / a.grossSaleKwd) * 100) : 0;
@@ -132,6 +161,11 @@ export const CreatorEarnings: React.FC = () => {
             </tbody>
           </table>
         </div>
+        {creatorAccruals.length > shown && (
+          <button type="button" onClick={() => setShown(v => v + 50)} className="mx-auto flex min-h-[44px] items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 text-xs font-bold text-gold-300 hover:bg-white/10">
+            عرض المزيد ({creatorAccruals.length - shown} متبقٍ)
+          </button>
+        )}
       </section>
 
       <section className="glass-panel rounded-3xl border border-white/10 p-6 space-y-4">

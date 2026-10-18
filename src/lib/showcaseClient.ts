@@ -2,6 +2,7 @@ import { authCsrfToken } from './authClient';
 import { IS_DEMO_MODE } from './runtime';
 import { demoShowcase } from '../data/demoShowcase';
 import type { AdCampaign, AdSlot, BusinessListing, DirectorySupplier, PublicAd } from '../types/majal';
+import { apiFetch } from './apiFetch';
 
 export class ShowcaseApiError extends Error {
   constructor(message: string, public readonly code?: string, public readonly status?: number) { super(message); }
@@ -9,7 +10,7 @@ export class ShowcaseApiError extends Error {
 
 async function request<T>(path: string, init: RequestInit = {}) {
   const method = (init.method || 'GET').toUpperCase();
-  const response = await fetch(`/api/v1/showcase${path}`, {
+  const response = await apiFetch(`/api/v1/showcase${path}`, {
     ...init,
     credentials: 'same-origin',
     headers: {
@@ -62,7 +63,7 @@ export const createCampaign = (input: { company: string; headline: string; tagli
 /** Image creative: PNG/JPEG/WebP, ≤ 300 KB. The server sniffs the real type and size. */
 export const uploadCampaignImage = async (id: string, file: File): Promise<{ width: number; height: number }> => {
   if (IS_DEMO_MODE) throw new ShowcaseApiError('رفع الصور غير متاح في العرض التجريبي.');
-  const response = await fetch(`/api/v1/showcase/admin/campaigns/${encodeURIComponent(id)}/image`, {
+  const response = await apiFetch(`/api/v1/showcase/admin/campaigns/${encodeURIComponent(id)}/image`, {
     method: 'POST', credentials: 'same-origin', body: file,
     headers: { 'Content-Type': file.type || 'application/octet-stream', 'X-CSRF-Token': authCsrfToken() }
   });

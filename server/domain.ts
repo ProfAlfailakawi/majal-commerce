@@ -341,7 +341,16 @@ export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser)
     }
 
     const launchRow = await db.prepare('SELECT * FROM launches WHERE collaboration_id = ? ORDER BY created_at DESC LIMIT 1').get<Record<string, unknown>>(collab.id);
+    // Real sales for this launch (paid + fulfilled orders, unit price × units; delivery fees are
+    // not revenue). The war room used to read an order ledger that only exists in demo mode.
+    const salesRow = launchRow ? await db.prepare(
+      "SELECT COALESCE(SUM(units),0) AS units, COALESCE(SUM(units*unit_price_fils),0) AS gross FROM orders WHERE launch_id=? AND status IN ('PAID','FULFILLED')"
+    ).get<{ units: number | string; gross: number | string }>(launchRow.id as string) : undefined;
+    const branchStockRows = launchRow ? await db.prepare('SELECT branch_id FROM launch_branch_stock WHERE launch_id=? ORDER BY branch_id').all<{ branch_id: string }>(launchRow.id as string) : [];
     const launch = launchRow ? {
+      branches: branchStockRows.map(r => r.branch_id),
+      unitsSold: Number(salesRow?.units ?? 0),
+      grossSalesFils: Number(salesRow?.gross ?? 0),
       id: launchRow.id,
       collaborationId: launchRow.collaboration_id,
       productId: launchRow.product_id,
@@ -469,12 +478,39 @@ export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser)
     organizations = orgRows.map(publicOrganizationSummary);
   }
 
+  /*
+   * Finance projections. The admin settlement cycle and the creator earnings screen read these;
+   * without them the UI showed an empty settlement list and 0.000 earnings against a database
+   * full of accruals. Admins get one aggregated row per creator with ELIGIBLE accruals (enough
+   * to run the cycle, without shipping every order line); creators get only their own batches.
+   */
+  snapshotPhase = 'FINANCE';
+  let settlements: Record<string, unknown>[] = [];
+  let eligibleAccruals: Record<string, unknown>[] = [];
+  if (isAdminUser || isCreatorUser) {
+    const batchRows = await db.prepare(`SELECT b.id, b.creator_id, b.total_fils, b.status, b.created_at, b.updated_at, cp.display_name
+      FROM settlement_batches b JOIN creator_profiles cp ON cp.id=b.creator_id
+      ${isAdminUser ? '' : 'WHERE b.creator_id=?'}
+      ORDER BY b.created_at DESC LIMIT 200`).all<Record<string, unknown>>(...(isAdminUser ? [] : [user.creatorId!]));
+    settlements = batchRows.map(b => ({
+      id: b.id, creatorId: b.creator_id, creatorName: b.display_name, totalFils: Number(b.total_fils),
+      status: b.status, createdAt: b.created_at, updatedAt: b.updated_at
+    }));
+  }
+  if (isAdminUser) {
+    const rows = await db.prepare(`SELECT creator_id, SUM(amount_fils) AS total_fils, COUNT(*) AS n, MIN(created_at) AS first_at
+      FROM accruals WHERE status='ELIGIBLE' GROUP BY creator_id ORDER BY creator_id LIMIT 500`).all<Record<string, unknown>>();
+    eligibleAccruals = rows.map(r => ({ creatorId: r.creator_id, totalFils: Number(r.total_fils), count: Number(r.n), firstAt: r.first_at }));
+  }
+
   return {
     products: productRows.map(isConsumerUser ? publicMarketplaceProduct : publicProduct),
     collaborations,
     creators,
     organizations,
-    marketLaunches
+    marketLaunches,
+    settlements,
+    eligibleAccruals
   };
   } catch (cause) {
     const databaseCode = typeof cause === 'object' && cause !== null && 'code' in cause

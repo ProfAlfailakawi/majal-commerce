@@ -1,4 +1,5 @@
 import { authCsrfToken } from './authClient';
+import { apiFetch } from './apiFetch';
 
 export interface PaciAuthRequest {
   requestId: string;
@@ -10,7 +11,7 @@ export interface PaciAuthRequest {
 }
 
 async function post<T>(url: string, body: unknown): Promise<T> {
-  const response = await fetch(url, {
+  const response = await apiFetch(url, {
     method: 'POST', credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': authCsrfToken() },
     body: JSON.stringify(body)

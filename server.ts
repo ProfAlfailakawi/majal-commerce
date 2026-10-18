@@ -148,7 +148,18 @@ async function initializeApplication(app: express.Express) {
     });
   });
 
-  app.use('/api/v1/auth', expressRateLimit(limitOptions(30, 15 * 60_000, 'auth')), createAuthRouter(db, authConfig));
+  // The auth surface is split into three budgets (all per client IP):
+  //  - credential attempts (login / reset / MFA): only FAILED attempts count. Counting
+  //    successful logins locked whole offices and mobile-carrier NATs out of the site during
+  //    a busy hour, while adding no protection (per-account lockout already stops guessing).
+  //  - registration: every attempt counts, to keep sign-up spam bounded.
+  //  - session probe (/me) and /logout: every page load of a signed-in user calls /me, so they
+  //    get a much larger ceiling and never consume the credential budget.
+  const isSessionProbe = (req: Request) => (req.method === 'GET' && req.path === '/me') || (req.method === 'POST' && req.path === '/logout');
+  const isRegister = (req: Request) => req.method === 'POST' && req.path === '/register';
+  app.use('/api/v1/auth', expressRateLimit({ ...limitOptions(60, 15 * 60_000, 'auth'), skip: req => isSessionProbe(req) || isRegister(req), skipSuccessfulRequests: true }));
+  app.use('/api/v1/auth', expressRateLimit({ ...limitOptions(60, 15 * 60_000, 'auth-register'), skip: req => !isRegister(req) }));
+  app.use('/api/v1/auth', expressRateLimit({ ...limitOptions(1500, 15 * 60_000, 'auth-session'), skip: req => !isSessionProbe(req) }), createAuthRouter(db, authConfig));
   app.use('/api/v1/catalog', createCatalogRouter(db, authConfig));
   app.use('/api/v1/notifications', createNotificationRouter(db, authConfig));
   app.use('/api/v1/payments', createPaymentRouter(db, authConfig, paymentRegistry));

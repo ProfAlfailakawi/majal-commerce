@@ -14,6 +14,7 @@
     "lint": "tsc --noEmit",
     "test": "node --import tsx --test src/lib/*.test.ts server/*.test.ts",
     "auth:bootstrap": "node --import tsx scripts/bootstrap-admin.ts",
+    "seed:dev": "node --import tsx scripts/seed-data.ts",
     "simulate:scale": "node --import tsx scripts/simulate-scale.ts",
     "audit:production": "npm audit --omit=dev",
     "deploy:cloudrun": "bash scripts/deploy-cloud-run.sh",

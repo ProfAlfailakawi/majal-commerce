@@ -128,6 +128,7 @@ function buildDemoStatement(): CreatorStatement {
 export const PayoutStatement: React.FC = () => {
   const [data, setData] = useState<CreatorStatement | null>(null);
   const [error, setError] = useState('');
+  const [shown, setShown] = useState(50);
   useEffect(() => {
     if (IS_DEMO_MODE) { setData(buildDemoStatement()); return; }
     commerceClient.statement().then(setData).catch(() => setError('تعذّر تحميل كشف المستحقات من الخادم.'));
@@ -159,7 +160,7 @@ export const PayoutStatement: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.lines.map((line, idx) => (
+                  {data.lines.slice(0, shown).map((line, idx) => (
                     <tr key={line.accrualId} className="border-b border-white/5 align-top">
                       <td data-label="الطلب" className="py-2"><div className="font-bold text-slate-100">{line.productName}</div><div className="text-slate-300"><span title={line.orderId}>{shortRef(line.orderId, 'ط')}</span> · {line.units} وحدة · {day(line.orderedAt)}</div></td>
                       <td data-label="السعر" className="tabular-nums">{formatFils(line.grossFils)}</td>
@@ -172,6 +173,11 @@ export const PayoutStatement: React.FC = () => {
                 </tbody>
               </table>
               </div>
+              {data.lines.length > shown && (
+                <button type="button" onClick={() => setShown(v => v + 100)} className="mt-4 mx-auto flex w-fit min-h-[44px] items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 text-xs font-bold text-gold-300 hover:bg-white/10">
+                  عرض المزيد ({data.lines.length - shown} متبقٍ)
+                </button>
+              )}
               {data.lines.length > 6 && (
                 <label htmlFor="payout-cap-toggle" className="payout-cap-btn mt-4 mx-auto flex w-fit min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-gold-300 hover:bg-white/10 md:hidden print:hidden">
                   <span className="payout-cap-more">عرض الكل ({data.lines.length})</span>

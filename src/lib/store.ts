@@ -475,8 +475,10 @@ export class Store {
               launchType: 'LIMITED_DROP',
               title: 'إطلاق التعاون',
               sellingPriceKwd: currentOffer?.sellingPriceKwd || 0,
-              unitsSold: Number(l.actualDailyUnitsSold || l.actual_daily_units_sold || 0),
-              branches: [],
+              unitsSold: Number(l.unitsSold ?? l.actualDailyUnitsSold ?? l.actual_daily_units_sold ?? 0),
+              grossSalesKwd: Number(l.grossSalesFils ?? 0) / 1000,
+              quantityCapUnits: l.quantityCap ?? l.quantity_cap ?? undefined,
+              branches: Array.isArray(l.branches) ? l.branches.map(String) : [],
               startDate: String(l.startsAt || l.starts_at || l.launchDate || l.launch_date || l.createdAt || l.created_at || new Date().toISOString()),
               status: (l.status || 'SCHEDULED') as any,
               gateChecklist: {
@@ -606,6 +608,31 @@ export class Store {
         for (const item of marketLaunches) if (!privateById.has(item.id)) privateById.set(item.id, item);
         this.launches = [...privateById.values()];
       }
+
+      // Finance: batches (admin: all, creator: own) and, for admins, one aggregated row per
+      // creator that has ELIGIBLE accruals so the settlement cycle can actually be run.
+      this.settlements = Array.isArray(snap.settlements) ? snap.settlements.map((b: any): SettlementBatch => ({
+        id: String(b.id),
+        creatorId: String(b.creatorId),
+        creatorName: String(b.creatorName || 'المبدع'),
+        totalAmountKwd: Number(b.totalFils || 0) / 1000,
+        periodStart: String(b.createdAt),
+        periodEnd: String(b.updatedAt || b.createdAt),
+        status: b.status === 'PAID' ? 'PAID' : b.status === 'APPROVED' || b.status === 'PROCESSING' ? 'APPROVED' : 'CALCULATED',
+        approvedAt: String(b.createdAt),
+        createdAt: String(b.createdAt)
+      })) : [];
+      this.accruals = Array.isArray(snap.eligibleAccruals) ? snap.eligibleAccruals.map((a: any): Accrual => ({
+        id: `agg_${a.creatorId}`,
+        creatorId: String(a.creatorId),
+        collaborationId: '',
+        orderId: '',
+        grossSaleKwd: 0,
+        royaltyRatePercent: 0,
+        accruedAmountKwd: Number(a.totalFils || 0) / 1000,
+        settlementStatus: 'SETTLEMENT_ELIGIBLE',
+        createdAt: String(a.firstAt || new Date().toISOString())
+      })) : [];
 
       // 3. Hydrate creators/profiles if available
       if (Array.isArray(snap.creators)) {
@@ -1562,7 +1589,15 @@ export class Store {
   }
 
   public approveSettlementBatch(creatorId: string) {
-    if (!IS_DEMO_MODE) return this.serverMutation(() => domainClient.approveSettlement(creatorId));
+    if (!IS_DEMO_MODE) {
+      return this.serverMutation(async () => {
+        const result = await domainClient.approveSettlement(creatorId);
+        // Refresh so the new batch appears and the creator's accruals stop counting as eligible.
+        await this.hydrateFromServer();
+        this.notify();
+        return result;
+      });
+    }
     if (!hasPermission(this.activeUser, 'RUN_SETTLEMENTS')) return this.fail('لا تملك صلاحية تشغيل التسويات.');
     const eligibleAccruals = this.accruals.filter(a => a.creatorId === creatorId && a.settlementStatus === 'SETTLEMENT_ELIGIBLE');
     if (eligibleAccruals.length === 0) return;

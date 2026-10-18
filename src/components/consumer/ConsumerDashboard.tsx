@@ -70,6 +70,14 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
   const [followMessage, setFollowMessage] = useState('');
   const [voteMessage, setVoteMessage] = useState('');
   const closeOrderModal = () => setSelectedLaunch(null);
+  // Opens the order dialog for a shared launch link once the launch is known to the store.
+  const sharedLaunchId = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('drop');
+  const [sharedHandled, setSharedHandled] = useState(false);
+  useEffect(() => {
+    if (!sharedLaunchId || sharedHandled) return;
+    const match = launches.find(l => l.id === sharedLaunchId && !isUpcoming(l));
+    if (match) { setSelectedLaunch(match); setSharedHandled(true); }
+  });
 
   // Follows are stored server-side so launch alerts reach the follower's inbox.
   useEffect(() => {

@@ -418,6 +418,7 @@ export interface Launch {
   title: string;
   sellingPriceKwd: number;
   quantityCapUnits?: number;
+  grossSalesKwd?: number;
   unitsSold: number;
   branches: string[];
   startDate: string;

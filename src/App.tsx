@@ -141,6 +141,14 @@ export default function App() {
     return () => { active = false; };
   }, []);
 
+  // A shared launch link (`/?drop=<launchId>&src=HOST`) lands on the market, where the order
+  // dialog for that launch opens. It used to be `/drop/<id>`, which the SPA shell answered with
+  // the generic landing page, so every link a host copied from the war room went nowhere.
+  useEffect(() => {
+    if (authStatus === 'LOADING') return;
+    if (new URLSearchParams(window.location.search).get('drop')) { setActiveSurface('CONSUMER'); store.setSurface('CONSUMER'); }
+  }, [authStatus]);
+
   const surfaceForUser = (user: { role: string; accountType?: string }): SurfaceType => {
     if (user.role === 'SUPER_ADMIN') return 'SUPER_ADMIN';
     if (user.role === 'ADMIN') return 'ADMIN';

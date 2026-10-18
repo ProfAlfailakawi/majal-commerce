@@ -1,6 +1,7 @@
 import { authCsrfToken } from './authClient';
 import { IS_DEMO_MODE } from './runtime';
 import type { UserRole } from '../types/majal';
+import { apiFetch } from './apiFetch';
 
 export const TEAM_ROLES = ['HOST_OPERATIONS', 'HOST_CHEF', 'HOST_FINANCE', 'HOST_MARKETING', 'HOST_SUPPORT'] as const satisfies readonly UserRole[];
 export type TeamRole = (typeof TEAM_ROLES)[number];
@@ -12,7 +13,7 @@ export class TeamApiError extends Error { constructor(message: string, public re
 
 async function request<T>(path: string, init: RequestInit = {}) {
   const method = (init.method || 'GET').toUpperCase();
-  const response = await fetch(`/api/v1/team${path}`, {
+  const response = await apiFetch(`/api/v1/team${path}`, {
     ...init, credentials: 'same-origin',
     headers: { ...(init.body ? { 'Content-Type': 'application/json' } : {}), ...(method !== 'GET' ? { 'X-CSRF-Token': authCsrfToken() } : {}), ...init.headers }
   });

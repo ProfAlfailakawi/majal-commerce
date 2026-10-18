@@ -382,3 +382,53 @@ test('IDENTITY regression: new creator, host and consumer are provisioned into i
     await db.close();
   }
 });
+
+test('UX regression: lockout and suspension are explained only to a caller who proved the password', async () => {
+  const db = await openMajalDatabase({ filename: ':memory:' });
+  const app = express();
+  app.use(express.json());
+  app.use('/api/v1/auth', createAuthRouter(db, config));
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise<void>(resolve => server.once('listening', resolve));
+  const baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  const login = (email: string, password: string) => fetch(`${baseUrl}/api/v1/auth/login`, {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email, password })
+  });
+  try {
+    const good = fixturePassword('Lockout');
+    await createUser(db, { name: 'Locked User', email: 'locked@example.test', password: good, role: 'CONSUMER' });
+    await createUser(db, { name: 'Paused User', email: 'paused@example.test', password: good, role: 'CONSUMER', status: 'SUSPENDED' });
+    for (let i = 0; i < 5; i++) assert.equal((await login('locked@example.test', 'wrong-password-123')).status, 401);
+    const wrongWhileLocked = await login('locked@example.test', 'wrong-password-123');
+    assert.equal(wrongWhileLocked.status, 401, 'wrong password never reveals the lock');
+    const rightWhileLocked = await login('locked@example.test', good);
+    assert.equal(rightWhileLocked.status, 429);
+    assert.equal((await rightWhileLocked.json() as { code: string }).code, 'ACCOUNT_LOCKED');
+    const suspendedRight = await login('paused@example.test', good);
+    assert.equal(suspendedRight.status, 403);
+    assert.equal((await suspendedRight.json() as { code: string }).code, 'ACCOUNT_SUSPENDED');
+    const suspendedWrong = await login('paused@example.test', 'wrong-password-123');
+    assert.equal(suspendedWrong.status, 401);
+    assert.equal((await login('nobody@example.test', good)).status, 401);
+  } finally {
+    server.close();
+    await db.close();
+  }
+});
+
+test('INPUT regression: names are sanitised, phones validated and failures say which field is wrong', async () => {
+  const db = await openMajalDatabase({ filename: ':memory:' });
+  try {
+    const password = fixturePassword('Inputs');
+    const spoof = await createUser(db, { name: '‮evil   name​', email: 'spoof@example.test', password, phone: '٩٦٥ ٥٠٠٠-٠٠٠٠' });
+    assert.equal(spoof.name, 'evil name', 'bidi override / zero-width characters are stripped and whitespace collapsed');
+    assert.equal(spoof.phone, '96550000000', 'Arabic-Indic digits and separators are normalised');
+    await assert.rejects(createUser(db, { name: 'A', email: 'a1@example.test', password }), /الاسم/);
+    await assert.rejects(createUser(db, { name: 'اسم صالح', email: 'not-an-email', password }), /البريد/);
+    await assert.rejects(createUser(db, { name: 'اسم صالح', email: 'p1@example.test', password, phone: 'abcdefgh' }), /رقم الهاتف/);
+    const noPhone = await createUser(db, { name: 'بدون هاتف', email: 'p2@example.test', password });
+    assert.equal(noPhone.phone, '');
+  } finally {
+    await db.close();
+  }
+});
