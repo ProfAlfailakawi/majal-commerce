@@ -1,4 +1,5 @@
 import { authCsrfToken } from './authClient';
+import { apiFetch } from './apiFetch';
 
 export class DomainApiError extends Error {
   constructor(message: string, public readonly code?: string, public readonly status?: number) { super(message); }
@@ -11,7 +12,7 @@ export function idempotencyKey(scope: string) {
 
 export async function request<T>(url: string, init: RequestInit = {}, idempotencyScope?: string, explicitKey?: string): Promise<T> {
   const method = (init.method || 'GET').toUpperCase();
-  const response = await fetch(url, {
+  const response = await apiFetch(url, {
     ...init,
     credentials: 'same-origin',
     headers: {
@@ -28,7 +29,7 @@ export async function request<T>(url: string, init: RequestInit = {}, idempotenc
 }
 
 export const domainClient = {
-  snapshot: () => request<{ products: any[]; collaborations: any[]; creators?: any[]; organizations?: any[]; marketLaunches?: any[] }>('/api/v1/domain/snapshot'),
+  snapshot: () => request<{ products: any[]; collaborations: any[]; creators?: any[]; organizations?: any[]; marketLaunches?: any[]; settlements?: any[]; eligibleAccruals?: any[] }>('/api/v1/domain/snapshot'),
   profiles: () => request<any[]>('/api/v1/domain/profiles'),
   listOrganizations: () => request<any[]>('/api/v1/domain/organizations'),
   createProduct: (body: unknown) => request<{id:string;recipeVersionId:string;status:string;recipeSha256:string}>('/api/v1/domain/products', { method: 'POST', body: JSON.stringify(body) }, 'product'),
@@ -56,6 +57,6 @@ export const moderationClient = {
   setUserStatus: (userId: string, status: string, reason: string) => request<{ user: { id: string; role: string; status: string }; changed: boolean }>(`/api/v1/moderation/users/${encodeURIComponent(userId)}/status`, { method: 'POST', body: JSON.stringify({ status, reason }) }),
   pauseProduct: (productId: string, reason: string) => request<{ product: { id: string; status: string }; pausedLaunches: number }>(`/api/v1/moderation/products/${encodeURIComponent(productId)}/pause`, { method: 'POST', body: JSON.stringify({ reason }) }),
   resumeProduct: (productId: string, reason: string) => request<{ product: { id: string; status: string }; note: string }>(`/api/v1/moderation/products/${encodeURIComponent(productId)}/resume`, { method: 'POST', body: JSON.stringify({ reason }) }),
-  listUsers: (after?: string) => request<{ users: Array<{ id: string; name: string; email: string; role: string; status: string }>; nextAfter: string | null }>(`/api/v1/moderation/users${after ? `?after=${encodeURIComponent(after)}` : ''}`),
+  listUsers: (after?: string, q?: string) => request<{ users: Array<{ id: string; name: string; email: string; role: string; status: string }>; nextAfter: string | null }>(`/api/v1/moderation/users${after || q ? `?${[after ? `after=${encodeURIComponent(after)}` : '', q ? `q=${encodeURIComponent(q)}` : ''].filter(Boolean).join('&')}` : ''}`),
   actions: (targetType?: 'USER' | 'PRODUCT') => request<{ actions: any[] }>(`/api/v1/moderation/actions${targetType ? `?targetType=${targetType}` : ''}`),
 };

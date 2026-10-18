@@ -194,13 +194,13 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
           </div>
 
           <div className="grid sm:grid-cols-[140px_1fr_auto] gap-2">
-            <select value={category} onChange={e => setCategory(e.target.value as DealDecision['category'])} className="glass-input px-3 py-2 rounded-xl text-xs outline-none">
+            <select aria-label="نوع السجل" value={category} onChange={e => setCategory(e.target.value as DealDecision['category'])} className="glass-input px-3 py-2 rounded-xl text-xs outline-none">
               <option value="DECISION">قرار</option>
               <option value="NOTE">ملاحظة</option>
               <option value="RISK">مخاطرة</option>
               <option value="MILESTONE">محطة</option>
             </select>
-            <input value={message} onChange={e => setMessage(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && message.trim().length >= 3) addDecision(); }} placeholder="سجّل قرارًا أو ملاحظة مرتبطة بالصفقة..." className="glass-input px-4 py-2.5 rounded-xl text-xs outline-none text-slate-100" />
+            <input value={message} onChange={e => setMessage(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && message.trim().length >= 3) addDecision(); }} placeholder="سجّل قرارًا أو ملاحظة مرتبطة بالصفقة..." aria-label="قرار أو ملاحظة الصفقة" className="glass-input px-4 py-2.5 rounded-xl text-xs outline-none text-slate-100" />
             <button onClick={addDecision} disabled={message.trim().length < 3} className="px-4 py-2.5 rounded-xl bg-gold-500 disabled:bg-white/5 disabled:text-slate-600 text-slate-950 font-black text-xs">حفظ</button>
           </div>
         </div>

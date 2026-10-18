@@ -181,8 +181,8 @@ export const CreatorPortal: React.FC = () => {
                   {col.currentOffer.status === 'PENDING' && (
                     <div className="grid lg:grid-cols-[1fr_auto] gap-3">
                       <div className="grid sm:grid-cols-[150px_1fr] gap-3">
-                        <input type="number" value={counterRate} onChange={e => setCounterRate(Number(e.target.value))} className="glass-input rounded-xl px-4 py-3 text-xs outline-none" />
-                        <input value={counterNotes} onChange={e => setCounterNotes(e.target.value)} placeholder="سبب التعديل أو الملاحظة التجارية..." className="glass-input rounded-xl px-4 py-3 text-xs outline-none" />
+                        <input type="number" aria-label="نسبة الحقوق المقترحة (%)" value={counterRate} onChange={e => setCounterRate(Number(e.target.value))} className="glass-input rounded-xl px-4 py-3 text-xs outline-none" />
+                        <input aria-label="سبب التعديل أو الملاحظة التجارية" value={counterNotes} onChange={e => setCounterNotes(e.target.value)} placeholder="سبب التعديل أو الملاحظة التجارية..." className="glass-input rounded-xl px-4 py-3 text-xs outline-none" />
                       </div>
                       <div className="flex gap-2">
                         <button onClick={async () => { await Promise.resolve(store.acceptOffer(col.id, col.currentOffer!.id)); }} className="px-4 py-2.5 rounded-xl bg-emerald-500 text-slate-950 text-xs font-black">قبول العرض</button>

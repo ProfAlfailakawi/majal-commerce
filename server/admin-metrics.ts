@@ -33,6 +33,7 @@ export async function adminMetrics(db: MajalDatabase) {
   const hosts = await db.prepare(
     "SELECT COUNT(*) AS total, COALESCE(SUM(CASE WHEN verification_status = 'VERIFIED' THEN 1 ELSE 0 END), 0) AS verified FROM organizations WHERE organization_type = 'HOST'"
   ).get<{ total: number | string; verified: number | string }>();
+  const users = await db.prepare('SELECT COUNT(*) AS c FROM users').get<{ c: number | string }>();
   const launches = await db.prepare("SELECT COUNT(*) AS c FROM launches WHERE status IN ('LIVE','PERMANENT')").get<{ c: number | string }>();
   const eligible = await db.prepare("SELECT COUNT(DISTINCT creator_id) AS c FROM accruals WHERE status = 'ELIGIBLE'").get<{ c: number | string }>();
   const batches = await db.prepare('SELECT status, COUNT(*) AS c, COALESCE(SUM(total_fils), 0) AS total FROM settlement_batches GROUP BY status')
@@ -45,6 +46,7 @@ export async function adminMetrics(db: MajalDatabase) {
     contracts: { fullySigned: n(contracts?.c) },
     disputes: { open: n(disputes?.c) },
     hosts: { total: n(hosts?.total), verified: n(hosts?.verified) },
+    users: { total: n(users?.c) },
     launches: { live: n(launches?.c) },
     settlements: {
       eligibleCreators: n(eligible?.c),

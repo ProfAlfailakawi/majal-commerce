@@ -62,12 +62,30 @@ export const HostPortal: React.FC = () => {
   const canSeeTwin = ['HOST_OWNER', 'HOST_OPERATIONS', 'HOST_CHEF'].includes(store.activeUser.role);
   const canSeeWarRoom = ['HOST_OWNER', 'HOST_OPERATIONS', 'HOST_CHEF', 'HOST_MARKETING', 'HOST_SUPPORT'].includes(store.activeUser.role);
 
-  const finance = useMemo(() => ({
-    gmv: hostOrders.reduce((s, o) => s + o.grossAmountKwd, 0),
-    hostNet: hostOrders.reduce((s, o) => s + o.hostNetKwd, 0),
-    creatorRoyalties: hostOrders.reduce((s, o) => s + o.creatorRoyaltyKwd, 0),
-    platformFees: hostOrders.reduce((s, o) => s + o.platformFeeKwd, 0)
-  }), [hostOrders]);
+  const finance = useMemo(() => {
+    if (IS_DEMO_MODE) {
+      return {
+        gmv: hostOrders.reduce((s, o) => s + o.grossAmountKwd, 0),
+        hostNet: hostOrders.reduce((s, o) => s + o.hostNetKwd, 0),
+        creatorRoyalties: hostOrders.reduce((s, o) => s + o.creatorRoyaltyKwd, 0),
+        platformFees: hostOrders.reduce((s, o) => s + o.platformFeeKwd, 0)
+      };
+    }
+    // Real mode: the browser holds no order ledger, so the figures come from the server's
+    // per-launch paid sales and the accepted offer's rates (same basis the accruals use:
+    // unit price × units, delivery fees excluded). This screen used to show 0.000 for hosts
+    // with real sales.
+    let gmv = 0, creatorRoyalties = 0, platformFees = 0;
+    for (const collaboration of myCollaborations) {
+      const sales = collaboration.activeLaunch?.grossSalesKwd ?? 0;
+      if (!sales) continue;
+      const accepted = [...collaboration.offerHistory].reverse().find(offer => offer.status === 'ACCEPTED') ?? collaboration.currentOffer;
+      gmv += sales;
+      creatorRoyalties += sales * ((accepted?.creatorRoyaltyRatePercent ?? 0) / 100);
+      platformFees += sales * ((accepted?.platformFeePercent ?? 0) / 100);
+    }
+    return { gmv, creatorRoyalties, platformFees, hostNet: Math.max(0, gmv - creatorRoyalties - platformFees) };
+  }, [hostOrders, myCollaborations]);
 
   useEffect(() => {
     const forbidden =

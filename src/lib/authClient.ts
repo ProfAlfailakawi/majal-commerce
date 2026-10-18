@@ -26,7 +26,9 @@ function cookieValue(name: string) {
 }
 
 async function request<T>(url: string, init: RequestInit = {}) {
-  const response = await fetch(url, {
+  let response: Response;
+  try {
+    response = await fetch(url, {
     ...init,
     credentials: 'same-origin',
     headers: {
@@ -37,9 +39,19 @@ async function request<T>(url: string, init: RequestInit = {}) {
       ...init.headers
     }
   });
+  } catch {
+    // The browser's own text ("Failed to fetch") is English and means nothing to the user.
+    throw new AuthApiError('تعذّر الاتصال بالخادم. تحقق من اتصالك بالإنترنت ثم حاول مجددًا.', 'NETWORK_ERROR');
+  }
   if (response.status === 204) return undefined as T;
   const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new AuthApiError(payload.error || 'تعذّر إكمال الطلب.', payload.code, response.status);
+  if (!response.ok) {
+    // Gateways/proxies answer overload and outages with HTML or empty bodies, not our JSON.
+    const fallback = response.status === 429 ? 'محاولات كثيرة خلال وقت قصير. انتظر قليلًا ثم حاول مجددًا.'
+      : response.status >= 500 ? 'الخدمة غير متاحة مؤقتًا. حاول مرة أخرى بعد قليل.'
+      : 'تعذّر إكمال الطلب.';
+    throw new AuthApiError(payload.error || fallback, payload.code, response.status);
+  }
   return payload as T;
 }
 

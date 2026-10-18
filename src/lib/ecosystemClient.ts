@@ -2,6 +2,7 @@ import { authCsrfToken } from './authClient';
 import { KuwaitiJobApplication, KuwaitiJobPost, SupplierOffering, SupplierProfile } from '../types/majal';
 import { IS_DEMO_MODE } from './runtime';
 import { demoEcosystem, type DemoIdentity } from '../data/demoEcosystem';
+import { apiFetch } from './apiFetch';
 
 /* Demo tabs have no session cookie, so every call below would 401. Inside an
  * explicitly-entered demo the same functions answer from the local demo
@@ -23,7 +24,7 @@ type ReviewQueue = { suppliers: SupplierProfile[]; jobs: KuwaitiJobPost[] };
 
 async function request<T>(path: string, init: RequestInit = {}) {
   const method = (init.method || 'GET').toUpperCase();
-  const response = await fetch(`/api/v1/ecosystem${path}`, {
+  const response = await apiFetch(`/api/v1/ecosystem${path}`, {
     ...init,
     credentials: 'same-origin',
     headers: {

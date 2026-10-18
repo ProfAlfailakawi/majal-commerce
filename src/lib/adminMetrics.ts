@@ -12,6 +12,7 @@ export interface AdminMetrics {
   contracts: { fullySigned: number };
   disputes: { open: number };
   hosts: { total: number; verified: number };
+  users?: { total: number };
   launches: { live: number };
   settlements: { eligibleCreators: number; batchesTotal: number; paidFils: number; approvedFils: number };
 }

@@ -37,7 +37,7 @@ const LaunchWarRoomBody: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => 
   const host = store.hosts.find(h => h.id === hostBusinessId);
 
   const metrics = useMemo(() => {
-    const gmv = canSeeFinance ? orders.reduce((s, o) => s + o.grossAmountKwd, 0) : 0;
+    const gmv = canSeeFinance ? (launch?.grossSalesKwd ?? 0) + (launch?.grossSalesKwd ? 0 : orders.reduce((s, o) => s + o.grossAmountKwd, 0)) : 0;
     const units = launch?.unitsSold || orders.reduce((s, o) => s + o.unitsCount, 0);
     const cap = launch?.quantityCapUnits || Math.max(units, 1);
     const sellThrough = Math.min(100, Math.round(units / cap * 100));
@@ -121,7 +121,7 @@ const LaunchWarRoomBody: React.FC<LaunchWarRoomProps> = ({ hostBusinessId }) => 
       <div className="rounded-2xl p-4 bg-gradient-to-l from-gold-500/8 via-white/[0.03] to-fuchsia-500/8 border border-white/10 space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div><div className="font-black">إسناد النمو</div><div className="text-xs text-slate-400 mt-1">النسب تظهر فقط من الطلبات التي تحمل مصدر اكتساب فعلي؛ لا توجد نسب مختلقة.</div></div>
-          <button onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/drop/${launch.id}`)} className="px-3 py-2 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center gap-2"><Link2 className="w-4 h-4" /> نسخ رابط الإطلاق</button>
+          <button onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/?drop=${encodeURIComponent(launch.id)}&src=HOST`)} className="px-3 py-2 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center gap-2"><Link2 className="w-4 h-4" /> نسخ رابط الإطلاق</button>
         </div>
         {trackedSourceUnits > 0 && (
           <ShareDonut

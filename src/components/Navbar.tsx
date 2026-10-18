@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Sparkles,
   Building2,
@@ -158,6 +158,13 @@ export const Navbar: React.FC<NavbarProps> = ({
       });
   };
 
+  // On phones the section strip scrolls sideways; keep the current section in view.
+  const mobileNavRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const active = mobileNavRef.current?.querySelector<HTMLElement>('[aria-current="page"]');
+    active?.scrollIntoView({ inline: 'center', block: 'nearest' });
+  }, [activeSurface]);
+
   useEffect(() => {
     refreshServerNotifications();
   }, [authStatus, activeUser.id]);
@@ -199,7 +206,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="text-xl sm:text-2xl font-black majal-wordmark block truncate leading-tight">
                   مجال
                 </span>
-                <span className="majal-brand-tagline text-xs text-slate-400 font-medium whitespace-nowrap">
+                <span className="majal-brand-tagline max-sm:hidden text-xs text-slate-400 font-medium whitespace-nowrap">
                   منصة الحاضن التجاري المرخّص
                 </span>
               </div>
@@ -283,7 +290,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {!IS_DEMO_MODE && authStatus === 'AUTHENTICATED' && <div className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-xl bg-white/5 border border-white/10">
               {/* Name/role are hidden on phones, but security + logout stay reachable. */}
-              <span className="hidden sm:grid w-7 h-7 rounded-full bg-gold-500/20 text-gold-300 place-items-center font-black text-xs" aria-hidden="true">{activeUser.name.slice(0, 1)}</span>
+              <span className="grid w-7 h-7 rounded-full bg-gold-500/20 text-gold-300 place-items-center font-black text-xs" aria-hidden="true">{activeUser.name.slice(0, 1)}</span>
               <div className="hidden sm:flex flex-col text-start">
                 <span className="max-w-28 truncate text-xs font-bold text-slate-100" title={activeUser.name}>{activeUser.name}</span>
                 <span className="text-xs text-gold-300 font-semibold">{activeUser.accountType === 'SUPPLIER' ? 'مورد' : roleLabels[activeUser.role]}</span>
@@ -423,14 +430,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        <div className="xl:hidden flex flex-wrap items-center gap-2 py-2 sm:py-3 border-t border-white/10 text-xs">
+        <div ref={mobileNavRef} className="xl:hidden flex flex-nowrap sm:flex-wrap items-center gap-2 py-2 sm:py-3 border-t border-white/10 text-xs overflow-x-auto sm:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="أقسام المنصة">
           {surfaces.map(s => {
             const isActive = activeSurface === s.id;
             return (
               <button
                 key={s.id}
                 onClick={() => onSurfaceChange(s.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 min-h-11 rounded-xl whitespace-nowrap text-sm sm:text-xs font-medium ${
+                aria-current={isActive ? 'page' : undefined}
+                className={`flex items-center gap-1.5 px-3 py-2 min-h-11 rounded-xl whitespace-nowrap shrink-0 text-sm sm:text-xs font-medium ${
                   isActive ? 'bg-gold-500 text-slate-950 font-black' : 'bg-white/5 text-slate-300'
                 }`}
               >

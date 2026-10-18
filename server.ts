@@ -2,6 +2,7 @@ import { directHostGuard } from './server/direct-host-guard';
 import express, { NextFunction, Request, Response } from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import dotenv from 'dotenv';
 import { rateLimit as expressRateLimit } from 'express-rate-limit';
 import { generateProductCopyPolish, explainHostMatch } from './server/gemini';
@@ -107,7 +108,23 @@ async function initializeApplication(app: express.Express) {
   // Only the document extraction endpoint receives a larger JSON envelope.
   app.use('/api/v1/domain/innovations/zero-form/extract', express.json({ limit: '2200kb', strict: true }));
   app.use(express.json({ limit: '64kb', strict: true }));
-  app.use('/api', expressRateLimit(limitOptions(240, 15 * 60_000, 'api')));
+  // Per-IP budgets are wrong for a consumer product: Kuwaiti mobile carriers, offices and
+  // households put many people behind one address, and a signed-in page makes ~20 calls on load
+  // plus minute-by-minute refreshes. A flat 240 calls / 15 min / IP turned three simultaneous
+  // users into a site-wide 429. Signed-in traffic is therefore budgeted per session cookie (the
+  // IP is still part of the key), and only cookie-less traffic shares the per-IP budget. The
+  // app-wide ceiling above still bounds a single address, and credential/registration/payment
+  // routes keep their own strict per-IP limiters.
+  const sessionKeyOf = (req: Request) => {
+    const match = /(?:^|;\s*)(?:__session|majal_session)=([^;]+)/.exec(req.headers.cookie || '');
+    return match ? createHash('sha256').update(match[1]).digest('hex').slice(0, 16) : '';
+  };
+  app.use('/api', expressRateLimit({
+    ...limitOptions(900, 15 * 60_000, 'api-session'),
+    skip: req => !sessionKeyOf(req),
+    keyGenerator: req => `${req.ip}:${sessionKeyOf(req)}`
+  }));
+  app.use('/api', expressRateLimit({ ...limitOptions(600, 15 * 60_000, 'api'), skip: req => Boolean(sessionKeyOf(req)) }));
 
   /*
    * نقطة خفيفة تعرض بصمة البناء الحالية على الخادم: هي الحقيقة الوحيدة التي يقارنها
@@ -148,7 +165,18 @@ async function initializeApplication(app: express.Express) {
     });
   });
 
-  app.use('/api/v1/auth', expressRateLimit(limitOptions(30, 15 * 60_000, 'auth')), createAuthRouter(db, authConfig));
+  // The auth surface is split into three budgets (all per client IP):
+  //  - credential attempts (login / reset / MFA): only FAILED attempts count. Counting
+  //    successful logins locked whole offices and mobile-carrier NATs out of the site during
+  //    a busy hour, while adding no protection (per-account lockout already stops guessing).
+  //  - registration: every attempt counts, to keep sign-up spam bounded.
+  //  - session probe (/me) and /logout: every page load of a signed-in user calls /me, so they
+  //    get a much larger ceiling and never consume the credential budget.
+  const isSessionProbe = (req: Request) => (req.method === 'GET' && req.path === '/me') || (req.method === 'POST' && req.path === '/logout');
+  const isRegister = (req: Request) => req.method === 'POST' && req.path === '/register';
+  app.use('/api/v1/auth', expressRateLimit({ ...limitOptions(60, 15 * 60_000, 'auth'), skip: req => isSessionProbe(req) || isRegister(req), skipSuccessfulRequests: true }));
+  app.use('/api/v1/auth', expressRateLimit({ ...limitOptions(60, 15 * 60_000, 'auth-register'), skip: req => !isRegister(req) }));
+  app.use('/api/v1/auth', expressRateLimit({ ...limitOptions(1500, 15 * 60_000, 'auth-session'), skip: req => !isSessionProbe(req) }), createAuthRouter(db, authConfig));
   app.use('/api/v1/catalog', createCatalogRouter(db, authConfig));
   app.use('/api/v1/notifications', createNotificationRouter(db, authConfig));
   app.use('/api/v1/payments', createPaymentRouter(db, authConfig, paymentRegistry));

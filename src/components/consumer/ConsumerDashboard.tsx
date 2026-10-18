@@ -70,10 +70,19 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
   const [followMessage, setFollowMessage] = useState('');
   const [voteMessage, setVoteMessage] = useState('');
   const closeOrderModal = () => setSelectedLaunch(null);
+  // Opens the order dialog for a shared launch link once the launch is known to the store.
+  const sharedLaunchId = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('drop');
+  const [sharedHandled, setSharedHandled] = useState(false);
+  useEffect(() => {
+    if (!sharedLaunchId || sharedHandled) return;
+    const match = launches.find(l => l.id === sharedLaunchId && !isUpcoming(l));
+    if (match) { setSelectedLaunch(match); setSharedHandled(true); }
+  });
 
   // Follows are stored server-side so launch alerts reach the follower's inbox.
   useEffect(() => {
-    if (IS_DEMO_MODE) return;
+    // A visitor with no session has no follows; asking only logged a 401 on every market visit.
+    if (IS_DEMO_MODE || store.activeUser.id === 'anonymous') return;
     commerceClient.follows().then(r => setFollowedCreators(r.follows.map(f => f.creatorId))).catch(() => undefined);
   }, []);
   const toggleFollow = async (creatorId: string) => {

@@ -1,5 +1,6 @@
 import { SurfaceType } from '../types/majal';
 import { authCsrfToken } from './authClient';
+import { apiFetch } from './apiFetch';
 
 export interface NotificationItem {
   id: string;
@@ -21,7 +22,7 @@ export interface NotificationPage {
 }
 
 async function request<T>(url: string, init: RequestInit = {}) {
-  const response = await fetch(url, {
+  const response = await apiFetch(url, {
     ...init,
     credentials: 'same-origin',
     headers: {

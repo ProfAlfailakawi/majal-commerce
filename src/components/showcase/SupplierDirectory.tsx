@@ -24,7 +24,7 @@ const SupplierCard: React.FC<{ s: DirectorySupplier }> = ({ s }) => (
     <div className="p-5 flex flex-col gap-3 flex-1">
       <div><h3 className="font-black leading-snug">{s.name}</h3><div className="mt-1 text-xs text-slate-400 inline-flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-gold-300" aria-hidden="true" />{s.region}</div></div>
       <p className="text-xs text-slate-300 leading-6 line-clamp-3">{s.description}</p>
-      {s.products.length > 0 && <ul className="flex flex-wrap gap-1.5">{s.products.slice(0, 4).map(p => <li key={p} className="text-xs px-2 py-1 rounded-lg bg-white/5 border border-white/10">{p}</li>)}</ul>}
+      {s.products.length > 0 && <ul className="flex flex-wrap gap-1.5">{s.products.slice(0, 4).map((p, i) => <li key={`${p}-${i}`} className="text-xs px-2 py-1 rounded-lg bg-white/5 border border-white/10">{p}</li>)}</ul>}
       <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-slate-300">
         {s.minOrder && <span className="inline-flex items-center gap-1.5"><Package className="w-3.5 h-3.5 text-gold-300" aria-hidden="true" />أقل طلب: {s.minOrder}</span>}
         <span className="inline-flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 text-gold-300" aria-hidden="true" />{s.delivers ? 'يوصّل' : 'استلام'}</span>
@@ -109,6 +109,8 @@ export const SupplierDirectory: React.FC<{ onSurfaceChange: (surface: SurfaceTyp
     });
     return () => { live = false; };
   }, []);
+  const [visibleCount, setVisibleCount] = useState(24);
+  useEffect(() => setVisibleCount(24), [query, category]);
   const present = useMemo(() => SUPPLIER_CATEGORY_KEYS.filter(k => items.some(i => i.category === k)), [items]);
   const shown = useMemo(() => {
     const q = norm(query.trim());
@@ -149,9 +151,12 @@ export const SupplierDirectory: React.FC<{ onSurfaceChange: (surface: SurfaceTyp
           </div>
         )}
         {loading ? <div role="status" className="text-xs text-slate-300 py-6 inline-flex items-center gap-2"><Clock3 className="w-4 h-4" aria-hidden="true" />جارٍ تحميل الدليل…</div> : shown.length ? (
-          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">{shown.map(s => <SupplierCard key={s.id} s={s} />)}</div>
+          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">{shown.slice(0, visibleCount).map(s => <SupplierCard key={s.id} s={s} />)}</div>
         ) : (
           <div className="rounded-3xl border border-dashed border-white/15 p-10 text-center space-y-3"><Search className="w-8 h-8 mx-auto text-gold-300" aria-hidden="true" /><p className="text-sm text-slate-300">{items.length ? 'لا نتائج مطابقة. جرّب كلمة أخرى.' : 'الدليل فارغ بعد. كن أول من يسجّل.'}</p><button type="button" onClick={() => setForm(true)} className="px-5 py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black">سجّل مورّدًا</button></div>
+        )}
+        {!loading && shown.length > visibleCount && (
+          <button type="button" onClick={() => setVisibleCount(v => v + 24)} className="mx-auto flex min-h-11 items-center rounded-xl border border-white/10 bg-white/5 px-5 text-xs font-bold text-gold-300 hover:bg-white/10">عرض المزيد ({shown.length - visibleCount})</button>
         )}
       </section>
 

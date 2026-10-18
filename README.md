@@ -77,6 +77,8 @@ npm run dev
 npm run auth:bootstrap
 ```
 
+بيانات اختبار واقعية (بدون وضع العرض): `npm run seed:dev` يملأ قاعدة التطوير المحلية (`MAJAL_DATABASE_PATH` أو `var/majal.sqlite`) بنحو 1,200 مستخدم موزّعين على كل الأدوار مع طلبات ومدفوعات ومستحقات وتقييمات وإشعارات ووظائف وموردين وإعلانات. السكربت حتمي ومتكرر التشغيل بلا تكرار سجلات، ويرفض العمل مع `NODE_ENV=production` أو `DATABASE_URL`. الحسابات: `superadmin0001@seed.majal.test` و`admin0001@…` و`client0001@…` و`creator0001@…` و`supplier0001@…` و`owner0001@…` و`staff0001@…`، وكلمة المرور الافتراضية للتطوير فقط `MajalSeed#2026-Test` (تُغيَّر بـ`SEED_PASSWORD`).
+
 للبناء:
 
 ```bash

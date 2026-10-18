@@ -1,3 +1,4 @@
+import { toLatinDigits } from './latin-digits';
 import {
   createCipheriv,
   createDecipheriv,
@@ -346,11 +347,26 @@ export interface CreateUserInput {
 }
 
 export async function createUser(db: MajalDatabase, input: CreateUserInput) {
-  const name = cleanText(input.name, 2, 120);
+  // Display names end up in admin lists, notifications and audit rows: strip control and
+  // bidirectional-override characters (U+202E and friends can make "evil" read as another name)
+  // and collapse whitespace before validating the length.
+  const name = cleanText(
+    typeof input.name === 'string' ? input.name.replace(/[\u0000-\u001F\u007F\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, '').replace(/\s+/g, ' ') : input.name,
+    2, 120
+  );
   const email = normalizeEmail(input.email);
-  const phone = input.phone ? cleanText(input.phone, 7, 24) : '';
+  // Phone is optional but, when given, must look like a phone number (Arabic-Indic digits and
+  // separators accepted, stored as plain Latin digits): "abcdefgh" used to pass.
+  let phone: string | undefined = '';
+  if (input.phone) {
+    const compact = typeof input.phone === 'string' ? toLatinDigits(input.phone).replace(/[\s\-().]/g, '') : '';
+    phone = /^\+?\d{7,15}$/.test(compact) ? compact : undefined;
+  }
   const passwordError = validatePassword(input.password);
-  if (!name || !email || phone === undefined || passwordError) throw new Error(passwordError || 'بيانات الحساب غير صالحة.');
+  if (passwordError) throw new Error(passwordError);
+  if (!name) throw new Error('الاسم يجب أن يتراوح بين حرفين و120 حرفًا.');
+  if (!email) throw new Error('البريد الإلكتروني غير صالح.');
+  if (phone === undefined) throw new Error('رقم الهاتف غير صالح. اكتب أرقامًا فقط، مثال: +96550000000.');
 
   const { hash, salt } = await hashPassword(input.password);
   const id = `usr_${randomUUID()}`;
@@ -963,6 +979,17 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
         });
       } else if (email) {
         await logAuthEvent(db, config, { email, eventType: 'LOGIN_FAILED', requestId, ip: req.ip });
+      }
+      // Only a caller who just proved the password may learn WHY the door is shut, so this
+      // cannot be used to enumerate accounts. Previously a legitimate user who tripped the
+      // lockout (or whose account was suspended) saw "wrong credentials" forever and kept
+      // retrying the right password, which only prolonged the situation.
+      if (user && passwordValid && locked) {
+        const minutes = Math.max(1, Math.ceil((new Date(user.locked_until as string).getTime() - Date.now()) / 60_000));
+        return jsonError(res, 429, `الحساب مقفل مؤقتًا بسبب محاولات دخول خاطئة متكررة. حاول مجددًا بعد ${minutes} دقيقة أو استخدم «نسيت كلمة المرور».`, 'ACCOUNT_LOCKED');
+      }
+      if (user && passwordValid && user.status !== 'ACTIVE') {
+        return jsonError(res, 401, 'هذا الحساب موقوف. تواصل مع دعم مجال لمعرفة السبب وإعادة التفعيل.', 'ACCOUNT_SUSPENDED');
       }
       return jsonError(res, 401, 'بيانات الدخول غير صحيحة أو الحساب غير متاح.', 'INVALID_CREDENTIALS');
     }

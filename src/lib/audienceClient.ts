@@ -2,6 +2,7 @@ import { authCsrfToken } from './authClient';
 import { IS_DEMO_MODE } from './runtime';
 import type { AdAudience } from './adAudience';
 import type { SurfaceType } from '../types/majal';
+import { apiFetch } from './apiFetch';
 
 export interface DailyPoint { day: string; browsers: number; views: number }
 export interface Traffic {
@@ -31,7 +32,7 @@ export interface PartnerKit { traffic: Traffic; facts: PlatformFacts; slots: Slo
 
 async function request<T>(path: string, init: RequestInit = {}) {
   const method = (init.method || 'GET').toUpperCase();
-  const response = await fetch(`/api/v1/audience${path}`, {
+  const response = await apiFetch(`/api/v1/audience${path}`, {
     ...init, credentials: 'same-origin',
     headers: { ...(init.body ? { 'Content-Type': 'application/json' } : {}), ...(method !== 'GET' ? { 'X-CSRF-Token': authCsrfToken() } : {}), ...init.headers }
   });
