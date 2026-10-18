@@ -20,7 +20,7 @@ export const CreatorEarnings: React.FC = () => {
     let active = true;
     commerceClient.statement().then(statement => {
       if (!active) return;
-      setServerAccruals(statement.lines.map(line => ({
+      setServerAccruals(statement.lines.filter(line => line.stage !== 'REVERSED').map(line => ({
         id: line.accrualId,
         creatorId: currentCreatorId,
         collaborationId: '',

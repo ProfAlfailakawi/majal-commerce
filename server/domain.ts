@@ -671,8 +671,8 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
       if (req.auth!.user.role !== 'CREATOR' || !req.auth!.user.creatorId) {
         return jsonError(res, 403, 'تسجيل المنتجات متاح لحساب المبدع المرتبط بملفه فقط.', 'CREATOR_REQUIRED');
       }
-      const ownedProfile = await db.prepare('SELECT id FROM creator_profiles WHERE id=? AND user_id=? LIMIT 1')
-        .get<{id:string}>(req.auth!.user.creatorId, req.auth!.user.id);
+      const ownedProfile = await db.prepare('SELECT id, matching_enabled FROM creator_profiles WHERE id=? AND user_id=? LIMIT 1')
+        .get<{id:string;matching_enabled:number|string}>(req.auth!.user.creatorId, req.auth!.user.id);
       if (!ownedProfile) return jsonError(res, 409, 'ارتباط حساب المبدع غير صالح. أعد تسجيل الدخول.', 'CREATOR_IDENTITY_MISMATCH');
 
       const publicName=toLatinDigitsOpt(text(req.body?.publicName,2,140)), category=text(req.body?.category,2,80), description=toLatinDigitsOpt(text(req.body?.shortDescription,5,1500));
@@ -693,6 +693,12 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
       const dietaryTags=stringArray(req.body?.dietaryTags, 40, 120);
       const expectedEquipment=stringArray(req.body?.expectedEquipment, 80, 160);
 
+      // Nothing else in the platform ever moves a product out of DRAFT, so a product created as
+      // DRAFT could never reach a host: the creator → host pipeline stopped at its first step.
+      // A creator who is available for matching (the default at registration) lists the product
+      // for host discovery straight away; the recipe stays sealed behind the access levels and
+      // admins can still pause any product. Otherwise it remains a private draft.
+      const initialStatus = Number(ownedProfile.matching_enabled) === 1 ? 'AVAILABLE_FOR_MATCHING' : 'DRAFT';
       const result = await withIdempotency(db, req, 'PRODUCT_CREATE', async () => {
         const productId=`prd_${randomUUID()}`, recipeId=`rcp_${randomUUID()}`, created=now();
         const receipt=await putEncryptedJson('recipes',recipeId,recipe);
@@ -704,8 +710,8 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
             dietary_tags_json, serving_size, shelf_life, prep_time_minutes,
             expected_equipment_json, accepts_exclusivity, desired_partnership_type,
             created_at, updated_at
-          ) VALUES(?,?,?,?,?,'DRAFT',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
-            .run(productId,req.auth!.user.creatorId,publicName,category,description,cost,price,isSecretRecipe?1:0,
+          ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+            .run(productId,req.auth!.user.creatorId,publicName,category,description,initialStatus,cost,price,isSecretRecipe?1:0,
               internalName,story,JSON.stringify(mediaUrls),JSON.stringify(generalIngredients),JSON.stringify(allergens),
               JSON.stringify(dietaryTags),servingSize,shelfLife,prepMinutes,JSON.stringify(expectedEquipment),acceptsExclusivity?1:0,
               desiredPartnershipType,created,created);
@@ -713,7 +719,7 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
             .run(recipeId,productId,JSON.stringify({objectKey:receipt.objectKey,storage:receipt.storageProvider,ciphertextSha256:receipt.ciphertextSha256}),receipt.plaintextSha256,req.auth!.user.id,created);
           await audit(tx,req,'PRODUCT_CREATED','PRODUCT',productId,undefined,{publicName,category,recipeSha256:receipt.plaintextSha256});
         });
-        return { id:productId, recipeVersionId:recipeId, status:'DRAFT', recipeSha256:receipt.plaintextSha256 };
+        return { id:productId, recipeVersionId:recipeId, status:initialStatus, recipeSha256:receipt.plaintextSha256 };
       });
       res.status(201).json(result);
     } catch(e) { handleDomainError(res,e); }
