@@ -43,7 +43,8 @@ test('a PAID webhook promotes the order and accrues 15% royalty exactly once', a
     // 30000 fils * 1500bp / 10000 = 4500 fils.
     assert.equal(accrual?.amount_fils, 4500);
     assert.equal(accrual?.creator_id, 'cr_o');
-    assert.equal(accrual?.status, 'ELIGIBLE');
+    // Paid is not delivered: the royalty waits as PENDING until the establishment fulfils the order.
+    assert.equal(accrual?.status, 'PENDING');
 
     // Retried PAID webhook is a no-op: still exactly one accrual.
     await applyVerifiedPaymentEvent(db, paid, Buffer.from('{"e":"paid"}'));

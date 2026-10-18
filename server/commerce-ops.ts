@@ -1,8 +1,10 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { Response, Router } from 'express';
 import { AuthConfig, AuthRole, AuthenticatedRequest, requireAuth, requireCsrf, requireRoles } from './auth';
 import { MajalDatabase } from './database';
 import { createOrCoalesceNotification } from './notifications';
+import { appendLedgerEntry } from './ledger';
+import { notify, creatorUserId } from './notify';
 import {
   PAYMENT_HOLD_MINUTES, filsToKwd, normalizeKuwaitPhone, organizationBranches, parseSlots, parseZones, safeParse
 } from './checkout';
@@ -105,6 +107,8 @@ export interface StatementLine {
   accrualId: string; orderId: string; productName: string; units: number; orderedAt: string;
   grossFils: number; commissionFils: number; hostShareFils: number; creatorPayoutFils: number;
   stage: 'PENDING' | 'APPROVED' | 'PAID' | 'REVERSED';
+  /** true once the order is delivered: only then does the royalty count for the settlement cycle. */
+  released: boolean;
   timeline: { pendingAt: string; approvedAt: string | null; paidAt: string | null };
   providerReference: string | null;
 }
@@ -137,7 +141,7 @@ export async function creatorStatement(db: MajalDatabase, creatorId: string): Pr
       : r.accrual_status === 'LOCKED' || r.accrual_status === 'PAID' ? 'APPROVED' : 'PENDING';
     return {
       accrualId: String(r.accrual_id), orderId: String(r.order_id), productName: String(r.public_name), units: Number(r.units), orderedAt: String(r.ordered_at),
-      grossFils, commissionFils, hostShareFils, creatorPayoutFils, stage,
+      grossFils, commissionFils, hostShareFils, creatorPayoutFils, stage, released: r.accrual_status === 'ELIGIBLE' || r.accrual_status === 'LOCKED' || r.accrual_status === 'PAID',
       timeline: { pendingAt: String(r.accrued_at), approvedAt: stage === 'APPROVED' || stage === 'PAID' ? String(r.batch_created_at ?? r.accrued_at) : null, paidAt: stage === 'PAID' ? String(r.batch_updated_at) : null },
       providerReference: stage === 'PAID' ? providerReference : null
     };
@@ -394,6 +398,94 @@ export function createCommerceRouter(db: MajalDatabase, authConfig: AuthConfig) 
         : `«${l.title}» — فرع ${b.name}: تجاوز ${(b as { utilizationPct: number }).utilizationPct}% من طاقة التحضير.`
     })));
     res.json({ organizationId: org, launches: out, alerts, cannedReplies: HOST_CANNED_REPLIES });
+  });
+
+  /*
+   * Order fulfilment ("تم التنفيذ").
+   *
+   * A PAID order is delivered or handed over by the establishment's own staff (owner, operations,
+   * kitchen, support) — or an admin resolving an exception. Marking it fulfilled is what makes
+   * the creator's royalty ELIGIBLE for the settlement cycle: money is released for delivered
+   * orders only. The transition is a single conditional UPDATE so a double click or two staff
+   * members acting at once can only win once.
+   */
+  const FULFIL_ROLES: AuthRole[] = ['HOST_OWNER', 'HOST_OPERATIONS', 'HOST_CHEF', 'HOST_SUPPORT', 'ADMIN', 'SUPER_ADMIN'];
+  router.post('/orders/:id/fulfil', requireRoles(...FULFIL_ROLES), async (req: AuthenticatedRequest, res) => {
+    const orderId = text(req.params.id, 3, 120);
+    if (!orderId) return jsonError(res, 400, 'معرّف الطلب غير صالح.', 'INVALID_ORDER');
+    const order = await db.prepare(`SELECT o.id, o.status, o.units, o.total_fils, o.consumer_user_id, l.organization_id, l.collaboration_id, p.public_name
+      FROM orders o JOIN launches l ON l.id = o.launch_id JOIN products p ON p.id = l.product_id WHERE o.id = ? LIMIT 1`)
+      .get<{ id: string; status: string; units: number | string; total_fils: number | string; consumer_user_id: string; organization_id: string; collaboration_id: string; public_name: string }>(orderId);
+    const isAdmin = req.auth!.user.role === 'ADMIN' || req.auth!.user.role === 'SUPER_ADMIN';
+    // A host can only see its own orders; to anyone else the order simply does not exist.
+    if (!order || (!isAdmin && order.organization_id !== hostOrg(req))) return jsonError(res, 404, 'الطلب غير موجود.', 'ORDER_NOT_FOUND');
+    if (order.status === 'FULFILLED') return res.json({ order: { id: order.id, status: 'FULFILLED' }, alreadyFulfilled: true });
+    if (order.status !== 'PAID') {
+      const why: Record<string, string> = { PENDING_PAYMENT: 'الطلب لم يُدفع بعد.', CANCELLED: 'الطلب ملغى.', REFUNDED: 'الطلب مسترجع.' };
+      return jsonError(res, 409, why[order.status] ?? 'حالة الطلب لا تسمح بالتنفيذ.', 'ORDER_NOT_PAID');
+    }
+    const at = now();
+    let accrualReleased = 0;
+    const won = await db.transaction(async tx => {
+      const moved = await tx.prepare("UPDATE orders SET status = 'FULFILLED', fulfilled_at = ?, fulfilled_by_user_id = ?, updated_at = ? WHERE id = ? AND status = 'PAID'")
+        .run(at, req.auth!.user.id, at, order.id);
+      if (!moved.changes) return false;
+      const released = await tx.prepare("UPDATE accruals SET status = 'ELIGIBLE', updated_at = ? WHERE order_id = ? AND status = 'PENDING'").run(at, order.id);
+      accrualReleased = Number(released.changes ?? 0);
+      await appendLedgerEntry(tx, {
+        scope: 'ORDER', entryType: 'ORDER_FULFILLED', entityType: 'ORDER', entityId: order.id,
+        amountFils: Number(order.total_fils), currency: 'KWD', meta: { fulfilledBy: req.auth!.user.id, accrualReleased }
+      });
+      const sha = (v: string) => createHash('sha256').update(v).digest('hex');
+      await tx.prepare(`INSERT INTO domain_audit_events(actor_user_id, actor_role, organization_id, action, entity_type, entity_id, before_sha256, after_sha256, request_id, session_hash, created_at)
+        VALUES(?, ?, ?, 'ORDER_FULFILLED', 'ORDER', ?, ?, ?, ?, ?, ?)`)
+        .run(req.auth!.user.id, req.auth!.user.role, order.organization_id, order.id, sha('PAID'), sha('FULFILLED'), randomUUID(), sha(req.auth!.tokenHash), at);
+      return true;
+    });
+    if (!won) {
+      const current = await db.prepare('SELECT status FROM orders WHERE id = ?').get<{ status: string }>(order.id);
+      if (current?.status === 'FULFILLED') return res.json({ order: { id: order.id, status: 'FULFILLED' }, alreadyFulfilled: true });
+      return jsonError(res, 409, 'تغيّرت حالة الطلب. حدّث القائمة.', 'ORDER_STATE_CHANGED');
+    }
+    await notify(db, [order.consumer_user_id], {
+      category: 'ORDER', priority: 'NOW', title: 'تم تنفيذ طلبك',
+      body: `طلبك «${order.public_name}» (${Number(order.units)} وحدة) جاهز وتم تسليمه. بالهناء والعافية!`,
+      actionLabel: 'افتح السوق', actionSurface: 'CONSUMER', entityType: 'ORDER', entityId: order.id, dedupeKey: `order-fulfilled:${order.id}`
+    });
+    if (accrualReleased) {
+      const col = await db.prepare('SELECT creator_id FROM collaborations WHERE id = ?').get<{ creator_id: string }>(order.collaboration_id);
+      await notify(db, [await creatorUserId(db, col?.creator_id)], {
+        category: 'SETTLEMENT', priority: 'SOON', title: 'استحقاق جديد مؤهل للتسوية',
+        body: `تم تنفيذ طلب على «${order.public_name}» وصار حقك فيه مؤهلًا لدورة التسوية القادمة.`,
+        actionLabel: 'افتح مستحقاتي', actionSurface: 'CREATOR', entityType: 'ORDER', entityId: order.id, dedupeKey: `accrual-eligible:${order.id}`
+      });
+    }
+    res.json({ order: { id: order.id, status: 'FULFILLED', fulfilledAt: at }, accrualReleased: accrualReleased > 0 });
+  });
+
+  /** Orders the establishment still has to deliver (default) or has already delivered. Oldest first. */
+  // Customer names and phone numbers: only the roles that hand orders over see them (not finance/marketing).
+  router.get('/host/orders', requireRoles('HOST_OWNER', 'HOST_OPERATIONS', 'HOST_CHEF', 'HOST_SUPPORT'), async (req: AuthenticatedRequest, res) => {
+    const org = hostOrg(req);
+    if (!org) return jsonError(res, 403, 'لا توجد منشأة مرتبطة بحسابك.', 'FORBIDDEN');
+    const status = req.query.status === 'FULFILLED' ? 'FULFILLED' : 'PAID';
+    const rawLimit = Number(req.query.limit);
+    const limit = Number.isInteger(rawLimit) && rawLimit >= 1 ? Math.min(rawLimit, 100) : 50;
+    const rows = await db.prepare(`SELECT o.id, o.status, o.units, o.total_fils, o.unit_price_fils, o.fulfillment_type, o.branch_id, o.contact_phone, o.created_at, o.fulfilled_at,
+        u.name AS customer_name, p.public_name
+      FROM orders o JOIN launches l ON l.id = o.launch_id JOIN products p ON p.id = l.product_id JOIN users u ON u.id = o.consumer_user_id
+      WHERE l.organization_id = ? AND o.status = ? ORDER BY ${status === 'PAID' ? 'o.created_at ASC' : 'o.fulfilled_at DESC'}, o.id ASC LIMIT ?`)
+      .all<Record<string, string | number | null>>(org, status, limit + 1);
+    const branches = await organizationBranches(db, org);
+    const waiting = await db.prepare("SELECT COUNT(*) AS c FROM orders o JOIN launches l ON l.id = o.launch_id WHERE l.organization_id = ? AND o.status = 'PAID'").get<{ c: number | string }>(org);
+    res.json({
+      status, awaiting: Number(waiting?.c ?? 0), hasMore: rows.length > limit,
+      orders: rows.slice(0, limit).map(r => ({
+        id: String(r.id), product: String(r.public_name), customer: String(r.customer_name), phone: r.contact_phone ? String(r.contact_phone) : null,
+        units: Number(r.units), totalFils: Number(r.total_fils), fulfillment: String(r.fulfillment_type),
+        branch: branches.find(b => b.id === r.branch_id)?.name ?? null, createdAt: String(r.created_at), fulfilledAt: r.fulfilled_at ? String(r.fulfilled_at) : null
+      }))
+    });
   });
 
   router.get('/host/canned-replies', requireRoles(...HOST_ALL_ROLES), (_req, res) => { res.json({ replies: HOST_CANNED_REPLIES }); });

@@ -33,6 +33,7 @@ export const domainClient = {
   profiles: () => request<any[]>('/api/v1/domain/profiles'),
   listOrganizations: () => request<any[]>('/api/v1/domain/organizations'),
   createProduct: (body: unknown) => request<{id:string;recipeVersionId:string;status:string;recipeSha256:string}>('/api/v1/domain/products', { method: 'POST', body: JSON.stringify(body) }, 'product'),
+  updateProduct: (productId: string, body: unknown) => request<{ id: string; status: string; approvalStatus: string }>(`/api/v1/domain/products/${encodeURIComponent(productId)}`, { method: 'PUT', body: JSON.stringify(body) }),
   requestRecipeAccess: (body: unknown) => request<{id:string;status:string;disclosureLevel?:number;collaborationId?:string}>('/api/v1/domain/recipe-access', { method: 'POST', body: JSON.stringify(body) }, 'recipe-access'),
   approveRecipeAccess: (id: string, body: unknown) => request<any>(`/api/v1/domain/recipe-access/${encodeURIComponent(id)}/approve`, { method: 'POST', body: JSON.stringify(body) }),
   revokeRecipeAccess: (id: string) => request<any>(`/api/v1/domain/recipe-access/${encodeURIComponent(id)}/revoke`, { method: 'POST', body: '{}' }),
@@ -58,5 +59,6 @@ export const moderationClient = {
   pauseProduct: (productId: string, reason: string) => request<{ product: { id: string; status: string }; pausedLaunches: number }>(`/api/v1/moderation/products/${encodeURIComponent(productId)}/pause`, { method: 'POST', body: JSON.stringify({ reason }) }),
   resumeProduct: (productId: string, reason: string) => request<{ product: { id: string; status: string }; note: string }>(`/api/v1/moderation/products/${encodeURIComponent(productId)}/resume`, { method: 'POST', body: JSON.stringify({ reason }) }),
   listUsers: (after?: string, q?: string) => request<{ users: Array<{ id: string; name: string; email: string; role: string; status: string }>; nextAfter: string | null }>(`/api/v1/moderation/users${after || q ? `?${[after ? `after=${encodeURIComponent(after)}` : '', q ? `q=${encodeURIComponent(q)}` : ''].filter(Boolean).join('&')}` : ''}`),
+  decideProduct: (productId: string, decision: 'APPROVE' | 'REJECT', reason = '') => request<{ product: { id: string; status: string; approvalStatus: string } }>(`/api/v1/moderation/products/${encodeURIComponent(productId)}/${decision === 'APPROVE' ? 'approve' : 'reject'}`, { method: 'POST', body: JSON.stringify(reason ? { reason } : {}) }),
   actions: (targetType?: 'USER' | 'PRODUCT') => request<{ actions: any[] }>(`/api/v1/moderation/actions${targetType ? `?targetType=${targetType}` : ''}`),
 };

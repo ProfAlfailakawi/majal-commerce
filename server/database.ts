@@ -1710,6 +1710,27 @@ const migrations = [
       ALTER TABLE launches ADD COLUMN open_notified_at TEXT;
       UPDATE launches SET opens_reminded_at = COALESCE(starts_at, created_at), open_notified_at = COALESCE(starts_at, created_at);
     `
+  },
+  {
+    /*
+     * Product approval and order fulfilment.
+     *  - products.approval_status gates host discovery: a creator's new product is PENDING until an
+     *    admin approves it. Rows that already exist are migrated: anything past the draft/screening
+     *    stage was already listed (or live) and is treated as APPROVED; drafts become PENDING so an
+     *    admin can look at them.
+     *  - orders.fulfilled_at / fulfilled_by_user_id record who delivered an order and when.
+     */
+    version: 31,
+    sql: `
+      ALTER TABLE products ADD COLUMN approval_status TEXT NOT NULL DEFAULT 'APPROVED' CHECK(approval_status IN ('PENDING', 'APPROVED', 'REJECTED'));
+      ALTER TABLE products ADD COLUMN approval_reason TEXT;
+      ALTER TABLE products ADD COLUMN approval_reviewed_by TEXT;
+      ALTER TABLE products ADD COLUMN approval_reviewed_at TEXT;
+      UPDATE products SET approval_status = 'PENDING' WHERE status IN ('DRAFT', 'SUBMITTED', 'SCREENING');
+      CREATE INDEX IF NOT EXISTS idx_products_approval ON products(approval_status, created_at);
+      ALTER TABLE orders ADD COLUMN fulfilled_at TEXT;
+      ALTER TABLE orders ADD COLUMN fulfilled_by_user_id TEXT;
+    `
   }
 ] as const;
 

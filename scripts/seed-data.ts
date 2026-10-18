@@ -194,9 +194,14 @@ export async function seed(db: MajalDatabase, options: { users?: number } = {}) 
         const status = live ? 'LIVE_TRIAL' : pick(['DRAFT', 'SUBMITTED', 'SCREENING', 'AVAILABLE_FOR_MATCHING', 'IN_DISCUSSION', 'TESTING', 'COMMERCIAL_NEGOTIATION', 'PAUSED']);
         const price = int(8, 160) * 100;
         const dish = pick(DISHES[category]);
-        await tx.prepare(`INSERT OR IGNORE INTO products(id,creator_id,public_name,category,short_description,status,estimated_unit_cost_fils,target_price_fils,is_secret_recipe,created_at,updated_at,internal_name,story,media_json,general_ingredients_json,allergens_json,dietary_tags_json,serving_size,shelf_life,prep_time_minutes,expected_equipment_json,accepts_exclusivity,desired_partnership_type)
-          VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
-          .run(pid, cr.profile, `${dish} - دفعة ${pn}`, category, `${dish} بوصفة عائلية أصيلة وطعم لا يُنسى.`, status, Math.round(price * 0.45), price, 1, iso(int(5, 250)), iso(2), `INT-${pn}`, 'وصفة توارثناها في العائلة.', '[]', JSON.stringify(['طحين', 'سكر', 'سمن']), JSON.stringify(chance(0.4) ? ['غلوتين'] : []), JSON.stringify(['حلال']), '1 شخص', '3 أيام', int(10, 120), '[]', chance(0.2) ? 1 : 0, 'ROYALTY');
+        // Approval: products beyond the draft stage were approved by an admin; drafts are split
+        // between "waiting for review" and "rejected with a reason" so every state has data.
+        const isDraft = ['DRAFT', 'SUBMITTED', 'SCREENING'].includes(status);
+        const approval = !isDraft ? 'APPROVED' : chance(0.35) ? 'REJECTED' : 'PENDING';
+        const approvalReason = approval === 'REJECTED' ? pick(['أضف المكونات الأساسية وحجم الحصة.', 'الصور والوصف غير كافيين، عدّلهما وأعد الإرسال.', 'السعر المستهدف أقل من التكلفة المقدّرة.']) : null;
+        await tx.prepare(`INSERT OR IGNORE INTO products(id,creator_id,public_name,category,short_description,status,estimated_unit_cost_fils,target_price_fils,is_secret_recipe,created_at,updated_at,internal_name,story,media_json,general_ingredients_json,allergens_json,dietary_tags_json,serving_size,shelf_life,prep_time_minutes,expected_equipment_json,accepts_exclusivity,desired_partnership_type,approval_status,approval_reason,approval_reviewed_at)
+          VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+          .run(pid, cr.profile, `${dish} - دفعة ${pn}`, category, `${dish} بوصفة عائلية أصيلة وطعم لا يُنسى.`, status, Math.round(price * 0.45), price, 1, iso(int(5, 250)), iso(2), `INT-${pn}`, 'وصفة توارثناها في العائلة.', '[]', JSON.stringify(['طحين', 'سكر', 'سمن']), JSON.stringify(chance(0.4) ? ['غلوتين'] : []), JSON.stringify(['حلال']), '1 شخص', '3 أيام', int(10, 120), '[]', chance(0.2) ? 1 : 0, 'ROYALTY', approval, approvalReason, isDraft && approval === 'PENDING' ? null : iso(int(1, 30)));
         bump('products');
         if (['IN_DISCUSSION', 'TESTING', 'COMMERCIAL_NEGOTIATION'].includes(status) || live) {
           const org = live ? pick(verifiedOrgs) : pick(ids.orgs);
@@ -241,7 +246,8 @@ export async function seed(db: MajalDatabase, options: { users?: number } = {}) 
         const branch = pick(l.branches);
         const hasPayment = status !== 'PENDING_PAYMENT' || chance(0.5);
         // Draw every remaining random value up-front so a re-run consumes the PRNG identically.
-        const accStatus = status === 'FULFILLED' ? pick(['ELIGIBLE', 'ELIGIBLE', 'PENDING'] as const) : 'PENDING';
+        // Lifecycle: PAID -> royalty PENDING; FULFILLED (delivered) -> ELIGIBLE for settlement.
+        const accStatus = status === 'FULFILLED' ? 'ELIGIBLE' : 'PENDING';
         const wantsReview = chance(0.45);
         const reviewVals = [int(2, 5), int(2, 5), int(2, 5), chance(0.8) ? 1 : 0, pick(REVIEW_COMMENTS), chance(0.04) ? 'HIDDEN' : 'PUBLISHED'] as const;
         if (hasPayment) {
@@ -250,8 +256,8 @@ export async function seed(db: MajalDatabase, options: { users?: number } = {}) 
             VALUES(?,?,?,?,?,'KWD',?,?,?,?,NULL,?,?)`).run(piId, oid, buyer, 'MYFATOORAH', total, piStatus, `seed-idem-${on}`, piStatus === 'PAID' || piStatus === 'REFUNDED' ? `seed-ref-${on}` : null, null, created, created);
           bump('payment_intents');
         }
-        const r = await tx.prepare(`INSERT OR IGNORE INTO orders(id,launch_id,consumer_user_id,payment_intent_id,units,unit_price_fils,total_fils,status,created_at,updated_at,branch_id,fulfillment_type,delivery_fee_fils,contact_phone,hold_expires_at)
-          VALUES(?,?,?,?,?,?,?,?,?,?,?,?,0,?,NULL)`).run(oid, l.id, buyer, hasPayment ? piId : null, units, l.price, total, status, created, created, branch, 'PICKUP', '+96555500000');
+        const r = await tx.prepare(`INSERT OR IGNORE INTO orders(id,launch_id,consumer_user_id,payment_intent_id,units,unit_price_fils,total_fils,status,created_at,updated_at,branch_id,fulfillment_type,delivery_fee_fils,contact_phone,hold_expires_at,fulfilled_at,fulfilled_by_user_id)
+          VALUES(?,?,?,?,?,?,?,?,?,?,?,?,0,?,NULL,?,?)`).run(oid, l.id, buyer, hasPayment ? piId : null, units, l.price, total, status, created, created, branch, 'PICKUP', '+96555500000', status === 'FULFILLED' ? created : null, status === 'FULFILLED' ? l.org.owner : null);
         if (!r.changes) continue;
         bump('orders');
         if (status === 'PAID' || status === 'FULFILLED' || status === 'PENDING_PAYMENT') {

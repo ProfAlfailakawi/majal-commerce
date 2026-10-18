@@ -33,6 +33,7 @@ import { StatusPill } from '../common/StatusPill';
 import { EmptyState } from '../common/EmptyState';
 import { SurfaceTabs } from '../common/SurfaceTabs';
 import { EcosystemApprovals } from './EcosystemApprovals';
+import { ProductApprovals } from './ProductApprovals';
 import { ShowcaseAdmin } from './ShowcaseAdmin';
 import { AudienceDashboard } from './AudienceDashboard';
 import { kwdFromFils, useAdminMetrics } from '../../lib/adminMetrics';
@@ -72,7 +73,7 @@ export const AdminDashboard: React.FC = () => {
   ];
   // Counts already held by the store; nothing is fetched or invented here.
   const overview = {
-    review: store.products.filter(p => p.status === 'SUBMITTED' || p.status === 'SCREENING').length,
+    review: store.products.filter(p => p.approvalStatus === 'PENDING').length,
     paused: store.products.filter(p => p.status === 'PAUSED').length,
     access: store.recipeGrants.filter(g => g.status === 'REQUESTED').length,
     disputes: metrics?.disputes.open ?? 0,
@@ -213,7 +214,7 @@ export const AdminDashboard: React.FC = () => {
       )}
 
       {activeTab === 'AUDIENCE' && store.activeUser.role === 'SUPER_ADMIN' && <AudienceDashboard />}
-      {activeTab === 'APPROVALS' && <div className="space-y-10"><EcosystemApprovals /><ShowcaseAdmin /></div>}
+      {activeTab === 'APPROVALS' && <div className="space-y-10"><ProductApprovals /><EcosystemApprovals /><ShowcaseAdmin /></div>}
 
       {activeTab === 'COMPLIANCE' && (
         <section className="glass-panel rounded-3xl p-6 border border-white/10 space-y-4">

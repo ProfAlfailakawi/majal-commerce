@@ -1,5 +1,5 @@
 import { notifyCreatorFollowers } from './commerce-ops';
-import { SURFACE, HOST_PRODUCT, collaborationSides, creatorUserId, notify, orgMemberIds } from './notify';
+import { SURFACE, HOST_PRODUCT, collaborationSides, creatorUserId, notify, notifyAdmins, orgMemberIds } from './notify';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { Response, Router } from 'express';
 import { AuthConfig, AuthenticatedRequest, requireAuth, requireCsrf, requireRoles } from './auth';
@@ -144,8 +144,17 @@ export function publicProduct(row: Record<string, unknown>) {
     estimatedPrepTimeMinutes: row.prep_time_minutes !== undefined && row.prep_time_minutes !== null ? Number(row.prep_time_minutes) : undefined,
     expectedEquipment: safeJson(row.expected_equipment_json),
     acceptsExclusivity: row.accepts_exclusivity !== undefined && row.accepts_exclusivity !== null ? Boolean(row.accepts_exclusivity) : undefined,
-    desiredPartnershipType: (row.desired_partnership_type as string) ?? undefined
+    desiredPartnershipType: (row.desired_partnership_type as string) ?? undefined,
+    approvalStatus: (row.approval_status as string) ?? 'APPROVED',
+    approvalReason: (row.approval_reason as string) ?? undefined,
+    approvalReviewedAt: (row.approval_reviewed_at as string) ?? undefined
   };
+}
+
+/** Hosts see approved products only; the reviewer's note is between the creator and the admins. */
+export function publicHostProduct(row: Record<string, unknown>) {
+  const { approvalReason: _approvalReason, approvalReviewedAt: _approvalReviewedAt, ...safe } = publicProduct(row);
+  return safe;
 }
 
 export function publicMarketplaceProduct(row: Record<string, unknown>) {
@@ -156,6 +165,8 @@ export function publicMarketplaceProduct(row: Record<string, unknown>) {
     expectedEquipment: _expectedEquipment,
     acceptsExclusivity: _acceptsExclusivity,
     desiredPartnershipType: _desiredPartnershipType,
+    approvalReason: _approvalReason,
+    approvalReviewedAt: _approvalReviewedAt,
     ...safe
   } = product;
   return safe;
@@ -266,12 +277,12 @@ export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser)
   // collaborating with that same tenant). Consumers see only products that are actually live.
   let productRows: Record<string, unknown>[] = [];
   if (isAdminUser) {
-    productRows = await db.prepare('SELECT p.* FROM products p ORDER BY p.created_at DESC LIMIT 500').all<Record<string, unknown>>();
+    productRows = await db.prepare("SELECT p.* FROM products p ORDER BY CASE p.approval_status WHEN 'PENDING' THEN 0 ELSE 1 END, p.created_at DESC LIMIT 500").all<Record<string, unknown>>();
   } else if (isCreatorUser) {
     productRows = await db.prepare('SELECT p.* FROM products p WHERE p.creator_id=? ORDER BY p.created_at DESC LIMIT 500').all<Record<string, unknown>>(user.creatorId!);
   } else if (isHostUser) {
     productRows = await db.prepare(`SELECT DISTINCT p.* FROM products p
-      WHERE p.status IN ('APPROVED_FOR_MARKETPLACE','AVAILABLE_FOR_MATCHING','IN_DISCUSSION','TESTING','COMMERCIAL_NEGOTIATION','CONTRACTING','LAUNCH_GATE','READY_TO_LAUNCH','LIVE_DROP','LIVE_TRIAL','LIVE_PERMANENT')
+      WHERE (p.status IN ('APPROVED_FOR_MARKETPLACE','AVAILABLE_FOR_MATCHING','IN_DISCUSSION','TESTING','COMMERCIAL_NEGOTIATION','CONTRACTING','LAUNCH_GATE','READY_TO_LAUNCH','LIVE_DROP','LIVE_TRIAL','LIVE_PERMANENT') AND p.approval_status='APPROVED')
          OR EXISTS (SELECT 1 FROM collaborations c WHERE c.product_id=p.id AND c.organization_id=?)
       ORDER BY p.created_at DESC LIMIT 500`).all<Record<string, unknown>>(user.hostBusinessId!);
   } else if (isConsumerUser) {
@@ -463,7 +474,7 @@ export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser)
     organizations = ownOrg ? [publicOrganization(ownOrg)] : [];
     const creatorRows = await db.prepare(`SELECT DISTINCT cp.* FROM creator_profiles cp
       JOIN products p ON p.creator_id=cp.id
-      WHERE p.status IN ('APPROVED_FOR_MARKETPLACE','AVAILABLE_FOR_MATCHING','IN_DISCUSSION','TESTING','COMMERCIAL_NEGOTIATION','CONTRACTING','LAUNCH_GATE','READY_TO_LAUNCH','LIVE_DROP','LIVE_TRIAL','LIVE_PERMANENT')
+      WHERE (p.status IN ('APPROVED_FOR_MARKETPLACE','AVAILABLE_FOR_MATCHING','IN_DISCUSSION','TESTING','COMMERCIAL_NEGOTIATION','CONTRACTING','LAUNCH_GATE','READY_TO_LAUNCH','LIVE_DROP','LIVE_TRIAL','LIVE_PERMANENT') AND p.approval_status='APPROVED')
          OR EXISTS (SELECT 1 FROM collaborations c WHERE c.creator_id=cp.id AND c.organization_id=?)
       ORDER BY cp.created_at DESC LIMIT 500`).all<Record<string, unknown>>(user.hostBusinessId!);
     creators = creatorRows.map(publicCreatorSummary);
@@ -504,7 +515,7 @@ export async function buildDomainSnapshot(db: MajalDatabase, user: SnapshotUser)
   }
 
   return {
-    products: productRows.map(isConsumerUser ? publicMarketplaceProduct : publicProduct),
+    products: productRows.map(isConsumerUser ? publicMarketplaceProduct : isHostUser ? publicHostProduct : publicProduct),
     collaborations,
     creators,
     organizations,
@@ -693,12 +704,9 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
       const dietaryTags=stringArray(req.body?.dietaryTags, 40, 120);
       const expectedEquipment=stringArray(req.body?.expectedEquipment, 80, 160);
 
-      // Nothing else in the platform ever moves a product out of DRAFT, so a product created as
-      // DRAFT could never reach a host: the creator → host pipeline stopped at its first step.
-      // A creator who is available for matching (the default at registration) lists the product
-      // for host discovery straight away; the recipe stays sealed behind the access levels and
-      // admins can still pause any product. Otherwise it remains a private draft.
-      const initialStatus = Number(ownedProfile.matching_enabled) === 1 ? 'AVAILABLE_FOR_MATCHING' : 'DRAFT';
+      // A new product is never listed automatically: it waits for an admin decision
+      // (approval_status PENDING). Only an approved product reaches hosts (see /moderation/products).
+      const initialStatus = 'DRAFT';
       const result = await withIdempotency(db, req, 'PRODUCT_CREATE', async () => {
         const productId=`prd_${randomUUID()}`, recipeId=`rcp_${randomUUID()}`, created=now();
         const receipt=await putEncryptedJson('recipes',recipeId,recipe);
@@ -709,8 +717,8 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
             internal_name, story, media_json, general_ingredients_json, allergens_json,
             dietary_tags_json, serving_size, shelf_life, prep_time_minutes,
             expected_equipment_json, accepts_exclusivity, desired_partnership_type,
-            created_at, updated_at
-          ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+            created_at, updated_at, approval_status
+          ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'PENDING')`)
             .run(productId,req.auth!.user.creatorId,publicName,category,description,initialStatus,cost,price,isSecretRecipe?1:0,
               internalName,story,JSON.stringify(mediaUrls),JSON.stringify(generalIngredients),JSON.stringify(allergens),
               JSON.stringify(dietaryTags),servingSize,shelfLife,prepMinutes,JSON.stringify(expectedEquipment),acceptsExclusivity?1:0,
@@ -719,10 +727,49 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
             .run(recipeId,productId,JSON.stringify({objectKey:receipt.objectKey,storage:receipt.storageProvider,ciphertextSha256:receipt.ciphertextSha256}),receipt.plaintextSha256,req.auth!.user.id,created);
           await audit(tx,req,'PRODUCT_CREATED','PRODUCT',productId,undefined,{publicName,category,recipeSha256:receipt.plaintextSha256});
         });
-        return { id:productId, recipeVersionId:recipeId, status:initialStatus, recipeSha256:receipt.plaintextSha256 };
+        return { id:productId, recipeVersionId:recipeId, status:initialStatus, approvalStatus:'PENDING', recipeSha256:receipt.plaintextSha256 };
       });
+      await notifyAdmins(db, 'product', 'منتج جديد بانتظار الاعتماد', `${publicName} — راجعه من تبويب الاعتمادات.`);
       res.status(201).json(result);
     } catch(e) { handleDomainError(res,e); }
+  });
+
+  /*
+   * Edit and resubmit. A creator may change a product that is still waiting for review or was
+   * rejected; the edit puts it back to PENDING and clears the previous reason. An approved
+   * product is not editable here (it is already in front of hosts).
+   */
+  router.put('/products/:id', async (req: AuthenticatedRequest, res) => {
+    try {
+      if (req.auth!.user.role !== 'CREATOR' || !req.auth!.user.creatorId) return jsonError(res, 403, 'تعديل المنتجات متاح لحساب المبدع فقط.', 'CREATOR_REQUIRED');
+      const row = await db.prepare('SELECT id, creator_id, approval_status, public_name FROM products WHERE id=?').get<{ id: string; creator_id: string; approval_status: string; public_name: string }>(req.params.id);
+      if (!row || row.creator_id !== req.auth!.user.creatorId) return jsonError(res, 404, 'المنتج غير موجود.', 'NOT_FOUND');
+      if (row.approval_status === 'APPROVED') return jsonError(res, 409, 'المنتج معتمد ولا يمكن تعديله من هنا.', 'ALREADY_APPROVED');
+      const publicName=toLatinDigitsOpt(text(req.body?.publicName,2,140)), category=text(req.body?.category,2,80), description=toLatinDigitsOpt(text(req.body?.shortDescription,5,1500));
+      const cost=integer(req.body?.estimatedUnitCostFils,0,50_000_000), price=integer(req.body?.targetPriceFils,1,50_000_000);
+      if (!publicName||!category||!description||cost===undefined||price===undefined) return jsonError(res,400,'بيانات المنتج غير صالحة.','INVALID_PRODUCT');
+      const recipe=req.body?.recipe;
+      if (recipe!==undefined && (recipe===null || typeof recipe!=='object')) return jsonError(res,400,'بيانات الوصفة غير صالحة.','INVALID_PRODUCT');
+      const at=now();
+      const newRecipeId=recipe!==undefined?`rcp_${randomUUID()}`:undefined;
+      const receipt=newRecipeId?await putEncryptedJson('recipes',newRecipeId,recipe):undefined;
+      await withTransaction(db, async tx => {
+        const updated=await tx.prepare(`UPDATE products SET public_name=?, category=?, short_description=?, estimated_unit_cost_fils=?, target_price_fils=?,
+            internal_name=COALESCE(?, internal_name), story=COALESCE(?, story), serving_size=COALESCE(?, serving_size), shelf_life=COALESCE(?, shelf_life),
+            approval_status='PENDING', approval_reason=NULL, approval_reviewed_by=NULL, approval_reviewed_at=NULL, status='DRAFT', updated_at=?
+          WHERE id=? AND approval_status IN ('PENDING','REJECTED')`)
+          .run(publicName,category,description,cost,price,text(req.body?.internalName,1,140)??null,text(req.body?.story,0,4000)??null,text(req.body?.servingSize,0,120)??null,text(req.body?.shelfLife,0,120)??null,at,row.id);
+        if(!updated.changes) throw Object.assign(new Error('ALREADY_APPROVED'),{status:409});
+        if(newRecipeId&&receipt){
+          const max=await tx.prepare('SELECT MAX(version_number) AS m FROM recipe_versions WHERE product_id=?').get<{m:number|string|null}>(row.id);
+          await tx.prepare('INSERT INTO recipe_versions(id, product_id, version_number, encrypted_payload, payload_sha256, created_by_user_id, created_at) VALUES(?, ?, ?, ?, ?, ?, ?)')
+            .run(newRecipeId,row.id,Number(max?.m||0)+1,JSON.stringify({objectKey:receipt.objectKey,storage:receipt.storageProvider,ciphertextSha256:receipt.ciphertextSha256}),receipt.plaintextSha256,req.auth!.user.id,at);
+        }
+        await audit(tx,req,'PRODUCT_RESUBMITTED','PRODUCT',row.id,{approvalStatus:row.approval_status},{approvalStatus:'PENDING',publicName});
+      });
+      await notifyAdmins(db, 'product', 'منتج أُعيد إرساله للمراجعة', `${publicName} — راجعه من تبويب الاعتمادات.`);
+      res.json({ id: row.id, status: 'DRAFT', approvalStatus: 'PENDING' });
+    } catch (e) { handleDomainError(res, e); }
   });
 
   router.post('/recipe-access', async (req: AuthenticatedRequest,res) => {
@@ -730,8 +777,9 @@ export function createDomainRouter(db: MajalDatabase, authConfig: AuthConfig) {
       const productId=text(req.body?.productId,3,120), level=integer(req.body?.disclosureLevel,1,3), purpose=text(req.body?.purpose,3,500);
       const org=req.auth!.user.hostBusinessId;
       if(!productId||level===undefined||!purpose||!org||!isHost(req,org)) return jsonError(res,403,'بيانات الطلب أو الصلاحية غير صالحة.','FORBIDDEN');
-      const product=await db.prepare('SELECT creator_id FROM products WHERE id=?').get<{creator_id:string}>(productId);
+      const product=await db.prepare('SELECT creator_id, approval_status FROM products WHERE id=?').get<{creator_id:string;approval_status:string}>(productId);
       if(!product) return jsonError(res,404,'المنتج غير موجود.','NOT_FOUND');
+      if(product.approval_status!=='APPROVED') return jsonError(res,404,'المنتج غير موجود.','NOT_FOUND');
       const result=await withIdempotency(db,req,'RECIPE_ACCESS_REQUEST',async()=>withTransaction(db, async tx => {
         let collab=await tx.prepare('SELECT id,stage FROM collaborations WHERE product_id=? AND organization_id=? LIMIT 1').get<{id:string;stage:string}>(productId,org);
         const created=now();

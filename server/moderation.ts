@@ -4,6 +4,7 @@ import { AuthConfig, AuthRole, AuthenticatedRequest, requireAuth, requireCsrf, r
 import { MajalDatabase, withTransaction } from './database';
 import { syncRoleClaim } from './firebase-mirror';
 import { ASSIGNABLE_ROLES } from '../src/lib/assignableRoles';
+import { SURFACE, creatorUserId, notify } from './notify';
 
 /*
  * إجراءات الإشراف الإدارية.
@@ -24,7 +25,7 @@ const USER_LIST_MAX = 50;
 const ASSIGNABLE_STATUSES = ['ACTIVE', 'SUSPENDED', 'INVITED'] as const;
 
 type UserRow = { id: string; name: string; email: string; role: string; status: string };
-type ProductRow = { id: string; creator_id: string; public_name: string; status: string };
+type ProductRow = { id: string; creator_id: string; public_name: string; status: string; approval_status?: string };
 
 async function recordModeration(
   db: MajalDatabase, req: AuthenticatedRequest,
@@ -135,6 +136,57 @@ export function createModerationRouter(db: MajalDatabase, authConfig: AuthConfig
   });
 
   /*
+   * اعتماد المنتجات. المنتج الجديد لا يظهر للمنشآت حتى يعتمده أدمن: الحالة PENDING عند التسجيل،
+   * والاعتماد يرفعه للمطابقة (إن كان المبدع متاحًا للمطابقة)، والرفض يُبقيه مسودة مع السبب ليعدّل
+   * المبدع ويعيد الإرسال. القرار يُسجَّل في سجل الإشراف والتدقيق ويصل المبدع كإشعار.
+   */
+  router.post('/products/:id/approve', requireRoles('ADMIN', 'SUPER_ADMIN'), async (req: AuthenticatedRequest, res) => {
+    const productId = text(req.params.id, 3, 120);
+    const note = req.body?.reason === undefined || req.body?.reason === null || req.body?.reason === '' ? '' : text(req.body.reason, 3, 500);
+    if (!productId) return jsonError(res, 400, 'معرّف المنتج غير صالح.', 'INVALID_PRODUCT');
+    if (note === undefined) return jsonError(res, 400, 'الملاحظة يجب أن تكون بين 3 و500 حرف.', 'INVALID_REASON');
+    const product = await db.prepare('SELECT id, creator_id, public_name, status, approval_status FROM products WHERE id = ? LIMIT 1').get<ProductRow>(productId);
+    if (!product) return jsonError(res, 404, 'المنتج غير موجود.', 'PRODUCT_NOT_FOUND');
+    if (product.approval_status === 'APPROVED') return jsonError(res, 409, 'المنتج معتمد مسبقًا.', 'ALREADY_APPROVED');
+    const creator = await db.prepare('SELECT matching_enabled FROM creator_profiles WHERE id = ?').get<{ matching_enabled: number | string }>(product.creator_id);
+    const nextStatus = Number(creator?.matching_enabled) === 1 ? 'AVAILABLE_FOR_MATCHING' : 'DRAFT';
+    const at = now();
+    const result = await db.prepare(
+      "UPDATE products SET approval_status = 'APPROVED', approval_reason = ?, approval_reviewed_by = ?, approval_reviewed_at = ?, status = ?, updated_at = ? WHERE id = ? AND approval_status IN ('PENDING','REJECTED')"
+    ).run(note || null, req.auth!.user.id, at, nextStatus, at, productId);
+    if (!result.changes) return jsonError(res, 409, 'المنتج معتمد مسبقًا.', 'ALREADY_APPROVED');
+    await recordModeration(db, req, 'PRODUCT', productId, 'PRODUCT_APPROVED', `${product.approval_status}/${product.status}`, `APPROVED/${nextStatus}`, note || 'اعتماد المنتج.');
+    await notify(db, [await creatorUserId(db, product.creator_id)], {
+      category: 'PRODUCT_REVIEW', priority: 'NOW', title: 'اعتُمد منتجك',
+      body: nextStatus === 'AVAILABLE_FOR_MATCHING' ? `«${product.public_name}» صار ظاهرًا للمنشآت المرخّصة.${note ? ` ملاحظة الإدارة: ${note}` : ''}` : `«${product.public_name}» معتمد، وهو غير ظاهر للمنشآت لأن المطابقة متوقفة في ملفك.`,
+      actionLabel: 'افتح منتجاتي', actionSurface: SURFACE.creator, entityType: 'PRODUCT', entityId: productId, dedupeKey: `product-approved:${productId}:${at}`
+    });
+    res.json({ product: { id: productId, status: nextStatus, approvalStatus: 'APPROVED' } });
+  });
+
+  router.post('/products/:id/reject', requireRoles('ADMIN', 'SUPER_ADMIN'), async (req: AuthenticatedRequest, res) => {
+    const productId = text(req.params.id, 3, 120);
+    const note = req.body?.reason === undefined || req.body?.reason === null || req.body?.reason === '' ? '' : text(req.body.reason, 3, 500);
+    if (!productId) return jsonError(res, 400, 'معرّف المنتج غير صالح.', 'INVALID_PRODUCT');
+    if (note === undefined) return jsonError(res, 400, 'السبب يجب أن يكون بين 3 و500 حرف.', 'INVALID_REASON');
+    const product = await db.prepare('SELECT id, creator_id, public_name, status, approval_status FROM products WHERE id = ? LIMIT 1').get<ProductRow>(productId);
+    if (!product) return jsonError(res, 404, 'المنتج غير موجود.', 'PRODUCT_NOT_FOUND');
+    if (product.approval_status !== 'PENDING') return jsonError(res, 409, 'يمكن رفض المنتجات قيد المراجعة فقط. للمنتج المعتمد استخدم الإيقاف الاحترازي.', 'NOT_PENDING');
+    const at = now();
+    const result = await db.prepare(
+      "UPDATE products SET approval_status = 'REJECTED', approval_reason = ?, approval_reviewed_by = ?, approval_reviewed_at = ?, status = 'DRAFT', updated_at = ? WHERE id = ? AND approval_status = 'PENDING'"
+    ).run(note || null, req.auth!.user.id, at, at, productId);
+    if (!result.changes) return jsonError(res, 409, 'تغيّرت حالة المنتج. حدّث الصفحة.', 'NOT_PENDING');
+    await recordModeration(db, req, 'PRODUCT', productId, 'PRODUCT_REJECTED', `${product.approval_status}/${product.status}`, 'REJECTED/DRAFT', note || 'رفض المنتج.');
+    await notify(db, [await creatorUserId(db, product.creator_id)], {
+      category: 'PRODUCT_REVIEW', priority: 'NOW', title: 'لم يُعتمد منتجك بعد',
+      body: `«${product.public_name}»${note ? `: ${note}` : '.'} عدّل المنتج وأعد إرساله للمراجعة.`,
+      actionLabel: 'عدّل وأعد الإرسال', actionSurface: SURFACE.creator, entityType: 'PRODUCT', entityId: productId, dedupeKey: `product-rejected:${productId}:${at}`
+    });
+    res.json({ product: { id: productId, status: 'DRAFT', approvalStatus: 'REJECTED' } });
+  });
+
+  /*
    * إعادة التشغيل لا تُعيد الإطلاق إلى LIVE تلقائيًا: بوابة الإطلاق (Launch Gate) قد تكون
    * سقطت أثناء الإيقاف. يعود المنتج للمطابقة، وإعادة الإطلاق تمرّ ببوابته المعتادة.
    */
@@ -143,9 +195,10 @@ export function createModerationRouter(db: MajalDatabase, authConfig: AuthConfig
     const reason = text(req.body?.reason, 3, 500) || 'إعادة تشغيل بعد مراجعة إدارية.';
     if (!productId) return jsonError(res, 400, 'معرّف المنتج غير صالح.', 'INVALID_PRODUCT');
 
-    const product = await db.prepare('SELECT id, creator_id, public_name, status FROM products WHERE id = ? LIMIT 1').get<ProductRow>(productId);
+    const product = await db.prepare('SELECT id, creator_id, public_name, status, approval_status FROM products WHERE id = ? LIMIT 1').get<ProductRow>(productId);
     if (!product) return jsonError(res, 404, 'المنتج غير موجود.', 'PRODUCT_NOT_FOUND');
     if (product.status !== 'PAUSED') return jsonError(res, 409, 'المنتج ليس موقوفًا.', 'PRODUCT_NOT_PAUSED');
+    if (product.approval_status && product.approval_status !== 'APPROVED') return jsonError(res, 409, 'المنتج غير معتمد؛ اعتمده أولًا.', 'PRODUCT_NOT_APPROVED');
 
     await db.prepare('UPDATE products SET status = ?, updated_at = ? WHERE id = ?').run('AVAILABLE_FOR_MATCHING', now(), productId);
     await recordModeration(db, req, 'PRODUCT', productId, 'PRODUCT_RESUMED', product.status, 'AVAILABLE_FOR_MATCHING', reason);

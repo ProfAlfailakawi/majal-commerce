@@ -20,10 +20,13 @@ export interface StatementLine {
   accrualId: string; orderId: string; productName: string; units: number; orderedAt: string;
   grossFils: number; commissionFils: number; hostShareFils: number; creatorPayoutFils: number;
   stage: 'PENDING' | 'APPROVED' | 'PAID' | 'REVERSED';
+  released?: boolean;
   timeline: { pendingAt: string; approvedAt: string | null; paidAt: string | null };
   providerReference: string | null;
 }
 export interface CreatorStatement { creatorId: string; currency: 'KWD'; lines: StatementLine[]; totals: Record<'grossFils' | 'commissionFils' | 'hostShareFils' | 'creatorPayoutFils' | 'pendingFils' | 'approvedFils' | 'paidFils', number> }
+export interface HostOrderRow { id: string; product: string; customer: string; phone: string | null; units: number; totalFils: number; fulfillment: string; branch: string | null; createdAt: string; fulfilledAt: string | null }
+export interface HostOrders { status: 'PAID' | 'FULFILLED'; awaiting: number; hasMore: boolean; orders: HostOrderRow[] }
 export interface WarRoomBranch { branchId: string; name: string; configured: boolean; capacityUnits?: number; reservedUnits?: number; remainingUnits?: number; utilizationPct?: number; level?: 'OK' | 'WARNING' | 'CUTOFF'; manualCutoff?: boolean; alertThresholdPct?: number }
 export interface WarRoom {
   organizationId: string;
@@ -48,6 +51,8 @@ export const commerceClient = {
   follows: () => request<{ follows: { creatorId: string; alerts: boolean }[] }>('/api/v1/commerce/follows'),
   statement: () => request<CreatorStatement>('/api/v1/commerce/creator/statement'),
   statementCsvUrl: '/api/v1/commerce/creator/statement.csv',
+  hostOrders: (status: 'PAID' | 'FULFILLED' = 'PAID') => request<HostOrders>(`/api/v1/commerce/host/orders?status=${status}`),
+  fulfilOrder: (orderId: string) => request<{ order: { id: string; status: string }; alreadyFulfilled?: boolean; accrualReleased?: boolean }>(`/api/v1/commerce/orders/${encodeURIComponent(orderId)}/fulfil`, { method: 'POST', body: '{}' }),
   warRoom: () => request<WarRoom>('/api/v1/commerce/host/war-room'),
   setBranchStock: (launchId: string, branchId: string, body: { capacityUnits: number; alertThresholdPct?: number; manualCutoff?: boolean }) =>
     request<WarRoomBranch>(`/api/v1/commerce/launches/${enc(launchId)}/branches/${enc(branchId)}/stock`, { method: 'PUT', body: JSON.stringify(body) }),

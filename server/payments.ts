@@ -478,13 +478,16 @@ async function applyVerifiedPaymentEventInner(db: MajalDatabase, event: Verified
               const offer = await tx.prepare("SELECT creator_royalty_basis_points FROM offer_versions WHERE collaboration_id = ? AND status = 'ACCEPTED' ORDER BY version_number DESC LIMIT 1").get<{ creator_royalty_basis_points: number | string }>(launch.collaboration_id);
               if (collab && offer) {
                 const royaltyBp = Number(offer.creator_royalty_basis_points);
+                // The accrual starts PENDING: it becomes ELIGIBLE for settlement only once the
+                // establishment marks the order fulfilled (POST /commerce/orders/:id/fulfil), so a
+                // creator is never paid for an order that was not delivered. A refund reverses it.
                 // Royalty base is the product sale only; the delivery fee is not creator revenue.
                 const orderTotal = Number(order.units) * Number(order.unit_price_fils);
                 const royaltyFils = Math.round((orderTotal * royaltyBp) / 10_000);
                 const accrualId = `acc_${randomUUID()}`;
                 await tx.prepare(`
                   INSERT INTO accruals(id, order_id, creator_id, amount_fils, status, created_at, updated_at)
-                  VALUES(?, ?, ?, ?, 'ELIGIBLE', ?, ?)
+                  VALUES(?, ?, ?, ?, 'PENDING', ?, ?)
                 `).run(accrualId, order.id, collab.creator_id, royaltyFils, now, now);
               }
             }
