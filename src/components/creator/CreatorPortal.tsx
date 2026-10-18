@@ -1,3 +1,4 @@
+import { ProductReviewStatus } from './ProductReviewStatus';
 import React, { useEffect, useState } from 'react';
 import {
   BadgeDollarSign,
@@ -137,9 +138,10 @@ export const CreatorPortal: React.FC = () => {
                       <div className="text-xs text-slate-400">{product.category}</div>
                       <h3 className="text-lg font-black text-slate-100 mt-1">{product.publicName}</h3>
                     </div>
-                    <StatusPill status={product.status} />
+                    {(!product.approvalStatus || product.approvalStatus === 'APPROVED') && <StatusPill status={product.status} />}
                   </div>
                   <p className="text-xs text-slate-400 leading-6">{product.shortDescription}</p>
+                  <ProductReviewStatus product={product} />
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">التكلفة</div><div className="text-xs font-black mt-1">{product.estimatedUnitCostKwd.toFixed(3)}</div></div>
                     <div className="rounded-xl p-3 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">السعر</div><div className="text-xs font-black mt-1">{product.targetSellingPriceKwd.toFixed(3)}</div></div>

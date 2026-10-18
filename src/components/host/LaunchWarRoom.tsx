@@ -18,11 +18,13 @@ import { StatusPill } from '../common/StatusPill';
 import { DnaDraw, DnaRing, dnaDrawDelay } from '../dna/DnaKit';
 import { ShareDonut } from '../common/ShareDonut';
 import { WarRoomOps } from './WarRoomOps';
+import { OrdersToFulfil } from './OrdersToFulfil';
 
 interface LaunchWarRoomProps { hostBusinessId: string; }
 
 export const LaunchWarRoom: React.FC<LaunchWarRoomProps> = props => (
   <div className="space-y-6">
+    <OrdersToFulfil />
     <WarRoomOps />
     <LaunchWarRoomBody {...props} />
   </div>

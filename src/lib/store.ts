@@ -367,7 +367,9 @@ export class Store {
           acceptsExclusivity: Boolean(p.acceptsExclusivity ?? p.accepts_exclusivity ?? false),
           desiredPartnershipType: (p.desiredPartnershipType || p.desired_partnership_type || 'PERCENTAGE_ROYALTY') as any,
           createdAt: String(p.createdAt || p.created_at || new Date().toISOString()),
-          currentRecipeVersion: 'V1.0'
+          currentRecipeVersion: 'V1.0',
+          approvalStatus: (p.approvalStatus === 'PENDING' || p.approvalStatus === 'REJECTED' ? p.approvalStatus : 'APPROVED') as CreatorProduct['approvalStatus'],
+          approvalReason: p.approvalReason ? String(p.approvalReason) : undefined
         }));
 
         this.products = serverProducts;
@@ -795,6 +797,43 @@ export class Store {
     return true;
   }
 
+  /** Admin decision on a product awaiting approval. Resolves true when the server accepted it. */
+  public async decideProduct(productId: string, decision: 'APPROVE' | 'REJECT', reason = ''): Promise<boolean> {
+    if (IS_DEMO_MODE) {
+      const product = this.products.find(p => p.id === productId);
+      if (!product) return false;
+      product.approvalStatus = decision === 'APPROVE' ? 'APPROVED' : 'REJECTED';
+      product.approvalReason = reason || undefined;
+      if (decision === 'APPROVE') product.status = 'AVAILABLE_FOR_MATCHING';
+      this.notify();
+      return true;
+    }
+    const result = await this.serverMutation(() => moderationClient.decideProduct(productId, decision, reason));
+    if (!result) return false;
+    await this.hydrateFromServer();
+    this.notify();
+    return true;
+  }
+
+  /** Creator edits a pending/rejected product and sends it back for review. */
+  public async resubmitProduct(productId: string, changes: { publicName: string; category: string; shortDescription: string; story?: string; estimatedUnitCostKwd: number; targetSellingPriceKwd: number }): Promise<boolean> {
+    if (IS_DEMO_MODE) {
+      const product = this.products.find(p => p.id === productId);
+      if (!product) return false;
+      Object.assign(product, { publicName: changes.publicName, category: changes.category, shortDescription: changes.shortDescription, story: changes.story ?? product.story, estimatedUnitCostKwd: changes.estimatedUnitCostKwd, targetSellingPriceKwd: changes.targetSellingPriceKwd, approvalStatus: 'PENDING', approvalReason: undefined });
+      this.notify();
+      return true;
+    }
+    const result = await this.serverMutation(() => domainClient.updateProduct(productId, {
+      publicName: changes.publicName, category: changes.category, shortDescription: changes.shortDescription, story: changes.story,
+      estimatedUnitCostFils: Math.round(changes.estimatedUnitCostKwd * 1000), targetPriceFils: Math.round(changes.targetSellingPriceKwd * 1000)
+    }));
+    if (!result) return false;
+    await this.hydrateFromServer();
+    this.notify();
+    return true;
+  }
+
   public pauseProduct(productId: string, reason: string) {
     // إيقاف منتج حيّ يجب أن يوقف البيع فعلاً: الخادم يوقف إطلاقاته الحيّة معه.
     if (!IS_DEMO_MODE) {
@@ -950,6 +989,7 @@ export class Store {
         id: result.id,
         status: result.status as CreatorProduct['status'],
         currentRecipeVersion: 'V1.0',
+        approvalStatus: 'PENDING',
         createdAt
       };
       const newRecipe: RecipeVersion = {

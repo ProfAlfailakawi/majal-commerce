@@ -171,7 +171,12 @@ export type ProductStatus =
   | 'PAUSED'
   | 'COMPLETED';
 
+export type ProductApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
 export interface CreatorProduct {
+  /** Admin review state. Only APPROVED products are shown to establishments. */
+  approvalStatus?: ProductApprovalStatus;
+  approvalReason?: string;
   id: string;
   creatorId: string;
   internalName: string;

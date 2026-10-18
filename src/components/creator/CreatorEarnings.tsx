@@ -28,7 +28,7 @@ export const CreatorEarnings: React.FC = () => {
         grossSaleKwd: line.grossFils / 1000,
         royaltyRatePercent: line.grossFils > 0 ? Math.round((line.creatorPayoutFils / line.grossFils) * 1000) / 10 : 0,
         accruedAmountKwd: line.creatorPayoutFils / 1000,
-        settlementStatus: line.stage === 'PAID' ? 'PAID' : line.stage === 'APPROVED' ? 'SETTLEMENT_LOCKED' : 'SETTLEMENT_ELIGIBLE',
+        settlementStatus: line.stage === 'PAID' ? 'PAID' : line.stage === 'APPROVED' ? 'SETTLEMENT_LOCKED' : line.released ? 'SETTLEMENT_ELIGIBLE' : 'ACCRUED',
         createdAt: line.orderedAt
       })));
     }).catch(() => { if (active) setServerAccruals([]); });
@@ -42,7 +42,8 @@ export const CreatorEarnings: React.FC = () => {
   const paid = IS_DEMO_MODE
     ? creatorSettlements.filter(s => s.status === 'PAID').reduce((sum, s) => sum + s.totalAmountKwd, 0)
     : creatorAccruals.filter(a => a.settlementStatus === 'PAID').reduce((sum, a) => sum + a.accruedAmountKwd, 0);
-  const totals = { eligible, locked, paid, lifetime: eligible + locked + paid };
+  const accrued = creatorAccruals.filter(a => a.settlementStatus === 'ACCRUED').reduce((sum, a) => sum + a.accruedAmountKwd, 0);
+  const totals = { eligible, locked, paid, accrued, lifetime: eligible + locked + paid + accrued };
 
   const [exported, setExported] = useState(false);
   const [shown, setShown] = useState(25);
@@ -108,6 +109,7 @@ export const CreatorEarnings: React.FC = () => {
             draw="creator-earnings-donut"
             icon={<Wallet className="w-6 h-6" />}
             segments={[
+              { key: 'accrued', label: 'بانتظار تنفيذ الطلب', value: totals.accrued, strokeClass: 'stroke-slate-500', dotClass: 'bg-slate-500' },
               { key: 'eligible', label: 'مؤهل للتسوية', value: totals.eligible, strokeClass: 'stroke-gold-400', dotClass: 'bg-gold-400' },
               { key: 'locked', label: 'ضمن دفعة معتمدة', value: totals.locked, strokeClass: 'stroke-slate-400', dotClass: 'bg-slate-400' },
               { key: 'paid', label: 'مدفوع ومؤكد', value: totals.paid, strokeClass: 'stroke-emerald-400', dotClass: 'bg-emerald-400' }
