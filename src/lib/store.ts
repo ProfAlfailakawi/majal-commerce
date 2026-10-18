@@ -745,6 +745,16 @@ export class Store {
     return true;
   }
 
+  /** Server-side name/email search; found accounts are merged into the loaded list so they can be managed. */
+  public async searchUsers(query: string): Promise<void> {
+    if (IS_DEMO_MODE) return;
+    const found = await this.serverMutation(() => moderationClient.listUsers(undefined, query.trim()));
+    if (!found) return;
+    const known = new Set(this.users.map(u => u.id));
+    const extra = found.users.filter(row => !known.has(row.id)).map(row => ({ id: row.id, name: row.name, email: row.email, phone: '', role: row.role as User['role'], status: row.status as User['status'] }));
+    if (extra.length) { this.users = [...this.users, ...extra]; this.notify(); }
+  }
+
   public changeUserRole(userId: string, role: User['role'], reason = 'تغيير دور إداري من لوحة السوبر أدمن.') {
     // الدور صلاحية لا حالة عرض. المسار الإنتاجي خادمي: يتحقق من الصلاحية، يكتب السبب في
     // سجل التدقيق، ويبطل جلسات الحساب فوراً حتى لا يسري الدور القديم حتى انتهاء الجلسة.

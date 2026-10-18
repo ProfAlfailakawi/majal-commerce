@@ -70,13 +70,14 @@ export const ProductDiscovery: React.FC = () => {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="البحث باسم المنتج، المكونات، أو المبدع..."
+              placeholder="البحث باسم المنتج، المكونات، أو المبدع..." aria-label="بحث في المنتجات"
               className="w-full glass-input rounded-xl ps-9 pe-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
             />
           </div>
 
           <div>
             <select
+              aria-label="فئة المنتج"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="w-full glass-input rounded-xl p-2 text-xs text-slate-200 focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
@@ -92,6 +93,7 @@ export const ProductDiscovery: React.FC = () => {
             <span className="shrink-0 whitespace-nowrap">حد أدنى للمطابقة:</span>
             <input
               type="range"
+              aria-label="الحد الأدنى للمطابقة"
               min="50"
               max="95"
               value={minMatchScore}

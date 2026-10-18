@@ -165,7 +165,14 @@ export function createModerationRouter(db: MajalDatabase, authConfig: AuthConfig
     const limit = Number.isInteger(rawLimit) && rawLimit >= 1 ? Math.min(rawLimit, USER_LIST_MAX) : USER_LIST_MAX;
     const after = typeof req.query?.after === 'string' ? text(req.query.after, 1, 120) : undefined;
     if (req.query?.after !== undefined && !after) return jsonError(res, 400, 'مؤشر الصفحة غير صالح.', 'INVALID_CURSOR');
-    const rows = after
+    // Name / email search, so an account beyond the first pages of a large user base can be
+    // found without paging through everyone. LIKE wildcards in the term are escaped.
+    const q = typeof req.query?.q === 'string' ? req.query.q.trim() : '';
+    if (req.query?.q !== undefined && (q.length < 2 || q.length > 80)) return jsonError(res, 400, 'عبارة البحث يجب أن تكون بين حرفين و80 حرفًا.', 'INVALID_QUERY');
+    const pattern = `%${q.toLowerCase().replace(/[\\%_]/g, m => `\\${m}`)}%`;
+    const rows = q
+      ? await db.prepare("SELECT id, name, email, role, status FROM users WHERE id > ? AND (LOWER(name) LIKE ? ESCAPE '\\' OR LOWER(email) LIKE ? ESCAPE '\\') ORDER BY id ASC LIMIT ?").all<UserRow>(after ?? '', pattern, pattern, limit + 1)
+      : after
       ? await db.prepare('SELECT id, name, email, role, status FROM users WHERE id > ? ORDER BY id ASC LIMIT ?').all<UserRow>(after, limit + 1)
       : await db.prepare('SELECT id, name, email, role, status FROM users ORDER BY id ASC LIMIT ?').all<UserRow>(limit + 1);
     const page = rows.slice(0, limit);

@@ -48,6 +48,8 @@ const InfoChip: React.FC<{ icon: React.ReactNode; label: string; status?: string
 
 export const SuperAdminDashboard: React.FC = () => {
   const [, setTick] = useState(0);
+  const [userQuery, setUserQuery] = useState('');
+  const [userLimit, setUserLimit] = useState(24);
   useEffect(() => store.subscribe(() => setTick(t => t + 1)), []);
   const [activeTab, setActiveTab] = useState<'COMMAND' | 'PERMISSIONS' | 'LIQUIDITY' | 'TRUST' | 'SYSTEM' | 'AUDIT'>('COMMAND');
 
@@ -71,6 +73,17 @@ export const SuperAdminDashboard: React.FC = () => {
     ['SYSTEM', 'النظام'],
     ['AUDIT', 'سجل التدقيق']
   ] as const;
+
+  useEffect(() => {
+    const term = userQuery.trim();
+    if (term.length < 2) return;
+    const timer = window.setTimeout(() => { void store.searchUsers(term); }, 350);
+    return () => window.clearTimeout(timer);
+  }, [userQuery]);
+  const normalizedQuery = userQuery.trim().toLowerCase();
+  const visibleUsers = store.users
+    .filter(u => u.id !== store.activeUser.id)
+    .filter(u => !normalizedQuery || u.name.toLowerCase().includes(normalizedQuery) || u.email.toLowerCase().includes(normalizedQuery));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
@@ -114,7 +127,7 @@ export const SuperAdminDashboard: React.FC = () => {
           <PredictiveInterventionRadar onNavigate={target => setActiveTab(target)} />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { icon: <Users className="w-5 h-5 text-sky-300" />, label: 'الحسابات', value: store.users.length },
+              { icon: <Users className="w-5 h-5 text-sky-300" />, label: 'الحسابات', value: platform?.users?.total ?? store.users.length },
               { icon: <Sparkles className="w-5 h-5 text-emerald-300" />, label: 'المبدعون', value: store.creators.length },
               { icon: <Building2 className="w-5 h-5 text-gold-300" />, label: 'المنشآت', value: store.hosts.length },
               { icon: <Network className="w-5 h-5 text-fuchsia-300" />, label: 'إشارات المطابقة', value: store.matches.length }
@@ -174,8 +187,16 @@ export const SuperAdminDashboard: React.FC = () => {
 
           <div className="pt-5 border-t border-white/10">
             <div className="flex items-center gap-2 mb-4"><Users className="w-5 h-5 text-sky-300" /><h4 className="font-black text-slate-100">إدارة الحسابات الفعلية</h4></div>
+            <input
+              type="search"
+              value={userQuery}
+              onChange={e => { setUserQuery(e.target.value); setUserLimit(24); }}
+              placeholder="ابحث بالاسم أو البريد…"
+              aria-label="بحث في الحسابات"
+              className="glass-input w-full rounded-xl px-4 py-2.5 text-xs mb-3 outline-none"
+            />
             <div className="grid md:grid-cols-2 gap-3">
-              {store.users.filter(u => u.id !== store.activeUser.id).map(user => (
+              {visibleUsers.slice(0, userLimit).map(user => (
                 <div key={user.id} className="rounded-2xl p-4 bg-slate-950/40 border border-white/10 space-y-3">
                   <div className="flex items-center gap-3">
                     <Avatar name={user.name} src={user.avatar} size={40} shape="squircle" />
@@ -184,6 +205,7 @@ export const SuperAdminDashboard: React.FC = () => {
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:flex sm:flex-wrap">
                     <select
                       value={user.role}
+                      aria-label={`دور الحساب: ${user.name}`}
                       onChange={e => {
                         const next = e.target.value as UserRole;
                         if (next === user.role) return;
@@ -215,6 +237,12 @@ export const SuperAdminDashboard: React.FC = () => {
                 </div>
               ))}
             </div>
+            {visibleUsers.length === 0 && <p className="text-xs text-slate-400 py-4">لا توجد حسابات مطابقة للبحث.</p>}
+            {visibleUsers.length > userLimit && (
+              <button type="button" onClick={() => setUserLimit(v => v + 24)} className="mx-auto mt-4 flex min-h-11 items-center rounded-xl border border-white/10 bg-white/5 px-4 text-xs font-bold text-gold-300 hover:bg-white/10">
+                عرض المزيد ({visibleUsers.length - userLimit} متبقٍ)
+              </button>
+            )}
           </div>
         </section>
       )}

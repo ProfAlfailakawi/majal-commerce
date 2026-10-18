@@ -108,7 +108,7 @@ export const OfferBuilder: React.FC<OfferBuilderProps> = ({ collaboration }) => 
           rows={2}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="شروط التسويق المشترك، التغطية الإعلامية، مواعيد التوريد..."
+          placeholder="شروط التسويق المشترك، التغطية الإعلامية، مواعيد التوريد..." aria-label="ملاحظات وشروط إضافية للعرض"
           className="w-full glass-input rounded-xl p-2.5 text-slate-100 text-xs resize-none"
         />
       </div>

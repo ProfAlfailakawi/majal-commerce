@@ -58,7 +58,7 @@ export const AdminAuditLogs: React.FC = () => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="بحث بالوصف أو المعرف..."
+            placeholder="بحث بالوصف أو المعرف..." aria-label="بحث في سجل التدقيق"
             className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
           />
         </div>
