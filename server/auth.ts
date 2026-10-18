@@ -989,7 +989,7 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
         return jsonError(res, 429, `الحساب مقفل مؤقتًا بسبب محاولات دخول خاطئة متكررة. حاول مجددًا بعد ${minutes} دقيقة أو استخدم «نسيت كلمة المرور».`, 'ACCOUNT_LOCKED');
       }
       if (user && passwordValid && user.status !== 'ACTIVE') {
-        return jsonError(res, 403, 'هذا الحساب موقوف. تواصل مع دعم مجال لمعرفة السبب وإعادة التفعيل.', 'ACCOUNT_SUSPENDED');
+        return jsonError(res, 401, 'هذا الحساب موقوف. تواصل مع دعم مجال لمعرفة السبب وإعادة التفعيل.', 'ACCOUNT_SUSPENDED');
       }
       return jsonError(res, 401, 'بيانات الدخول غير صحيحة أو الحساب غير متاح.', 'INVALID_CREDENTIALS');
     }

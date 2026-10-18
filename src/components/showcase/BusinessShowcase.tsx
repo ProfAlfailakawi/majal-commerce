@@ -48,7 +48,7 @@ const ListingCard: React.FC<{ item: BusinessListing; onOpen: () => void }> = ({ 
         {item.yearsOperating !== null && <Fact icon={<CalendarClock className="w-3.5 h-3.5 text-gold-300" aria-hidden="true" />} label={item.yearsOperating === 0 ? 'جديد' : `${item.yearsOperating} سنوات`} />}
         {item.revenueBand && <Fact icon={<TrendingUp className="w-3.5 h-3.5 text-gold-300" aria-hidden="true" />} label={item.revenueBand} />}
       </div>
-      {item.highlights.length > 0 && <ul className="flex flex-wrap gap-1.5">{item.highlights.slice(0, 3).map(h => <li key={h} className="text-xs px-2 py-1 rounded-lg bg-emerald-500/10 border border-emerald-400/15 text-emerald-200">{h}</li>)}</ul>}
+      {item.highlights.length > 0 && <ul className="flex flex-wrap gap-1.5">{item.highlights.slice(0, 3).map((h, i) => <li key={`${h}-${i}`} className="text-xs px-2 py-1 rounded-lg bg-emerald-500/10 border border-emerald-400/15 text-emerald-200">{h}</li>)}</ul>}
       <button type="button" onClick={onOpen} className="mt-auto w-full py-2.5 rounded-xl bg-gold-500/10 border border-gold-300/25 text-gold-300 text-xs font-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">التفاصيل والتواصل</button>
     </div>
   </article>
@@ -263,7 +263,7 @@ export const BusinessShowcase: React.FC<{ onSurfaceChange: (surface: SurfaceType
             {open.yearsOperating !== null && <Fact icon={<CalendarClock className="w-3.5 h-3.5 text-gold-300" aria-hidden="true" />} label={`${open.yearsOperating} سنوات تشغيل`} />}
           </div>
           <p className="text-sm text-slate-200 leading-7 mt-4">{open.summary}</p>
-          {open.includes.length > 0 && <div className="mt-4"><h4 className="text-xs font-black mb-2">يشمله البيع</h4><ul className="flex flex-wrap gap-1.5">{open.includes.map(x => <li key={x} className="text-xs px-2.5 py-1 rounded-lg bg-white/5 border border-white/10">{x}</li>)}</ul></div>}
+          {open.includes.length > 0 && <div className="mt-4"><h4 className="text-xs font-black mb-2">يشمله البيع</h4><ul className="flex flex-wrap gap-1.5">{open.includes.map((x, idx) => <li key={`${x}-${idx}`} className="text-xs px-2.5 py-1 rounded-lg bg-white/5 border border-white/10">{x}</li>)}</ul></div>}
           {open.reason && <p className="text-xs text-slate-300 mt-4">سبب البيع: {open.reason}</p>}
           <div className="mt-5 space-y-3">
             {open.contactPhone ? (

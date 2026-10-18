@@ -405,7 +405,7 @@ test('UX regression: lockout and suspension are explained only to a caller who p
     assert.equal(rightWhileLocked.status, 429);
     assert.equal((await rightWhileLocked.json() as { code: string }).code, 'ACCOUNT_LOCKED');
     const suspendedRight = await login('paused@example.test', good);
-    assert.equal(suspendedRight.status, 403);
+    assert.equal(suspendedRight.status, 401);
     assert.equal((await suspendedRight.json() as { code: string }).code, 'ACCOUNT_SUSPENDED');
     const suspendedWrong = await login('paused@example.test', 'wrong-password-123');
     assert.equal(suspendedWrong.status, 401);

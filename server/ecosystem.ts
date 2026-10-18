@@ -211,8 +211,10 @@ export function createEcosystemRouter(db: MajalDatabase, authConfig: AuthConfig)
     const suppliers = await db.prepare("SELECT * FROM supplier_profiles WHERE verification_status='VERIFIED' ORDER BY updated_at DESC LIMIT 120").all<SupplierRow>();
     const supplierIds = suppliers.map(row => row.id);
     const offerings = supplierIds.length
-      ? await db.prepare(`SELECT so.* FROM supplier_offerings so JOIN supplier_profiles sp ON sp.id=so.supplier_id
-          WHERE sp.verification_status='VERIFIED' AND so.status='ACTIVE' ORDER BY so.updated_at DESC LIMIT 300`).all<OfferingRow>()
+      // Only the offerings of the suppliers being returned: a global "newest 300" starved every
+      // supplier outside that window of its products once the directory grew.
+      ? await db.prepare(`SELECT so.* FROM supplier_offerings so
+          WHERE so.supplier_id IN (${supplierIds.map(() => '?').join(',')}) AND so.status='ACTIVE' ORDER BY so.updated_at DESC LIMIT 1200`).all<OfferingRow>(...supplierIds)
       : [];
     const jobs = await db.prepare("SELECT * FROM job_posts WHERE status='APPROVED' ORDER BY submitted_at DESC LIMIT 120").all<JobRow>();
     res.json({ suppliers: suppliers.map(supplierPublic), offerings: offerings.map(offeringPublic), jobs: jobs.map(jobPublic) });
