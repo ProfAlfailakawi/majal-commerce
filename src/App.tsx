@@ -10,6 +10,7 @@ import { Bot, Sparkles } from 'lucide-react';
 import { AppErrorBoundary } from './components/common/AppErrorBoundary';
 import { AI_ASSISTANT_ENABLED, INTEGRATION_SIMULATORS_ENABLED, IS_DEMO_MODE } from './lib/runtime';
 import { AuthSession, logout, restoreAuthSession } from './lib/authClient';
+import { SESSION_EXPIRED_EVENT } from './lib/apiFetch';
 import { ExperienceGuide } from './components/common/ExperienceGuide';
 import { ConnectionSentinel } from './components/common/ConnectionSentinel';
 import { OnboardingExperience } from './components/onboarding/OnboardingExperience';
@@ -149,6 +150,24 @@ export default function App() {
     if (new URLSearchParams(window.location.search).get('drop')) { setActiveSurface('CONSUMER'); store.setSurface('CONSUMER'); }
   }, [authStatus]);
 
+  // Any authenticated API call that answers 401 ends the signed-in state here.
+  const [sessionNotice, setSessionNotice] = useState('');
+  const authStatusRef = React.useRef(authStatus);
+  authStatusRef.current = authStatus;
+  useEffect(() => {
+    const onExpired = () => {
+      if (authStatusRef.current !== 'AUTHENTICATED') return;
+      store.clearAuthenticatedUser();
+      setAuthStatus('ANONYMOUS');
+      setActiveSurface('PUBLIC');
+      store.setSurface('PUBLIC');
+      setSessionNotice('انتهت جلستك أو أُنهيت من جهاز آخر. سجّل الدخول من جديد للمتابعة.');
+      setShowAuth(true);
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+  }, []);
+
   const surfaceForUser = (user: { role: string; accountType?: string }): SurfaceType => {
     if (user.role === 'SUPER_ADMIN') return 'SUPER_ADMIN';
     if (user.role === 'ADMIN') return 'ADMIN';
@@ -159,6 +178,7 @@ export default function App() {
   };
 
   const handleAuthenticated = async (session: AuthSession) => {
+    setSessionNotice('');
     if (!store.setAuthenticatedUser(session.user)) return;
     const surface = surfaceForUser(session.user);
     await store.hydrateFromServer();
@@ -214,6 +234,7 @@ export default function App() {
       <div className="ambient-bg" aria-hidden="true" />
 
       <div className="relative z-10 flex-1 flex flex-col">
+        {sessionNotice && <div role="alert" className="bg-amber-500/15 border-b border-amber-400/30 text-amber-200 text-xs font-bold px-4 py-2.5 text-center">{sessionNotice}</div>}
         <Navbar
           activeSurface={activeSurface}
           onSurfaceChange={handleSurfaceChange}

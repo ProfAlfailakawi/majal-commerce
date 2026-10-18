@@ -17,6 +17,9 @@ export const ProductDiscovery: React.FC = () => {
   const host = store.hosts.find(h => h.id === currentHostId);
 
   const [searchTerm, setSearchTerm] = useState('');
+  // With a few hundred listed products, rendering every card (and its match breakdown) made
+  // this screen thousands of DOM nodes; show the best matches first and the rest on demand.
+  const [shown, setShown] = useState(12);
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [minMatchScore, setMinMatchScore] = useState<number>(75);
   const [selectedProductForVault, setSelectedProductForVault] = useState<{ product: CreatorProduct; level: DisclosureLevel } | null>(null);
@@ -113,7 +116,10 @@ export const ProductDiscovery: React.FC = () => {
 
       {/* Product Match Cards */}
       <CapGrid className="dna-draw-quick grid grid-cols-1 md:grid-cols-2 gap-6">
-        {visibleProducts.map(p => {
+        {[...visibleProducts]
+          .sort((a, b) => host ? store.calculateMatchScore(b, host).overallScore - store.calculateMatchScore(a, host).overallScore : 0)
+          .slice(0, shown)
+          .map(p => {
           const creator = store.creators.find(cr => cr.id === p.creatorId);
           const matchCalc = store.calculateMatchScore(p, host);
           const grant = store.recipeGrants.find(g => g.productId === p.id && g.hostBusinessId === currentHostId && (g.status === 'REQUESTED' || g.status === 'APPROVED'));
@@ -214,6 +220,11 @@ export const ProductDiscovery: React.FC = () => {
           </div>
         )}
       </CapGrid>
+      {visibleProducts.length > shown && (
+        <button type="button" onClick={() => setShown(v => v + 12)} className="mx-auto flex min-h-11 items-center rounded-xl border border-white/10 bg-white/5 px-5 text-xs font-bold text-gold-300 hover:bg-white/10">
+          عرض المزيد ({visibleProducts.length - shown} منتجًا متبقيًا)
+        </button>
+      )}
 
       {selectedProductForVault && (
         <RecipeVaultModal
