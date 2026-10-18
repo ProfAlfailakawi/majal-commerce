@@ -2,6 +2,7 @@ import { directHostGuard } from './server/direct-host-guard';
 import express, { NextFunction, Request, Response } from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import dotenv from 'dotenv';
 import { rateLimit as expressRateLimit } from 'express-rate-limit';
 import { generateProductCopyPolish, explainHostMatch } from './server/gemini';
@@ -107,7 +108,23 @@ async function initializeApplication(app: express.Express) {
   // Only the document extraction endpoint receives a larger JSON envelope.
   app.use('/api/v1/domain/innovations/zero-form/extract', express.json({ limit: '2200kb', strict: true }));
   app.use(express.json({ limit: '64kb', strict: true }));
-  app.use('/api', expressRateLimit(limitOptions(240, 15 * 60_000, 'api')));
+  // Per-IP budgets are wrong for a consumer product: Kuwaiti mobile carriers, offices and
+  // households put many people behind one address, and a signed-in page makes ~20 calls on load
+  // plus minute-by-minute refreshes. A flat 240 calls / 15 min / IP turned three simultaneous
+  // users into a site-wide 429. Signed-in traffic is therefore budgeted per session cookie (the
+  // IP is still part of the key), and only cookie-less traffic shares the per-IP budget. The
+  // app-wide ceiling above still bounds a single address, and credential/registration/payment
+  // routes keep their own strict per-IP limiters.
+  const sessionKeyOf = (req: Request) => {
+    const match = /(?:^|;\s*)(?:__session|majal_session)=([^;]+)/.exec(req.headers.cookie || '');
+    return match ? createHash('sha256').update(match[1]).digest('hex').slice(0, 16) : '';
+  };
+  app.use('/api', expressRateLimit({
+    ...limitOptions(900, 15 * 60_000, 'api-session'),
+    skip: req => !sessionKeyOf(req),
+    keyGenerator: req => `${req.ip}:${sessionKeyOf(req)}`
+  }));
+  app.use('/api', expressRateLimit({ ...limitOptions(600, 15 * 60_000, 'api'), skip: req => Boolean(sessionKeyOf(req)) }));
 
   /*
    * نقطة خفيفة تعرض بصمة البناء الحالية على الخادم: هي الحقيقة الوحيدة التي يقارنها
