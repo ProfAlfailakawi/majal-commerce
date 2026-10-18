@@ -65,6 +65,7 @@ test('order fulfilment: staff mark PAID orders delivered, which releases the cre
     assert.deepEqual(list.orders.map(o => o.id).sort(), ['ord_f1', 'ord_f2']);
     assert.equal(list.awaiting, 2);
     assert.equal((await (await get(stranger, '/commerce/host/orders')).json() as { orders: unknown[] }).orders.length, 0);
+    assert.equal((await get(fin, '/commerce/host/orders')).status, 403, 'finance does not see customer contact details');
 
     // Who may and may not.
     assert.equal((await post(buyerS, '/commerce/orders/ord_f1/fulfil')).status, 403, 'a customer cannot fulfil');

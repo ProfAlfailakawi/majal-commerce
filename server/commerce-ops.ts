@@ -464,7 +464,8 @@ export function createCommerceRouter(db: MajalDatabase, authConfig: AuthConfig) 
   });
 
   /** Orders the establishment still has to deliver (default) or has already delivered. Oldest first. */
-  router.get('/host/orders', requireRoles(...HOST_ALL_ROLES), async (req: AuthenticatedRequest, res) => {
+  // Customer names and phone numbers: only the roles that hand orders over see them (not finance/marketing).
+  router.get('/host/orders', requireRoles('HOST_OWNER', 'HOST_OPERATIONS', 'HOST_CHEF', 'HOST_SUPPORT'), async (req: AuthenticatedRequest, res) => {
     const org = hostOrg(req);
     if (!org) return jsonError(res, 403, 'لا توجد منشأة مرتبطة بحسابك.', 'FORBIDDEN');
     const status = req.query.status === 'FULFILLED' ? 'FULFILLED' : 'PAID';
