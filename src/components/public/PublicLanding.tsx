@@ -81,6 +81,19 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
 
         <span aria-hidden="true" className="majal-hero-rings xl:hidden" />
 
+        {/* The gate itself: two nested arches rising from the panel's base, seating the
+            constellation. Purely decorative, wide screens only, painted once (no motion). */}
+        <svg aria-hidden="true" focusable="false" className="majal-gate hidden xl:block" viewBox="0 0 240 320" preserveAspectRatio="xMidYMax meet">
+          <defs>
+            <linearGradient id="majal-gate-fade" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="currentColor" stopOpacity="0.55" />
+              <stop offset="1" stopColor="currentColor" stopOpacity="0.05" />
+            </linearGradient>
+          </defs>
+          <path d="M6 320V120a114 114 0 0 1 228 0V320" fill="none" stroke="url(#majal-gate-fade)" strokeWidth="1.5" />
+          <path d="M22 320V120a98 98 0 0 1 196 0V320" fill="none" stroke="url(#majal-gate-fade)" strokeWidth="1" strokeDasharray="2 5" />
+        </svg>
+
         {/*
           The brand monument. The previous version put four flat tiles here, which said
           the same thing as the journey section further down the page and said it worse.
@@ -190,13 +203,13 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
       {/* One panel rather than four floating cards: these are facets of a single claim,
           and a hairline between them reads as a spec plate instead of four unrelated
           numbers competing for the same attention. */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="majal-ledger grid grid-cols-2 lg:grid-cols-4">
         {stats.map((st, i) => (
-          <div key={i} className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 text-center sm:text-start rounded-2xl border border-gold-300/15 bg-gold-500/[0.04] px-3 sm:px-4 py-3.5">
-            <span className="w-10 h-10 shrink-0 rounded-xl grid place-items-center bg-gold-500/12 border border-gold-300/25 text-gold-300">{st.icon}</span>
+          <div key={i} className="majal-ledger-cell flex flex-col sm:flex-row items-center gap-3 sm:gap-4 text-center sm:text-start px-3 sm:px-5 py-5">
+            <span className="majal-arch-tile">{st.icon}</span>
             <div className="min-w-0">
-              <div className="text-sm font-black text-slate-100 leading-6">{st.title}</div>
-              <div className="text-xs text-slate-400 leading-5">{st.sub}</div>
+              <div className="majal-ledger-title font-display leading-7">{st.title}</div>
+              <div className="majal-ledger-sub text-sm leading-6">{st.sub}</div>
             </div>
           </div>
         ))}
@@ -206,25 +219,25 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
 
       <section aria-labelledby="landing-showcase" className="rounded-3xl border border-gold-300/20 bg-gold-500/[0.05] p-6 sm:p-8 grid md:grid-cols-[1fr_auto] gap-5 items-center">
         <div className="space-y-2">
-          <h2 id="landing-showcase" className="text-lg sm:text-xl font-black flex items-center gap-2"><Tag className="w-5 h-5 text-gold-300" aria-hidden="true" />عندك مشروع تبي تبيعه؟</h2>
-          <p className="text-xs sm:text-sm text-slate-300 leading-7 max-w-2xl">بوابة مجانية بلا عمولة: ارفع طلبك برقم تواصلك، نعتمده، ويظهر لجمهور مجال في بطاقة واضحة.</p>
+          <h2 id="landing-showcase" className="font-display text-xl sm:text-2xl font-black flex items-center gap-2"><Tag className="w-5 h-5 text-gold-300" aria-hidden="true" />عندك مشروع تبي تبيعه؟</h2>
+          <p className="text-sm sm:text-base text-slate-300 leading-7 max-w-2xl">بوابة مجانية بلا عمولة: ارفع طلبك برقم تواصلك، نعتمده، ويظهر لجمهور مجال في بطاقة واضحة.</p>
         </div>
         <button type="button" onClick={() => onSurfaceChange('SHOWCASE')} className="px-6 py-3.5 rounded-2xl bg-gold-500 hover:bg-gold-400 text-slate-950 font-black text-sm flex items-center justify-center gap-2">تصفّح المشاريع المعروضة<ChevronLeft className="w-4 h-4" aria-hidden="true" /></button>
       </section>
 
       <div className="grid md:grid-cols-5 gap-5">
         {[
-          { icon: <Users className="w-5 h-5" />, title: 'فصل الأدوار', body: 'كل طرف يرى ما يخصه فقط، حتى داخل المنشأة نفسها توجد صلاحيات مختلفة للمالك، الشيف، المالية، والتسويق.', cls: 'md:col-span-3 glass-panel border border-gold-300/20 p-6 sm:p-8 rounded-[28px] elev-2' },
-          { icon: <Coins className="w-5 h-5" />, title: 'مستحقات شفافة', body: 'المبدع يتابع مبيعاته ومستحقاته، والمنشأة تتابع الهوامش والإطلاقات، والأدمن يراقب دورة التسوية.', cls: 'md:col-span-2 border-s-2 border-s-gold-400/70 border border-white/10 bg-white/[0.03] p-5 sm:p-6 rounded-2xl' },
+          { icon: <Users className="w-5 h-5" />, title: 'فصل الأدوار', body: 'كل طرف يرى ما يخصه فقط، حتى داخل المنشأة نفسها توجد صلاحيات مختلفة للمالك، الشيف، المالية، والتسويق.', cls: 'md:col-span-3 majal-bento-lead p-6 sm:p-8 rounded-[28px]' },
+          { icon: <Coins className="w-5 h-5" />, title: 'مستحقات شفافة', body: 'المبدع يتابع مبيعاته ومستحقاته، والمنشأة تتابع الهوامش والإطلاقات، والأدمن يراقب دورة التسوية.', cls: 'md:col-span-2 majal-bento-card border-s-2 border-s-gold-400/70 border border-white/10 bg-white/[0.03] p-5 sm:p-6 rounded-2xl' },
           { icon: <Store className="w-5 h-5" />, title: 'منظومة بلا تداخل', body: 'هوية المبدع مستقلة عن المنشأة والمورد، وكل وظيفة كويتية تمر عبر مراجعة الإدارة قبل أن تظهر للجمهور.', cls: 'md:col-span-5 md:flex md:items-center md:gap-6 border border-dashed border-gold-300/25 p-5 sm:p-6 rounded-3xl' }
         ].map((item, idx) => (
           <div key={idx} className={`relative overflow-hidden space-y-3 md:space-y-0 ${item.cls}`}>
-            {idx === 0 && <span aria-hidden="true" className="absolute inset-x-8 top-0 h-px bg-gradient-to-l from-transparent via-gold-300/60 to-transparent" />}
-            <div className="flex items-center gap-3 md:shrink-0 md:min-w-[14rem]">
-              <div className="w-11 h-11 shrink-0 rounded-xl bg-gold-500/10 border border-gold-300/20 flex items-center justify-center text-gold-300">{item.icon}</div>
-              <h3 className="font-bold text-slate-100 text-base">{item.title}</h3>
+            {idx === 0 && <svg aria-hidden="true" focusable="false" className="majal-bento-arch" viewBox="0 0 120 150"><path d="M4 150V60a56 56 0 0 1 112 0V150M24 150V62a36 36 0 0 1 72 0V150" fill="none" stroke="currentColor" strokeWidth="2" /></svg>}
+            <div className="relative flex items-center gap-3 md:shrink-0 md:min-w-[14rem]">
+              <div className={idx === 0 ? 'majal-arch-tile majal-arch-tile--lead' : 'w-11 h-11 shrink-0 rounded-xl bg-gold-500/10 border border-gold-300/20 flex items-center justify-center text-gold-300'}>{item.icon}</div>
+              <h3 className={`font-display font-black text-lg ${idx === 0 ? 'majal-bento-title' : 'text-slate-100'}`}>{item.title}</h3>
             </div>
-            <p className={`text-xs text-slate-300 leading-7 ${idx === 2 ? "" : "md:mt-3"}`}>{item.body}</p>
+            <p className={`relative text-sm leading-7 ${idx === 0 ? 'majal-bento-body' : 'text-slate-300'} ${idx === 2 ? "" : "md:mt-3"}`}>{item.body}</p>
           </div>
         ))}
       </div>
