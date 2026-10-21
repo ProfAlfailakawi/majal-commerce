@@ -1,0 +1,65 @@
+/* Majal's operating room: a layered control surface, using the existing gold and ink tokens. */
+.majal-admin-overview {
+  position: relative;
+  isolation: isolate;
+}
+.majal-admin-overview > .majal-hero {
+  background:
+    radial-gradient(70% 120% at 0% 0%, color-mix(in srgb, var(--gold-500) 18%, transparent), transparent 70%),
+    linear-gradient(118deg, var(--ink-900), var(--ink-800) 58%, var(--ink-900)) !important;
+  border-color: color-mix(in srgb, var(--gold-400) 30%, transparent) !important;
+  box-shadow: var(--elev-3), inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+.majal-admin-overview > .majal-hero::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: -5rem;
+  inset-block-end: -8rem;
+  width: 18rem;
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in srgb, var(--gold-400) 18%, transparent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.7rem color-mix(in srgb, var(--gold-400) 5%, transparent), 0 0 0 3.4rem color-mix(in srgb, var(--gold-400) 3%, transparent);
+  pointer-events: none;
+}
+.majal-admin-overview > .majal-hero > * { position: relative; z-index: 1; }
+.majal-admin-overview > .majal-hero button { min-height: 48px; box-shadow: var(--elev-gold); }
+.majal-admin-overview > section.grid:first-of-type > div {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(155deg, color-mix(in srgb, var(--ink-800) 92%, transparent), var(--ink-900)) !important;
+  border-color: color-mix(in srgb, var(--edge-hi) 14%, transparent) !important;
+  box-shadow: var(--elev-2), inset 0 1px 0 var(--edge-hi) !important;
+}
+.majal-admin-overview > section.grid:first-of-type > div::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 18%;
+  width: 2px;
+  background: linear-gradient(transparent, var(--gold-400), transparent);
+  opacity: .72;
+}
+html[data-theme='light'] .majal-admin-overview > .majal-hero {
+  background: radial-gradient(70% 120% at 0% 0%, rgba(199,165,91,.14), transparent 70%), linear-gradient(118deg, #fffdf8, #f5f0e5 58%, #fff) !important;
+  border-color: rgba(199,165,91,.36) !important;
+  box-shadow: 0 18px 42px rgba(11,18,32,.09), inset 0 1px 0 rgba(255,255,255,.96) !important;
+}
+html[data-theme='light'] .majal-admin-overview > section.grid:first-of-type > div {
+  background: linear-gradient(155deg, #fff, #f7f3e9) !important;
+  border-color: rgba(199,165,91,.25) !important;
+  box-shadow: 0 10px 25px rgba(11,18,32,.07), inset 0 1px 0 #fff !important;
+}
+html[data-theme='contrast'] .majal-admin-overview > .majal-hero,
+html[data-theme='contrast'] .majal-admin-overview > section.grid:first-of-type > div {
+  background: #000 !important;
+  border: 2px solid #fff !important;
+  box-shadow: none !important;
+}
+@media (max-width: 639px) {
+  .majal-admin-overview > .majal-hero { padding: 1.1rem !important; }
+  .majal-admin-overview > section.grid:first-of-type > div { min-height: 112px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .majal-admin-overview > section.grid:first-of-type > div { transition: none !important; }
+}
