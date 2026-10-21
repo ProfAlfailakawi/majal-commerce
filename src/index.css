@@ -1224,3 +1224,104 @@ body:has(.majal-ai-fab) footer { padding-bottom: 4.5rem; }
 @media (prefers-reduced-motion: reduce) {
   .majal-img-in, .majal-img-loading { animation: none; }
 }
+
+/* ============================================================
+   Visual elevation — the gate motif
+   Display face + arch-shaped tiles + a spec-plate ledger. The arch is the brand mark's
+   own silhouette, so shape language, type and illustration all say "licensed gate".
+   Presentation only: tokens, type and surface treatment; no behaviour.
+   ============================================================ */
+:root {
+  --font-display: 'Tajawal', 'Segoe UI', Tahoma, 'Noto Sans Arabic', system-ui, sans-serif;
+  --ledger-bg: rgba(19, 28, 45, 0.82);
+  --ledger-line: rgba(199, 165, 91, 0.22);
+  --ledger-title: #f4efe2;
+  --ledger-sub: #aeb6c6;
+  --arch-ink: var(--gold-300);
+}
+:root[data-theme='light'] {
+  --ledger-bg: #fffdf8;
+  --ledger-line: rgba(138, 104, 36, 0.24);
+  --ledger-title: #0b1220;
+  --ledger-sub: #4a5468;
+  --arch-ink: #7d612b;
+}
+:root[data-theme='contrast'] {
+  --ledger-bg: #000;
+  --ledger-line: #fff;
+  --ledger-title: #fff;
+  --ledger-sub: #fff;
+  --arch-ink: #ffd98a;
+}
+
+/* Display role stays on Tajawal (800): a Kufi trial was dropped because its kashida
+   stretching and dense dots hurt legibility. */
+.font-display { font-family: var(--font-display); font-weight: 800; letter-spacing: 0; }
+
+/* Spec plate: four facets of one claim, hairline-divided inside a single frame. */
+.majal-ledger {
+  gap: 1px;
+  background: var(--ledger-line);
+  border: 1px solid var(--ledger-line);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: var(--elev-1);
+}
+.majal-ledger-cell { background: var(--ledger-bg); }
+.majal-ledger-title { color: var(--ledger-title); font-size: 1.0625rem; font-weight: 700; }
+.majal-ledger-sub { color: var(--ledger-sub); }
+
+/* Arch tile: the gate silhouette as the icon seat. */
+.majal-arch-tile {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 3.25rem;
+  border-radius: 9999px 9999px 0.6rem 0.6rem;
+  color: var(--arch-ink);
+  background: linear-gradient(180deg, rgba(199, 165, 91, 0.28), rgba(199, 165, 91, 0.06));
+  border: 1px solid rgba(199, 165, 91, 0.4);
+  border-bottom-width: 2px;
+}
+.majal-arch-tile--lead { width: 3rem; height: 3.5rem; color: #e8c880; background: linear-gradient(180deg, rgba(232, 200, 128, 0.3), rgba(232, 200, 128, 0.05)); border-color: rgba(232, 200, 128, 0.5); }
+
+/* Hero gate: nested arches behind the constellation (xl+ only). */
+.majal-gate {
+  position: absolute;
+  inset-inline-end: -0.5rem;
+  inset-block-end: 0;
+  width: 24rem;
+  height: 120%;
+  max-height: 30rem;
+  color: var(--gold-500);
+  pointer-events: none;
+}
+
+/* The one dark moment on the page, in every theme: a lit threshold. */
+.majal-bento-lead {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, #101a30 0%, #0a1222 100%);
+  border: 1px solid rgba(232, 200, 128, 0.35);
+  box-shadow: 0 18px 44px rgba(7, 13, 24, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.majal-bento-title { color: #f8ecd0; }
+.majal-bento-body { color: #d3d9e6; }
+.majal-bento-arch {
+  position: absolute;
+  inset-inline-end: 1.25rem;
+  inset-block-end: 0;
+  width: 7.5rem;
+  height: 9.375rem;
+  color: rgba(232, 200, 128, 0.2);
+  pointer-events: none;
+}
+.majal-bento-card { transition: transform var(--dur-base) var(--ease-out), border-color var(--dur-base) ease; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .majal-bento-card:hover { transform: translateY(-2px); border-color: rgba(199, 165, 91, 0.45); }
+}
+@media (max-width: 767px) {
+  .majal-bento-arch { display: none; }
+  .majal-ledger-title { font-size: 1rem; }
+}
