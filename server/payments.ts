@@ -563,7 +563,7 @@ export function createPaymentRouter(db: MajalDatabase, authConfig: AuthConfig, r
         currency: 'KWD',
         customerReference: req.auth.user.id,
         idempotencyKey,
-        returnUrl: new URL('/payment/return', process.env.APP_URL || `${req.protocol}://${req.get('host')}`).toString()
+        returnUrl: new URL(`/payment/return?order=${encodeURIComponent(orderPublicId)}`, process.env.APP_URL || `${req.protocol}://${req.get('host')}`).toString()
       });
       await db.prepare(`
         UPDATE payment_intents

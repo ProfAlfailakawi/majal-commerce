@@ -324,7 +324,16 @@ async function initializeApplication(app: express.Express) {
         }
       },
     }));
-    app.get('/{*rest}', expressRateLimit(limitOptions(600, 60_000, 'spa-shell')), (req, res) => path.extname(req.path) ? jsonError(res, 404, 'الملف غير موجود.') : res.sendFile(indexPath));
+    // og:image / canonical must be absolute for link previews (WhatsApp, X, LinkedIn): fill the placeholder
+    // with the configured public origin, falling back to the request's own host.
+    const indexHtml = fs.readFileSync(indexPath, 'utf8');
+    app.get('/{*rest}', expressRateLimit(limitOptions(600, 60_000, 'spa-shell')), (req, res) => {
+      if (path.extname(req.path)) return jsonError(res, 404, 'الملف غير موجود.');
+      const candidate = (process.env.APP_URL || `${req.protocol}://${req.get('host')}`).trim().replace(/\/+$/, '');
+      const origin = /^https?:\/\/[\w.:-]+$/.test(candidate) ? candidate : '';
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+      res.type('html').send(indexHtml.replaceAll('__PUBLIC_ORIGIN__', origin));
+    });
   }
 
   app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {

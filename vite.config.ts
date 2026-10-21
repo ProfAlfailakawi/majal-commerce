@@ -20,7 +20,10 @@ function publicOriginPlugin() {
     .replace(/\/+$/, '');
   return {
     name: 'majal-public-origin',
-    transformIndexHtml(html: string) {
+    transformIndexHtml(html: string, ctx: { bundle?: unknown }) {
+      // The Docker build has no APP_URL (Cloud Run injects it at runtime), so a production
+      // bundle keeps the placeholder and server.ts fills in the live origin per response.
+      if (!origin && ctx.bundle) return html;
       return html.replaceAll('__PUBLIC_ORIGIN__', origin);
     },
   };

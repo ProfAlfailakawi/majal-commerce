@@ -250,7 +250,7 @@ export function createOrdersRouter(db: MajalDatabase, authConfig: AuthConfig, pa
         currency: 'KWD',
         customerReference: auth.user.id,
         idempotencyKey,
-        returnUrl: new URL('/payment/return', process.env.APP_URL || `${req.protocol}://${req.get('host')}`).toString()
+        returnUrl: new URL(`/payment/return?order=${encodeURIComponent(orderId)}`, process.env.APP_URL || `${req.protocol}://${req.get('host')}`).toString()
       });
       await db.prepare('UPDATE payment_intents SET provider_reference = ?, status = ?, checkout_url = ?, updated_at = ? WHERE id = ?')
         .run(result.providerReference, result.status, result.checkoutUrl ?? null, now(), intentId);

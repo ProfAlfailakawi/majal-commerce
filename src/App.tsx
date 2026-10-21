@@ -16,6 +16,7 @@ import { ConnectionSentinel } from './components/common/ConnectionSentinel';
 import { OnboardingExperience } from './components/onboarding/OnboardingExperience';
 import { OnboardingIntent, hasSeenOnboarding, markOnboardingSeen } from './lib/onboarding';
 
+const PaymentReturnPage = lazy(() => import('./components/consumer/PaymentReturnPage').then(module => ({ default: module.PaymentReturnPage })));
 const CreatorPortal = lazy(() => import('./components/creator/CreatorPortal').then(module => ({ default: module.CreatorPortal })));
 const HostPortal = lazy(() => import('./components/host/HostPortal').then(module => ({ default: module.HostPortal })));
 const SupplierPortal = lazy(() => import('./components/supplier/SupplierPortal').then(module => ({ default: module.SupplierPortal })));
@@ -70,6 +71,8 @@ export default function App() {
   const [inviteToken, setInviteToken] = useState<string | null>(() => new URLSearchParams(window.location.search).get('invite'));
   const [partnerToken, setPartnerToken] = useState<string | null>(() => new URLSearchParams(window.location.search).get('partners'));
   const [gateToken, setGateToken] = useState<string | null>(() => new URLSearchParams(window.location.search).get('my-report'));
+  const [paymentReturn, setPaymentReturn] = useState<{ orderId: string | null } | null>(() => window.location.pathname.replace(/\/+$/, '') === '/payment/return' ? { orderId: new URLSearchParams(window.location.search).get('order') } : null);
+  const closePaymentReturn = () => { window.history.replaceState(null, '', '/'); setPaymentReturn(null); };
   const closeGateReport = () => { window.history.replaceState(null, '', '/'); setGateToken(null); };
   const closePartners = () => { window.history.replaceState(null, '', '/'); setPartnerToken(null); };
   const closeInvite = () => { window.history.replaceState(null, '', '/'); setInviteToken(null); };
@@ -98,10 +101,10 @@ export default function App() {
 
   // Anonymous audience measurement: one report per browser per page per day, role only (see lib/audienceClient).
   useEffect(() => {
-    if (authStatus === 'LOADING' || adReportToken || inviteToken || partnerToken || gateToken || legalDocument) return;
+    if (authStatus === 'LOADING' || paymentReturn || adReportToken || inviteToken || partnerToken || gateToken || legalDocument) return;
     const user = store.activeUser;
     reportPageView(activeSurface, audienceOf(user), user.role === 'ADMIN' || user.role === 'SUPER_ADMIN');
-  }, [activeSurface, authStatus, adReportToken, inviteToken, partnerToken, gateToken, legalDocument]);
+  }, [activeSurface, authStatus, paymentReturn, adReportToken, inviteToken, partnerToken, gateToken, legalDocument]);
 
   // The first-run introduction. It is held back until the session question is settled:
   // opening it over a still-resolving auth state would show a returning operator the
@@ -254,7 +257,7 @@ export default function App() {
 
         <main id="main-content" tabIndex={-1} className="animate-in fade-in duration-300 flex-1 pb-[4.5rem] sm:pb-10 outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
           <Suspense fallback={<SurfaceFallback />}>
-            {gateToken ? <GateReportPage token={gateToken} onClose={closeGateReport} /> : partnerToken ? <PartnerKitPage token={partnerToken} onClose={closePartners} /> : inviteToken ? <InviteAcceptPage token={inviteToken} onDone={closeInvite} /> : adReportToken ? <AdReportPage token={adReportToken} onClose={closeAdReport} /> : legalDocument ? <LegalCenter initialDocument={legalDocument} onBack={closeLegal} /> : <>
+            {paymentReturn ? <PaymentReturnPage orderId={paymentReturn.orderId} onDone={closePaymentReturn} /> : gateToken ? <GateReportPage token={gateToken} onClose={closeGateReport} /> : partnerToken ? <PartnerKitPage token={partnerToken} onClose={closePartners} /> : inviteToken ? <InviteAcceptPage token={inviteToken} onDone={closeInvite} /> : adReportToken ? <AdReportPage token={adReportToken} onClose={closeAdReport} /> : legalDocument ? <LegalCenter initialDocument={legalDocument} onBack={closeLegal} /> : <>
               {activeSurface === 'PUBLIC' && <PublicLanding onSurfaceChange={handleSurfaceChange} />}
               {activeSurface === 'DIRECTORY' && <SupplierDirectory onSurfaceChange={handleSurfaceChange} />}
               {activeSurface === 'SHOWCASE' && <BusinessShowcase onSurfaceChange={handleSurfaceChange} />}
