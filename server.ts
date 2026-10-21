@@ -324,7 +324,17 @@ async function initializeApplication(app: express.Express) {
         }
       },
     }));
-    app.get('/{*rest}', expressRateLimit(limitOptions(600, 60_000, 'spa-shell')), (req, res) => path.extname(req.path) ? jsonError(res, 404, 'الملف غير موجود.') : res.sendFile(indexPath));
+    // og:image / canonical must be absolute for link previews (WhatsApp, X, LinkedIn). The build has no APP_URL
+    // (Cloud Run injects it at runtime), so the placeholder is filled once here from configuration, never from
+    // request data; with no valid APP_URL it collapses to a root-relative path.
+    const configuredOrigin = (process.env.APP_URL || '').trim().replace(/\/+$/, '');
+    const publicOrigin = /^https?:\/\/[\w.:-]+$/.test(configuredOrigin) ? configuredOrigin : '';
+    const indexHtml = fs.readFileSync(indexPath, 'utf8').replaceAll('__PUBLIC_ORIGIN__', publicOrigin);
+    app.get('/{*rest}', expressRateLimit(limitOptions(600, 60_000, 'spa-shell')), (req, res) => {
+      if (path.extname(req.path)) return jsonError(res, 404, 'الملف غير موجود.');
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+      res.type('html').send(indexHtml);
+    });
   }
 
   app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
