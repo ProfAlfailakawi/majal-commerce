@@ -68,12 +68,12 @@ export const TeamManager: React.FC = () => {
           {team.members.map(m => (
             <div key={m.userId} className="flex flex-wrap items-center gap-3 rounded-xl bg-white/[0.03] border border-white/10 px-3 py-2.5">
               <Avatar name={m.name} size={34} shape="squircle" />
-              <div className="min-w-0 flex-1"><div className="text-sm font-black truncate">{m.name}{m.self ? ' (أنت)' : ''}</div><div dir="ltr" className="text-xs text-slate-400 truncate text-start">{m.email}</div></div>
+              <div className="min-w-[8rem] flex-1"><div className="text-sm font-black truncate" title={m.name}>{m.name}{m.self ? ' (أنت)' : ''}</div><div dir="ltr" className="text-xs text-slate-400 truncate text-start" title={m.email}>{m.email}</div></div>
               {m.role === 'HOST_OWNER' || m.self ? <span className="text-xs text-gold-300 font-black">{roleLabel(m.role as UserRole)}</span> : (
                 <>
                   <select aria-label={`دور ${m.name}`} value={m.role} disabled={busy} onChange={e => act(() => changeTeamMember(m.userId, { role: e.target.value as TeamRole }))} className={`${field} !w-auto`}>{TEAM_ROLES.map(r => <option key={r} value={r}>{roleLabel(r as UserRole)}</option>)}</select>
-                  <button type="button" disabled={busy} onClick={() => act(() => changeTeamMember(m.userId, { status: m.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE' }))} aria-label={m.status === 'ACTIVE' ? `إيقاف ${m.name}` : `تفعيل ${m.name}`} className="p-2 rounded-lg bg-white/5 border border-white/10">{m.status === 'ACTIVE' ? <Pause className="w-4 h-4 text-amber-300" aria-hidden="true" /> : <Play className="w-4 h-4 text-emerald-300" aria-hidden="true" />}</button>
-                  <button type="button" disabled={busy} onClick={() => { if (window.confirm(`إزالة ${m.name} من المنشأة؟`)) void act(() => removeTeamMember(m.userId)); }} aria-label={`إزالة ${m.name}`} className="p-2 rounded-lg bg-rose-500/10 border border-rose-400/20"><Trash2 className="w-4 h-4 text-rose-300" aria-hidden="true" /></button>
+                  <button type="button" disabled={busy} onClick={() => act(() => changeTeamMember(m.userId, { status: m.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE' }))} aria-label={m.status === 'ACTIVE' ? `إيقاف ${m.name}` : `تفعيل ${m.name}`} className="grid place-items-center p-2 max-sm:min-h-11 max-sm:min-w-11 rounded-lg bg-white/5 border border-white/10">{m.status === 'ACTIVE' ? <Pause className="w-4 h-4 text-amber-300" aria-hidden="true" /> : <Play className="w-4 h-4 text-emerald-300" aria-hidden="true" />}</button>
+                  <button type="button" disabled={busy} onClick={() => { if (window.confirm(`إزالة ${m.name} من المنشأة؟`)) void act(() => removeTeamMember(m.userId)); }} aria-label={`إزالة ${m.name}`} className="grid place-items-center p-2 max-sm:min-h-11 max-sm:min-w-11 rounded-lg bg-rose-500/10 border border-rose-400/20"><Trash2 className="w-4 h-4 text-rose-300" aria-hidden="true" /></button>
                 </>
               )}
             </div>
