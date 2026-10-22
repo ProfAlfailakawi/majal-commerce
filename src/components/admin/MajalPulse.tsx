@@ -52,7 +52,7 @@ export const MajalPulse: React.FC = () => {
           <div>
             <div className="inline-flex items-center gap-2 text-emerald-300 text-xs font-black"><Activity className="w-4 h-4" /> نبض مجال</div>
             <h2 className="text-xl md:text-2xl font-black mt-2">نبض مجال — السوق كله في شاشة واحدة</h2>
-            <p className="text-xs text-slate-400 mt-2 leading-6">من العرض والطلب إلى المختبر والعقود والإطلاق والقيمة الاقتصادية، مع إبراز أي نقطة تحتاج تدخل الإدارة.</p>
+            <p className="text-xs text-slate-400 mt-2 leading-6">من العرض والطلب إلى الإطلاق والقيمة، مع إبراز ما يحتاج تدخّلًا.</p>
           </div>
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-400/20 text-xs text-emerald-300 font-bold">
             <ArrowUpLeft className="w-4 h-4" /> لقطة تشغيلية حية من بيانات المنصة

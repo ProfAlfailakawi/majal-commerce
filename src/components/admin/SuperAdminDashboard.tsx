@@ -93,7 +93,7 @@ export const SuperAdminDashboard: React.FC = () => {
           <div className="space-y-3 max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-fuchsia-500/10 border border-fuchsia-400/20 text-fuchsia-200 text-xs font-black"><Crown className="w-4 h-4" /> سوبر أدمن مجال</div>
             <h1 className="text-2xl md:text-4xl font-black">مركز قيادة «مجال»</h1>
-            <p className="text-sm text-slate-400 leading-7">السوبر أدمن لا يدير شاشة فقط؛ يدير السوق نفسه: الأدوار، السياسات، المخاطر، سيولة العرض والطلب، سلامة الوصول والبيانات، ومؤشرات الشركة العليا.</p>
+            <p className="text-sm text-slate-400 leading-7">يدير السوق نفسه: الأدوار، السياسات، المخاطر، السيولة، سلامة الوصول والبيانات.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 w-full xl:w-auto xl:min-w-[320px]">

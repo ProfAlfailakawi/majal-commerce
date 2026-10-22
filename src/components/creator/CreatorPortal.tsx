@@ -101,7 +101,7 @@ export const CreatorPortal: React.FC = () => {
                 <span className="text-xs text-slate-400">{profile.specialty}</span>
               </div>
               <h1 className="text-2xl md:text-3xl font-black mt-2">أهلًا {profile.displayName}، هذا مجال نموّك</h1>
-              <p className="text-sm text-slate-400 mt-2 max-w-2xl leading-7">كل ما تحتاجه من اكتشاف فرصة، حماية وصفة، تفاوض، عقد، إطلاق ومستحقات موجود في مسار واحد.</p>
+              <p className="text-sm text-slate-400 mt-2 max-w-2xl leading-7">فرصة، حماية، تفاوض، عقد، إطلاق، مستحقات — في مسار واحد.</p>
             </div>
           </div>
 
