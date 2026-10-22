@@ -255,7 +255,7 @@ export default function App() {
 
         {!adReportToken && !inviteToken && !partnerToken && !gateToken && !legalDocument && !['DIRECTORY', 'CREATOR', 'HOST', 'SUPPLIER'].includes(activeSurface) && <AdSlot slot="SPONSOR" />}
 
-        <main id="main-content" tabIndex={-1} className="animate-in fade-in duration-300 flex-1 pb-[4.5rem] sm:pb-10 outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
+        <main id="main-content" data-surface={paymentReturn ? 'PAYMENT' : (gateToken || partnerToken || inviteToken || adReportToken || legalDocument) ? 'OTHER' : activeSurface} tabIndex={-1} className="animate-in fade-in duration-300 flex-1 pb-[4.5rem] sm:pb-10 outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
           <Suspense fallback={<SurfaceFallback />}>
             {paymentReturn ? <PaymentReturnPage orderId={paymentReturn.orderId} onDone={closePaymentReturn} /> : gateToken ? <GateReportPage token={gateToken} onClose={closeGateReport} /> : partnerToken ? <PartnerKitPage token={partnerToken} onClose={closePartners} /> : inviteToken ? <InviteAcceptPage token={inviteToken} onDone={closeInvite} /> : adReportToken ? <AdReportPage token={adReportToken} onClose={closeAdReport} /> : legalDocument ? <LegalCenter initialDocument={legalDocument} onBack={closeLegal} /> : <>
               {activeSurface === 'PUBLIC' && <PublicLanding onSurfaceChange={handleSurfaceChange} />}

@@ -1,0 +1,68 @@
+/* ==========================================================================
+   Motion layer (round 2). Loaded last. Presentation only.
+   One token set, transform + opacity only, 120-260ms, no loops, no fill that
+   leaves a transform behind (so fixed modals are never re-parented).
+   Everything that moves lives under prefers-reduced-motion: no-preference;
+   the resting (non-animated) state is always the finished design.
+   ========================================================================== */
+:root {
+  --m-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --m-d1: 120ms;
+  --m-d2: 180ms;
+  --m-d3: 260ms;
+}
+
+@keyframes m-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes m-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Buttons get a transform transition only where no utility already owns transition-property. */
+@layer base {
+  button:not(:disabled) { transition: transform var(--m-d1) var(--m-ease); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Route / surface change: the new surface eases in (6px, opacity). Not on the payment return page. */
+  #main-content:not([data-surface='PAYMENT']) > * { animation: m-rise var(--m-d3) var(--m-ease) backwards; }
+
+  /* Press feedback. Dialogs that carry money, contracts or vault content stay still. */
+  button:not(:disabled):active,
+  a[class*='rounded']:active { transform: scale(0.98); }
+  [aria-labelledby='contract-modal-title'] button:active,
+  [aria-labelledby='consumer-order-title'] button:active,
+  [aria-labelledby='recipe-vault-title'] button:active,
+  [aria-labelledby='unit-economics-title'] button:active { transform: none; }
+
+  /* Clickable cards lift a pixel. */
+  a.glass-card, button.glass-card { transition: transform var(--m-d2) var(--m-ease), box-shadow var(--m-d2) var(--m-ease), border-color var(--m-d2) ease; }
+  @media (hover: hover) {
+    a.glass-card:hover, button.glass-card:hover { transform: translateY(-1px); box-shadow: var(--elev-2); }
+  }
+
+  /* Icon nudge inside primary-looking buttons on hover (direction follows RTL). */
+  @media (hover: hover) {
+    button:hover > svg.lucide-chevron-left, a:hover > svg.lucide-chevron-left { transform: translateX(-2px); }
+    button > svg.lucide-chevron-left, a > svg.lucide-chevron-left { transition: transform var(--m-d2) var(--m-ease); }
+  }
+
+  /* Disclosure open: the revealed content fades up once. */
+  details[open] > :not(summary) { animation: m-rise var(--m-d2) var(--m-ease) backwards; }
+
+  /* Dialog panels (those without their own entrance), excluding money / contract / vault. */
+  [role='dialog']:not(.animate-in):not([aria-labelledby='contract-modal-title']):not([aria-labelledby='consumer-order-title']):not([aria-labelledby='recipe-vault-title']):not([aria-labelledby='unit-economics-title']) {
+    animation: m-rise var(--m-d3) var(--m-ease) backwards;
+  }
+
+  /* Staggered first appearance for cards that start below the fold (see lib/motionReveal.ts). */
+  [data-reveal='wait'] { opacity: 0; transform: translateY(8px); }
+  [data-reveal='in'] { animation: m-rise var(--m-d3) var(--m-ease) var(--reveal-delay, 0ms) backwards; }
+}
+
+@media print {
+  [data-reveal] { opacity: 1 !important; transform: none !important; animation: none !important; }
+}
