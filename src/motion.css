@@ -17,8 +17,8 @@
   to   { opacity: 1; transform: none; }
 }
 @keyframes m-reveal {
-  from { opacity: 0.6; transform: translateY(8px); }
-  to   { opacity: 1; transform: none; }
+  from { transform: translateY(8px); }
+  to   { transform: none; }
 }
 @keyframes m-fade {
   from { opacity: 0; }
@@ -63,8 +63,8 @@
   }
 
   /* Staggered first appearance for cards that start below the fold (see lib/motionReveal.ts). */
-  /* Waiting cards are dimmed, never fully hidden, so content can't be stuck invisible (find-in-page, captures, slow IO). */
-  [data-reveal='wait'] { opacity: 0.6; transform: translateY(8px); }
+  /* Waiting cards only sit 8px low (no opacity change), so content is never hidden or dimmed: contrast and find-in-page stay intact. */
+  [data-reveal='wait'] { transform: translateY(8px); }
   [data-reveal='in'] { animation: m-reveal var(--m-d3) var(--m-ease) var(--reveal-delay, 0ms) backwards; }
 }
 
