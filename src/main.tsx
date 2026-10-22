@@ -3,6 +3,8 @@ import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import './components/dna/dna-theme.css';
+import './motion.css';
+import {installMotionReveal} from './lib/motionReveal';
 import {installAppUpdate} from './lib/app-update';
 
 /**
@@ -56,6 +58,8 @@ requestAnimationFrame(() => requestAnimationFrame(dismissBootSplash));
 // Register the service worker so the app is installable and launches offline. Production
 // only: a SW in dev would cache Vite's HMR chunks and fight live reload. Registered after
 // `load` so it never competes with the first paint or the bundle fetch for bandwidth.
+installMotionReveal();
+
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch((error) => {
