@@ -9,24 +9,30 @@
       catch (e) { return 'anon' + Math.random().toString(36).slice(2, 10); }
     })();
     function clean(s) { return String(s == null ? '' : s).replace(/[?#][^\s)'"]*/g, '').slice(0, 160); }
-    // A path segment that looks like an identifier (digits, uuid, long token, mixed letters+digits, an email or an encoded value) is replaced
-    // by :id, so a visitor's participant or session id never leaves the browser inside a page path or a request breadcrumb.
+    // A path segment that looks like an identifier (digits, uuid, a long token, letters mixed with digits, an email or an encoded value) is
+    // replaced by :id, so a visitor's participant, session or share-link token never leaves the browser inside a page path, a request
+    // breadcrumb or a stack frame. File names such as index-abc123.js stay readable.
     function route(p) {
       try {
         return String(p).split('/').map(function (s) {
-          var id = /^\d{2,}$/.test(s) || /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(s) || /^[0-9a-f]{16,}$/i.test(s) || /^[A-Za-z0-9_-]{20,}$/.test(s) ||
-            (/\d/.test(s) && /[A-Za-z]/.test(s) && s.length >= 8) || s.indexOf('@') !== -1 || s.indexOf('%') !== -1;
+          if (/\.(m?js|css|html?|map|json|svg|png|jpe?g|webp|gif|woff2?|ico)$/i.test(s) && !/[@%]/.test(s)) return s;
+          var id = /^\d{2,}$/.test(s) || /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(s) || /^[A-Za-z0-9_-]{20,}$/.test(s) || (/^[A-Za-z0-9_-]{12,}$/.test(s) && !/^[a-z-]+$/.test(s)) ||
+            (/\d/.test(s) && /[A-Za-z]/.test(s) && s.length >= 6) || s.indexOf('@') !== -1 || s.indexOf('%') !== -1;
           return id ? ':id' : s;
         }).join('/');
       } catch (e) { return ''; }
     }
-    // A file path keeps its own name (index-abc123.js is useful in a stack) but its folders are redacted like any other path.
-    function fileRoute(p) {
-      var parts = String(p).split('/'), last = parts.pop();
-      return route(parts.join('/')) + '/' + (last.indexOf('.') > 0 ? last : route(last));
-    }
-    function file(u) { try { return fileRoute(new URL(u, location.href).pathname).slice(0, 60); } catch (e) { return clean(u); } }
     function path(u) { try { return route(new URL(u, location.href).pathname).slice(0, 60); } catch (e) { return clean(u); } }
+    function file(u) { return path(u); }
+    // Error messages can quote what a visitor typed or uploaded. Emails, long numbers, long tokens and quoted values that are not plain
+    // identifiers are masked before anything is queued.
+    function scrub(s) {
+      return String(s)
+        .replace(/[^\s@]+@[^\s@]+\.[^\s@]+/g, '[email]')
+        .replace(/\+?\d[\d\s().-]{6,}\d/g, '[num]')
+        .replace(/\b[A-Za-z0-9_-]{24,}\b/g, '[token]')
+        .replace(/(["'`])((?:(?!\1).){1,200}?)\1/g, function (m, q, v) { return /^[A-Za-z_$][\w$]{0,30}$/.test(v) ? m : q + '...' + q; });
+    }
     function same(u) { try { return new URL(u, location.href).origin === location.origin; } catch (e) { return false; } }
     // The last few things the visitor did: tags, ids and paths only, never text they typed or read.
     function step(s) { try { trail.push(String(s).slice(0, 70)); if (trail.length > 20) trail.shift(); } catch (e) {} }
@@ -41,7 +47,7 @@
     }
     function note(kind, message, extra) {
       try {
-        var m = clean(message); if (!m) return;
+        var m = scrub(clean(message)); if (!m) return;
         var key = kind + m; if (seen[key]) return; seen[key] = 1;
         var r = { k: kind, m: m, p: route(location.pathname) };
         if (extra) { r.t = extra.t; r.o = extra.o ? 1 : 0; r.b = trail.slice(-12); }
@@ -51,7 +57,7 @@
     }
     function frames(stack) {
       try {
-        return String(stack || '').split('\n').slice(0, 6).map(function (l) { return clean(l.replace(location.origin, '').replace(/^\s+/, '').replace(/\/[^\s:)]+/g, fileRoute)); })
+        return String(stack || '').split('\n').slice(0, 6).map(function (l) { return clean(l.replace(location.origin, '').replace(/^\s+/, '').replace(/\/[^\s:)]+/g, route)); })
           .filter(function (l) { return l && !/^(Error|TypeError|ReferenceError|RangeError|SyntaxError)\b/.test(l); }).slice(0, 4).map(function (l) { return l.slice(0, 110); });
       } catch (e) { return []; }
     }
@@ -111,13 +117,6 @@
           return open.apply(this, arguments);
         };
       }
-    } catch (e) {}
-    try {
-      var ce = console.error;
-      console.error = function () {
-        try { note('console', Array.prototype.slice.call(arguments, 0, 2).map(function (x) { return x && x.message ? x.message : typeof x === 'object' ? '' : String(x); }).join(' ')); } catch (x) {}
-        return ce.apply(this, arguments);
-      };
     } catch (e) {}
     addEventListener('pagehide', flush);
   } catch (e) { /* the sensor must never break the page */ }
