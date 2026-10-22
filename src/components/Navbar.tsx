@@ -225,7 +225,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={() => resetDemoData()}
                   title="إعادة تعيين البيانات التجريبية"
                   aria-label="إعادة تعيين البيانات التجريبية"
-                  className="relative hidden sm:grid place-items-center w-5 h-5 rounded-full hover:bg-white/15 transition-colors after:content-[''] after:absolute after:-inset-2.5"
+                  className="relative hidden sm:grid place-items-center w-6 h-6 rounded-full hover:bg-white/15 transition-colors after:content-[''] after:absolute after:-inset-2.5"
                 >
                   <RefreshCw className="w-3 h-3" />
                 </button>
@@ -234,7 +234,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={() => exitDemoMode()}
                   title="الخروج من البيئة التجريبية"
                   aria-label="الخروج من البيئة التجريبية"
-                  className="relative hidden sm:grid place-items-center w-5 h-5 rounded-full hover:bg-white/15 transition-colors after:content-[''] after:absolute after:-inset-2.5"
+                  className="relative hidden sm:grid place-items-center w-6 h-6 rounded-full hover:bg-white/15 transition-colors after:content-[''] after:absolute after:-inset-2.5"
                 >
                   <LogOut className="w-3 h-3" />
                 </button>
