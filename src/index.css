@@ -1043,6 +1043,9 @@ body:has(.majal-ai-fab) footer { padding-bottom: 4.5rem; }
   }
   .majal-ai-fab > button > span, .majal-ai-fab > button > svg:last-child { display: none; }
   .majal-ai-fab > button > svg { width: 1.125rem; height: 1.125rem; }
+  /* The 2rem edge tab stays as drawn; an invisible strip on its inner side brings the touch target to 2.5rem. */
+  .majal-ai-fab > button { position: relative; }
+  .majal-ai-fab > button::before { content: ''; position: absolute; inset-block: 0; inset-inline-start: -0.5rem; inset-inline-end: 0; }
   body:has(.majal-ai-fab) footer { padding-bottom: 5.25rem; }
   /* While the page is moving the button steps aside, so it never rides over rings and numbers. */
   body.is-scrolling .majal-ai-fab { opacity: 0; pointer-events: none; }

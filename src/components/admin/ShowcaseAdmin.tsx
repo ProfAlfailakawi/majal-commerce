@@ -52,7 +52,7 @@ const BillingEditor: React.FC<{ c: AdCampaign; busy: boolean; onSave: (billing: 
   const k = 'w-full glass-input rounded-xl px-3 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300';
   return (
     <details className="rounded-xl border border-white/10 bg-white/[0.02]" open={c.billing === 'UNSET' && c.status === 'PENDING_REVIEW'}>
-      <summary className="cursor-pointer px-3 py-2 text-xs font-black flex items-center justify-between gap-2"><span>السعر والدفع</span><span className={c.billing === 'PAID' ? 'text-emerald-300' : c.billing === 'COMPLIMENTARY' ? 'text-slate-300' : 'text-amber-300'}>{BILLING_LABEL[c.billing ?? 'UNSET']}{c.billing === 'PAID' && c.priceKwd ? ` · ${c.priceKwd.toLocaleString('ar-KW-u-nu-latn')} د.ك` : ''}</span></summary>
+      <summary className="cursor-pointer max-sm:min-h-11 px-3 py-2 text-xs font-black flex items-center justify-between gap-2"><span>السعر والدفع</span><span className={c.billing === 'PAID' ? 'text-emerald-300' : c.billing === 'COMPLIMENTARY' ? 'text-slate-300' : 'text-amber-300'}>{BILLING_LABEL[c.billing ?? 'UNSET']}{c.billing === 'PAID' && c.priceKwd ? ` · ${c.priceKwd.toLocaleString('ar-KW-u-nu-latn')} د.ك` : ''}</span></summary>
       <form className="p-3 space-y-2" onSubmit={e => { e.preventDefault(); onSave(billing, price ? Number(price) : null, note); }}>
         <select aria-label="حالة الدفع" value={billing} onChange={e => setBilling(e.target.value as typeof billing)} className={k}>{(Object.keys(BILLING_LABEL) as (keyof typeof BILLING_LABEL)[]).map(b => <option key={b} value={b}>{BILLING_LABEL[b]}</option>)}</select>
         {billing === 'PAID' && <input aria-label="المبلغ المدفوع بالدينار" inputMode="numeric" pattern="\d*" dir="ltr" placeholder="المبلغ (د.ك)" value={price} onChange={e => setPrice(e.target.value.replace(/\D/g, ''))} className={k} />}
@@ -70,7 +70,7 @@ const CampaignEditor: React.FC<{ c: AdCampaign; busy: boolean; onSave: (input: P
   const k = 'w-full glass-input rounded-xl px-3 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300';
   return (
     <details className="rounded-xl border border-white/10 bg-white/[0.02]">
-      <summary className="cursor-pointer px-3 py-2 text-xs font-black">تعديل الحملة</summary>
+      <summary className="cursor-pointer flex items-center max-sm:min-h-11 px-3 py-2 text-xs font-black">تعديل الحملة</summary>
       <form className="p-3 space-y-2" onSubmit={e => { e.preventDefault(); onSave({ ...f, tagline: f.tagline }); }}>
         <div className="grid sm:grid-cols-2 gap-2">
           <input aria-label="الشركة" required maxLength={80} value={f.company} onChange={e => setF({ ...f, company: e.target.value })} className={k} />
