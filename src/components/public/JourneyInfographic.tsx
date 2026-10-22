@@ -17,7 +17,7 @@ export const JourneyInfographic: React.FC<{ hold?: boolean }> = ({ hold = false 
       <span className="inline-block text-xs font-black text-gold-300">رحلة مجال</span>
       <h2 id="journey-heading" className="font-display text-2xl sm:text-4xl font-black text-slate-100">كيف تعمل رحلة «مجال»؟</h2>
       <p className="text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto leading-7">
-        ست محطات مرتبطة بالترتيب. لا تُفتح محطة قبل اكتمال ما قبلها، ولذلك لا يوجد «إطلاق سريع» يتجاوز الحماية أو العقد.
+        ست محطات بالترتيب، ولا تُفتح محطة قبل اكتمال ما قبلها.
       </p>
     </div>
 

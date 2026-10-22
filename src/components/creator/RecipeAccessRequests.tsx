@@ -39,7 +39,7 @@ export const RecipeAccessRequests: React.FC<RecipeAccessRequestsProps> = ({ crea
         <div className="w-12 h-12 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-400/20 flex items-center justify-center text-fuchsia-300"><LockKeyhole className="w-6 h-6" /></div>
         <div>
           <h3 className="text-lg font-black text-slate-100">أذونات الوصفات</h3>
-          <p className="text-xs text-slate-400 mt-1">أنت من يقرر من يرى ماذا، ولأي مدة، وبأي مستوى إفصاح.</p>
+          <p className="text-xs text-slate-400 mt-1">أنت تقرر من يرى، ولأي مدة، وبأي مستوى.</p>
         </div>
       </div>
 
@@ -56,7 +56,15 @@ export const RecipeAccessRequests: React.FC<RecipeAccessRequestsProps> = ({ crea
                     {grant.status === 'REQUESTED' ? 'طلب جديد' : 'إذن فعّال'}
                   </span>
                 </div>
-                <div className="text-xs text-slate-400 mt-2 leading-6">{host?.commercialName} — درجة الاطلاع المطلوبة/الممنوحة: <strong className="text-slate-200"><bdi>{grant.disclosureLevel}</bdi></strong> (الحد الأقصى <bdi>3</bdi>)</div>
+                <div className="text-xs text-slate-400 mt-2 flex items-center gap-2 flex-wrap">
+                  <span>{host?.commercialName}</span>
+                  <span className="inline-flex items-center gap-1.5" role="img" aria-label={`درجة الاطلاع ${grant.disclosureLevel} من 3`}>
+                    <span className="flex gap-0.5" aria-hidden="true">
+                      {[1, 2, 3].map(n => <span key={n} className={`h-1.5 w-4 rounded-full ${n <= grant.disclosureLevel ? 'bg-gold-400' : 'bg-white/15'}`} />)}
+                    </span>
+                    <strong className="text-slate-200"><bdi>{grant.disclosureLevel}</bdi></strong>/<bdi>3</bdi>
+                  </span>
+                </div>
                 <div className="text-xs text-slate-400 mt-1">السبب: {grant.purpose}</div>
               </div>
 

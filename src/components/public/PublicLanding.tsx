@@ -169,7 +169,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
           </h1>
 
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-3xl">
-            مسار واحد واضح: المبدع يملك الوصفة، المنشأة تحتضن وتطلق، المورد يجهّز سلسلة التوريد، والسوق يقيس الطلب — مع بوابة توظيف كويتية لا تنشر أي إعلان قبل اعتماد الإدارة.
+            المبدع يملك الوصفة، المنشأة تحتضن وتطلق، المورد يجهّز، والسوق يقيس الطلب — في مسار واحد.
           </p>
 
           {IS_DEMO_MODE ? <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-4">
@@ -220,16 +220,16 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
       <section aria-labelledby="landing-showcase" className="rounded-3xl border border-gold-300/20 bg-gold-500/[0.05] p-6 sm:p-8 grid md:grid-cols-[1fr_auto] gap-5 items-center">
         <div className="space-y-2">
           <h2 id="landing-showcase" className="font-display text-xl sm:text-2xl font-black flex items-center gap-2"><Tag className="w-5 h-5 text-gold-300" aria-hidden="true" />عندك مشروع تبي تبيعه؟</h2>
-          <p className="text-sm sm:text-base text-slate-300 leading-7 max-w-2xl">بوابة مجانية بلا عمولة: ارفع طلبك برقم تواصلك، نعتمده، ويظهر لجمهور مجال في بطاقة واضحة.</p>
+          <p className="text-sm sm:text-base text-slate-300 leading-7 max-w-2xl">بوابة مجانية بلا عمولة: ارفع طلبك، نعتمده، ويظهر للجمهور.</p>
         </div>
         <button type="button" onClick={() => onSurfaceChange('SHOWCASE')} className="px-6 py-3.5 rounded-2xl bg-gold-500 hover:bg-gold-400 text-slate-950 font-black text-sm flex items-center justify-center gap-2">تصفّح المشاريع المعروضة<ChevronLeft className="w-4 h-4" aria-hidden="true" /></button>
       </section>
 
       <div className="grid md:grid-cols-5 gap-5">
         {[
-          { icon: <Users className="w-5 h-5" />, title: 'فصل الأدوار', body: 'كل طرف يرى ما يخصه فقط، حتى داخل المنشأة نفسها توجد صلاحيات مختلفة للمالك، الشيف، المالية، والتسويق.', cls: 'md:col-span-3 majal-bento-lead p-6 sm:p-8 rounded-[28px]' },
-          { icon: <Coins className="w-5 h-5" />, title: 'مستحقات شفافة', body: 'المبدع يتابع مبيعاته ومستحقاته، والمنشأة تتابع الهوامش والإطلاقات، والأدمن يراقب دورة التسوية.', cls: 'md:col-span-2 majal-bento-card border-s-2 border-s-gold-400/70 border border-white/10 bg-white/[0.03] p-5 sm:p-6 rounded-2xl' },
-          { icon: <Store className="w-5 h-5" />, title: 'منظومة بلا تداخل', body: 'هوية المبدع مستقلة عن المنشأة والمورد، وكل وظيفة كويتية تمر عبر مراجعة الإدارة قبل أن تظهر للجمهور.', cls: 'md:col-span-5 md:flex md:items-center md:gap-6 border border-dashed border-gold-300/25 p-5 sm:p-6 rounded-3xl' }
+          { icon: <Users className="w-5 h-5" />, title: 'فصل الأدوار', body: 'كل طرف يرى ما يخصه فقط، حتى داخل المنشأة.', chips: ['المالك', 'الشيف', 'المالية', 'التسويق'], cls: 'md:col-span-3 majal-bento-lead p-6 sm:p-8 rounded-[28px]' },
+          { icon: <Coins className="w-5 h-5" />, title: 'مستحقات شفافة', body: 'كل طرف يتابع حصته، والأدمن يراقب دورة التسوية.', cls: 'md:col-span-2 majal-bento-card border-s-2 border-s-gold-400/70 border border-white/10 bg-white/[0.03] p-5 sm:p-6 rounded-2xl' },
+          { icon: <Store className="w-5 h-5" />, title: 'منظومة بلا تداخل', body: 'هوية المبدع مستقلة عن المنشأة والمورد، وكل وظيفة تُراجَع قبل ظهورها.', cls: 'md:col-span-5 md:flex md:items-center md:gap-6 border border-dashed border-gold-300/25 p-5 sm:p-6 rounded-3xl' }
         ].map((item, idx) => (
           <div key={idx} className={`relative overflow-hidden space-y-3 md:space-y-0 ${item.cls}`}>
             {idx === 0 && <svg aria-hidden="true" focusable="false" className="majal-bento-arch" viewBox="0 0 120 150"><path d="M4 150V60a56 56 0 0 1 112 0V150M24 150V62a36 36 0 0 1 72 0V150" fill="none" stroke="currentColor" strokeWidth="2" /></svg>}
@@ -238,6 +238,13 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
               <h3 className={`font-display font-black text-lg ${idx === 0 ? 'majal-bento-title' : 'text-slate-100'}`}>{item.title}</h3>
             </div>
             <p className={`relative text-sm leading-7 ${idx === 0 ? 'majal-bento-body' : 'text-slate-300'} ${idx === 2 ? "" : "md:mt-3"}`}>{item.body}</p>
+            {'chips' in item && item.chips && (
+              <ul className="relative flex flex-wrap gap-2 mt-3 list-none p-0">
+                {item.chips.map(chip => (
+                  <li key={chip} className="px-2.5 py-1 rounded-full border border-current/30 majal-bento-body text-xs font-bold">{chip}</li>
+                ))}
+              </ul>
+            )}
           </div>
         ))}
       </div>
