@@ -72,7 +72,7 @@ export const CreatorPortal: React.FC = () => {
           <Sparkles className="w-8 h-8" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-2xl font-black text-slate-100">تعذّر تحميل ملف المبدع الخاص بحسابك</h2>
+          <h1 className="text-2xl font-black text-slate-100">تعذّر تحميل ملف المبدع الخاص بحسابك</h1>
           <p className="text-sm text-slate-400 max-w-lg mx-auto leading-6">
             ملف المبدع يُنشأ على الخادم مع الحساب ويُربط بهوية حسابك فقط. لن تنشئ الواجهة ملفًا محليًا أو تربطك بمبدع آخر.
           </p>

@@ -143,7 +143,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
             <button
               onClick={handleRunAi}
               disabled={loading || !promptInput.trim()}
-              className="w-full py-2.5 bg-gold-500 hover:bg-gold-400 disabled:bg-slate-800 text-slate-950 font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md"
+              className="w-full py-2.5 bg-gold-500 hover:bg-gold-400 disabled:bg-slate-800 disabled:text-slate-300 text-slate-950 font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md"
             >
               {loading ? (
                 <>

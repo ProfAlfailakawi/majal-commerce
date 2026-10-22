@@ -123,7 +123,7 @@ export const AdSlot: React.FC<{ slot: AdSlotType; topic?: string; className?: st
 
   if (slot === 'SPONSOR') {
     if (!visible.length) return null;
-    return <div className={`w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 ${className}`}><AdCard ad={visible[0]} audience={audience} compact onHide={() => hide(visible[0].id)} /></div>;
+    return <aside aria-label="رعاة مجال" className={`w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 ${className}`}><AdCard ad={visible[0]} audience={audience} compact onHide={() => hide(visible[0].id)} /></aside>;
   }
   if (!visible.length) {
     return <aside aria-label="من مجال" className={`grid gap-3 sm:grid-cols-2 xl:grid-cols-3 ${className}`}><HouseCardView card={HOUSE[audience]} compact={compactSlot} /></aside>;
