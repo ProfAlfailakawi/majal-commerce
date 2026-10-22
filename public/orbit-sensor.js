@@ -9,7 +9,24 @@
       catch (e) { return 'anon' + Math.random().toString(36).slice(2, 10); }
     })();
     function clean(s) { return String(s == null ? '' : s).replace(/[?#][^\s)'"]*/g, '').slice(0, 160); }
-    function path(u) { try { return new URL(u, location.href).pathname.slice(0, 60); } catch (e) { return clean(u); } }
+    // A path segment that looks like an identifier (digits, uuid, long token, mixed letters+digits, an email or an encoded value) is replaced
+    // by :id, so a visitor's participant or session id never leaves the browser inside a page path or a request breadcrumb.
+    function route(p) {
+      try {
+        return String(p).split('/').map(function (s) {
+          var id = /^\d{2,}$/.test(s) || /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(s) || /^[0-9a-f]{16,}$/i.test(s) || /^[A-Za-z0-9_-]{20,}$/.test(s) ||
+            (/\d/.test(s) && /[A-Za-z]/.test(s) && s.length >= 8) || s.indexOf('@') !== -1 || s.indexOf('%') !== -1;
+          return id ? ':id' : s;
+        }).join('/');
+      } catch (e) { return ''; }
+    }
+    // A file path keeps its own name (index-abc123.js is useful in a stack) but its folders are redacted like any other path.
+    function fileRoute(p) {
+      var parts = String(p).split('/'), last = parts.pop();
+      return route(parts.join('/')) + '/' + (last.indexOf('.') > 0 ? last : route(last));
+    }
+    function file(u) { try { return fileRoute(new URL(u, location.href).pathname).slice(0, 60); } catch (e) { return clean(u); } }
+    function path(u) { try { return route(new URL(u, location.href).pathname).slice(0, 60); } catch (e) { return clean(u); } }
     function same(u) { try { return new URL(u, location.href).origin === location.origin; } catch (e) { return false; } }
     // The last few things the visitor did: tags, ids and paths only, never text they typed or read.
     function step(s) { try { trail.push(String(s).slice(0, 70)); if (trail.length > 20) trail.shift(); } catch (e) {} }
@@ -17,6 +34,7 @@
       timer = 0;
       if (!queue.length || sent >= MAX) { queue = []; return; }
       var batch = queue.splice(0, 5); sent += 1;
+      if (queue.length && sent < MAX) timer = setTimeout(flush, 3000); // keep draining what is left
       var body = JSON.stringify({ s: session, r: batch });
       try { if (navigator.sendBeacon && navigator.sendBeacon(ENDPOINT, body)) return; } catch (e) {}
       try { fetch(ENDPOINT, { method: 'POST', body: body, keepalive: true, mode: 'cors', headers: { 'Content-Type': 'text/plain' } }).catch(function () {}); } catch (e) {}
@@ -25,7 +43,7 @@
       try {
         var m = clean(message); if (!m) return;
         var key = kind + m; if (seen[key]) return; seen[key] = 1;
-        var r = { k: kind, m: m, p: location.pathname };
+        var r = { k: kind, m: m, p: route(location.pathname) };
         if (extra) { r.t = extra.t; r.o = extra.o ? 1 : 0; r.b = trail.slice(-12); }
         queue.push(r);
         if (!timer) timer = setTimeout(flush, 3000);
@@ -33,7 +51,7 @@
     }
     function frames(stack) {
       try {
-        return String(stack || '').split('\n').slice(0, 6).map(function (l) { return clean(l.replace(location.origin, '').replace(/^\s+/, '')); })
+        return String(stack || '').split('\n').slice(0, 6).map(function (l) { return clean(l.replace(location.origin, '').replace(/^\s+/, '').replace(/\/[^\s:)]+/g, fileRoute)); })
           .filter(function (l) { return l && !/^(Error|TypeError|ReferenceError|RangeError|SyntaxError)\b/.test(l); }).slice(0, 4).map(function (l) { return l.slice(0, 110); });
       } catch (e) { return []; }
     }
@@ -42,23 +60,23 @@
         var t = e.target; if (!t || !t.tagName) return;
         var id = t.id && /^[\w-]{1,30}$/.test(t.id) ? '#' + t.id : '';
         var type = t.tagName === 'BUTTON' || t.tagName === 'INPUT' ? ' [' + (t.type || 'button') + ']' : '';
-        step('\u0646\u0642\u0631 ' + t.tagName.toLowerCase() + id + type + ' \u0641\u064a ' + location.pathname);
+        step('\u0646\u0642\u0631 ' + t.tagName.toLowerCase() + id + type + ' \u0641\u064a ' + route(location.pathname));
       } catch (x) {}
     }, true);
-    addEventListener('submit', function (e) { try { step('\u0625\u0631\u0633\u0627\u0644 \u0646\u0645\u0648\u0630\u062c \u0641\u064a ' + location.pathname); } catch (x) {} }, true);
-    addEventListener('popstate', function () { step('\u062a\u0646\u0642\u0651\u0644 \u0625\u0644\u0649 ' + location.pathname); });
+    addEventListener('submit', function (e) { try { step('\u0625\u0631\u0633\u0627\u0644 \u0646\u0645\u0648\u0630\u062c \u0641\u064a ' + route(location.pathname)); } catch (x) {} }, true);
+    addEventListener('popstate', function () { step('\u062a\u0646\u0642\u0651\u0644 \u0625\u0644\u0649 ' + route(location.pathname)); });
     try {
       ['pushState', 'replaceState'].forEach(function (name) {
         var orig = history[name]; if (!orig) return;
-        history[name] = function () { var r = orig.apply(this, arguments); step('\u062a\u0646\u0642\u0651\u0644 \u0625\u0644\u0649 ' + location.pathname); return r; };
+        history[name] = function () { var r = orig.apply(this, arguments); step('\u062a\u0646\u0642\u0651\u0644 \u0625\u0644\u0649 ' + route(location.pathname)); return r; };
       });
     } catch (e) {}
     addEventListener('error', function (e) {
       try {
         var t = e.target;
-        if (t && t !== window && (t.src || t.href)) return note('resource', '\u062a\u0639\u0630\u0631 \u062a\u062d\u0645\u064a\u0644 ' + (t.src || t.href));
+        if (t && t !== window && (t.src || t.href)) return note('resource', '\u062a\u0639\u0630\u0631 \u062a\u062d\u0645\u064a\u0644 ' + path(t.src || t.href));
         var own = !!(e.filename && same(e.filename));
-        note('error', (e.message || 'error') + (e.filename ? ' @' + path(e.filename) + (e.lineno ? ':' + e.lineno : '') : ''), { t: frames(e.error && e.error.stack), o: own });
+        note('error', (e.message || 'error') + (e.filename ? ' @' + file(e.filename) + (e.lineno ? ':' + e.lineno : '') : ''), { t: frames(e.error && e.error.stack), o: own });
       } catch (x) {}
     }, true);
     addEventListener('unhandledrejection', function (e) {
@@ -78,7 +96,7 @@
       window.fetch = function () {
         var a = arguments, u = a[0] && a[0].url ? a[0].url : a[0];
         var p = f.apply(this, a);
-        try { p.then(function (r) { if (r) judge(u, r.status); }, function () { note('request', '\u0641\u0634\u0644 \u0627\u0644\u0627\u062a\u0635\u0627\u0644 ' + clean(u)); step('\u0637\u0644\u0628 ' + path(u) + ' \u2190 \u0641\u0634\u0644'); }); } catch (x) {}
+        try { p.then(function (r) { if (r) judge(u, r.status); }, function () { note('request', '\u0641\u0634\u0644 \u0627\u0644\u0627\u062a\u0635\u0627\u0644 ' + path(u)); step('\u0637\u0644\u0628 ' + path(u) + ' \u2190 \u0641\u0634\u0644'); }); } catch (x) {}
         return p;
       };
     }
@@ -88,7 +106,7 @@
         var open = X.prototype.open;
         X.prototype.open = function (m, u) {
           try {
-            this.addEventListener('loadend', function () { try { if (this.status === 0) { note('request', '\u0641\u0634\u0644 \u0627\u0644\u0627\u062a\u0635\u0627\u0644 ' + clean(u)); step('\u0637\u0644\u0628 ' + path(u) + ' \u2190 \u0641\u0634\u0644'); } else judge(u, this.status); } catch (x) {} });
+            this.addEventListener('loadend', function () { try { if (this.status === 0) { note('request', '\u0641\u0634\u0644 \u0627\u0644\u0627\u062a\u0635\u0627\u0644 ' + path(u)); step('\u0637\u0644\u0628 ' + path(u) + ' \u2190 \u0641\u0634\u0644'); } else judge(u, this.status); } catch (x) {} });
           } catch (x) {}
           return open.apply(this, arguments);
         };
