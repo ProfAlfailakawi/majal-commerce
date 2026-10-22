@@ -983,7 +983,8 @@ button.dna-hubn:focus-visible .dna-hubt { transform: translateY(-2px); }
 .dna-over {
   font-size: 12px;
   font-weight: 800;
-  color: var(--dna-accent);
+  /* nudged toward the ink so the small overline clears 4.5:1 on tinted hubs in every theme */
+  color: color-mix(in srgb, var(--dna-accent) 82%, var(--dna-ink));
 }
 .dna-over[data-latin='true'] {
   direction: ltr;

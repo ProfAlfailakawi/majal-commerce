@@ -222,7 +222,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
         aria-labelledby={headingId}
         className="relative min-h-full flex flex-col max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8"
       >
-        <header className="flex items-center justify-between gap-4 shrink-0">
+        <div className="flex items-center justify-between gap-4 shrink-0">
           <span className="flex items-center gap-3">
             <MajalMark size={34} />
             <span className="text-lg font-black majal-wordmark leading-none">مجال</span>
@@ -235,9 +235,9 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
             <span>تخطّي التعريف</span>
             <X className="w-3.5 h-3.5" />
           </button>
-        </header>
+        </div>
 
-        <main className="flex-1 flex flex-col justify-center py-10 sm:py-14">
+        <div className="flex-1 flex flex-col justify-center py-10 sm:py-14">
           {step === 'WELCOME' && (
             <div className="text-center space-y-8">
               <div style={rise(0)} className="flex justify-center">
@@ -480,9 +480,9 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
               </div>
             </div>
           )}
-        </main>
+        </div>
 
-        <footer className="sticky bottom-0 shrink-0 space-y-4 -mx-4 sm:-mx-8 px-4 sm:px-8 pt-8 pb-3 bg-gradient-to-t from-(--onb-fade) via-(--onb-fade) via-85% to-transparent">
+        <div className="sticky bottom-0 shrink-0 space-y-4 -mx-4 sm:-mx-8 px-4 sm:px-8 pt-8 pb-3 bg-gradient-to-t from-(--onb-fade) via-(--onb-fade) via-85% to-transparent">
           {/* A segmented rail, not dots: it shows how much is left, which is the only
               honest way to ask someone to keep going. */}
           <div className="flex items-center gap-1.5" aria-hidden="true">
@@ -531,7 +531,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
               )}
             </div>
           </div>
-        </footer>
+        </div>
       </div>
     </div>
   );

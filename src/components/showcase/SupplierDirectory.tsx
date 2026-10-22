@@ -22,7 +22,7 @@ const SupplierCard: React.FC<{ s: DirectorySupplier }> = ({ s }) => (
       {s.verified && <span className="absolute top-2.5 end-3 px-2.5 py-1 rounded-full bg-emerald-400 text-slate-950 text-xs font-black inline-flex items-center gap-1"><BadgeCheck className="w-3.5 h-3.5" aria-hidden="true" />موثّق في مجال</span>}
     </div>
     <div className="p-5 flex flex-col gap-3 flex-1">
-      <div><h3 className="font-black leading-snug">{s.name}</h3><div className="mt-1 text-xs text-slate-400 inline-flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-gold-300" aria-hidden="true" />{s.region}</div></div>
+      <div><h2 className="font-black leading-snug">{s.name}</h2><div className="mt-1 text-xs text-slate-400 inline-flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-gold-300" aria-hidden="true" />{s.region}</div></div>
       <p className="text-xs text-slate-300 leading-6 line-clamp-3">{s.description}</p>
       {s.products.length > 0 && <ul className="flex flex-wrap gap-1.5">{s.products.slice(0, 4).map((p, i) => <li key={`${p}-${i}`} className="text-xs px-2 py-1 rounded-lg bg-white/5 border border-white/10">{p}</li>)}</ul>}
       <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-slate-300">

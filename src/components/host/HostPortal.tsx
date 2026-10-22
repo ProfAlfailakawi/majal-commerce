@@ -113,7 +113,7 @@ export const HostPortal: React.FC = () => {
       return (
         <div className="max-w-3xl mx-auto p-8 text-center text-slate-400 space-y-4">
           <Building2 className="w-12 h-12 mx-auto text-slate-400 opacity-50" />
-          <h2 className="text-xl font-bold text-slate-200">لا توجد منشأة مرتبطة بحسابك</h2>
+          <h1 className="text-xl font-bold text-slate-200">لا توجد منشأة مرتبطة بحسابك</h1>
           <p>للبدء في استخدام منصة المنشآت، يرجى إنشاء ملف منشأتك.</p>
           {!IS_DEMO_MODE && (
             <div className="space-y-3">

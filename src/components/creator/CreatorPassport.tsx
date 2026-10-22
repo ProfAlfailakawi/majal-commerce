@@ -48,7 +48,7 @@ export const CreatorPassport: React.FC<CreatorPassportProps> = ({ creatorId }) =
           <Avatar name={profile.displayName} src={profile.avatarUrl} size={64} shape="squircle" />
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-xl font-black text-slate-100">جواز المبدع</h3>
+              <h2 className="text-xl font-black text-slate-100">جواز المبدع</h2>
               <span className="px-2.5 py-1 rounded-full bg-gold-500/10 text-gold-300 border border-gold-300/20 text-xs font-black">{stage}</span>
             </div>
             <p className="text-xs text-slate-400 mt-1">جواز تجاري حي يلخص ما أثبته المبدع فعليًا داخل «مجال».</p>
