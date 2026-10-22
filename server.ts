@@ -387,7 +387,7 @@ async function startServer() {
       res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
       // fonts.googleapis.com serves only the @font-face stylesheet and fonts.gstatic.com
       // only the font binaries; neither can execute script under this policy.
-      res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://images.unsplash.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
+      res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://images.unsplash.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://orbitq8.web.app; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
     }
     if (req.path.startsWith('/api/')) res.setHeader('Cache-Control', 'no-store');
     next();
