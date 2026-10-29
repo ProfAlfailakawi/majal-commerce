@@ -155,8 +155,12 @@ export async function logout() {
   setSessionHint(false);
 }
 
-export function beginMfaEnrollment() {
-  return request<{ manualKey: string; otpauthUri: string }>('/api/v1/auth/mfa/enroll', { method: 'POST' });
+/** `currentCode` is required by the server only when MFA is already active (re-enrolment). */
+export function beginMfaEnrollment(currentCode?: string) {
+  return request<{ manualKey: string; otpauthUri: string }>('/api/v1/auth/mfa/enroll', {
+    method: 'POST',
+    ...(currentCode ? { body: JSON.stringify({ code: currentCode }) } : {})
+  });
 }
 
 export function confirmMfaEnrollment(code: string) {
