@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { reportError, resolveTrustProxyHops } from './observability';
+import { reportError, reportSweeperError, resolveTrustProxyHops } from './observability';
 
 // resolveTrustProxyHops emits structured warnings for invalid/insecure settings; silence them
 // so the test output stays readable.
@@ -55,4 +55,24 @@ test('reportError emits a Cloud Error Reporting entry with the stack, never secr
   assert.equal(entry.serviceContext.service, 'majal');
   assert.equal(entry.path, '/api/x');
   assert.equal('sessionToken' in entry, false);
+});
+
+test('a sweeper that cannot reach the database for a moment logs a warning; any other failure stays an error', () => {
+  const lines: Record<string, unknown>[] = [];
+  const originalLog = console.log;
+  console.log = (line: string) => { lines.push(JSON.parse(line)); };
+  try {
+    reportSweeperError('hold_sweeper_failed', new Error('Connection terminated due to connection timeout'));
+    reportSweeperError('launch_schedule_sweeper_failed', new Error('timeout exceeded when trying to connect'));
+    reportSweeperError('hold_sweeper_failed', new Error('column "held_until" does not exist'));
+  } finally {
+    console.log = originalLog;
+  }
+  assert.equal(lines[0].severity, 'WARNING');
+  assert.equal(lines[0].event, 'hold_sweeper_failed_db_unreachable');
+  assert.equal(lines[0]['@type'], undefined, 'a warning is not sent to Error Reporting');
+  assert.equal(lines[1].severity, 'WARNING');
+  assert.equal(lines[2].severity, 'ERROR');
+  assert.equal(lines[2].event, 'hold_sweeper_failed');
+  assert.match(String(lines[2].message), /held_until/);
 });

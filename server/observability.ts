@@ -33,6 +33,24 @@ export function reportError(event: string, error: unknown, fields: Record<string
   });
 }
 
+// pg-pool's messages when a connection cannot be opened in time or drops while opening.
+const TRANSIENT_DB_FAILURE = /Connection terminated|connection timeout|timeout exceeded when trying to connect|ECONNRESET|ECONNREFUSED/i;
+
+/**
+ * For background sweepers that run again on their next tick. A database that cannot be reached
+ * for a moment (Cloud Run gives an idle instance almost no CPU between requests, and a suspended
+ * database takes a moment to wake) is logged as a WARNING: the next tick retries, so nothing is
+ * lost. Any other failure is still a real error for Error Reporting.
+ */
+export function reportSweeperError(event: string, error: unknown, fields: Record<string, unknown> = {}) {
+  const err = error instanceof Error ? error : new Error(String(error));
+  if (TRANSIENT_DB_FAILURE.test(err.message)) {
+    structuredLog('WARNING', `${event}_db_unreachable`, { ...fields, errorName: err.name, reason: err.message.slice(0, 200) });
+    return;
+  }
+  reportError(event, err, fields);
+}
+
 /**
  * Number of reverse-proxy hops Express should trust when deriving `req.ip`.
  *
