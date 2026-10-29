@@ -30,6 +30,7 @@ import { deliveryReadiness, startNotificationDeliveryWorker } from './server/del
 import { installProcessSafetyHandlers, reportError, requestTelemetry, resolveTrustProxyHops, structuredLog } from './server/observability';
 import { secureStorageReadiness } from './server/secure-storage';
 import { closeRateLimitStore, initRateLimitStore, rateLimitBackend, rateLimitStore } from './server/rate-limit-store';
+import { staticCompression } from './server/static-compression';
 
 dotenv.config({ quiet: true });
 installProcessSafetyHandlers();
@@ -310,6 +311,10 @@ async function initializeApplication(app: express.Express) {
   } else {
     const distPath = path.join(process.cwd(), 'dist'), indexPath = path.join(distPath, 'index.html');
     if (!fs.existsSync(indexPath)) throw new Error('Production client bundle is missing. Run npm run build first.');
+    // Gzip/brotli for the built client and the HTML shell only. Every API, webhook and health
+    // route is registered above, so none of them reaches this middleware; its filter also
+    // refuses /api, /internal, webhook paths and text/event-stream (server/static-compression.ts).
+    app.use(staticCompression());
     app.use(express.static(distPath, {
       index: false,
       maxAge: '1h',
