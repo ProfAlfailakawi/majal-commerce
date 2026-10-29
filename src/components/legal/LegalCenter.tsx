@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Clock3, FileText, Scale, ShieldCheck, RotateCcw, Mail, ChevronLeft, ChevronDown,
+  Clock3, FileText, Scale, ShieldCheck, RotateCcw, Mail, ChevronRight, ChevronDown,
   Building2, KeyRound, Lightbulb, Wallet, ShieldAlert, Gavel, Database, Target, Share2, Trash2, Lock,
   Undo2, Utensils, Send, Hourglass, LockKeyhole, ScrollText, Rocket, Banknote, type LucideIcon
 } from 'lucide-react';
@@ -226,9 +226,11 @@ const sectionIcons: Record<LegalDocumentId, LucideIcon[]> = {
 interface LegalCenterProps {
   initialDocument?: LegalDocumentId;
   onBack: () => void;
+  /** Lets the app keep the URL, title and canonical tag in step with the selected tab. */
+  onSelect?: (document: LegalDocumentId) => void;
 }
 
-export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TERMS', onBack }) => {
+export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TERMS', onBack, onSelect }) => {
   const [active, setActive] = useState<LegalDocumentId>(initialDocument);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const isFirstRender = useRef(true);
@@ -261,8 +263,8 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
           <h1 className="text-2xl sm:text-3xl font-black text-slate-100">المركز القانوني والامتثال</h1>
         </div>
         <button onClick={onBack} className="px-4 py-2.5 rounded-xl glass-card border border-white/10 text-xs font-bold text-slate-200 hover:bg-white/5 flex items-center gap-2">
+          <ChevronRight className="w-4 h-4" aria-hidden="true" />
           <span>رجوع</span>
-          <ChevronLeft className="w-4 h-4" />
         </button>
       </div>
 
@@ -276,7 +278,7 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
             key={item.id}
             role="tab"
             aria-selected={active === item.id}
-            onClick={() => setActive(item.id)}
+            onClick={() => (onSelect ? onSelect(item.id) : setActive(item.id))}
             className={`shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${
               active === item.id ? 'bg-gold-500 text-slate-950' : 'glass-card border border-white/10 text-slate-300 hover:bg-white/5'
             }`}

@@ -5,7 +5,7 @@ import type { AdAccent, AdSlot, BusinessListing, BusinessSector, SurfaceType } f
 import { AD_AUDIENCES, AD_AUDIENCE_LABEL, AD_TOPICS } from '../../lib/adAudience';
 import { fetchBusinesses, requestAdSlot, submitBusiness } from '../../lib/showcaseClient';
 import { reportGateEvent } from '../../lib/audienceClient';
-import { arCount } from '../../lib/arPlural';
+import { AR, arCount } from '../../lib/arPlural';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { SectorArt } from './SectorArt';
 import { PrivateLinkNote } from './PrivateLinkNote';
@@ -45,7 +45,7 @@ const ListingCard: React.FC<{ item: BusinessListing; onOpen: () => void }> = ({ 
       <h3 className="font-black leading-snug line-clamp-2">{item.title}</h3>
       <div className="flex flex-wrap gap-x-4 gap-y-1.5">
         <Fact icon={<MapPin className="w-3.5 h-3.5 text-gold-300" aria-hidden="true" />} label={item.city} />
-        {item.yearsOperating !== null && <Fact icon={<CalendarClock className="w-3.5 h-3.5 text-gold-300" aria-hidden="true" />} label={item.yearsOperating === 0 ? 'جديد' : `${item.yearsOperating} سنوات`} />}
+        {item.yearsOperating !== null && <Fact icon={<CalendarClock className="w-3.5 h-3.5 text-gold-300" aria-hidden="true" />} label={item.yearsOperating === 0 ? 'جديد' : arCount(item.yearsOperating, AR.year)} />}
         {item.revenueBand && <Fact icon={<TrendingUp className="w-3.5 h-3.5 text-gold-300" aria-hidden="true" />} label={item.revenueBand} />}
       </div>
       {item.highlights.length > 0 && <ul className="flex flex-wrap gap-1.5">{item.highlights.slice(0, 3).map((h, i) => <li key={`${h}-${i}`} className="text-xs px-2 py-1 rounded-lg bg-emerald-500/10 border border-emerald-400/15 text-emerald-200">{h}</li>)}</ul>}
@@ -260,7 +260,7 @@ export const BusinessShowcase: React.FC<{ onSurfaceChange: (surface: SurfaceType
             <Fact icon={<MapPin className="w-3.5 h-3.5 text-gold-300" aria-hidden="true" />} label={open.city} />
             {open.askingPriceKwd !== null && <Fact icon={<Banknote className="w-3.5 h-3.5 text-gold-300" aria-hidden="true" />} label={formatKwd(open.askingPriceKwd)} />}
             {open.revenueBand && <Fact icon={<TrendingUp className="w-3.5 h-3.5 text-gold-300" aria-hidden="true" />} label={open.revenueBand} />}
-            {open.yearsOperating !== null && <Fact icon={<CalendarClock className="w-3.5 h-3.5 text-gold-300" aria-hidden="true" />} label={`${open.yearsOperating} سنوات تشغيل`} />}
+            {open.yearsOperating !== null && <Fact icon={<CalendarClock className="w-3.5 h-3.5 text-gold-300" aria-hidden="true" />} label={open.yearsOperating === 0 ? 'جديد' : `${arCount(open.yearsOperating, AR.year)} تشغيل`} />}
           </div>
           <p className="text-sm text-slate-200 leading-7 mt-4">{open.summary}</p>
           {open.includes.length > 0 && <div className="mt-4"><h4 className="text-xs font-black mb-2">يشمله البيع</h4><ul className="flex flex-wrap gap-1.5">{open.includes.map((x, idx) => <li key={`${x}-${idx}`} className="text-xs px-2.5 py-1 rounded-lg bg-white/5 border border-white/10">{x}</li>)}</ul></div>}
