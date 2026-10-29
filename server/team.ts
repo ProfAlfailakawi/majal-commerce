@@ -77,6 +77,8 @@ export function createTeamRouter(db: MajalDatabase, authConfig: AuthConfig) {
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'INVITE_USED') return jsonError(res, 409, 'استُخدمت هذه الدعوة.', 'INVITE_USED');
+      // createUser rejects a malformed phone with a user-facing message; that is a 400, not a 500.
+      if (error instanceof Error && error.message.startsWith('رقم الهاتف غير صالح')) return jsonError(res, 400, error.message, 'INVALID_PHONE');
       throw error;
     }
     await notify(db, await orgMemberIds(db, row.organization_id, ['HOST_OWNER']), { category: 'TEAM', priority: 'SOON', title: 'انضم عضو جديد لفريقك', body: `${name} قبل الدعوة وفُعّل حسابه.`, actionLabel: 'افتح الفريق', actionSurface: SURFACE.host, entityType: 'ORGANIZATION', entityId: row.organization_id, dedupeKey: `team-joined:${row.id}` });
@@ -134,15 +136,18 @@ export function createTeamRouter(db: MajalDatabase, authConfig: AuthConfig) {
   router.post('/members/:userId', authenticated, csrfProtected, async (req: AuthenticatedRequest, res) => {
     const orgId = await owner(req, res); if (!orgId) return;
     if (req.params.userId === req.auth!.user.id) return jsonError(res, 409, 'لا يمكنك تعديل حسابك.', 'SELF_EDIT');
-    const target = await db.prepare('SELECT om.role, om.status FROM organization_memberships om WHERE om.organization_id = ? AND om.user_id = ?').get<{ role: string; status: string }>(orgId, req.params.userId);
+    const target = await db.prepare('SELECT om.role, om.status, u.status AS user_status FROM organization_memberships om JOIN users u ON u.id = om.user_id WHERE om.organization_id = ? AND om.user_id = ?').get<{ role: string; status: string; user_status: string }>(orgId, req.params.userId);
     if (!target) return jsonError(res, 404, 'العضو غير موجود في منشأتك.', 'NOT_FOUND');
     if (target.role === 'HOST_OWNER') return jsonError(res, 409, 'لا يمكن تعديل المالك.', 'OWNER_IMMUTABLE');
     const role = req.body?.role === undefined ? target.role as TeamRole : teamRole(req.body.role);
     const status = req.body?.status === undefined ? target.status : (['ACTIVE', 'SUSPENDED'].includes(req.body.status) ? req.body.status as string : undefined);
     if (!role || !status) return jsonError(res, 400, 'دور أو حالة غير صالحة.', 'INVALID_CHANGE');
+    // A platform suspension (moderation sets users.status, not the membership) is not the owner's to
+    // lift: a role change or "reactivate" here used to copy the membership's ACTIVE onto the account.
+    const accountStatus = target.user_status === 'SUSPENDED' && target.status !== 'SUSPENDED' ? 'SUSPENDED' : status;
     await withTransaction(db, async tx => {
       await tx.prepare('UPDATE organization_memberships SET role = ?, status = ? WHERE organization_id = ? AND user_id = ?').run(role, status, orgId, req.params.userId);
-      await tx.prepare('UPDATE users SET role = ?, status = ?, updated_at = ? WHERE id = ? AND host_business_id = ?').run(role, status, now(), req.params.userId, orgId);
+      await tx.prepare('UPDATE users SET role = ?, status = ?, updated_at = ? WHERE id = ? AND host_business_id = ?').run(role, accountStatus, now(), req.params.userId, orgId);
       await tx.prepare('DELETE FROM sessions WHERE user_id = ?').run(req.params.userId);
       await audit(tx, req, 'TEAM_MEMBER_CHANGED', req.params.userId, orgId, { role, status });
     });

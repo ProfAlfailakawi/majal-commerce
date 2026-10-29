@@ -88,8 +88,11 @@ export async function sweepLaunchSchedule(db: MajalDatabase, at = new Date()) {
  */
 export async function msUntilNextLaunchEvent(db: MajalDatabase, at = new Date()): Promise<number | null> {
   const lateIso = new Date(at.getTime() - LATE_WINDOW_MS).toISOString();
+  // Reminders only exist for launches that have not opened yet (the sweep's own query is
+  // `starts_at > now`). Using the 24h late window here made every launch activated "now" look
+  // like an overdue reminder, so the sweeper woke every few seconds for a whole day.
   const reminder = await db.prepare("SELECT MIN(starts_at) AS s FROM launches WHERE status = 'LIVE' AND opens_reminded_at IS NULL AND starts_at > ?")
-    .get<{ s: string | null }>(lateIso);
+    .get<{ s: string | null }>(at.toISOString());
   const opening = await db.prepare("SELECT MIN(starts_at) AS s FROM launches WHERE status = 'LIVE' AND open_notified_at IS NULL AND starts_at > ?")
     .get<{ s: string | null }>(lateIso);
   const events: number[] = [];

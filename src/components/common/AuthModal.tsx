@@ -282,13 +282,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
           {!needsMfa && mode !== 'RESET_REQUEST' ? (
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-200">{mode === 'RESET_VERIFY' ? 'كلمة المرور الجديدة' : 'كلمة المرور'}</span>
+                <label htmlFor="auth-password" className="text-xs font-bold text-slate-200">{mode === 'RESET_VERIFY' ? 'كلمة المرور الجديدة' : 'كلمة المرور'}</label>
                 {(mode === 'REGISTER' || mode === 'RESET_VERIFY') && (
                   <span className="text-xs text-slate-400">12 محرفًا على الأقل</span>
                 )}
               </div>
               <div className="relative">
                 <input
+                  id="auth-password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={event => setPassword(event.target.value)}

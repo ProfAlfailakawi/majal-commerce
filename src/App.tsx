@@ -201,10 +201,27 @@ export default function App() {
     }
   };
 
+  // Private-link pages (invite, reports, partner kit, payment return) render ahead of every
+  // surface, so navigating away must close them; otherwise the nav pill moves and the page stays.
+  const leavePrivatePages = () => {
+    if (!(paymentReturn || gateToken || partnerToken || inviteToken || adReportToken)) return false;
+    setPaymentReturn(null); setGateToken(null); setPartnerToken(null); setInviteToken(null); setAdReportToken(null);
+    return true;
+  };
+
   const handleOpenLegal = (document: LegalDocumentId) => {
+    leavePrivatePages();
     window.history.pushState({ legalDocument: document }, '', legalPath(document));
     setLegalDocument(document);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Switching tabs inside the legal centre: same document state as a footer link, without a
+  // history entry per tab or a scroll jump. Before, the tab changed only local state, so the
+  // URL/title stayed on the old document and a later footer link to it did nothing.
+  const selectLegalTab = (document: LegalDocumentId) => {
+    window.history.replaceState({ legalDocument: document }, '', legalPath(document));
+    setLegalDocument(document);
   };
 
   const closeLegal = () => {
@@ -213,7 +230,8 @@ export default function App() {
   };
 
   const handleSurfaceChange = (surface: SurfaceType) => {
-    if (legalDocument) window.history.pushState({}, '', '/');
+    if (leavePrivatePages()) window.history.replaceState(null, '', '/');
+    else if (legalDocument) window.history.pushState({}, '', '/');
     setLegalDocument(null);
     if (!canAccessSurface(store.activeUser, surface)) {
       setActiveSurface('PUBLIC');
@@ -257,7 +275,7 @@ export default function App() {
 
         <main id="main-content" data-surface={paymentReturn ? 'PAYMENT' : (gateToken || partnerToken || inviteToken || adReportToken || legalDocument) ? 'OTHER' : activeSurface} tabIndex={-1} className="animate-in fade-in duration-300 flex-1 pb-[4.5rem] sm:pb-10 outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
           <Suspense fallback={<SurfaceFallback />}>
-            {paymentReturn ? <PaymentReturnPage orderId={paymentReturn.orderId} onDone={closePaymentReturn} /> : gateToken ? <GateReportPage token={gateToken} onClose={closeGateReport} /> : partnerToken ? <PartnerKitPage token={partnerToken} onClose={closePartners} /> : inviteToken ? <InviteAcceptPage token={inviteToken} onDone={closeInvite} /> : adReportToken ? <AdReportPage token={adReportToken} onClose={closeAdReport} /> : legalDocument ? <LegalCenter initialDocument={legalDocument} onBack={closeLegal} /> : <>
+            {paymentReturn ? <PaymentReturnPage orderId={paymentReturn.orderId} onDone={closePaymentReturn} /> : gateToken ? <GateReportPage token={gateToken} onClose={closeGateReport} /> : partnerToken ? <PartnerKitPage token={partnerToken} onClose={closePartners} /> : inviteToken ? <InviteAcceptPage token={inviteToken} onDone={closeInvite} /> : adReportToken ? <AdReportPage token={adReportToken} onClose={closeAdReport} /> : legalDocument ? <LegalCenter initialDocument={legalDocument} onBack={closeLegal} onSelect={selectLegalTab} /> : <>
               {activeSurface === 'PUBLIC' && <PublicLanding onSurfaceChange={handleSurfaceChange} />}
               {activeSurface === 'DIRECTORY' && <SupplierDirectory onSurfaceChange={handleSurfaceChange} />}
               {activeSurface === 'SHOWCASE' && <BusinessShowcase onSurfaceChange={handleSurfaceChange} />}

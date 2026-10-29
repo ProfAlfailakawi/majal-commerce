@@ -69,6 +69,8 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
   const [followedCreators, setFollowedCreators] = useState<string[]>([]);
   const [followMessage, setFollowMessage] = useState('');
   const [voteMessage, setVoteMessage] = useState('');
+  // A refused vote (outside demo the vote needs a paid order) must not look like a success.
+  const [voteOk, setVoteOk] = useState(true);
   const closeOrderModal = () => setSelectedLaunch(null);
   // Opens the order dialog for a shared launch link once the launch is known to the store.
   const sharedLaunchId = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('drop');
@@ -76,7 +78,13 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
   useEffect(() => {
     if (!sharedLaunchId || sharedHandled) return;
     const match = launches.find(l => l.id === sharedLaunchId && !isUpcoming(l));
-    if (match) { setSelectedLaunch(match); setSharedHandled(true); }
+    if (!match) return;
+    setSelectedLaunch(match); setSharedHandled(true);
+    // Consume the link: otherwise every return to the market remounts this view, re-reads
+    // `?drop=` and pops the dialog open again. `src` stays, it attributes the order.
+    const url = new URL(window.location.href);
+    url.searchParams.delete('drop');
+    window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
   });
 
   // Follows are stored server-side so launch alerts reach the follower's inbox.
@@ -146,6 +154,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
   const handleKeepVote = () => {
     if (!featured) return;
     const review = store.submitReview(featured.id, 5, 4, 5, 'أبي هذا المنتج يستمر في المنيو.', true, 'عميل مجال');
+    setVoteOk(Boolean(review));
     setVoteMessage(review ? 'وصل صوتك. صار لك أثر مباشر في قرار استمرار المنتج.' : (store.lastGuardMessage || 'تم تسجيل صوت بهذا الاسم لهذا الإطلاق مسبقًا.'));
     setTimeout(() => setVoteMessage(''), 3200);
   };
@@ -230,7 +239,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
                   <button type="button" onClick={() => setSelectedLaunch(featured)} className="flex-1 py-3 rounded-xl bg-gold-500 text-slate-950 text-xs font-black flex items-center justify-center gap-2"><ShoppingBag className="w-4 h-4" /> اطلب التجربة</button>
                   <button type="button" onClick={handleKeepVote} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black text-emerald-300 flex items-center gap-2"><Heart className="w-4 h-4" /> خلوه</button>
                 </div>
-                {voteMessage && <div className="rounded-xl p-3 bg-emerald-500/10 border border-emerald-400/20 text-xs text-emerald-300 font-bold">{voteMessage}</div>}
+                {voteMessage && <div role="status" className={`rounded-xl p-3 text-xs font-bold border ${voteOk ? 'bg-emerald-500/10 border-emerald-400/20 text-emerald-300' : 'bg-rose-500/10 border-rose-400/20 text-rose-200'}`}>{voteMessage}</div>}
               </div>
             </div>
           )}
