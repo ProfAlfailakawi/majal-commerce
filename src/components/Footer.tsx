@@ -124,7 +124,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
               <a
                 key={link.id}
                 href={legalPath(link.id)}
-                onClick={(event) => { event.preventDefault(); onOpenLegal(link.id); }}
+                onClick={(event) => { if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return; event.preventDefault(); onOpenLegal(link.id); }}
                 className="py-1.5 -my-1.5 inline-flex items-center hover:text-gold-300 transition-colors"
               >
                 {link.label}

@@ -78,7 +78,13 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
   useEffect(() => {
     if (!sharedLaunchId || sharedHandled) return;
     const match = launches.find(l => l.id === sharedLaunchId && !isUpcoming(l));
-    if (match) { setSelectedLaunch(match); setSharedHandled(true); }
+    if (!match) return;
+    setSelectedLaunch(match); setSharedHandled(true);
+    // Consume the link: otherwise every return to the market remounts this view, re-reads
+    // `?drop=` and pops the dialog open again. `src` stays, it attributes the order.
+    const url = new URL(window.location.href);
+    url.searchParams.delete('drop');
+    window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
   });
 
   // Follows are stored server-side so launch alerts reach the follower's inbox.
