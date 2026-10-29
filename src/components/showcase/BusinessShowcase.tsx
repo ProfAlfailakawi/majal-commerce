@@ -180,6 +180,13 @@ export const BusinessShowcase: React.FC<{ onSurfaceChange: (surface: SurfaceType
   const [sector, setSector] = useState<BusinessSector | 'ALL'>('ALL');
   const [open, setOpen] = useState<BusinessListing | null>(null);
   const [form, setForm] = useState<'sell' | 'ad' | null>(null);
+  // The free «عندك مشروع تبي تبيعه؟» house card asks the app to go to SHOWCASE; on this page that
+  // was a no-op, so the card did nothing. Here it opens the sell form it advertises.
+  useEffect(() => {
+    const onNavigate = (event: Event) => { if ((event as CustomEvent<SurfaceType>).detail === 'SHOWCASE') setForm('sell'); };
+    window.addEventListener('majal:navigate', onNavigate);
+    return () => window.removeEventListener('majal:navigate', onNavigate);
+  }, []);
   useEffect(() => { fetchBusinesses().then(r => setListings(r.listings)).catch(() => setListings([])).finally(() => setLoading(false)); }, []);
   const present = useMemo(() => SECTOR_KEYS.filter(k => listings.some(l => l.sector === k)), [listings]);
   const shown = sector === 'ALL' ? listings : listings.filter(l => l.sector === sector);
