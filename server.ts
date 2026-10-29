@@ -27,7 +27,7 @@ import { createModerationRouter } from './server/moderation';
 import { createCommercePublicRouter, createCommerceRouter } from './server/commerce-ops';
 import { expireStaleHolds } from './server/checkout';
 import { deliveryReadiness, startNotificationDeliveryWorker } from './server/delivery';
-import { installProcessSafetyHandlers, reportError, requestTelemetry, resolveTrustProxyHops, structuredLog } from './server/observability';
+import { installProcessSafetyHandlers, reportError, reportSweeperError, requestTelemetry, resolveTrustProxyHops, structuredLog } from './server/observability';
 import { secureStorageReadiness } from './server/secure-storage';
 import { closeRateLimitStore, initRateLimitStore, rateLimitBackend, rateLimitStore } from './server/rate-limit-store';
 import { staticCompression } from './server/static-compression';
@@ -355,10 +355,10 @@ async function initializeApplication(app: express.Express) {
   const stopDeliveryWorker = startNotificationDeliveryWorker(db);
   const stopCleanup = startAdaptiveLoop(() => purgeExpiredSessions(db), { activeMs: 30 * 60_000 });
   // Pending-payment holds release their reserved stock once the payment window elapses.
-  const stopHolds = startAdaptiveLoop(() => expireStaleHolds(db).catch(error => reportError('hold_sweeper_failed', error, {})), { activeMs: 60_000 });
+  const stopHolds = startAdaptiveLoop(() => expireStaleHolds(db).catch(error => reportSweeperError('hold_sweeper_failed', error, {})), { activeMs: 60_000 });
   // Scheduled launches: remind the waitlist an hour ahead and announce the opening.
   const stopLaunches = startAdaptiveLoop(
-    () => sweepLaunchSchedule(db).catch(error => reportError('launch_schedule_sweeper_failed', error, {})),
+    () => sweepLaunchSchedule(db).catch(error => reportSweeperError('launch_schedule_sweeper_failed', error, {})),
     { activeMs: 60_000, wakeInMs: () => msUntilNextLaunchEvent(db) }
   );
   return {
