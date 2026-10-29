@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CheckCircle2, Copy, KeyRound, ShieldCheck, X } from 'lucide-react';
-import { beginMfaEnrollment, confirmMfaEnrollment } from '../../lib/authClient';
+import { AuthApiError, beginMfaEnrollment, confirmMfaEnrollment } from '../../lib/authClient';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { MajalLoader } from '../brand/MajalLoader';
 
@@ -10,6 +10,9 @@ export const AccountSecurityModal: React.FC<{ isOpen: boolean; onClose: () => vo
   const [code, setCode] = useState('');
   const [status, setStatus] = useState<'IDLE' | 'LOADING' | 'CONFIRMED'>('IDLE');
   const [notice, setNotice] = useState('');
+  // Set once the server says MFA is already active: re-enrolment then needs the current code.
+  const [needsCurrentCode, setNeedsCurrentCode] = useState(false);
+  const [currentCode, setCurrentCode] = useState('');
 
   if (!isOpen) return null;
 
@@ -17,8 +20,9 @@ export const AccountSecurityModal: React.FC<{ isOpen: boolean; onClose: () => vo
     setNotice('');
     setStatus('LOADING');
     try {
-      setEnrollment(await beginMfaEnrollment());
+      setEnrollment(await beginMfaEnrollment(needsCurrentCode ? currentCode : undefined));
     } catch (error) {
+      if (error instanceof AuthApiError && error.code === 'MFA_CODE_REQUIRED') { setNeedsCurrentCode(true); setNotice(''); return; }
       setNotice(error instanceof Error ? error.message : 'تعذّر بدء إعداد المصادقة الثنائية.');
     } finally {
       setStatus('IDLE');
@@ -53,7 +57,8 @@ export const AccountSecurityModal: React.FC<{ isOpen: boolean; onClose: () => vo
       <div className="p-6 space-y-5 overflow-y-auto">
         {status === 'CONFIRMED' ? <div className="rounded-2xl p-5 bg-emerald-500/10 border border-emerald-400/20 text-center space-y-3"><CheckCircle2 className="w-10 h-10 text-emerald-300 mx-auto" /><h3 className="font-black text-emerald-200">تم تفعيل المصادقة الثنائية</h3><p className="text-xs text-slate-300 leading-6">سيطلب النظام رمزاً من تطبيق المصادقة عند تسجيل الدخول القادم.</p></div> : !enrollment ? <div className="space-y-4">
           <div className="rounded-2xl p-4 bg-white/[0.03] border border-white/10 flex gap-3"><KeyRound className="w-5 h-5 text-gold-300 shrink-0 mt-0.5" /><p className="text-xs text-slate-300 leading-6">ستُنشأ لك هوية رمز مصادقة مشفّرة. افتح أي تطبيق مصادقة موثوق، ثم أدخل المفتاح مرة واحدة.</p></div>
-          <button onClick={begin} disabled={status === 'LOADING'} aria-busy={status === 'LOADING'} className="w-full py-3.5 rounded-2xl bg-gold-500 text-slate-950 font-black text-sm disabled:opacity-50 flex items-center justify-center gap-2">{status === 'LOADING' ? <><MajalLoader size={16} label="جارٍ تجهيز هوية المصادقة…" /><span>جارٍ التجهيز…</span></> : 'ابدأ التفعيل'}</button>
+          {needsCurrentCode && <label className="block space-y-2"><span className="text-xs font-bold text-slate-200">المصادقة الثنائية مفعّلة. أدخل الرمز الحالي من تطبيق المصادقة لإعادة الإعداد</span><input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={currentCode} onChange={event => setCurrentCode(event.target.value.replace(/\D/g, '').slice(0, 6))} className="w-full rounded-xl bg-slate-950/60 border border-white/10 p-3 text-center text-xl tracking-[0.4em] text-slate-100 outline-none focus:border-emerald-400/40 focus-visible:ring-2 focus-visible:ring-gold-300" /></label>}
+          <button onClick={begin} disabled={status === 'LOADING' || (needsCurrentCode && currentCode.length !== 6)} aria-busy={status === 'LOADING'} className="w-full py-3.5 rounded-2xl bg-gold-500 text-slate-950 font-black text-sm disabled:opacity-50 flex items-center justify-center gap-2">{status === 'LOADING' ? <><MajalLoader size={16} label="جارٍ تجهيز هوية المصادقة…" /><span>جارٍ التجهيز…</span></> : 'ابدأ التفعيل'}</button>
         </div> : <div className="space-y-4">
           <div className="space-y-2"><span className="text-xs font-bold text-slate-200">المفتاح اليدوي</span><div className="flex items-center gap-2"><code dir="ltr" className="flex-1 rounded-xl bg-slate-950/60 border border-white/10 p-3 text-center text-xs tracking-widest text-gold-300 break-all">{enrollment.manualKey}</code><button onClick={() => navigator.clipboard?.writeText(enrollment.manualKey)} className="p-3 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white" aria-label="نسخ مفتاح المصادقة"><Copy className="w-4 h-4" /></button></div></div>
           <label className="block space-y-2"><span className="text-xs font-bold text-slate-200">أدخل الرمز الحالي للتأكيد</span><input inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={code} onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} className="w-full rounded-xl bg-slate-950/60 border border-white/10 p-3 text-center text-xl tracking-[0.4em] text-slate-100 outline-none focus:border-emerald-400/40 focus-visible:ring-2 focus-visible:ring-gold-300" /></label>

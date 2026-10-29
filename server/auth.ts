@@ -1052,6 +1052,21 @@ export function createAuthRouter(db: MajalDatabase, config: AuthConfig) {
   router.post('/mfa/enroll', authenticated, csrfProtected, async (req: AuthenticatedRequest, res) => {
     if (!req.auth) return jsonError(res, 401, 'يلزم تسجيل الدخول.');
     if (!config.encryptionKey) return jsonError(res, 503, 'AUTH_ENCRYPTION_KEY مطلوب قبل تفعيل MFA.', 'MFA_NOT_CONFIGURED');
+    // Re-enrolment replaces the secret and switches MFA off until confirmed, so with MFA
+    // already active it needs a current code from the existing authenticator; a session
+    // alone (e.g. a stolen cookie) must not be able to strip or swap the second factor.
+    // First-time enrolment is unchanged.
+    const current = await db.prepare('SELECT * FROM users WHERE id = ?').get<UserRow>(req.auth.user.id);
+    if (current?.mfa_enabled === 1) {
+      if (!current.mfa_secret_encrypted) return jsonError(res, 503, 'إعداد MFA غير مكتمل على الخادم.', 'MFA_CONFIGURATION_ERROR');
+      if (!req.body?.code) return jsonError(res, 403, 'المصادقة الثنائية مفعّلة. أدخل الرمز الحالي من تطبيق المصادقة لإعادة الإعداد.', 'MFA_CODE_REQUIRED');
+      const step = matchTotpStep(decryptSecret(current.mfa_secret_encrypted, config.encryptionKey), req.body.code);
+      // Single-use, like login: claiming the step atomically rejects a replayed code.
+      const claimed = step !== null && (await db.prepare(
+        'UPDATE users SET mfa_last_step = ? WHERE id = ? AND (mfa_last_step IS NULL OR mfa_last_step < ?)'
+      ).run(step, current.id, step)).changes === 1;
+      if (!claimed) return jsonError(res, 403, 'رمز التحقق غير صحيح.', 'INVALID_MFA_CODE');
+    }
     const secret = generateTotpSecret();
     const encrypted = encryptSecret(secret, config.encryptionKey);
     await db.prepare('UPDATE users SET mfa_secret_encrypted = ?, mfa_enabled = 0, updated_at = ? WHERE id = ?')
