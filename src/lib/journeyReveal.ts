@@ -60,9 +60,21 @@ export function markPlayed(playKey?: string, persist = true): void {
   }
 }
 
-/** Test helper. */
+/**
+ * Test helper. Also clears the persisted keys: Node 25+ ships a global `sessionStorage`, so
+ * without this a key played in one test stays "played" in the next one.
+ */
 export function resetPlayedForTests(): void {
   played.clear();
+  try {
+    if (typeof sessionStorage === 'undefined') return;
+    for (let i = sessionStorage.length - 1; i >= 0; i -= 1) {
+      const key = sessionStorage.key(i);
+      if (key?.startsWith(PLAYED_PREFIX)) sessionStorage.removeItem(key);
+    }
+  } catch {
+    /* storage unavailable: nothing persisted to clear */
+  }
 }
 
 /* ------------------------------------------------------------------------------------------
