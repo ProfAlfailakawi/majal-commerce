@@ -12,7 +12,7 @@ import { createHash } from 'node:crypto';
  * عامل الخدمة ينسخ هذه الترويسة مع الصفحة المحفوظة، فتبقى السياسة نفسها حين تُقدَّم منه.
  */
 export function updatingPageCsp(html: string): string | null {
-  const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match => match[1]);
+  const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script\s*>/gi)].map(match => match[1]);
   if (!scripts.length) return null;
   const hashes = scripts.map(body => `'sha256-${createHash('sha256').update(body, 'utf8').digest('base64')}'`);
   return [

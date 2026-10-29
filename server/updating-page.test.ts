@@ -178,7 +178,7 @@ test('U4 the page is self-contained, RTL, light/dark and uses the required copy'
 });
 
 function runPage(options: { health: boolean[]; recent?: number[]; pathname?: string; online?: boolean }) {
-  const script = /<script>([\s\S]*?)<\/script>/.exec(PAGE)?.[1] || '';
+  const script = /<script>([\s\S]*?)<\/script\s*>/i.exec(PAGE)?.[1] || '';
   const timers: Array<{ fn: () => void; ms: number }> = [];
   const asked: string[] = [];
   const nodes: Record<string, any> = {};
@@ -240,7 +240,7 @@ test('U4 opened by name it returns to the start; offline it says so and does not
 });
 
 test('U5 the CSP allows exactly the inline script hash and nothing external', () => {
-  const script = /<script>([\s\S]*?)<\/script>/.exec(PAGE)![1];
+  const script = /<script>([\s\S]*?)<\/script\s*>/i.exec(PAGE)![1];
   const hash = createHash('sha256').update(script, 'utf8').digest('base64');
   assert.ok(CSP.includes(`script-src 'sha256-${hash}'`));
   assert.ok(CSP.startsWith("default-src 'none'"));
