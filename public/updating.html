@@ -1,0 +1,202 @@
+<!doctype html>
+<!--
+  صفحة «نُحدّث البرنامج».
+
+  أثناء النشر يتبدّل الخادم، فتجيب واجهةُ Google الأماميّة عن التنقّل بصفحة خطأٍ
+  إنجليزية (500/502/503/504) لا يكتبها خادمُنا. عاملُ الخدمة (public/sw.js) يحفظ هذه
+  الصفحة عند تثبيته، ويقدّمها بدلاً من ذلك الجواب أو من انقطاع التنقّل والجهازُ متّصل —
+  والرابطُ في شريط العنوان يبقى ما طلبه الزائر، فإعادةُ التحميل تفتحه هو نفسه.
+
+  مستقلّةٌ تماماً: لا طلبَ خارجياً، والخطُّ Tajawal من الموقع نفسه إن كان محفوظاً وإلا
+  خطُّ النظام. العلامةُ هندسة public/favicon.svg نفسها (البوابة والحلقة).
+
+  تسأل /api/ready كل ثلاث ثوانٍ (وتتباطأ تدريجياً إلى خمس عشرة)، فإذا أجاب أعادت فتح
+  الصفحة المطلوبة. وإن أُعيد التحميل ثلاثَ مرّاتٍ في دقيقتين والخادمُ يجيب، تباطأت إلى
+  مرّةٍ كل نصف دقيقة ولا تدور في حلقة.
+
+  السكربت المضمَّن مسموحٌ ببصمته وحدها: server/updating-page.ts يحسب sha256 له ويضعه في
+  ترويسة CSP لهذا الملف، فلا يلزم توسيع سياسة الموقع العامة (script-src 'self').
+-->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f7f4ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+<title>نُحدّث البرنامج · مجال</title>
+<style>
+@font-face{font-family:"Tajawal";font-weight:500;font-display:swap;src:local("Tajawal Medium"),url("/fonts/4255019c1c.woff2") format("woff2")}
+@font-face{font-family:"Tajawal";font-weight:700;font-display:swap;src:local("Tajawal Bold"),url("/fonts/fa5e723266.woff2") format("woff2")}
+:root{
+  --bg:#f7f4ec;--bg-top:#fbf8f1;--bg-bottom:#f1ece0;--ink:#0b1220;--muted:#4b5567;--line:rgba(11,18,32,.10);
+  --accent:#8a6a2c;--glow:rgba(138,106,44,.12);--scan:#8a6a2c;--spark:#c7a55b;--spark-soft:#a8843c;
+  --button:#ffffff;--button-line:rgba(11,18,32,.16);--shadow:rgba(11,18,32,.22);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0b1220;--bg-top:#0a101b;--bg-bottom:#070d18;--ink:#f8fafc;--muted:#94a3b8;--line:rgba(255,255,255,.09);
+    --accent:#e8c880;--glow:rgba(199,165,91,.16);--scan:#e8c880;--spark:#e8c880;--spark-soft:#c7a55b;
+    --button:#131c2d;--button-line:rgba(255,255,255,.14);--shadow:rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;min-height:100%;display:grid;place-items:center;
+  padding:max(24px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom));
+  background:radial-gradient(circle at 50% 40%,var(--glow),transparent 46%),linear-gradient(180deg,var(--bg-top) 0%,var(--bg) 55%,var(--bg-bottom) 100%);
+  background-color:var(--bg);
+  color:var(--ink);
+  font-family:"Tajawal","Segoe UI",Tahoma,"Noto Sans Arabic",system-ui,-apple-system,sans-serif;
+  font-weight:500;font-synthesis:none;-webkit-font-smoothing:antialiased;text-align:center;
+}
+main{display:grid;justify-items:center;gap:0;max-width:420px;width:100%}
+.stage{position:relative;width:132px;height:132px;display:grid;place-items:center;margin-bottom:30px}
+.halo{position:absolute;inset:0;width:100%;height:100%;animation:turn 3.6s linear infinite}
+.halo circle{fill:none;stroke-width:2;stroke-linecap:round}
+.halo .track{stroke:var(--line)}
+.halo .arc{stroke:var(--accent);stroke-dasharray:96 400;opacity:.85}
+.mark{width:84px;height:84px;display:block;filter:drop-shadow(0 18px 30px var(--shadow))}
+.mark .gate{stroke-dasharray:1;animation:draw 2.8s cubic-bezier(.16,1,.3,1) infinite}
+.mark .core{transform-box:fill-box;transform-origin:50% 50%;animation:breathe 2.4s cubic-bezier(.45,0,.25,1) infinite}
+.spark{position:absolute;fill:var(--spark);animation:twinkle 2.4s ease-in-out infinite}
+.spark.one{width:20px;height:20px;top:6px;inset-inline-start:8px}
+.spark.two{width:12px;height:12px;bottom:14px;inset-inline-end:6px;fill:var(--spark-soft);animation-delay:1.2s}
+h1{margin:0;font-size:clamp(22px,5.6vw,27px);font-weight:700;line-height:1.5;letter-spacing:0}
+.lead{margin:6px 0 0;font-size:16px;line-height:1.7;color:var(--muted)}
+.pulse{width:132px;height:2px;margin:26px 0 28px;border-radius:99px;background:var(--line);overflow:hidden}
+.pulse i{display:block;width:36%;height:100%;border-radius:inherit;background:linear-gradient(90deg,transparent,var(--scan),transparent);animation:scan 1.5s ease-in-out infinite}
+button{
+  min-height:44px;padding:0 22px;border-radius:12px;cursor:pointer;
+  border:1px solid var(--button-line);background:var(--button);color:var(--ink);
+  font:inherit;font-size:14px;font-weight:700;
+  transition:border-color .2s ease,transform .2s ease;
+}
+button:hover{border-color:var(--accent)}
+button:active{transform:scale(.98)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.note{min-height:20px;margin:14px 0 0;font-size:12.5px;line-height:1.6;color:var(--muted)}
+@keyframes turn{to{transform:rotate(360deg)}}
+@keyframes draw{0%{stroke-dashoffset:1}45%,100%{stroke-dashoffset:0}}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(.84)}}
+@keyframes twinkle{0%,100%{opacity:.25;transform:scale(.7) rotate(0)}50%{opacity:1;transform:scale(1) rotate(20deg)}}
+@keyframes scan{0%{transform:translateX(130%)}100%{transform:translateX(-360%)}}
+@media (prefers-reduced-motion:reduce){
+  .halo,.mark .gate,.mark .core,.spark,.pulse i{animation:none}
+  .mark .gate{stroke-dasharray:none}
+  .spark{opacity:.8}
+}
+</style>
+</head>
+<body>
+<main>
+  <div class="stage" aria-hidden="true">
+    <svg class="halo" viewBox="0 0 132 132" focusable="false"><circle class="track" cx="66" cy="66" r="63"/><circle class="arc" cx="66" cy="66" r="63"/></svg>
+    <svg class="mark" viewBox="0 0 64 64" focusable="false">
+      <defs>
+        <linearGradient id="updating-gold" x1="1" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="#a8843c"/>
+          <stop offset="45%" stop-color="#c7a55b"/>
+          <stop offset="100%" stop-color="#f4e1b0"/>
+        </linearGradient>
+      </defs>
+      <rect width="64" height="64" rx="15" fill="#0b1220"/>
+      <g transform="translate(32 33.5) scale(0.78) translate(-32 -33.5)" fill="none" stroke="url(#updating-gold)" stroke-linecap="round">
+        <path class="gate" pathLength="1" d="M11 53 V33 A21 21 0 0 1 53 33 V53" stroke-width="6.5"/>
+        <circle class="core" cx="32" cy="34" r="9" stroke-width="6"/>
+      </g>
+    </svg>
+    <svg class="spark one" viewBox="0 0 24 24" focusable="false"><path d="M12 0c.7 6.4 5.6 11.3 12 12-6.4.7-11.3 5.6-12 12-.7-6.4-5.6-11.3-12-12C6.4 11.3 11.3 6.4 12 0z"/></svg>
+    <svg class="spark two" viewBox="0 0 24 24" focusable="false"><path d="M12 0c.7 6.4 5.6 11.3 12 12-6.4.7-11.3 5.6-12 12-.7-6.4-5.6-11.3-12-12C6.4 11.3 11.3 6.4 12 0z"/></svg>
+  </div>
+  <h1 id="title">نُحدّث البرنامج الآن ✨</h1>
+  <p class="lead" id="lead">لحظاتٍ ونعود</p>
+  <div class="pulse" aria-hidden="true"><i></i></div>
+  <button type="button" id="retry">أعد المحاولة الآن</button>
+  <p class="note" id="note" role="status" aria-live="polite">ستُفتح الصفحة التي طلبتها تلقائياً حين نعود.</p>
+</main>
+<script>
+(function () {
+  var HEALTH = "/api/ready";
+  var FIRST = 3000, CEILING = 15000, PATIENT = 30000;
+  var KEY = "majal-updating-reloads";
+  var tries = 0, timer = 0, asking = false;
+  var title = document.getElementById("title");
+  var lead = document.getElementById("lead");
+  var note = document.getElementById("note");
+
+  /* إعاداتُ التحميل في الدقيقتين الأخيرتين: ثلاثٌ والخادمُ يجيب تعني أن الصفحة
+     نفسها تتعثّر، فلا ندور في حلقة. */
+  function recent() {
+    try {
+      var now = Date.now();
+      return JSON.parse(sessionStorage.getItem(KEY) || "[]").filter(function (t) { return now - t < 120000; });
+    } catch (e) { return []; }
+  }
+  function remember() {
+    try { var list = recent(); list.push(Date.now()); sessionStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {}
+  }
+  function stuck() { return recent().length >= 3; }
+
+  /* فُتحت هذه الصفحة باسمها مباشرة: العودة إلى البداية، لا إليها. */
+  function reopen() {
+    if (location.pathname === "/updating.html") location.replace("/");
+    else location.reload();
+  }
+
+  function describe() {
+    if (navigator.onLine === false) {
+      title.textContent = "لا اتصال بالإنترنت الآن";
+      lead.textContent = "سنعود تلقائياً حين يعود الاتصال";
+      note.textContent = "";
+    } else if (stuck()) {
+      title.textContent = "نُحدّث البرنامج الآن ✨";
+      lead.textContent = "يستغرق ذلك وقتاً أطول من المعتاد";
+      note.textContent = "سنحاول مرّةً كل نصف دقيقة، ويمكنك المحاولة الآن.";
+    } else {
+      title.textContent = "نُحدّث البرنامج الآن ✨";
+      lead.textContent = "لحظاتٍ ونعود";
+      note.textContent = "ستُفتح الصفحة التي طلبتها تلقائياً حين نعود.";
+    }
+  }
+
+  function wait() {
+    if (stuck()) return PATIENT;
+    return Math.min(CEILING, Math.round(FIRST * Math.pow(1.3, Math.max(0, tries - 5))));
+  }
+  function later() { clearTimeout(timer); timer = setTimeout(ask, wait()); }
+
+  function ask() {
+    clearTimeout(timer);
+    if (asking) return;
+    if (navigator.onLine === false) { describe(); later(); return; }
+    asking = true;
+    tries++;
+    var control = typeof AbortController === "function" ? new AbortController() : null;
+    var guard = setTimeout(function () { if (control) control.abort(); }, 8000);
+    fetch(HEALTH, { cache: "no-store", credentials: "same-origin", signal: control ? control.signal : undefined })
+      .then(function (response) { return response.ok; }, function () { return false; })
+      .then(function (ok) {
+        clearTimeout(guard);
+        asking = false;
+        if (ok) { remember(); reopen(); return; }
+        describe();
+        later();
+      });
+  }
+
+  document.getElementById("retry").addEventListener("click", reopen);
+  window.addEventListener("online", function () { describe(); ask(); });
+  window.addEventListener("offline", describe);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) ask(); });
+
+  describe();
+  later();
+})();
+</script>
+</body>
+</html>

@@ -4,6 +4,8 @@
  * A dropped connection, a captive portal or a server restart rejects `fetch` itself — before
  * any HTTP status exists — and every client wrapper would otherwise show that raw text.
  */
+import { isPlatformUpdating, showUpdatingNotice, updatingJsonResponse } from './updatingNotice';
+
 export const NETWORK_ERROR_MESSAGE = 'تعذّر الاتصال بالخادم. تحقق من اتصالك بالإنترنت ثم حاول مجددًا.';
 
 export class NetworkError extends Error {
@@ -23,6 +25,13 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
     const url = typeof input === 'string' ? input : input instanceof URL ? input.pathname : input.url;
     if (response.status === 401 && typeof window !== 'undefined' && !/\/api\/v1\/auth\//.test(url)) {
       window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+    }
+    // Our /api always answers JSON. A 5xx page in HTML is the platform swapping servers
+    // mid-deploy: one calm notice instead of an error, and a JSON body callers can read.
+    if (isPlatformUpdating(response.status, response.headers.get('content-type'))) {
+      if (typeof window !== 'undefined') showUpdatingNotice();
+      const method = String(init?.method || (typeof input === 'object' && 'method' in input ? input.method : 'GET')).toUpperCase();
+      return updatingJsonResponse(!['GET', 'HEAD'].includes(method));
     }
     return response;
   } catch (error) {
