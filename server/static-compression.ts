@@ -13,7 +13,8 @@ import type { Request, RequestHandler, Response } from 'express';
  *    (/api/ai/*) and the CSV statement download;
  *  - any /internal/** path, and any path with a /webhook or /webhooks segment;
  *  - any text/event-stream response: a gzip buffer would hold events back instead of letting
- *    each frame reach the client as it is written.
+ *    each frame reach the client as it is written;
+ *  - any 206 byte-range reply, whose Content-Range counts uncompressed bytes.
  * Everything else defers to compression's own filter (compressible Content-Type only).
  * compression itself also skips HEAD requests, bodies under 1 KB and Cache-Control: no-transform.
  */
@@ -23,6 +24,7 @@ const EVENT_STREAM = /^\s*text\/event-stream\b/i;
 export function shouldCompress(req: Request, res: Response): boolean {
   if (NEVER_COMPRESS_PATH.test(req.path)) return false;
   if (EVENT_STREAM.test(String(res.getHeader('Content-Type') ?? ''))) return false;
+  if (res.statusCode === 206) return false;
   return compression.filter(req, res);
 }
 

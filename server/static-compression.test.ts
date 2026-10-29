@@ -120,6 +120,14 @@ test('HEAD requests are answered without a compressed body', async () => {
   assert.equal(reply.headers['content-encoding'], undefined);
 });
 
+test('a byte-range request gets exactly the uncompressed bytes it asked for', async () => {
+  const reply = await send(ASSET, { ...BOTH, Range: 'bytes=0-2047' });
+  assert.equal(reply.status, 206);
+  assert.equal(reply.headers['content-encoding'], undefined);
+  assert.equal(reply.headers['content-range'], `bytes 0-2047/${Buffer.byteLength(JS)}`);
+  assert.equal(reply.body.toString('utf8'), JS.slice(0, 2048));
+});
+
 test('API, internal and webhook responses are never compressed', async () => {
   for (const route of ['/api/early', '/api/late', '/API/late', '/internal/jobs', '/partner/webhooks/order', '/webhook']) {
     const reply = await send(route, BOTH);
