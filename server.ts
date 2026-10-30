@@ -31,6 +31,7 @@ import { installProcessSafetyHandlers, reportError, reportSweeperError, requestT
 import { secureStorageReadiness } from './server/secure-storage';
 import { closeRateLimitStore, initRateLimitStore, rateLimitBackend, rateLimitStore } from './server/rate-limit-store';
 import { staticCompression } from './server/static-compression';
+import { updatingPageCsp } from './server/updating-page';
 
 dotenv.config({ quiet: true });
 installProcessSafetyHandlers();
@@ -315,6 +316,10 @@ async function initializeApplication(app: express.Express) {
     // route is registered above, so none of them reaches this middleware; its filter also
     // refuses /api, /internal, webhook paths and text/event-stream (server/static-compression.ts).
     app.use(staticCompression());
+    // صفحة «نُحدّث البرنامج» تحمل سكربتها مضمَّناً (يقدّمها عامل الخدمة والخادم لا يجيب)،
+    // فلها وحدها سياسة تسمح ببصمة ذلك السكربت لا غير (server/updating-page.ts).
+    const updatingPath = path.join(distPath, 'updating.html');
+    const updatingCsp = fs.existsSync(updatingPath) ? updatingPageCsp(fs.readFileSync(updatingPath, 'utf8')) : null;
     app.use(express.static(distPath, {
       index: false,
       maxAge: '1h',
@@ -324,6 +329,7 @@ async function initializeApplication(app: express.Express) {
         // على إصدار سابق ولا يرى المتصفح تحديثاً أصلاً.
         if (filePath.endsWith('.html') || filePath.endsWith('sw.js') || filePath.endsWith('build-id.json')) {
           res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+          if (updatingCsp && filePath === updatingPath) res.setHeader('Content-Security-Policy', updatingCsp);
         } else if (/[-.][A-Za-z0-9_-]{8,}\.[a-z0-9]+$/i.test(filePath)) {
           res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
         }
