@@ -43,7 +43,7 @@ test('the notice polls every 3 s and slows to 15 s; the copy has no emoji (DESIG
   assert.equal(nextDelay(5), 3000);
   assert.ok(nextDelay(8) > 3000);
   assert.equal(nextDelay(40), 15000);
-  assert.ok(UPDATING_MESSAGE.includes('نُحدّث البرنامج'));
+  assert.ok(UPDATING_MESSAGE.includes('نُحدّث مجال'));
   assert.ok(!/\p{Extended_Pictographic}/u.test(UPDATING_WRITE_MESSAGE));
 });
 

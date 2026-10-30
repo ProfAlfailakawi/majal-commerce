@@ -86,7 +86,7 @@ const deploying = (status: number | 'drop'): Net => async pathname => {
 const isUpdatingPage = async (response: Response | null) =>
   Boolean(response) && response!.status === 503 && response!.headers.get('cache-control') === 'no-store'
   && /text\/html/.test(response!.headers.get('content-type') || '') && response!.headers.get('content-security-policy') === CSP
-  && (await response!.clone().text()).includes('نُحدّث البرنامج الآن');
+  && (await response!.clone().text()).includes('تُفتح البوابة من جديد بعد قليل');
 
 test('U1 navigation answered 500/502/503/504 gets the updating page (503, no-store, its CSP)', async () => {
   for (const status of [500, 502, 503, 504]) {
@@ -166,15 +166,17 @@ test('U3 install stores the page in a fixed cache that activate keeps; a good na
   assert.ok(source.includes("const BUILD = '__BUILD_ID__';"), 'build stamp placeholder kept');
 });
 
-test('U4 the page is self-contained, RTL, light/dark and uses the required copy', () => {
+test('U4 the page is self-contained, RTL, light/dark and uses its own gate copy', () => {
   assert.ok(!/https?:\/\//i.test(PAGE) && !/\bsrc=/i.test(PAGE) && !/<link\b/i.test(PAGE) && !/@import/i.test(PAGE));
   assert.ok((PAGE.match(/url\("([^"]+)"\)/g) || []).every(u => /^url\("\/fonts\//.test(u)));
   for (const u of PAGE.match(/\/fonts\/[\w.]+\.woff2/g) || []) assert.ok(fs.existsSync(path.join('public', u)), u);
   assert.match(PAGE, /<html lang="ar" dir="rtl">/);
   assert.match(PAGE, /prefers-color-scheme:dark/);
   assert.match(PAGE, /prefers-reduced-motion/);
-  assert.match(PAGE, /<title>نُحدّث البرنامج · مجال<\/title>/);
-  for (const text of ['نُحدّث البرنامج الآن ✨', 'لحظاتٍ ونعود', 'أعد المحاولة الآن', 'لا اتصال بالإنترنت الآن']) assert.ok(PAGE.includes(text), text);
+  assert.match(PAGE, /<title>البوابة تُفتح بعد قليل · مجال<\/title>/);
+  for (const text of ['تُفتح البوابة من جديد بعد قليل', 'نُجري تحديثاً على مجال', 'حاول الدخول الآن', 'لا اتصال يبلغ البوابة الآن']) assert.ok(PAGE.includes(text), text);
+  assert.match(PAGE, /id="note" role="status" aria-live="polite"/);
+  for (const text of ['✨', 'لحظاتٍ ونعود', 'أعد المحاولة الآن', 'نُحدّث البرنامج الآن']) assert.ok(!PAGE.includes(text), `shared template copy: ${text}`);
 });
 
 function runPage(options: { health: boolean[]; recent?: number[]; pathname?: string; online?: boolean }) {
