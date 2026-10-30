@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  صفحة «نُحدّث البرنامج».
+  صفحة التحديث: «تُفتح البوابة من جديد بعد قليل».
 
   أثناء النشر يتبدّل الخادم، فتجيب واجهةُ Google الأماميّة عن التنقّل بصفحة خطأٍ
   إنجليزية (500/502/503/504) لا يكتبها خادمُنا. عاملُ الخدمة (public/sw.js) يحفظ هذه
@@ -8,7 +8,8 @@
   والرابطُ في شريط العنوان يبقى ما طلبه الزائر، فإعادةُ التحميل تفتحه هو نفسه.
 
   مستقلّةٌ تماماً: لا طلبَ خارجياً، والخطُّ Tajawal من الموقع نفسه إن كان محفوظاً وإلا
-  خطُّ النظام. العلامةُ هندسة public/favicon.svg نفسها (البوابة والحلقة).
+  خطُّ النظام. التصميم بابان كحليّان شبه مغلقين بحوافّ ذهبية يتنفّسان قليلاً، ومن الشقّ
+  بينهما خيطُ ضوء؛ قوسهما معاً قوسُ العلامة، والحلقة نصفان على البابين (public/favicon.svg).
 
   تسأل /api/ready كل ثلاث ثوانٍ (وتتباطأ تدريجياً إلى خمس عشرة)، فإذا أجاب أعادت فتح
   الصفحة المطلوبة. وإن أُعيد التحميل ثلاثَ مرّاتٍ في دقيقتين والخادمُ يجيب، تباطأت إلى
@@ -24,100 +25,132 @@
 <meta name="robots" content="noindex">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#f7f4ec" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<title>نُحدّث البرنامج · مجال</title>
+<meta name="theme-color" content="#070d18" media="(prefers-color-scheme: dark)">
+<title>البوابة تُفتح بعد قليل · مجال</title>
 <style>
 @font-face{font-family:"Tajawal";font-weight:500;font-display:swap;src:local("Tajawal Medium"),url("/fonts/4255019c1c.woff2") format("woff2")}
 @font-face{font-family:"Tajawal";font-weight:700;font-display:swap;src:local("Tajawal Bold"),url("/fonts/fa5e723266.woff2") format("woff2")}
 :root{
-  --bg:#f7f4ec;--bg-top:#fbf8f1;--bg-bottom:#f1ece0;--ink:#0b1220;--muted:#4b5567;--line:rgba(11,18,32,.10);
-  --accent:#8a6a2c;--glow:rgba(138,106,44,.12);--scan:#8a6a2c;--spark:#c7a55b;--spark-soft:#a8843c;
-  --button:#ffffff;--button-line:rgba(11,18,32,.16);--shadow:rgba(11,18,32,.22);
+  /* المحيط حول البابين: كريمُ الثيم الفاتح في مجال. البابان كحليّان في الثيمين. */
+  --ground:#f7f4ec;--ground-top:#fbf8f1;--ground-bottom:#efe8d8;--frame:rgba(11,18,32,.10);--floor:rgba(125,97,43,.30);
+  --door-a:#18243a;--door-b:#0f172a;--door-c:#0b1220;
+  --edge:#a8843c;--edge-hi:#e8c880;--mould:rgba(232,200,128,.17);
+  --light:#fff3cf;--glow:rgba(244,225,176,.55);--spill:rgba(199,165,91,.30);
+  --ink:#f8f4ea;--muted:#b9c3d4;--eyebrow:#e8c880;
+  --cta:#c7a55b;--cta-hover:#d4b46a;--cta-ink:#0b1220;
+  --shadow:0 30px 60px rgba(11,18,32,.28),0 8px 18px rgba(11,18,32,.16);
+  --open:0px;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --bg:#0b1220;--bg-top:#0a101b;--bg-bottom:#070d18;--ink:#f8fafc;--muted:#94a3b8;--line:rgba(255,255,255,.09);
-    --accent:#e8c880;--glow:rgba(199,165,91,.16);--scan:#e8c880;--spark:#e8c880;--spark-soft:#c7a55b;
-    --button:#131c2d;--button-line:rgba(255,255,255,.14);--shadow:rgba(0,0,0,.6);
+    --ground:#070d18;--ground-top:#0a101b;--ground-bottom:#05090f;--frame:rgba(255,255,255,.06);--floor:rgba(232,200,128,.22);
+    --door-a:#1d2b44;--door-b:#131c2d;--door-c:#0f172a;
+    --edge:#c7a55b;--edge-hi:#f4e1b0;--mould:rgba(232,200,128,.14);
+    --glow:rgba(232,200,128,.5);--spill:rgba(232,200,128,.22);
+    --shadow:0 30px 70px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03);
     color-scheme:dark;
   }
 }
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
-  margin:0;min-height:100%;display:grid;place-items:center;
-  padding:max(24px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom));
-  background:radial-gradient(circle at 50% 40%,var(--glow),transparent 46%),linear-gradient(180deg,var(--bg-top) 0%,var(--bg) 55%,var(--bg-bottom) 100%);
-  background-color:var(--bg);
-  color:var(--ink);
+  margin:0;min-height:100%;overflow-x:hidden;
+  padding:max(16px,env(safe-area-inset-top)) 16px max(26px,env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,var(--ground-top) 0%,var(--ground) 55%,var(--ground-bottom) 100%);
+  background-color:var(--ground);color:var(--ink);
   font-family:"Tajawal","Segoe UI",Tahoma,"Noto Sans Arabic",system-ui,-apple-system,sans-serif;
-  font-weight:500;font-synthesis:none;-webkit-font-smoothing:antialiased;text-align:center;
+  font-weight:500;font-synthesis:none;-webkit-font-smoothing:antialiased;
 }
-main{display:grid;justify-items:center;gap:0;max-width:420px;width:100%}
-.stage{position:relative;width:132px;height:132px;display:grid;place-items:center;margin-bottom:30px}
-.halo{position:absolute;inset:0;width:100%;height:100%;animation:turn 3.6s linear infinite}
-.halo circle{fill:none;stroke-width:2;stroke-linecap:round}
-.halo .track{stroke:var(--line)}
-.halo .arc{stroke:var(--accent);stroke-dasharray:96 400;opacity:.85}
-.mark{width:84px;height:84px;display:block;filter:drop-shadow(0 18px 30px var(--shadow))}
-.mark .gate{stroke-dasharray:1;animation:draw 2.8s cubic-bezier(.16,1,.3,1) infinite}
-.mark .core{transform-box:fill-box;transform-origin:50% 50%;animation:breathe 2.4s cubic-bezier(.45,0,.25,1) infinite}
-.spark{position:absolute;fill:var(--spark);animation:twinkle 2.4s ease-in-out infinite}
-.spark.one{width:20px;height:20px;top:6px;inset-inline-start:8px}
-.spark.two{width:12px;height:12px;bottom:14px;inset-inline-end:6px;fill:var(--spark-soft);animation-delay:1.2s}
-h1{margin:0;font-size:clamp(22px,5.6vw,27px);font-weight:700;line-height:1.5;letter-spacing:0}
-.lead{margin:6px 0 0;font-size:16px;line-height:1.7;color:var(--muted)}
-.pulse{width:132px;height:2px;margin:26px 0 28px;border-radius:99px;background:var(--line);overflow:hidden}
-.pulse i{display:block;width:36%;height:100%;border-radius:inherit;background:linear-gradient(90deg,transparent,var(--scan),transparent);animation:scan 1.5s ease-in-out infinite}
+/* البابان معاً قوسُ العلامة: نصف قطر الركن الخارجي العلوي = عرضُ الباب الواحد. */
+.gate{
+  --w:min(100vw - 32px,760px);--arch:calc(var(--w) / 2);
+  position:relative;width:var(--w);margin:0 auto;
+  height:calc(100vh - max(16px,env(safe-area-inset-top)) - max(26px,env(safe-area-inset-bottom)));
+  height:calc(100dvh - max(16px,env(safe-area-inset-top)) - max(26px,env(safe-area-inset-bottom)));
+  min-height:600px;display:grid;grid-template-columns:1fr 1fr;
+}
+/* ما خلف البابين: عتمةٌ بشكل القوس نفسه، فيُقرأ خيط الضوء في الثيمين. */
+.gate::before{content:"";position:absolute;inset:0;border-radius:var(--arch) var(--arch) 0 0;background:#04070d}
+/* خطّ الأرض تحت البوابة، وبقعةُ الضوء التي تنسكب من الشقّ عليه. */
+.gate::after{content:"";position:absolute;inset-inline:-8px;bottom:-9px;height:2px;border-radius:2px;background:var(--floor)}
+.spill{position:absolute;left:50%;bottom:-26px;width:min(64%,320px);height:34px;transform:translateX(-50%);
+  background:radial-gradient(50% 60% at 50% 30%,var(--spill),transparent 72%);opacity:.6;pointer-events:none;
+  animation:spill 6.4s cubic-bezier(.65,0,.35,1) infinite}
+/* خيطُ الضوء خلف البابين: لا يُرى إلا من الشقّ. */
+.light{position:absolute;top:0;bottom:0;left:50%;width:2px;transform:translateX(-50%);border-radius:2px;
+  background:linear-gradient(180deg,transparent 0,var(--light) 9%,var(--light) 92%,rgba(255,243,207,.6) 100%);
+  box-shadow:0 0 10px 2px var(--glow),0 0 34px 8px var(--glow)}
+.door{
+  position:relative;z-index:1;display:grid;align-content:end;gap:0;min-width:0;
+  padding:0 clamp(16px,4.4vw,40px) clamp(26px,6vh,56px);
+  background:linear-gradient(180deg,var(--door-a) 0%,var(--door-b) 46%,var(--door-c) 100%);
+  border:1px solid var(--edge);box-shadow:var(--shadow);
+  animation:breathe 6.4s cubic-bezier(.65,0,.35,1) infinite;
+}
+/* الإطار المحفور داخل كل باب. */
+.door::before{content:"";position:absolute;inset:12px;border:1px solid var(--mould);pointer-events:none}
+/* الحافّة الذهبية عند الشقّ أعرض قليلاً: هي ما يلتقط الضوء. */
+.door::after{content:"";position:absolute;top:0;bottom:0;width:3px;pointer-events:none;
+  background:linear-gradient(180deg,var(--edge-hi),var(--edge) 40%,var(--edge) 80%,var(--edge-hi))}
+.door.r{border-start-start-radius:var(--arch);--dir:1;transform-origin:right center}
+.door.r::before{border-start-start-radius:calc(var(--arch) - 12px)}
+.door.r::after{left:-1px}
+.door.l{border-start-end-radius:var(--arch);--dir:-1;justify-items:start}
+.door.l::before{border-start-end-radius:calc(var(--arch) - 12px)}
+.door.l::after{right:-1px}
+/* حلقةُ العلامة نصفان، نصفٌ على كل باب، فتلتئم حين يُغلقان. */
+.ring{position:absolute;top:calc(var(--arch) + 34px);width:30px;height:60px;border:6px solid var(--edge);
+  box-shadow:0 6px 14px rgba(0,0,0,.28);pointer-events:none}
+.door.r .ring{left:-1px;border-left:0;border-radius:0 60px 60px 0}
+.door.l .ring{right:-1px;border-right:0;border-radius:60px 0 0 60px}
+.copy,.act{position:relative;max-width:300px}
+.door.r .copy{justify-self:end;width:100%}
+.eyebrow{margin:0 0 14px;font-size:11px;font-weight:700;letter-spacing:.32em;color:var(--eyebrow);direction:ltr;text-align:right}
+h1{margin:0;font-size:clamp(21px,5.8vw,30px);font-weight:700;line-height:1.42;color:var(--ink);text-wrap:balance}
+.lead{margin:12px 0 0;font-size:14.5px;line-height:1.75;color:var(--muted)}
+.act{display:grid;justify-items:start;gap:12px}
 button{
-  min-height:44px;padding:0 22px;border-radius:12px;cursor:pointer;
-  border:1px solid var(--button-line);background:var(--button);color:var(--ink);
-  font:inherit;font-size:14px;font-weight:700;
-  transition:border-color .2s ease,transform .2s ease;
+  min-height:44px;padding:0 16px;border-radius:12px;cursor:pointer;border:0;
+  background:var(--cta);color:var(--cta-ink);font:inherit;font-size:14px;font-weight:700;
+  box-shadow:0 10px 26px rgba(199,165,91,.22);
+  transition:background-color .14s ease,transform .24s cubic-bezier(.16,1,.3,1);
 }
-button:hover{border-color:var(--accent)}
+button:hover{background:var(--cta-hover)}
 button:active{transform:scale(.98)}
-button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-.note{min-height:20px;margin:14px 0 0;font-size:12.5px;line-height:1.6;color:var(--muted)}
-@keyframes turn{to{transform:rotate(360deg)}}
-@keyframes draw{0%{stroke-dashoffset:1}45%,100%{stroke-dashoffset:0}}
-@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(.84)}}
-@keyframes twinkle{0%,100%{opacity:.25;transform:scale(.7) rotate(0)}50%{opacity:1;transform:scale(1) rotate(20deg)}}
-@keyframes scan{0%{transform:translateX(130%)}100%{transform:translateX(-360%)}}
+button:focus-visible{outline:2px solid var(--edge-hi);outline-offset:3px}
+.note{min-height:20px;margin:0;text-wrap:pretty;font-size:12.5px;line-height:1.7;color:var(--muted)}
+/* «شبه مغلقين»: ينفرجان بضع بكسلات ثم يعودان، والضوء على الأرض يتبعهما. */
+@keyframes breathe{0%,100%{transform:translateX(calc(var(--dir) * 0px))}50%{transform:translateX(calc(var(--dir) * 5px))}}
+@keyframes spill{0%,100%{opacity:.45;transform:translateX(-50%) scaleX(.7)}50%{opacity:1;transform:translateX(-50%) scaleX(1)}}
+@media (max-width:420px){.door{padding-inline:16px 14px}.door.l{padding-inline:14px 16px}.lead{font-size:14px}}
+@media (max-height:640px){.ring{display:none}}
 @media (prefers-reduced-motion:reduce){
-  .halo,.mark .gate,.mark .core,.spark,.pulse i{animation:none}
-  .mark .gate{stroke-dasharray:none}
-  .spark{opacity:.8}
+  .door,.spill{animation:none}
+  .door.r{transform:translateX(3px)}.door.l{transform:translateX(-3px)}
+  .spill{opacity:.8}
 }
 </style>
 </head>
 <body>
-<main>
-  <div class="stage" aria-hidden="true">
-    <svg class="halo" viewBox="0 0 132 132" focusable="false"><circle class="track" cx="66" cy="66" r="63"/><circle class="arc" cx="66" cy="66" r="63"/></svg>
-    <svg class="mark" viewBox="0 0 64 64" focusable="false">
-      <defs>
-        <linearGradient id="updating-gold" x1="1" y1="1" x2="0" y2="0">
-          <stop offset="0%" stop-color="#a8843c"/>
-          <stop offset="45%" stop-color="#c7a55b"/>
-          <stop offset="100%" stop-color="#f4e1b0"/>
-        </linearGradient>
-      </defs>
-      <rect width="64" height="64" rx="15" fill="#0b1220"/>
-      <g transform="translate(32 33.5) scale(0.78) translate(-32 -33.5)" fill="none" stroke="url(#updating-gold)" stroke-linecap="round">
-        <path class="gate" pathLength="1" d="M11 53 V33 A21 21 0 0 1 53 33 V53" stroke-width="6.5"/>
-        <circle class="core" cx="32" cy="34" r="9" stroke-width="6"/>
-      </g>
-    </svg>
-    <svg class="spark one" viewBox="0 0 24 24" focusable="false"><path d="M12 0c.7 6.4 5.6 11.3 12 12-6.4.7-11.3 5.6-12 12-.7-6.4-5.6-11.3-12-12C6.4 11.3 11.3 6.4 12 0z"/></svg>
-    <svg class="spark two" viewBox="0 0 24 24" focusable="false"><path d="M12 0c.7 6.4 5.6 11.3 12 12-6.4.7-11.3 5.6-12 12-.7-6.4-5.6-11.3-12-12C6.4 11.3 11.3 6.4 12 0z"/></svg>
-  </div>
-  <h1 id="title">نُحدّث البرنامج الآن ✨</h1>
-  <p class="lead" id="lead">لحظاتٍ ونعود</p>
-  <div class="pulse" aria-hidden="true"><i></i></div>
-  <button type="button" id="retry">أعد المحاولة الآن</button>
-  <p class="note" id="note" role="status" aria-live="polite">ستُفتح الصفحة التي طلبتها تلقائياً حين نعود.</p>
+<main class="gate">
+  <span class="light" aria-hidden="true"></span>
+  <section class="door r">
+    <span class="ring" aria-hidden="true"></span>
+    <div class="copy">
+      <p class="eyebrow" aria-hidden="true">MAJAL</p>
+      <h1 id="title">تُفتح البوابة من جديد بعد قليل</h1>
+      <p class="lead" id="lead">نُجري تحديثاً على مجال خلف هذا الباب.</p>
+    </div>
+  </section>
+  <section class="door l">
+    <span class="ring" aria-hidden="true"></span>
+    <div class="act">
+      <button type="button" id="retry">حاول الدخول الآن</button>
+      <p class="note" id="note" role="status" aria-live="polite">حين تُفتح، نُدخلك إلى الصفحة التي طلبتها دون أن تفعل شيئاً.</p>
+    </div>
+  </section>
+  <span class="spill" aria-hidden="true"></span>
 </main>
 <script>
 (function () {
@@ -150,17 +183,17 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 
   function describe() {
     if (navigator.onLine === false) {
-      title.textContent = "لا اتصال بالإنترنت الآن";
-      lead.textContent = "سنعود تلقائياً حين يعود الاتصال";
+      title.textContent = "لا اتصال يبلغ البوابة الآن";
+      lead.textContent = "تحقّق من الإنترنت، ونُكمل دخولك حين يعود الاتصال.";
       note.textContent = "";
     } else if (stuck()) {
-      title.textContent = "نُحدّث البرنامج الآن ✨";
-      lead.textContent = "يستغرق ذلك وقتاً أطول من المعتاد";
-      note.textContent = "سنحاول مرّةً كل نصف دقيقة، ويمكنك المحاولة الآن.";
+      title.textContent = "تُفتح البوابة من جديد بعد قليل";
+      lead.textContent = "يأخذ تحديث مجال وقتاً أطول مما قدّرنا.";
+      note.textContent = "نطرق الباب مرّةً كل نصف دقيقة، ولك أن تحاول الآن.";
     } else {
-      title.textContent = "نُحدّث البرنامج الآن ✨";
-      lead.textContent = "لحظاتٍ ونعود";
-      note.textContent = "ستُفتح الصفحة التي طلبتها تلقائياً حين نعود.";
+      title.textContent = "تُفتح البوابة من جديد بعد قليل";
+      lead.textContent = "نُجري تحديثاً على مجال خلف هذا الباب.";
+      note.textContent = "حين تُفتح، نُدخلك إلى الصفحة التي طلبتها دون أن تفعل شيئاً.";
     }
   }
 
