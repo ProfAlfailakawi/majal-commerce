@@ -1328,3 +1328,16 @@ body:has(.majal-ai-fab) footer { padding-bottom: 4.5rem; }
   .majal-bento-arch { display: none; }
   .majal-ledger-title { font-size: 1rem; }
 }
+
+
+/* iPhone Duo folded postures only. Unsupported/disabled Safari preview features
+   leave the existing site styles unchanged on every other device and posture. */
+@media (device-posture: folded) and (horizontal-viewport-segments: 2) {
+  html, body, #root { min-width: 0; max-width: 100%; }
+}
+@media (device-posture: folded) and (vertical-viewport-segments: 2) {
+  html, body, #root { min-width: 0; max-width: 100%; }
+}
+@media (device-posture: folded) and (orientation: landscape) and (max-height: 520px) {
+  html { scroll-padding-block: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-bottom)); }
+}
