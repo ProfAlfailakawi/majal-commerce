@@ -19,6 +19,7 @@
     "audit:production": "npm audit --omit=dev",
     "deploy:cloudrun": "bash scripts/deploy-cloud-run.sh",
     "verify:pwa": "node scripts/verify-pwa.mjs",
+    "verify:demo": "node scripts/verify-demo-entry.mjs",
     "verify:env": "node scripts/verify-env.mjs",
     "secrets:generate": "node scripts/generate-secrets.mjs"
   },
