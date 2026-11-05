@@ -31,7 +31,6 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "express-rate-limit": "^7.5.1",
-    "firebase": "^12.17.1",
     "lucide-react": "^0.546.0",
     "pg": "^8.16.3",
     "rate-limit-redis": "^4.3.1",
