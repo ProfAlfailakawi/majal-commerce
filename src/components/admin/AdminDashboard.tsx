@@ -193,7 +193,7 @@ export const AdminDashboard: React.FC = () => {
             ]}
           />
 
-          <div className="grid md:grid-cols-2 gap-3">
+          <div className="grid sm:grid-cols-2 md:grid-cols-2 gap-3">
             {[
               { id: 'priorities', icon: <Users className="w-4 h-4 text-gold-300" />, title: 'أولويات الأدمن اليومية', items: priorities },
               { id: 'limits', icon: <Lock className="w-4 h-4 text-gold-300" />, title: 'حدود صلاحياتك', items: limits }

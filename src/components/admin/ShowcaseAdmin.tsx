@@ -162,7 +162,7 @@ export const ShowcaseAdmin: React.FC = () => {
         <>
         <section className="space-y-3" aria-labelledby="dir-admin-title">
           <div className="flex items-center gap-2"><Truck className="w-5 h-5 text-gold-300" aria-hidden="true" /><h3 id="dir-admin-title" className="font-black">دليل الموردين</h3></div>
-          {suppliers.length ? <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">{sup.shown.map(s => (
+          {suppliers.length ? <div className="grid sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3">{sup.shown.map(s => (
             <article key={s.id} className="glass-card rounded-2xl p-4 border border-white/10 space-y-2.5">
               <div className="flex justify-between gap-3"><div className="min-w-0"><div className="text-xs text-gold-300 font-black">{SUPPLIER_CATEGORIES[s.category]?.label} · {s.region}</div><h4 className="font-black mt-0.5 truncate">{s.name}</h4></div><span className={`text-xs px-2 py-1 rounded-full h-fit shrink-0 ${s.status === 'PENDING_REVIEW' ? 'bg-amber-500/10 text-amber-300' : 'bg-emerald-500/10 text-emerald-300'}`}>{STATUS[s.status]}</span></div>
               <p className="text-xs text-slate-400 leading-6 line-clamp-2">{s.description}</p>

@@ -53,7 +53,7 @@ export const SupplierDirectory: React.FC = () => {
       </button>
 
       {expanded && (
-        <div className="px-5 pb-5 grid md:grid-cols-2 xl:grid-cols-3 gap-3 border-t border-white/5 pt-4">
+        <div className="px-5 pb-5 grid sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 border-t border-white/5 pt-4">
           {visible.map(supplier => {
             const supplierOfferings = offerings.filter(item => item.supplierId === supplier.id && item.status === 'ACTIVE').slice(0, 4);
             return (

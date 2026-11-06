@@ -255,7 +255,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
 
       <section className="space-y-5">
         <div className="flex items-center justify-between gap-4"><div><h2 className="text-2xl font-black">الإطلاقات الحالية</h2><p className="text-xs text-slate-400 mt-1">منتجات محدودة، تجريبية، موسمية أو مرشحة للدخول الدائم.</p></div><div className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-400 whitespace-nowrap shrink-0">{arCount(launches.length, AR.launch)}</div></div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {launches.slice(0, LAUNCHES_VISIBLE).map(renderLaunchCard)}
           {!launches.length && <div className="md:col-span-2 lg:col-span-3 rounded-3xl p-8 border border-dashed border-white/15 bg-white/[0.02] text-center"><Sparkles className="w-7 h-7 text-gold-300 mx-auto" /><div className="font-black mt-3">لا توجد إطلاقات متاحة حاليًا</div><div className="text-xs text-slate-400 mt-2">لن يظهر زر الطلب قبل اكتمال الجاهزية وربط الدفع.</div></div>}
         </div>
@@ -266,7 +266,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
               <span className="flex-1">عرض المزيد ({launches.length - LAUNCHES_VISIBLE})</span>
               <ChevronDown className="w-4 h-4 text-slate-400 transition-transform group-open:rotate-180" aria-hidden="true" />
             </summary>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 p-4 pt-2">
+            <div className="grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-5 p-4 pt-2">
               {launches.slice(LAUNCHES_VISIBLE).map(renderLaunchCard)}
             </div>
           </details>

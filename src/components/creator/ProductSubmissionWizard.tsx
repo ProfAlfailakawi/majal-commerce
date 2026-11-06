@@ -175,7 +175,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
             <div className="space-y-4 animate-in fade-in">
               <h4 className="font-bold text-gold-400 text-sm">1. معلومات المنتج والقصة التسويقية</h4>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-slate-300 font-bold mb-1">اسم المنتج للجمهور (الاسم التجاري):</label>
                   <input
@@ -268,7 +268,7 @@ export const ProductSubmissionWizard: React.FC<ProductSubmissionWizardProps> = (
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-950/35 p-4 rounded-xl border border-white/10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 bg-slate-950/35 p-4 rounded-xl border border-white/10">
                 <div>
                   <label className="block text-slate-300 font-bold mb-1">تكلفة التجهيز التقديرية للقطعة (د.ك):</label>
                   <input

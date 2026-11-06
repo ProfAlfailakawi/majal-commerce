@@ -151,7 +151,7 @@ export const DigitalTwinPanel: React.FC<DigitalTwinPanelProps> = ({ product, hos
                   تفاصيل التكلفة والعائد وسجل تغييرات الوصفة محجوبة حتى يمنح المبدع إذن اطلاع صالحًا لهذه المنشأة (الدرجة 2 على الأقل).
                 </div>
               ) : compareMode ? (
-                <div className="grid md:grid-cols-2 gap-3 text-xs">
+                <div className="grid sm:grid-cols-2 md:grid-cols-2 gap-3 text-xs">
                   <div className="rounded-xl p-4 bg-slate-950/60 border border-white/10">
                     <div className="font-black text-sky-300">الحالية — {currentRecipe?.versionNumber || product.currentRecipeVersion}</div>
                     <div className="mt-3 space-y-2 text-slate-400">

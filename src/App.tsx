@@ -244,7 +244,7 @@ export default function App() {
 
   return (
     <AppErrorBoundary>
-    <div dir="rtl" className="min-h-screen text-slate-100 font-sans selection:bg-gold-500 selection:text-slate-950 flex flex-col justify-between relative overflow-x-clip">
+    <div dir="rtl" className="min-h-dvh text-slate-100 font-sans selection:bg-gold-500 selection:text-slate-950 flex flex-col justify-between relative overflow-x-clip">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-gold-500 focus:text-slate-950 focus:font-black">
         انتقل إلى المحتوى الرئيسي
       </a>
