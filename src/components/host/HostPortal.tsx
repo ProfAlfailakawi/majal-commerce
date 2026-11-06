@@ -178,7 +178,7 @@ export const HostPortal: React.FC = () => {
     <div data-accent="gold" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
       <section className="majal-hero glass-panel rounded-[28px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
         <div className="majal-glow -top-[18rem] -start-[17rem] w-[42rem] h-[42rem]" style={{ '--glow': 'rgba(56,189,248,0.08)' } as React.CSSProperties} />
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="flex items-center gap-4 min-w-0 max-[374px]:flex-col max-[374px]:items-start">
             <Avatar name={host.commercialName} src={host.logoUrl} size={80} shape="squircle" className="ring-2 ring-sky-400/25 shadow-xl" />
             <div className="min-w-0">
@@ -192,7 +192,7 @@ export const HostPortal: React.FC = () => {
           </div>
 
           {hasPermission(store.activeUser, 'MANAGE_CHALLENGES') && (
-            <button onClick={() => setShowPublisher(true)} className="lg:shrink-0 px-6 py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 text-xs font-black flex items-center gap-2"><Plus className="w-4 h-4" /> نشر تحدي ابتكار</button>
+            <button onClick={() => setShowPublisher(true)} className="sm:shrink-0 px-6 py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 text-xs font-black flex items-center gap-2"><Plus className="w-4 h-4" /> نشر تحدي ابتكار</button>
           )}
         </div>
       </section>
@@ -271,10 +271,11 @@ export const HostPortal: React.FC = () => {
       {activeTab === 'FINANCE' && (
         <section className="glass-panel rounded-3xl p-5 md:p-6 border border-white/10 space-y-5">
           <div className="flex items-center gap-3"><div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-center text-emerald-300"><CircleDollarSign className="w-6 h-6" /></div><div><h3 className="text-lg font-black">المالية والتسويات</h3><p className="text-xs text-slate-400 mt-1">هذه الشاشة تظهر فقط للأدوار المصرح لها ماليًا.</p></div></div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,25rem)] items-stretch">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 gap-3 content-start">
             {[
               ['إجمالي المبيعات', finance.gmv], ['صافي المنشأة', finance.hostNet], ['حقوق المبدعين', finance.creatorRoyalties], ['رسوم مجال', finance.platformFees]
-            ].map(([label, value], idx) => <div key={idx} className="majal-stat rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400 flex items-center gap-1.5">{idx > 0 && <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full ${['', 'bg-emerald-400', 'bg-gold-400', 'bg-sky-400'][idx]}`} />}{label as string}</div><div className="majal-numeral mt-2 text-xl font-black font-mono">{Number(value).toFixed(3)} د.ك</div></div>)}
+            ].map(([label, value], idx) => <div key={idx} className="majal-stat rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400 flex items-center gap-1.5">{idx > 0 && <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full ${['', 'bg-emerald-400', 'bg-gold-400', 'bg-sky-400'][idx]}`} />}{label as string}</div><div className="majal-numeral mt-2 text-lg lg:text-xl whitespace-nowrap font-black font-mono">{Number(value).toFixed(3)} د.ك</div></div>)}
           </div>
           {finance.gmv > 0 && (
             <ShareDonut
@@ -290,6 +291,7 @@ export const HostPortal: React.FC = () => {
               ]}
             />
           )}
+          </div>
           <FoldedNote summary="تنبيه: فصل الصلاحيات المالية">فصل الصلاحيات المالية يمنع الشيف والتسويق من تعديل أو اعتماد قواعد التسوية والعقود المالية.</FoldedNote>
         </section>
       )}

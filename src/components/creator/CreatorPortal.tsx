@@ -92,7 +92,7 @@ export const CreatorPortal: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
       <section className="majal-hero glass-panel rounded-[28px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
         <div className="majal-glow -top-[19rem] -end-[17rem] w-[42rem] h-[42rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="flex items-center gap-4 min-w-0 max-[374px]:flex-col max-[374px]:items-start">
             <Avatar name={profile.displayName} src={profile.avatarUrl} size={80} shape="squircle" className="shadow-xl" />
             <div className="min-w-0">
@@ -105,7 +105,7 @@ export const CreatorPortal: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3 lg:shrink-0">
+          <div className="flex flex-wrap gap-3 sm:shrink-0">
             <button onClick={() => setShowCalculator(true)} className="px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-bold text-slate-300 hover:bg-white/10">حاسبة الاقتصاديات</button>
             <button onClick={() => setShowWizard(true)} className="px-6 py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 text-xs font-black flex items-center gap-2"><Plus className="w-4 h-4" /> تسجيل منتج جديد</button>
           </div>
@@ -128,7 +128,7 @@ export const CreatorPortal: React.FC = () => {
 
       {activeTab === 'PRODUCTS' && (
         <div className="space-y-6">
-          <div className="grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:max-lg:[&>*:last-child:nth-child(odd)]:col-span-2">
             {myProducts.map(product => (
               <article key={product.id} className={`glass-card rounded-3xl border border-white/10 overflow-hidden ${product.id === settlingProductId ? 'majal-settle-in' : ''}`}>
                 <ProductImage src={product.mediaUrls[0]} alt={product.publicName} loading="lazy" markSize={72} className="w-full h-36 sm:h-48 object-cover" />

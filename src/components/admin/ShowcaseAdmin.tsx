@@ -174,8 +174,8 @@ export const ShowcaseAdmin: React.FC = () => {
             </article>))}{sup.toggle && <div className="md:col-span-2 lg:col-span-3">{sup.toggle}</div>}</div>
             : <div className="rounded-2xl p-6 border border-dashed border-white/10 text-center text-xs text-slate-400">لا توجد طلبات موردين.</div>}
         </section>
-        <div className="grid lg:grid-cols-2 gap-6">
-          <section className="space-y-3">
+        <div className="space-y-8">
+          <section className="grid sm:grid-cols-2 gap-3 content-start sm:[&>*:not(article)]:col-span-2">
             <div className="flex items-center gap-2"><Store className="w-5 h-5 text-gold-300" aria-hidden="true" /><h3 className="font-black">مشاريع للبيع</h3></div>
             {listings.length ? lis.shown.map(l => (
               <article key={l.id} className="glass-card rounded-2xl p-5 border border-white/10 space-y-3">
@@ -192,8 +192,8 @@ export const ShowcaseAdmin: React.FC = () => {
           {lis.toggle}
           </section>
 
-          <section className="space-y-3">
-            <div className="flex items-center gap-2"><Megaphone className="w-5 h-5 text-gold-300" aria-hidden="true" /><h3 className="font-black">حملات الشركات</h3></div>
+          <section className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3 content-start items-start">
+            <div className="flex items-center gap-2 lg:col-span-2 xl:col-span-3"><Megaphone className="w-5 h-5 text-gold-300" aria-hidden="true" /><h3 className="font-black">حملات الشركات</h3></div>
             <form onSubmit={create} className="glass-card rounded-2xl p-4 border border-white/10 space-y-2">
               <div className="text-xs font-black flex items-center gap-1.5"><Plus className="w-4 h-4" aria-hidden="true" />حملة جديدة</div>
               <div className="grid sm:grid-cols-2 gap-2">
@@ -208,6 +208,7 @@ export const ShowcaseAdmin: React.FC = () => {
               <TargetChips audiences={draft.audiences} topics={draft.topics} onChange={(audiences, topics) => setDraft(d => ({ ...d, audiences, topics }))} />
               <button disabled={busy === 'create'} className="w-full py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black disabled:opacity-50">إنشاء</button>
             </form>
+            <div className="space-y-3 min-w-0 lg:contents lg:[&>*]:!m-0">
             {cam.shown.map(c => {
               const d = dates[c.id] ?? { s: c.startsOn ?? '', e: c.endsOn ?? '' };
               return (
@@ -237,6 +238,7 @@ export const ShowcaseAdmin: React.FC = () => {
               );
             })}
           {cam.toggle}
+            </div>
           </section>
         </div>
         </>

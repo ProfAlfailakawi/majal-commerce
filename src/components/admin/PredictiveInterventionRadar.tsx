@@ -93,7 +93,7 @@ export const PredictiveInterventionRadar: React.FC<{ onNavigate: (target: RadarT
         </div>
 
         {signals.length ? (
-          <div className="grid lg:grid-cols-2 gap-3 lg:[&>*:last-child:nth-child(odd)]:col-span-2">
+          <div className="grid sm:grid-cols-2 gap-3 sm:[&>*:last-child:nth-child(odd)]:col-span-2">
             {signals.map(signal => {
               const meta = severityMeta[signal.severity];
               return (

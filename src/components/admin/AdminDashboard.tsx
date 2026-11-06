@@ -113,7 +113,7 @@ export const AdminDashboard: React.FC = () => {
     <div className="majal-admin-overview max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
       <section className="majal-hero glass-panel rounded-[28px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
         <div className="absolute inset-y-0 start-0 w-64 bg-gradient-to-l from-gold-500/10 to-transparent pointer-events-none" />
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="space-y-3 max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold-500/10 border border-gold-300/20 text-gold-300 text-xs font-bold">
               <ShieldCheck className="w-4 h-4" />
@@ -141,7 +141,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      <section className="grid grid-cols-2 lg:grid-cols-[1.5fr_1.2fr_1fr_1fr_1fr] gap-3 sm:gap-4">
+      <section className="grid grid-cols-2 sm:grid-cols-6 lg:grid-cols-[1.5fr_1.2fr_1fr_1fr_1fr] gap-3 sm:gap-4">
         {[
           { label: 'إجمالي المبيعات (طلبات مكتملة)', value: metrics ? `${totals.totalGmv} د.ك` : '—', icon: <Wallet className="w-5 h-5 text-gold-300" /> },
           { label: 'رسوم المنصة', value: metrics ? `${totals.totalPlatformFees} د.ك` : '—', icon: <BadgeCheck className="w-5 h-5 text-emerald-300" /> },
@@ -149,7 +149,7 @@ export const AdminDashboard: React.FC = () => {
           { label: 'منشآت مرخّصة', value: totals.verifiedHosts, icon: <Building2 className="w-5 h-5 text-fuchsia-300" /> },
           { label: 'نزاعات مفتوحة', value: totals.openDisputes, icon: <AlertTriangle className="w-5 h-5 text-rose-300" /> }
         ].map((card, idx) => (
-          <div key={idx} className={`majal-rise glass-card rounded-2xl p-4 sm:p-5 border border-white/10 min-w-0 ${idx === 0 ? 'col-span-2 sm:col-span-1' : ''}`}>
+          <div key={idx} className={`majal-rise glass-card rounded-2xl p-4 sm:p-5 border border-white/10 min-w-0 ${idx === 0 ? 'col-span-2' : ''} ${idx < 2 ? 'sm:col-span-3' : 'sm:col-span-2'} lg:col-span-1`}>
             <div>{card.icon}</div>
             <div className="mt-3 sm:mt-4 text-xs text-slate-400">{card.label}</div>
             <DnaFlash as="div" value={card.value} className="mt-1 text-xl sm:text-2xl font-black text-slate-100 font-mono break-words">{card.value}</DnaFlash>
@@ -223,9 +223,9 @@ export const AdminDashboard: React.FC = () => {
             <Building2 className="w-5 h-5 text-gold-300" />
             <h2 className="text-lg font-black">المنشآت الحاضنة وسجل الامتثال</h2>
           </div>
-          <div className="space-y-3">
+          <div className="grid sm:grid-cols-2 gap-3">
             {store.hosts.map(host => (
-              <div key={host.id} className="rounded-2xl p-4 bg-white/5 border border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              <div key={host.id} className="rounded-2xl p-4 bg-white/5 border border-white/10 flex flex-col justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-bold text-slate-100">{host.commercialName}</span>
@@ -246,11 +246,11 @@ export const AdminDashboard: React.FC = () => {
             ))}
           </div>
 
-          <div className="pt-5 border-t border-white/10 space-y-3">
-            <div className="flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-rose-300" /><h3 className="font-black text-slate-100">التحكّم الطارئ بالمنتجات</h3></div>
-            <p className="text-xs text-slate-400">إيقاف أو إعادة منتج مباشر عند وجود مشكلة جودة، امتثال أو سلامة. كل إجراء يسجل في سجل التدقيق.</p>
+          <div className="pt-5 border-t border-white/10 grid sm:grid-cols-2 gap-3 content-start">
+            <div className="flex items-center gap-2 sm:col-span-2"><AlertTriangle className="w-5 h-5 text-rose-300" /><h3 className="font-black text-slate-100">التحكّم الطارئ بالمنتجات</h3></div>
+            <p className="text-xs text-slate-400 sm:col-span-2">إيقاف أو إعادة منتج مباشر عند وجود مشكلة جودة، امتثال أو سلامة. كل إجراء يسجل في سجل التدقيق.</p>
             {store.products.filter(p => p.status === 'LIVE_DROP' || p.status === 'LIVE_TRIAL' || p.status === 'LIVE_PERMANENT' || p.status === 'PAUSED').map(product => (
-              <div key={product.id} className="rounded-2xl p-4 bg-slate-950/40 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div key={product.id} className="rounded-2xl p-4 bg-slate-950/40 border border-white/10 flex flex-col justify-between gap-3">
                 <div><div className="font-bold text-slate-100">{product.publicName}</div><div className="mt-1.5"><StatusPill status={product.status} prefix="الحالة" /></div></div>
                 {product.status === 'PAUSED' ? (
                   <button
