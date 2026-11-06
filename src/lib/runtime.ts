@@ -28,6 +28,8 @@
  * evaluated against one stable answer for the lifetime of the page.
  */
 
+import { forgetDemoSandboxId, readDemoSandboxId, rememberDemoSandboxId } from './demoTransport';
+
 const DEMO_ACTIVE_KEY = 'majal_demo_active_v1';
 
 /** Whether this build is allowed to offer a demo at all. Opt-out, not opt-in. */
@@ -36,7 +38,8 @@ export const DEMO_AVAILABLE = import.meta.env.VITE_DISABLE_DEMO_MODE !== 'true';
 function readDemoFlag(): boolean {
   if (typeof window === 'undefined') return false;
   try {
-    return window.sessionStorage.getItem(DEMO_ACTIVE_KEY) === 'true';
+    // العلم وحده لا يكفي: لا عرض بلا معرّف صندوق صادر من الخادم (يُغلق الباب على علم مزروع يدويًا).
+    return window.sessionStorage.getItem(DEMO_ACTIVE_KEY) === 'true' && readDemoSandboxId() !== '';
   } catch {
     // Private windows and blocked site data both throw here. Failing closed is
     // the only safe answer: no flag, no demo.
@@ -67,21 +70,30 @@ import { DEMO_ECOSYSTEM_STORAGE_KEY } from '../data/demoEcosystem';
  * switch is total: the reload rebuilds the store from scratch rather than
  * leaving it half-converted with a live identity still in hand.
  */
-export function enterDemoMode(): boolean {
-  if (!DEMO_AVAILABLE || typeof window === 'undefined') return false;
+export async function enterDemoMode(): Promise<{ ok: boolean; message?: string }> {
+  if (!DEMO_AVAILABLE || typeof window === 'undefined') return { ok: false, message: 'التجربة غير متاحة في هذا الإصدار.' };
   try {
+    // الخادم هو من يصدر الصندوق. إن كان معطّلًا (404) أو ممتلئًا أو لا اتصال: لا دخول ولا بديل محلي صامت.
+    const response = await fetch('/api/v1/demo/enter', { method: 'POST', headers: { Accept: 'application/json' } });
+    const body = await response.json().catch(() => ({})) as { sessionId?: string; error?: string };
+    if (!response.ok || !rememberDemoSandboxId(body.sessionId)) {
+      return { ok: false, message: body.error || 'تعذّر تجهيز البيئة التجريبية. حاول لاحقًا.' };
+    }
     window.sessionStorage.setItem(DEMO_ACTIVE_KEY, 'true');
   } catch {
-    return false;
+    return { ok: false, message: 'تعذّر الاتصال بالخادم لتجهيز البيئة التجريبية.' };
   }
   window.location.reload();
-  return true;
+  return { ok: true };
 }
 
 /** Leave the demo and drop everything it wrote in this tab. */
 export function exitDemoMode(): boolean {
   if (typeof window === 'undefined') return false;
+  // أفضل جهد: يُرمى الصندوق على الخادم فورًا (وإلا انتهت مهلته وحده).
+  void fetch('/api/v1/demo/exit', { method: 'POST', keepalive: true }).catch(() => undefined);
   try {
+    forgetDemoSandboxId();
     window.sessionStorage.removeItem(DEMO_ACTIVE_KEY);
     window.sessionStorage.removeItem(DEMO_STORAGE_KEY);
     window.sessionStorage.removeItem(DEMO_ECOSYSTEM_STORAGE_KEY);
@@ -95,6 +107,7 @@ export function exitDemoMode(): boolean {
 /** Throw the demo's own state away and rebuild it, without leaving the demo. */
 export function resetDemoData(): boolean {
   if (!IS_DEMO_MODE || typeof window === 'undefined') return false;
+  void fetch('/api/v1/demo/reset', { method: 'POST', keepalive: true }).catch(() => undefined);
   try {
     window.sessionStorage.removeItem(DEMO_STORAGE_KEY);
     window.sessionStorage.removeItem(DEMO_ECOSYSTEM_STORAGE_KEY);

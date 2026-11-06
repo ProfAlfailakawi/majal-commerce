@@ -17,6 +17,7 @@ import {
 import { SurfaceType, UserRole } from '../../types/majal';
 import { store } from '../../lib/store';
 import { IS_DEMO_MODE } from '../../lib/runtime';
+import { DemoEntryButton } from '../common/DemoEntryButton';
 import { JourneyInfographic } from './JourneyInfographic';
 import { MajalMark } from '../brand/MajalMark';
 import { Overture, shouldPlayOverture } from './Overture';
@@ -196,6 +197,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
             <span className="px-4 py-3 rounded-2xl bg-emerald-500/5 border border-emerald-400/15 text-emerald-200 text-xs flex items-center gap-2">
               <ShieldCheck className="w-4 h-4" /> كل حساب يرى ما يخصه فقط — وبياناتك محمية
             </span>
+            <DemoEntryButton className="w-full sm:w-72" />
           </div>}
         </div>
       </div>

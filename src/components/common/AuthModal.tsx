@@ -4,6 +4,7 @@ import { AuthApiError, AuthSession, login, register } from '../../lib/authClient
 import { MajalLoader } from '../brand/MajalLoader';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { UserRole } from '../../types/majal';
+import { DemoEntryButton } from './DemoEntryButton';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -350,6 +351,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
             {submitting ? <MajalLoader size={16} label="جارٍ معالجة الطلب…" /> : mode === 'LOGIN' ? <LogIn className="w-4 h-4" /> : (mode === 'RESET_REQUEST' || mode === 'RESET_VERIFY') ? <RefreshCcw className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
             {submitting ? 'جارٍ المعالجة…' : needsMfa ? 'تحقق وادخل' : mode === 'LOGIN' ? 'دخول فوري' : mode === 'RESET_REQUEST' ? 'إرسال رمز التوثيق للبريد' : mode === 'RESET_VERIFY' ? 'توثيق الرمز وتعيين كلمة المرور' : `إنشاء حساب (${accountType === 'SUPPLIER' ? 'مورد' : role === 'SUPER_ADMIN' ? 'سوبر أدمن' : role === 'ADMIN' ? 'أدمن' : role === 'CREATOR' ? 'مبدع' : role === 'HOST_OWNER' ? 'منشأة' : 'عميل'})`}
           </button>
+
+          {mode === 'LOGIN' && !needsMfa && <DemoEntryButton className="pt-1" />}
         </form>
       </div>
     </div>

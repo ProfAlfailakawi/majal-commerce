@@ -10,6 +10,7 @@ import { dealRoomCopilot, enrichSemanticMatch, groundOpportunityRadar, launchMar
 import { AuthenticatedRequest, createAuthConfig, createAuthRouter, purgeExpiredSessions, requireAuth, requireCsrf } from './server/auth';
 import { createCatalogRouter } from './server/catalog';
 import { databaseHealth, MajalDatabase, openMajalDatabase } from './server/database';
+import { createDemoAwareDb, createDemoRegistry, createDemoRouter, demoContext, demoGuard } from './server/demo-sandbox';
 import { createNotificationRouter } from './server/notifications';
 import { createPaciCallbackHandler, createPaciRegistry, createPaciRouter } from './server/paci';
 import { createPaymentRegistry, createPaymentRouter, createPaymentWebhookHandler } from './server/payments';
@@ -93,7 +94,13 @@ async function initializeApplication(app: express.Express) {
   const authConfig = createAuthConfig(isProduction);
   // Must resolve before any limiter is created: each one binds its store at registration.
   await initRateLimitStore();
-  const db = await openMajalDatabase();
+  const realDb = await openMajalDatabase();
+  // الصندوق التجريبي: داخل طلب يحمل معرّف صندوق صالحًا يتحوّل `db` إلى نسخة SQLite خاصة بالزائر في
+  // الذاكرة؛ خارجه هو القاعدة الحقيقية. الحلقات الخلفية تعمل خارج أي سياق فتبقى على الحقيقية.
+  const demoRegistry = createDemoRegistry();
+  const db = createDemoAwareDb(realDb, demoRegistry);
+  const stopDemoSweep = setInterval(() => void demoRegistry.sweep(), 60_000);
+  stopDemoSweep.unref();
   const paymentRegistry = createPaymentRegistry();
   const paciRegistry = createPaciRegistry();
   const paymentReady = paymentRegistry.readiness;
@@ -104,12 +111,17 @@ async function initializeApplication(app: express.Express) {
   // below still apply. Skipped in development, where Vite serves hundreds of modules.
   app.use(expressRateLimit({ ...limitOptions(1200, 60_000, 'all'), skip: () => !isProduction }));
 
+  // الطبقة الأولى للصندوق التجريبي: قائمة سماح تسبق كل موجّه (الويب هوك والدفع وPACI والذكاء وغيرها).
+  app.use(demoGuard());
+
   app.post('/api/v1/payments/webhooks/:provider', expressRateLimit(limitOptions(300, 60_000, 'payment-webhook')), express.raw({ type: 'application/json', limit: '256kb' }), createPaymentWebhookHandler(db, paymentRegistry));
   app.post('/api/v1/paci/internal/callback', expressRateLimit(limitOptions(120, 60_000, 'paci-callback')), express.raw({ type: 'application/json', limit: '64kb' }), createPaciCallbackHandler(db));
 
   // Only the document extraction endpoint receives a larger JSON envelope.
   app.use('/api/v1/domain/innovations/zero-form/extract', express.json({ limit: '2200kb', strict: true }));
   app.use(express.json({ limit: '64kb', strict: true }));
+  // الطبقة الثانية: تُشغّل ما بعدها داخل سياق الصندوق. بعد قراءة الجسم عمدًا (قراءته تُضيّع السياق).
+  app.use(demoContext(demoRegistry));
   // Per-IP budgets are wrong for a consumer product: Kuwaiti mobile carriers, offices and
   // households put many people behind one address, and a signed-in page makes ~20 calls on load
   // plus minute-by-minute refreshes. A flat 240 calls / 15 min / IP turned three simultaneous
@@ -166,6 +178,8 @@ async function initializeApplication(app: express.Express) {
       }
     });
   });
+
+  app.use('/api/v1/demo', createDemoRouter(demoRegistry, expressRateLimit(limitOptions(20, 15 * 60_000, 'demo-entry'))));
 
   // The auth surface is split into three budgets (all per client IP):
   //  - credential attempts (login / reset / MFA): only FAILED attempts count. Counting
@@ -370,7 +384,7 @@ async function initializeApplication(app: express.Express) {
   return {
     db,
     shutdown: async () => {
-      stopDeliveryWorker(); stopCleanup(); stopHolds(); stopLaunches(); await closeRateLimitStore(); await db.close();
+      stopDeliveryWorker(); stopCleanup(); stopHolds(); stopLaunches(); clearInterval(stopDemoSweep); await demoRegistry.closeAll(); await closeRateLimitStore(); await realDb.close();
     }
   };
 }
