@@ -32,7 +32,8 @@ const at = needle => { const i = server.indexOf(needle); if (i < 0) fail(`server
 const guard = at('app.use(demoGuard())');
 const firstRoute = Math.min(at("app.post('/api/v1/payments/webhooks/:provider'"), at("app.use('/api/v1/auth'"));
 const json = at("app.use(express.json({ limit: '64kb', strict: true }))");
-const context = at('app.use(demoContext(demoRegistry))');
+const context = at('app.use(demoContext(demoRegistry,');
+if (!/demoContext\(demoRegistry, undefined, expressRateLimit/.test(server)) fail('إعادة بناء الصندوق بلا حدّ معدل: يمكن استنزاف السقف.');
 if (!(guard < firstRoute)) fail('حارس الصندوق يجب أن يسبق كل الموجّهات والويب هوك.');
 if (!(json < context)) fail('سياق الصندوق يجب أن يلي express.json (قراءة الجسم تُضيّع AsyncLocalStorage).');
 if (!(context < at("app.use('/api/v1/auth'"))) fail('سياق الصندوق يجب أن يسبق موجّه المصادقة.');

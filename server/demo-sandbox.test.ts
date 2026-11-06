@@ -168,3 +168,24 @@ test('kill switch: enter and any demo-tagged request answer 404, never real data
     assert.equal((await fetch(`${h.base}/api/v1/public/user-count`)).status, 200);
   } finally { await h.close(); }
 });
+
+test('re-creating a missing sandbox is rate limited, so forged ids cannot exhaust the cap', async () => {
+  const real = await openTestDatabase();
+  const registry = createDemoRegistry({ maxSandboxes: 40, open: () => openMajalDatabase({ filename: ':memory:' }) });
+  let allowed = 2;
+  const limiter: express.RequestHandler = (_req, res, next) => (allowed-- > 0 ? next() : void res.status(429).json({ error: 'limit' }));
+  const app = express();
+  app.use(demoGuard(() => true));
+  app.use(express.json());
+  app.use(demoContext(registry, () => true, limiter));
+  app.get('/api/version', (_req, res) => { res.json({ ok: true }); });
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise<void>(resolve => server.once('listening', resolve));
+  const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  try {
+    const statuses: number[] = [];
+    for (let i = 0; i < 5; i++) statuses.push((await fetch(`${base}/api/version`, { headers: { [DEMO_HEADER]: newId() } })).status);
+    assert.deepEqual(statuses, [200, 200, 429, 429, 429]);
+    assert.equal(registry.size(), 2, 'only limiter-approved ids allocate a database');
+  } finally { await new Promise<void>(resolve => server.close(() => resolve())); await registry.closeAll(); await real.close(); }
+});
