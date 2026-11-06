@@ -218,14 +218,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                  these orders or these payouts are real. */
               <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-black whitespace-nowrap shrink-0 bg-amber-500/15 text-amber-300 border border-amber-400/35">
                 <FlaskConical className="w-3.5 h-3.5" aria-hidden="true" />
-                <span className="hidden lg:inline">بيئة تجريبية — بيانات مصطنعة</span>
-                <span className="lg:hidden">تجريبي</span>
+                <span className="hidden xl:inline">بيئة تجريبية — بيانات مصطنعة</span>
+                <span className="xl:hidden">تجريبي</span>
                 <button
                   type="button"
                   onClick={() => resetDemoData()}
                   title="إعادة تعيين البيانات التجريبية"
                   aria-label="إعادة تعيين البيانات التجريبية"
-                  className="relative hidden lg:grid place-items-center w-6 h-6 rounded-full hover:bg-white/15 transition-colors after:content-[''] after:absolute after:-inset-2.5"
+                  className="relative hidden xl:grid place-items-center w-6 h-6 rounded-full hover:bg-white/15 transition-colors after:content-[''] after:absolute after:-inset-2.5"
                 >
                   <RefreshCw className="w-3 h-3" />
                 </button>
@@ -234,7 +234,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={() => exitDemoMode()}
                   title="الخروج من البيئة التجريبية"
                   aria-label="الخروج من البيئة التجريبية"
-                  className="relative hidden lg:grid place-items-center w-6 h-6 rounded-full hover:bg-white/15 transition-colors after:content-[''] after:absolute after:-inset-2.5"
+                  className="relative hidden xl:grid place-items-center w-6 h-6 rounded-full hover:bg-white/15 transition-colors after:content-[''] after:absolute after:-inset-2.5"
                 >
                   <LogOut className="w-3 h-3" />
                 </button>
@@ -323,7 +323,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="مساعد مجال الذكي"
             >
               <Bot className="w-4 h-4 text-gold-300" />
-              <span className="hidden lg:inline">مساعد مجال</span>
+              <span className="hidden xl:inline">مساعد مجال</span>
             </button>}
 
             <ThemeToggle />
@@ -384,7 +384,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 aria-expanded={showRoleDropdown}
               >
                 <Avatar name={activeUser.name} src={activeUser.avatar} size={32} />
-                <div className="text-start hidden lg:block max-w-[180px]">
+                <div className="text-start hidden xl:block max-w-[180px]">
                   <span className="block font-bold text-slate-200 text-xs leading-tight truncate" title={activeUser.name}>{activeUser.name}</span>
                   <span className="block text-xs text-gold-300 truncate">{activeUser.accountType === 'SUPPLIER' ? 'مورد' : roleLabels[activeUser.role]}</span>
                 </div>
@@ -397,7 +397,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     هوية العرض: مبدع · منشأة · مورد · أدمن · سوبر أدمن
                   </div>
                   {/* On phones the demo chip is a plain badge; its two actions live here. */}
-                  <div className="lg:hidden grid grid-cols-2 gap-2 p-1 pb-2 mb-1 border-b border-white/10">
+                  <div className="xl:hidden grid grid-cols-2 gap-2 p-1 pb-2 mb-1 border-b border-white/10">
                     <button type="button" role="menuitem" onClick={() => resetDemoData()} className="min-h-11 flex items-center justify-center gap-2 rounded-xl bg-amber-500/10 border border-amber-400/30 text-amber-200 text-sm font-bold"><RefreshCw className="w-4 h-4" aria-hidden="true" />إعادة التعيين</button>
                     <button type="button" role="menuitem" onClick={() => exitDemoMode()} className="min-h-11 flex items-center justify-center gap-2 rounded-xl bg-white/5 border border-white/10 text-slate-200 text-sm font-bold"><LogOut className="w-4 h-4" aria-hidden="true" />خروج من العرض</button>
                   </div>

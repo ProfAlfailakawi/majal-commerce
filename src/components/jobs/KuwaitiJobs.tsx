@@ -83,7 +83,7 @@ export const KuwaitiJobs: React.FC = () => {
       {loading ? (
         <div role="status" className="text-xs text-slate-300 py-4">جارٍ تحميل الفرص…</div>
       ) : (
-        <div className="grid sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3">
+        <div className="grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {jobs.slice(0, 6).map(job => (
             <article key={job.id} className="rounded-2xl p-4 flex flex-col bg-white/[0.03] border border-white/10">
               <div className="flex justify-between gap-3">

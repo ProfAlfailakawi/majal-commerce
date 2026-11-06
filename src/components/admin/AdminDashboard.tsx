@@ -141,7 +141,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      <section className="grid grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4">
+      <section className="grid grid-cols-2 lg:grid-cols-[1.5fr_1.2fr_1fr_1fr_1fr] gap-3 sm:gap-4">
         {[
           { label: 'إجمالي المبيعات (طلبات مكتملة)', value: metrics ? `${totals.totalGmv} د.ك` : '—', icon: <Wallet className="w-5 h-5 text-gold-300" /> },
           { label: 'رسوم المنصة', value: metrics ? `${totals.totalPlatformFees} د.ك` : '—', icon: <BadgeCheck className="w-5 h-5 text-emerald-300" /> },
@@ -276,7 +276,7 @@ export const AdminDashboard: React.FC = () => {
       )}
 
       {activeTab === 'ACCESS' && (
-        <section className="grid xl:grid-cols-[1fr_1fr] gap-6">
+        <section className="grid lg:grid-cols-[1fr_1fr] gap-6">
           <div className="glass-panel rounded-3xl p-6 border border-white/10 space-y-4">
             <div className="flex items-center gap-2">
               <Lock className="w-5 h-5 text-gold-300" />
@@ -337,7 +337,7 @@ export const AdminDashboard: React.FC = () => {
               </div>
             );
           })()}
-          <div className="space-y-3">
+          <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 md:gap-3 md:[&>*:only-child]:col-span-2">
             {store.settlements.length === 0 ? (
               <EmptyState
                 variant="inline"
@@ -350,7 +350,7 @@ export const AdminDashboard: React.FC = () => {
               const steps = [{ label: 'معتمد', done: true }, { label: 'مدفوع', done: paidBatch }, { label: 'مؤكد', done: paidBatch }];
               return (
               <div key={batch.id} className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
                   <div className="min-w-0">
                     <div className="font-black text-slate-100">{batch.creatorName}</div>
                     <details className="group mt-1 text-xs text-slate-400">

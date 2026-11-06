@@ -233,7 +233,7 @@ export const BusinessShowcase: React.FC<{ onSurfaceChange: (surface: SurfaceType
           )}
         </div>
         {loading ? <div role="status" className="text-xs text-slate-300 py-6">جارٍ تحميل المشاريع…</div> : shown.length ? (
-          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">{shown.map(item => <ListingCard key={item.id} item={item} onOpen={() => { reportGateEvent('listing_open', item.id); setOpen(item); }} />)}</div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{shown.map(item => <ListingCard key={item.id} item={item} onOpen={() => { reportGateEvent('listing_open', item.id); setOpen(item); }} />)}</div>
         ) : (
           <div className="rounded-3xl border border-dashed border-white/15 p-10 text-center space-y-3"><Layers className="w-8 h-8 mx-auto text-gold-300" aria-hidden="true" /><p className="text-sm text-slate-300">لا توجد مشاريع معروضة الآن. كن أول من يعرض مشروعه.</p><button type="button" onClick={() => setForm('sell')} className="px-5 py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black">اعرض مشروعك</button></div>
         )}

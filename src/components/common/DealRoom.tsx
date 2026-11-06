@@ -137,7 +137,7 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
         </div>
       </div>
 
-      <div className="grid xl:grid-cols-[.9fr_1.1fr] gap-5">
+      <div className="grid lg:grid-cols-[.9fr_1.1fr] gap-5">
         <div className="space-y-3">
           <div className="font-bold text-sm text-slate-100 flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-300" /> خط سير الصفقة</div>
           <DnaStepper

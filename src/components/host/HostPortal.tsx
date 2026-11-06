@@ -178,7 +178,7 @@ export const HostPortal: React.FC = () => {
     <div data-accent="gold" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
       <section className="majal-hero glass-panel rounded-[28px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
         <div className="majal-glow -top-[18rem] -start-[17rem] w-[42rem] h-[42rem]" style={{ '--glow': 'rgba(56,189,248,0.08)' } as React.CSSProperties} />
-        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="flex items-center gap-4 min-w-0 max-[374px]:flex-col max-[374px]:items-start">
             <Avatar name={host.commercialName} src={host.logoUrl} size={80} shape="squircle" className="ring-2 ring-sky-400/25 shadow-xl" />
             <div className="min-w-0">
@@ -192,7 +192,7 @@ export const HostPortal: React.FC = () => {
           </div>
 
           {hasPermission(store.activeUser, 'MANAGE_CHALLENGES') && (
-            <button onClick={() => setShowPublisher(true)} className="xl:shrink-0 px-6 py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 text-xs font-black flex items-center gap-2"><Plus className="w-4 h-4" /> نشر تحدي ابتكار</button>
+            <button onClick={() => setShowPublisher(true)} className="lg:shrink-0 px-6 py-3.5 rounded-2xl bg-gradient-to-l from-gold-500 to-gold-300 text-slate-950 text-xs font-black flex items-center gap-2"><Plus className="w-4 h-4" /> نشر تحدي ابتكار</button>
           )}
         </div>
       </section>

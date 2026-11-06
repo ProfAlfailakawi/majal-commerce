@@ -89,14 +89,14 @@ export const SuperAdminDashboard: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
       <section className="majal-hero glass-panel rounded-[28px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
         <div className="majal-glow -top-[19rem] -end-[17rem] w-[44rem] h-[44rem]" style={{ '--glow': 'rgba(232,121,249,0.10)' } as React.CSSProperties} />
-        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-3 max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-fuchsia-500/10 border border-fuchsia-400/20 text-fuchsia-200 text-xs font-black"><Crown className="w-4 h-4" /> سوبر أدمن مجال</div>
             <h1 className="text-2xl md:text-4xl font-black">مركز قيادة «مجال»</h1>
             <p className="text-sm text-slate-400 leading-7">يدير السوق نفسه: الأدوار، السياسات، المخاطر، السيولة، سلامة الوصول والبيانات.</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 w-full xl:w-auto xl:min-w-[320px]">
+          <div className="grid grid-cols-2 gap-3 w-full lg:w-auto lg:min-w-[320px]">
             <div className="majal-stat rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">إجمالي المبيعات (د.ك، طلبات مكتملة)</div><div className="majal-numeral mt-2 text-2xl font-black text-gold-300 font-mono">{metrics.gmv}</div></div>
             <div className="majal-stat rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">رسوم مجال (د.ك)</div><div className="majal-numeral mt-2 text-2xl font-black text-emerald-300 font-mono">{metrics.platform}</div></div>
             <div className="majal-stat rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400">إطلاقات حيّة</div><div className="majal-numeral mt-2 text-2xl font-black text-sky-300 font-mono">{metrics.live}</div></div>
@@ -136,10 +136,10 @@ export const SuperAdminDashboard: React.FC = () => {
             ))}
           </div>
 
-          <div className="grid xl:grid-cols-[1.1fr_.9fr] gap-6">
+          <div className="grid lg:grid-cols-[1.1fr_.9fr] gap-6">
             <section className="glass-panel rounded-3xl p-6 border border-white/10 space-y-4">
               <div className="flex items-center gap-2"><Activity className="w-5 h-5 text-emerald-300" /><h2 className="text-lg font-black">النبض التنفيذي</h2></div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
                 <InfoChip icon={<Network className="w-4 h-4 text-sky-300" />} label="حركة السوق" status={`${store.creators.length} مبدع / ${store.hosts.length} منشأة`} />
                 <InfoChip icon={<KeyRound className="w-4 h-4 text-gold-300" />} label="حماية الحقوق" status={`${store.recipeGrants.length} إذن وصفة`} />
                 <InfoChip icon={<Users className="w-4 h-4 text-fuchsia-300" />} label="الفصل التشغيلي" status={`${roleRows.length} أدوار`} />
@@ -149,7 +149,7 @@ export const SuperAdminDashboard: React.FC = () => {
 
             <section className="glass-panel rounded-3xl p-6 border border-white/10 space-y-4">
               <div className="flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-gold-300" /><h2 className="text-lg font-black">حواجز الحوكمة</h2></div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
                 {[
                   ['منع رفع الصلاحية', 'لا يمكن للأدمن منح نفسه صلاحية سوبر أدمن.'],
                   ['حماية الوصفة', 'الوصفة الكاملة لا تُعرض للسوبر أدمن افتراضيًا لمجرد امتلاكه الإدارة.'],
