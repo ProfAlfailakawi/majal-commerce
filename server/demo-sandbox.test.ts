@@ -3,6 +3,7 @@ import test from 'node:test';
 import { randomBytes } from 'node:crypto';
 import { AddressInfo } from 'node:net';
 import express from 'express';
+import { rateLimit } from 'express-rate-limit';
 import { openTestDatabase } from './test-db';
 import { createAuthRouter, createPublicRegistration } from './auth';
 import {
@@ -27,6 +28,7 @@ async function harness(options: { enabled?: () => boolean; maxSandboxes?: number
   const db = createDemoAwareDb(real, registry);
   const enabled = options.enabled ?? (() => true);
   const app = express();
+  app.use(rateLimit({ windowMs: 60_000, limit: 100_000, validate: false }));
   app.use(demoGuard(registry, enabled));
   app.use(express.json());
   app.use(demoContext(registry, enabled));
@@ -178,6 +180,7 @@ test('re-creating a missing sandbox is rate limited, so forged ids cannot exhaus
   let allowed = 2;
   const limiter: express.RequestHandler = (_req, res, next) => (allowed-- > 0 ? next() : void res.status(429).json({ error: 'limit' }));
   const app = express();
+  app.use(rateLimit({ windowMs: 60_000, limit: 100_000, validate: false }));
   app.use(demoGuard(registry, () => true));
   app.use(express.json());
   app.use(demoContext(registry, () => true, limiter));
