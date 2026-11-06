@@ -67,8 +67,8 @@ export const LabWorkspace: React.FC<LabWorkspaceProps> = ({ collaboration }) => 
   };
 
   return (
-    <div className="space-y-6 text-slate-100">
-      <section className="glass-panel p-6 rounded-3xl border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="grid gap-6 lg:grid-cols-2 items-start text-slate-100">
+      <section className="lg:col-span-2 glass-panel p-6 rounded-3xl border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-gold-500/10 text-gold-300 rounded-2xl border border-gold-300/20"><FlaskConical className="w-6 h-6" /></div>
           <div><h3 className="text-lg font-black">مختبر تطوير المنتج</h3><p className="text-xs text-slate-400 mt-1 leading-6">كل دفعة محفوظة كبيانات تشغيلية قابلة للمراجعة؛ لا توجد أرقام افتراضية عند تسجيل تجربة جديدة.</p></div>
@@ -76,10 +76,10 @@ export const LabWorkspace: React.FC<LabWorkspaceProps> = ({ collaboration }) => 
         <button onClick={() => setShowCalculator(true)} className="px-4 py-2.5 bg-gold-500 hover:bg-gold-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-2"><Calculator className="w-4 h-4" /> حاسبة الجدوى</button>
       </section>
 
-      {notice && <div className={`p-3 rounded-xl text-xs font-bold border ${notice.startsWith('تم') ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-rose-500/10 text-rose-300 border-rose-400/20'}`}>{notice}</div>}
+      {notice && <div className={`lg:col-span-2 p-3 rounded-xl text-xs font-bold border ${notice.startsWith('تم') ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20' : 'bg-rose-500/10 text-rose-300 border-rose-400/20'}`}>{notice}</div>}
 
       {tastingSession && (
-        <section className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
+        <section className="lg:col-span-2 glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
           <div className="flex items-center justify-between gap-3 flex-wrap"><div className="flex items-center gap-2 text-gold-300 font-bold text-sm"><Award className="w-5 h-5" /><span>جلسة التذوق المسجلة — التذوق الأعمى</span></div><span dir="ltr" className="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-300 border border-emerald-400/20 font-mono">{tastingSession.aggregateOverallScore} / 10</span></div>
           <div className="grid sm:grid-cols-2 md:grid-cols-2 gap-4 text-xs">{tastingSession.scorecards.map((sc, i) => <div key={i} className="p-4 rounded-xl bg-slate-950/45 border border-white/10"><div className="flex items-center justify-between font-bold"><span>{sc.evaluatorName} — {roleLabel(sc.evaluatorRole as never) || sc.evaluatorRole}</span><span dir="ltr" className="text-gold-300">{sc.overallScore}/10</span></div><p className="text-slate-400 text-xs leading-6 mt-2">{sc.notes}</p></div>)}</div>
         </section>
@@ -87,7 +87,7 @@ export const LabWorkspace: React.FC<LabWorkspaceProps> = ({ collaboration }) => 
 
       <section className="glass-panel p-6 rounded-3xl border border-white/10 space-y-5 text-xs">
         <div className="flex items-center gap-2"><Plus className="w-4 h-4 text-gold-300" /><h4 className="font-black text-sm">تسجيل دفعة تجريبية جديدة</h4></div>
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-4">
           <label className="space-y-1"><span className="text-slate-400 font-bold">نسخة الوصفة</span><select value={recipeVersion} onChange={e => setRecipeVersion(e.target.value)} className="w-full glass-input rounded-xl p-3 outline-none">{recipeVersions.map(v => <option key={v.id} value={v.versionNumber}>{v.versionNumber}</option>)}</select></label>
           <label className="space-y-1"><span className="text-slate-400 font-bold">إنتاجية الدفعة</span><input type="number" min="1" value={yieldQuantity} onChange={e => setYieldQuantity(Number(e.target.value))} className="w-full glass-input rounded-xl p-3 outline-none" /></label>
           <label className="space-y-1"><span className="text-slate-400 font-bold">التكلفة المقاسة د.ك</span><input type="number" min="0" step="0.001" value={measuredCostKwd} onChange={e => setMeasuredCostKwd(Number(e.target.value))} className="w-full glass-input rounded-xl p-3 outline-none" /></label>
@@ -95,7 +95,7 @@ export const LabWorkspace: React.FC<LabWorkspaceProps> = ({ collaboration }) => 
           <label className="space-y-1"><span className="text-slate-400 font-bold">الهدر %</span><input type="number" min="0" max="100" step="0.1" value={wastePercentage} onChange={e => setWastePercentage(Number(e.target.value))} className="w-full glass-input rounded-xl p-3 outline-none" /></label>
           <label className="space-y-1"><span className="text-slate-400 font-bold">القرار</span><select value={selectedBatchDecision} onChange={e => setSelectedBatchDecision(e.target.value as LabBatch['decision'])} className="w-full glass-input rounded-xl p-3 outline-none"><option value="APPROVE_NEXT">تجربة أخرى</option><option value="PRODUCTION_CANDIDATE">مرشح إنتاج</option><option value="REJECT">مرفوض</option></select></label>
         </div>
-        <div className="grid sm:grid-cols-2 md:grid-cols-2 gap-4"><label className="space-y-1"><span className="text-slate-400 font-bold">ملاحظات التذوق/التشغيل</span><textarea rows={3} value={batchDecisionNote} onChange={e => setBatchDecisionNote(e.target.value)} className="w-full glass-input rounded-xl p-3 outline-none resize-none" /></label><label className="space-y-1"><span className="text-slate-400 font-bold">التغييرات المقترحة</span><textarea rows={3} value={proposedChanges} onChange={e => setProposedChanges(e.target.value)} className="w-full glass-input rounded-xl p-3 outline-none resize-none" /></label></div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4"><label className="space-y-1"><span className="text-slate-400 font-bold">ملاحظات التذوق/التشغيل</span><textarea rows={3} value={batchDecisionNote} onChange={e => setBatchDecisionNote(e.target.value)} className="w-full glass-input rounded-xl p-3 outline-none resize-none" /></label><label className="space-y-1"><span className="text-slate-400 font-bold">التغييرات المقترحة</span><textarea rows={3} value={proposedChanges} onChange={e => setProposedChanges(e.target.value)} className="w-full glass-input rounded-xl p-3 outline-none resize-none" /></label></div>
         <button onClick={handleRecordNewBatch} className="px-5 py-3 bg-gold-500 hover:bg-gold-400 text-slate-950 font-black rounded-xl text-xs">حفظ الدفعة وربطها بالسجل</button>
       </section>
 
