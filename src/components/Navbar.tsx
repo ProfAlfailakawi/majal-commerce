@@ -272,7 +272,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 must log out first, so a real identity never looks at synthetic stock. */}
             {/* أيقونة صامتة: المدخل ثانويّ بجانب زر الدخول، ولا يستحق عبارة. */}
             {!IS_DEMO_MODE && DEMO_AVAILABLE && authStatus === 'ANONYMOUS' && <button
-              onClick={() => { void enterDemoMode().then(result => { if (!result.ok) window.alert(result.message); }); }}
+              onClick={() => { void enterDemoMode().then(result => { if (!result.ok) window.alert(result.message ?? 'تعذّر الدخول إلى البيئة التجريبية.'); }); }}
               title="تجربة العرض — بيئة تجريبية ببيانات مصطنعة"
               aria-label="تجربة العرض"
               className="grid place-items-center w-11 h-11 rounded-xl border border-amber-400/35 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-colors"

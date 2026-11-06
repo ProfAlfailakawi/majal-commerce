@@ -14,7 +14,7 @@ export const DemoEntryButton: React.FC<{ className?: string }> = ({ className = 
     setBusy(true);
     setError('');
     const result = await enterDemoMode();
-    if (!result.ok) { setError(result.message); setBusy(false); }
+    if (!result.ok) { setError(result.message ?? 'تعذّر الدخول إلى البيئة التجريبية.'); setBusy(false); }
   };
   return (
     <div className={className}>

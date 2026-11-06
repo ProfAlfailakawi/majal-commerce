@@ -70,7 +70,7 @@ import { DEMO_ECOSYSTEM_STORAGE_KEY } from '../data/demoEcosystem';
  * switch is total: the reload rebuilds the store from scratch rather than
  * leaving it half-converted with a live identity still in hand.
  */
-export async function enterDemoMode(): Promise<{ ok: true } | { ok: false; message: string }> {
+export async function enterDemoMode(): Promise<{ ok: boolean; message?: string }> {
   if (!DEMO_AVAILABLE || typeof window === 'undefined') return { ok: false, message: 'التجربة غير متاحة في هذا الإصدار.' };
   try {
     // الخادم هو من يصدر الصندوق. إن كان معطّلًا (404) أو ممتلئًا أو لا اتصال: لا دخول ولا بديل محلي صامت.
