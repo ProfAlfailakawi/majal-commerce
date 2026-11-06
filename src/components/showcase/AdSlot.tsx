@@ -126,10 +126,10 @@ export const AdSlot: React.FC<{ slot: AdSlotType; topic?: string; className?: st
     return <aside aria-label="رعاة مجال" className={`w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 ${className}`}><AdCard ad={visible[0]} audience={audience} compact onHide={() => hide(visible[0].id)} /></aside>;
   }
   if (!visible.length) {
-    return <aside aria-label="من مجال" className={`grid gap-3 sm:grid-cols-2 xl:grid-cols-3 ${className}`}><HouseCardView card={HOUSE[audience]} compact={compactSlot} /></aside>;
+    return <aside aria-label="من مجال" className={`grid gap-3 sm:grid-cols-2 xl:grid-cols-3 [&>*:only-child]:col-span-full ${className}`}><HouseCardView card={HOUSE[audience]} compact={compactSlot} /></aside>;
   }
   return (
-    <aside aria-label="إعلانات الشركاء" className={`grid gap-3 sm:grid-cols-2 xl:grid-cols-3 ${className}`}>
+    <aside aria-label="إعلانات الشركاء" className={`grid gap-3 sm:grid-cols-2 xl:grid-cols-3 [&>*:only-child]:col-span-full ${className}`}>
       {(slot === 'PORTAL' ? visible.slice(0, 2) : visible).map((ad, i) => (
         // On phones a portal shows one sponsor line, not a stack above the page's own content.
         <div key={ad.id} className={slot === 'PORTAL' && i > 0 ? 'hidden sm:block' : ''}><AdCard ad={ad} audience={audience} compact={compactSlot} onHide={() => hide(ad.id)} /></div>

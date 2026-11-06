@@ -55,14 +55,14 @@ export const AudienceDashboard: React.FC = () => {
       </section>
       {error && <div role="alert" className="p-4 rounded-2xl bg-rose-500/10 border border-rose-400/20 text-xs text-rose-200">{error}</div>}
 
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Kpi icon={<Eye className="w-4 h-4" aria-hidden="true" />} label="داخلون اليوم" value={num(t.totals.browsersToday)} hint="متصفحات مختلفة" />
         <Kpi icon={<TrendingUp className="w-4 h-4" aria-hidden="true" />} label="آخر 7 أيام" value={num(t.totals.browsers7)} hint="متصفحات مختلفة (مجموع الأيام)" tone="text-emerald-300" />
         <Kpi icon={<Users className="w-4 h-4" aria-hidden="true" />} label="آخر 30 يومًا" value={num(t.totals.browsers30)} hint="مجموع داخلين يوميًا" tone="text-sky-300" />
         <Kpi icon={<MousePointerClick className="w-4 h-4" aria-hidden="true" />} label="مشاهدات الصفحات" value={num(t.totals.views30)} hint="30 يومًا" tone="text-fuchsia-300" />
       </div>
 
-      <div className="grid xl:grid-cols-[1.6fr_1fr] gap-6">
+      <div className="grid lg:grid-cols-[1.6fr_1fr] gap-6">
         <Panel title="الداخلون يوميًا" sub="كل عمود متصفح دخل مجال في ذلك اليوم (مرة واحدة). الأخضر هو اليوم.">
           <TrendBars points={t.daily.map(d => ({ day: d.day, value: d.browsers }))} label="عدد الداخلين يوميًا خلال 30 يومًا" />
         </Panel>

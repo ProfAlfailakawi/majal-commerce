@@ -151,7 +151,7 @@ export const SupplierDirectory: React.FC<{ onSurfaceChange: (surface: SurfaceTyp
           </div>
         )}
         {loading ? <div role="status" className="text-xs text-slate-300 py-6 inline-flex items-center gap-2"><Clock3 className="w-4 h-4" aria-hidden="true" />جارٍ تحميل الدليل…</div> : shown.length ? (
-          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">{shown.slice(0, visibleCount).map(s => <SupplierCard key={s.id} s={s} />)}</div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{shown.slice(0, visibleCount).map(s => <SupplierCard key={s.id} s={s} />)}</div>
         ) : (
           <div className="rounded-3xl border border-dashed border-white/15 p-10 text-center space-y-3"><Search className="w-8 h-8 mx-auto text-gold-300" aria-hidden="true" /><p className="text-sm text-slate-300">{items.length ? 'لا نتائج مطابقة. جرّب كلمة أخرى.' : 'الدليل فارغ بعد. كن أول من يسجّل.'}</p><button type="button" onClick={() => setForm(true)} className="px-5 py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black">سجّل مورّدًا</button></div>
         )}

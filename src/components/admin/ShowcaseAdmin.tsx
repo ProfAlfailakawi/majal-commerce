@@ -162,7 +162,7 @@ export const ShowcaseAdmin: React.FC = () => {
         <>
         <section className="space-y-3" aria-labelledby="dir-admin-title">
           <div className="flex items-center gap-2"><Truck className="w-5 h-5 text-gold-300" aria-hidden="true" /><h3 id="dir-admin-title" className="font-black">دليل الموردين</h3></div>
-          {suppliers.length ? <div className="grid sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3">{sup.shown.map(s => (
+          {suppliers.length ? <div className="grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">{sup.shown.map(s => (
             <article key={s.id} className="glass-card rounded-2xl p-4 border border-white/10 space-y-2.5">
               <div className="flex justify-between gap-3"><div className="min-w-0"><div className="text-xs text-gold-300 font-black">{SUPPLIER_CATEGORIES[s.category]?.label} · {s.region}</div><h4 className="font-black mt-0.5 truncate">{s.name}</h4></div><span className={`text-xs px-2 py-1 rounded-full h-fit shrink-0 ${s.status === 'PENDING_REVIEW' ? 'bg-amber-500/10 text-amber-300' : 'bg-emerald-500/10 text-emerald-300'}`}>{STATUS[s.status]}</span></div>
               <p className="text-xs text-slate-400 leading-6 line-clamp-2">{s.description}</p>
@@ -171,10 +171,10 @@ export const ShowcaseAdmin: React.FC = () => {
                 {s.status !== 'APPROVED' && <button disabled={busy === s.id} onClick={() => run(s.id, () => reviewDirectorySupplier(s.id, 'APPROVED'))} className="flex-1 py-2 rounded-xl bg-emerald-400 text-slate-950 text-xs font-black disabled:opacity-40 flex items-center justify-center gap-1.5"><Check className="w-4 h-4" aria-hidden="true" />اعتماد ونشر</button>}
                 <button disabled={busy === s.id} onClick={() => run(s.id, () => reviewDirectorySupplier(s.id, 'REJECTED', 'يحتاج تعديلًا قبل النشر.'))} className="px-4 py-2 rounded-xl bg-rose-500/10 border border-rose-400/20 text-rose-300 text-xs font-black flex items-center gap-1"><X className="w-4 h-4" aria-hidden="true" />{s.status === 'APPROVED' ? 'إخفاء' : 'رفض'}</button>
               </div>
-            </article>))}{sup.toggle && <div className="md:col-span-2 xl:col-span-3">{sup.toggle}</div>}</div>
+            </article>))}{sup.toggle && <div className="md:col-span-2 lg:col-span-3">{sup.toggle}</div>}</div>
             : <div className="rounded-2xl p-6 border border-dashed border-white/10 text-center text-xs text-slate-400">لا توجد طلبات موردين.</div>}
         </section>
-        <div className="grid xl:grid-cols-2 gap-6">
+        <div className="grid lg:grid-cols-2 gap-6">
           <section className="space-y-3">
             <div className="flex items-center gap-2"><Store className="w-5 h-5 text-gold-300" aria-hidden="true" /><h3 className="font-black">مشاريع للبيع</h3></div>
             {listings.length ? lis.shown.map(l => (
