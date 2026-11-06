@@ -14,12 +14,35 @@
  *  4. سقف عدد الصناديق، ومهلة (TTL)، ومفتاح إيقاف `MAJAL_DEMO_ENABLED=false` فيُردّ 404.
  */
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { randomBytes } from 'node:crypto';
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import express, { type NextFunction, type Request, type RequestHandler, type Response } from 'express';
 import { openMajalDatabase, type MajalDatabase, type MajalStatement } from './database';
 
 export const DEMO_HEADER = 'x-majal-demo';
 export const DEMO_ID_PATTERN = /^demo_[0-9a-f]{64}$/;
+
+/**
+ * معرّف الصندوق موقَّع: `demo_` + 32 ست عشري عشوائية (nonce) + 32 ست عشري توقيع HMAC.
+ * الصيغة العامة لم تتغير (64 ست عشري) فيبقى ناقل العميل كما هو، لكن الخادم لا يقبل ولا يحجز صندوقًا
+ * إلا لمعرّف أصدره هو. المفتاح مشتق من سرّ الخادم القائم (AUTH_SESSION_SECRET) بسياق خاص، فيصمد المعرّف
+ * عبر إعادة تشغيل Cloud Run وتعدّد النسخ، ولا يمكن تزويره بلا السر.
+ */
+export function createDemoIdSigner(secret?: string) {
+  const root = secret && secret.trim().length >= 32 ? secret.trim() : randomBytes(32).toString('hex');
+  const key = createHmac('sha256', root).update('majal-demo-sandbox-id-v1').digest();
+  const mac = (nonce: string) => createHmac('sha256', key).update(nonce).digest('hex').slice(0, 32);
+  return {
+    issue(): string {
+      const nonce = randomBytes(16).toString('hex');
+      return `demo_${nonce}${mac(nonce)}`;
+    },
+    verify(id: string): boolean {
+      if (!DEMO_ID_PATTERN.test(id)) return false;
+      const nonce = id.slice(5, 37), given = Buffer.from(id.slice(37), 'utf8'), expected = Buffer.from(mac(nonce), 'utf8');
+      return given.length === expected.length && timingSafeEqual(given, expected);
+    }
+  };
+}
 export const DEMO_TTL_MS = 30 * 60_000;
 export const DEMO_MAX_SANDBOXES = 40;
 
@@ -40,6 +63,8 @@ export interface DemoRegistryOptions {
   maxSandboxes?: number;
   now?: () => number;
   open?: () => Promise<MajalDatabase>;
+  /** سرّ الخادم لاشتقاق مفتاح توقيع المعرّفات؛ بلا سر يُولَّد مفتاح عشوائي للعملية (تطوير/اختبار). */
+  secret?: string;
 }
 
 /** سجل الصناديق + سياق الطلب الحالي. نسخة واحدة لكل عملية؛ تُنشأ نسخ إضافية في الاختبارات. */
@@ -49,6 +74,7 @@ export function createDemoRegistry(options: DemoRegistryOptions = {}) {
   const now = options.now ?? Date.now;
   // دائمًا SQLite في الذاكرة، حتى حين يكون الإنتاج PostgreSQL: لا اتصال ولا ملف يشاركان الإنتاج.
   const open = options.open ?? (() => openMajalDatabase({ filename: ':memory:' }));
+  const signer = createDemoIdSigner(options.secret);
   const sandboxes = new Map<string, Sandbox>();
   const als = new AsyncLocalStorage<{ id: string; db: MajalDatabase }>();
 
@@ -65,7 +91,8 @@ export function createDemoRegistry(options: DemoRegistryOptions = {}) {
   }
 
   async function create(id: string): Promise<boolean> {
-    if (!DEMO_ID_PATTERN.test(id)) return false;
+    // لا يُحجز شيء لمعرّف لم يصدره الخادم.
+    if (!signer.verify(id)) return false;
     await sweep();
     const existing = sandboxes.get(id);
     if (existing) { existing.expiresAt = now() + ttlMs; return true; }
@@ -87,6 +114,8 @@ export function createDemoRegistry(options: DemoRegistryOptions = {}) {
   return {
     ttlMs,
     maxSandboxes,
+    issueId: signer.issue,
+    verifyId: signer.verify,
     size: () => sandboxes.size,
     has: (id: string) => Boolean(get(id)),
     create,
@@ -129,10 +158,17 @@ export function createDemoAwareDb(real: MajalDatabase, registry: DemoRegistry): 
   };
 }
 
-export function readDemoId(req: Pick<Request, 'headers'>): string {
+/** قيمة الترويسة كما وردت إن طابقت الصيغة (بلا تحقق من التوقيع). */
+export function rawDemoHeader(req: Pick<Request, 'headers'>): string {
   const raw = req.headers[DEMO_HEADER];
   const value = String((Array.isArray(raw) ? raw[0] : raw) ?? '').trim();
   return DEMO_ID_PATTERN.test(value) ? value : '';
+}
+
+/** معرّف موقَّع صالح أصدره الخادم، وإلا ''. */
+export function readDemoId(req: Pick<Request, 'headers'>, registry: Pick<DemoRegistry, 'verifyId'>): string {
+  const value = rawDemoHeader(req);
+  return value && registry.verifyId(value) ? value : '';
 }
 
 /**
@@ -156,9 +192,14 @@ export function isDemoAllowedRoute(method: string, path: string): boolean {
  * - بلا معرّف صالح: يمرّ الطلب كما هو (حساب حقيقي، لا تغيير).
  * - بمعرّف صالح: تُحذف الكوكيز، ثم قائمة السماح.
  */
-export function demoGuard(enabled: () => boolean = demoEnabled): RequestHandler {
+export function demoGuard(registry: Pick<DemoRegistry, 'verifyId'>, enabled: () => boolean = demoEnabled): RequestHandler {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!readDemoId(req)) return next();
+    const claimed = rawDemoHeader(req);
+    if (!claimed) return next();
+    // ادّعى أنه صندوق لكن توقيعه لا يصح (مزوَّر أو من سر قديم): يُرفض قبل أي حجز، ولا يسقط إلى البيانات الحقيقية.
+    if (!registry.verifyId(claimed)) {
+      return void res.status(403).json({ error: 'معرّف البيئة التجريبية غير صالح. أعد الدخول إلى العرض.', code: 'DEMO_INVALID_ID' });
+    }
     if (!enabled()) {
       // مفتاح الإيقاف: طلب بمعرّف صندوق لا يُخدَّم أبدًا بالبيانات الحقيقية.
       return void res.status(404).json({ error: 'البيئة التجريبية غير متاحة.', code: 'DEMO_DISABLED' });
@@ -178,7 +219,7 @@ export function demoGuard(enabled: () => boolean = demoEnabled): RequestHandler 
  */
 export function demoContext(registry: DemoRegistry, enabled: () => boolean = demoEnabled, allocLimiter: RequestHandler = (_req, _res, next) => next()): RequestHandler {
   return (req: Request, res: Response, next: NextFunction) => {
-    const id = readDemoId(req);
+    const id = readDemoId(req, registry);
     if (!id) return next();
     const fail = () => res.status(503).json({ error: 'تعذّر تجهيز البيئة التجريبية. أعد المحاولة.', code: 'DEMO_UNAVAILABLE' });
     if (!enabled()) return void res.status(404).json({ error: 'البيئة التجريبية غير متاحة.', code: 'DEMO_DISABLED' });
@@ -203,19 +244,19 @@ export function createDemoRouter(registry: DemoRegistry, limiter: RequestHandler
   });
   router.post('/enter', limiter, async (req, res) => {
     if (!enabled()) return void res.status(404).json({ error: 'البيئة التجريبية غير متاحة.', code: 'DEMO_DISABLED' });
-    const id = `demo_${randomBytes(32).toString('hex')}`;
+    const id = registry.issueId();
     if (!(await registry.create(id))) {
       return void res.status(503).json({ error: 'البيئة التجريبية ممتلئة حاليًا. أعد المحاولة بعد قليل.', code: 'DEMO_CAPACITY' });
     }
     res.json({ ok: true, sandbox: true, sessionId: id, ttlMs: registry.ttlMs });
   });
   router.post('/reset', limiter, async (req, res) => {
-    const id = readDemoId(req);
+    const id = readDemoId(req, registry);
     if (!id || !(await registry.reset(id))) return void res.status(404).json({ error: 'لا توجد جلسة تجريبية نشطة.', code: 'DEMO_NOT_FOUND' });
     res.json({ ok: true, ttlMs: registry.ttlMs });
   });
   router.post('/exit', async (req, res) => {
-    const id = readDemoId(req);
+    const id = readDemoId(req, registry);
     if (id) await registry.destroy(id);
     res.json({ ok: true });
   });
