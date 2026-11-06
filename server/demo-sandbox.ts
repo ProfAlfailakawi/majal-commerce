@@ -176,17 +176,21 @@ export function demoGuard(enabled: () => boolean = demoEnabled): RequestHandler 
  * وتُشغّل بقية السلسلة داخل سياق الصندوق. صندوق مفقود (إعادة تشغيل Cloud Run أو انتهاء مهلة)
  * يُعاد بناؤه فارغًا بدل أن يسقط الطلب إلى القاعدة الحقيقية.
  */
-export function demoContext(registry: DemoRegistry, enabled: () => boolean = demoEnabled): RequestHandler {
+export function demoContext(registry: DemoRegistry, enabled: () => boolean = demoEnabled, allocLimiter: RequestHandler = (_req, _res, next) => next()): RequestHandler {
   return (req: Request, res: Response, next: NextFunction) => {
     const id = readDemoId(req);
     if (!id) return next();
     const fail = () => res.status(503).json({ error: 'تعذّر تجهيز البيئة التجريبية. أعد المحاولة.', code: 'DEMO_UNAVAILABLE' });
     if (!enabled()) return void res.status(404).json({ error: 'البيئة التجريبية غير متاحة.', code: 'DEMO_DISABLED' });
     if (registry.run(id, next)) return;
-    registry.create(id).then(ok => {
-      if (ok && registry.run(id, next)) return;
-      fail();
-    }, fail);
+    // إعادة بناء صندوق مفقود تحجز ذاكرة كالدخول تمامًا، فتمرّ بالحدّ نفسه قبل فتح أي قاعدة
+    // (وإلا أمكن استنزاف السقف بمعرّفات مختلفة على مسار عادي مثل /api/version).
+    allocLimiter(req, res, () => {
+      registry.create(id).then(ok => {
+        if (ok && registry.run(id, next)) return;
+        fail();
+      }, fail);
+    });
   };
 }
 

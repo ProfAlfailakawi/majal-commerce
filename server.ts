@@ -121,7 +121,7 @@ async function initializeApplication(app: express.Express) {
   app.use('/api/v1/domain/innovations/zero-form/extract', express.json({ limit: '2200kb', strict: true }));
   app.use(express.json({ limit: '64kb', strict: true }));
   // الطبقة الثانية: تُشغّل ما بعدها داخل سياق الصندوق. بعد قراءة الجسم عمدًا (قراءته تُضيّع السياق).
-  app.use(demoContext(demoRegistry));
+  app.use(demoContext(demoRegistry, undefined, expressRateLimit(limitOptions(20, 15 * 60_000, 'demo-entry'))));
   // Per-IP budgets are wrong for a consumer product: Kuwaiti mobile carriers, offices and
   // households put many people behind one address, and a signed-in page makes ~20 calls on load
   // plus minute-by-minute refreshes. A flat 240 calls / 15 min / IP turned three simultaneous
