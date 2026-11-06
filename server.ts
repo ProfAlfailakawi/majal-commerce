@@ -97,7 +97,7 @@ async function initializeApplication(app: express.Express) {
   const realDb = await openMajalDatabase();
   // الصندوق التجريبي: داخل طلب يحمل معرّف صندوق صالحًا يتحوّل `db` إلى نسخة SQLite خاصة بالزائر في
   // الذاكرة؛ خارجه هو القاعدة الحقيقية. الحلقات الخلفية تعمل خارج أي سياق فتبقى على الحقيقية.
-  const demoRegistry = createDemoRegistry();
+  const demoRegistry = createDemoRegistry({ secret: process.env.AUTH_SESSION_SECRET });
   const db = createDemoAwareDb(realDb, demoRegistry);
   const stopDemoSweep = setInterval(() => void demoRegistry.sweep(), 60_000);
   stopDemoSweep.unref();
@@ -112,7 +112,7 @@ async function initializeApplication(app: express.Express) {
   app.use(expressRateLimit({ ...limitOptions(1200, 60_000, 'all'), skip: () => !isProduction }));
 
   // الطبقة الأولى للصندوق التجريبي: قائمة سماح تسبق كل موجّه (الويب هوك والدفع وPACI والذكاء وغيرها).
-  app.use(demoGuard());
+  app.use(demoGuard(demoRegistry));
 
   app.post('/api/v1/payments/webhooks/:provider', expressRateLimit(limitOptions(300, 60_000, 'payment-webhook')), express.raw({ type: 'application/json', limit: '256kb' }), createPaymentWebhookHandler(db, paymentRegistry));
   app.post('/api/v1/paci/internal/callback', expressRateLimit(limitOptions(120, 60_000, 'paci-callback')), express.raw({ type: 'application/json', limit: '64kb' }), createPaciCallbackHandler(db));

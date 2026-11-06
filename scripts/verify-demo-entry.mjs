@@ -29,7 +29,7 @@ if (!/readDemoSandboxId\(\) !== ''/.test(read('src/lib/runtime.ts'))) fail('عل
 
 const server = read('server.ts');
 const at = needle => { const i = server.indexOf(needle); if (i < 0) fail(`server.ts لا يحتوي «${needle}».`); return i; };
-const guard = at('app.use(demoGuard())');
+const guard = at('app.use(demoGuard(demoRegistry))');
 const firstRoute = Math.min(at("app.post('/api/v1/payments/webhooks/:provider'"), at("app.use('/api/v1/auth'"));
 const json = at("app.use(express.json({ limit: '64kb', strict: true }))");
 const context = at('app.use(demoContext(demoRegistry,');
@@ -43,6 +43,8 @@ at('demoRegistry.closeAll()');
 if (/createXRouter\(\s*realDb/.test(server) || /Router\(realDb/.test(server)) fail('موجّه يستقبل realDb مباشرة: يتجاوز الصندوق.');
 
 const sandbox = read('server/demo-sandbox.ts');
+if (!sandbox.includes('createDemoIdSigner') || !/if \(!signer\.verify\(id\)\) return false;/.test(sandbox)) fail('الصندوق لا يشترط معرّفًا موقَّعًا قبل الحجز (ثغرة استنزاف السقف).');
+if (!/secret: process\.env\.AUTH_SESSION_SECRET/.test(server)) fail('مفتاح توقيع المعرّفات لا يُشتق من سرّ الخادم.');
 if (!/openMajalDatabase\(\{ filename: ':memory:' \}\)/.test(sandbox)) fail('الصندوق لا يفتح SQLite في الذاكرة.');
 if (!sandbox.includes('MAJAL_DEMO_ENABLED')) fail('مفتاح الإيقاف MAJAL_DEMO_ENABLED مفقود.');
 if (!read('.env.example').includes('MAJAL_DEMO_ENABLED')) fail('.env.example لا يوثّق MAJAL_DEMO_ENABLED.');

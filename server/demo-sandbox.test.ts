@@ -3,10 +3,11 @@ import test from 'node:test';
 import { randomBytes } from 'node:crypto';
 import { AddressInfo } from 'node:net';
 import express from 'express';
+import { rateLimit } from 'express-rate-limit';
 import { openTestDatabase } from './test-db';
 import { createAuthRouter, createPublicRegistration } from './auth';
 import {
-  DEMO_HEADER, createDemoAwareDb, createDemoRegistry, createDemoRouter, demoContext, demoGuard, demoEnabled, isDemoAllowedRoute
+  DEMO_HEADER, createDemoIdSigner, createDemoAwareDb, createDemoRegistry, createDemoRouter, demoContext, demoGuard, demoEnabled, isDemoAllowedRoute
 } from './demo-sandbox';
 import { openMajalDatabase } from './database';
 
@@ -15,16 +16,20 @@ const config = {
   encryptionKey: 'test-encryption-key-that-is-long-enough-12345', sessionHours: 8, cookieName: 'majal_session', csrfCookieName: 'majal_csrf'
 };
 const password = `${randomBytes(12).toString('base64url')}-Aa1!`;
-const newId = () => `demo_${randomBytes(32).toString('hex')}`;
+const SECRET = 'unit-test-server-secret-that-is-at-least-32-chars';
+const signer = createDemoIdSigner(SECRET);
+const newId = () => signer.issue();
+const forgedId = () => `demo_${randomBytes(32).toString('hex')}`;
 const passThrough: express.RequestHandler = (_req, _res, next) => next();
 
 async function harness(options: { enabled?: () => boolean; maxSandboxes?: number; now?: () => number } = {}) {
   const real = await openTestDatabase();
-  const registry = createDemoRegistry({ maxSandboxes: options.maxSandboxes, now: options.now, open: () => openMajalDatabase({ filename: ':memory:' }) });
+  const registry = createDemoRegistry({ secret: SECRET, maxSandboxes: options.maxSandboxes, now: options.now, open: () => openMajalDatabase({ filename: ':memory:' }) });
   const db = createDemoAwareDb(real, registry);
   const enabled = options.enabled ?? (() => true);
   const app = express();
-  app.use(demoGuard(enabled));
+  app.use(rateLimit({ windowMs: 60_000, limit: 100_000, validate: false }));
+  app.use(demoGuard(registry, enabled));
   app.use(express.json());
   app.use(demoContext(registry, enabled));
   app.use('/api/v1/demo', createDemoRouter(registry, passThrough, enabled));
@@ -148,7 +153,7 @@ test('enter issues a sandbox; cap, TTL expiry, reset and exit behave', async () 
     assert.equal(h.registry.has(body.sessionId), false);
 
     // reset يُبقي المعرّف ويفرغ الصندوق؛ exit يهدمه.
-    const id = `demo_${randomBytes(32).toString('hex')}`;
+    const id = newId();
     clock += h.registry.ttlMs + 1; await h.registry.sweep();
     assert.equal(await h.registry.create(id), true);
     const reset = await fetch(`${h.base}/api/v1/demo/reset`, { method: 'POST', headers: { [DEMO_HEADER]: id } });
@@ -171,11 +176,12 @@ test('kill switch: enter and any demo-tagged request answer 404, never real data
 
 test('re-creating a missing sandbox is rate limited, so forged ids cannot exhaust the cap', async () => {
   const real = await openTestDatabase();
-  const registry = createDemoRegistry({ maxSandboxes: 40, open: () => openMajalDatabase({ filename: ':memory:' }) });
+  const registry = createDemoRegistry({ secret: SECRET, maxSandboxes: 40, open: () => openMajalDatabase({ filename: ':memory:' }) });
   let allowed = 2;
   const limiter: express.RequestHandler = (_req, res, next) => (allowed-- > 0 ? next() : void res.status(429).json({ error: 'limit' }));
   const app = express();
-  app.use(demoGuard(() => true));
+  app.use(rateLimit({ windowMs: 60_000, limit: 100_000, validate: false }));
+  app.use(demoGuard(registry, () => true));
   app.use(express.json());
   app.use(demoContext(registry, () => true, limiter));
   app.get('/api/version', (_req, res) => { res.json({ ok: true }); });
@@ -188,4 +194,37 @@ test('re-creating a missing sandbox is rate limited, so forged ids cannot exhaus
     assert.deepEqual(statuses, [200, 200, 429, 429, 429]);
     assert.equal(registry.size(), 2, 'only limiter-approved ids allocate a database');
   } finally { await new Promise<void>(resolve => server.close(() => resolve())); await registry.closeAll(); await real.close(); }
+});
+
+test('forged and tampered ids are rejected before reserving anything; the cap cannot be exhausted by them', async () => {
+  const h = await harness({ maxSandboxes: 3 });
+  try {
+    const probe = (id: string) => fetch(`${h.base}/api/version-probe`, { headers: { [DEMO_HEADER]: id } });
+    // 25 well-formed but unsigned ids: 403 each, zero sandboxes.
+    for (let i = 0; i < 25; i++) assert.equal((await probe(forgedId())).status, 403);
+    assert.equal(h.registry.size(), 0);
+    // a valid id with one flipped signature character is forged too
+    const good = newId();
+    const last = good.slice(-1) === '0' ? '1' : '0';
+    assert.equal((await probe(good.slice(0, -1) + last)).status, 403);
+    // an id signed with a different secret (stale/rotated or attacker-made) is rejected
+    assert.equal((await probe(createDemoIdSigner('another-secret-another-secret-another-secret').issue())).status, 403);
+    assert.equal(h.registry.size(), 0);
+    assert.equal(await h.registry.create(forgedId()), false);
+    // legitimate entries still fill the cap exactly, unaffected by the forged traffic
+    for (let i = 0; i < 3; i++) assert.equal((await fetch(`${h.base}/api/v1/demo/enter`, { method: 'POST' })).status, 200);
+    assert.equal((await fetch(`${h.base}/api/v1/demo/enter`, { method: 'POST' })).status, 503);
+  } finally { await h.close(); }
+});
+
+test('a signed id survives a restart: a fresh registry with the same secret rebuilds the sandbox', async () => {
+  const id = newId();
+  const a = createDemoRegistry({ secret: SECRET, open: () => openMajalDatabase({ filename: ':memory:' }) });
+  const b = createDemoRegistry({ secret: SECRET, open: () => openMajalDatabase({ filename: ':memory:' }) });
+  const other = createDemoRegistry({ secret: 'a-completely-different-server-secret-0000', open: () => openMajalDatabase({ filename: ':memory:' }) });
+  try {
+    assert.equal(await a.create(id), true);
+    assert.equal(await b.create(id), true, 'after restart / another instance');
+    assert.equal(await other.create(id), false, 'different secret');
+  } finally { await a.closeAll(); await b.closeAll(); await other.closeAll(); }
 });
