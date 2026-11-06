@@ -208,7 +208,7 @@ export const ShowcaseAdmin: React.FC = () => {
               <TargetChips audiences={draft.audiences} topics={draft.topics} onChange={(audiences, topics) => setDraft(d => ({ ...d, audiences, topics }))} />
               <button disabled={busy === 'create'} className="w-full py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black disabled:opacity-50">إنشاء</button>
             </form>
-            <div className="space-y-3 min-w-0 lg:contents lg:[&>*]:!m-0">
+            <div className="space-y-3 min-w-0 sm:grid sm:grid-cols-2 sm:gap-3 sm:space-y-0 sm:items-start sm:[&>*:not(article)]:col-span-full lg:contents lg:[&>*]:!m-0">
             {cam.shown.map(c => {
               const d = dates[c.id] ?? { s: c.startsOn ?? '', e: c.endsOn ?? '' };
               return (
