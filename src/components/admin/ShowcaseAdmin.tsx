@@ -192,9 +192,9 @@ export const ShowcaseAdmin: React.FC = () => {
           {lis.toggle}
           </section>
 
-          <section className="grid gap-3 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-x-6 content-start items-start">
-            <div className="flex items-center gap-2 lg:col-span-2"><Megaphone className="w-5 h-5 text-gold-300" aria-hidden="true" /><h3 className="font-black">حملات الشركات</h3></div>
-            <form onSubmit={create} className="glass-card rounded-2xl p-4 border border-white/10 space-y-2 lg:sticky lg:top-24">
+          <section className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3 content-start items-start">
+            <div className="flex items-center gap-2 lg:col-span-2 xl:col-span-3"><Megaphone className="w-5 h-5 text-gold-300" aria-hidden="true" /><h3 className="font-black">حملات الشركات</h3></div>
+            <form onSubmit={create} className="glass-card rounded-2xl p-4 border border-white/10 space-y-2">
               <div className="text-xs font-black flex items-center gap-1.5"><Plus className="w-4 h-4" aria-hidden="true" />حملة جديدة</div>
               <div className="grid sm:grid-cols-2 gap-2">
                 <input required aria-label="اسم الشركة" placeholder="اسم الشركة" maxLength={80} value={draft.company} onChange={e => setDraft({ ...draft, company: e.target.value })} className={field} />
@@ -208,7 +208,7 @@ export const ShowcaseAdmin: React.FC = () => {
               <TargetChips audiences={draft.audiences} topics={draft.topics} onChange={(audiences, topics) => setDraft(d => ({ ...d, audiences, topics }))} />
               <button disabled={busy === 'create'} className="w-full py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black disabled:opacity-50">إنشاء</button>
             </form>
-            <div className="space-y-3 min-w-0 xl:grid xl:grid-cols-2 xl:gap-3 xl:space-y-0 xl:items-start">
+            <div className="space-y-3 min-w-0 lg:contents lg:[&>*]:!m-0">
             {cam.shown.map(c => {
               const d = dates[c.id] ?? { s: c.startsOn ?? '', e: c.endsOn ?? '' };
               return (
