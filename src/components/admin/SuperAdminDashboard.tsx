@@ -139,7 +139,7 @@ export const SuperAdminDashboard: React.FC = () => {
           <div className="grid lg:grid-cols-[1.1fr_.9fr] gap-6">
             <section className="glass-panel rounded-3xl p-6 border border-white/10 space-y-4">
               <div className="flex items-center gap-2"><Activity className="w-5 h-5 text-emerald-300" /><h2 className="text-lg font-black">النبض التنفيذي</h2></div>
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3">
                 <InfoChip icon={<Network className="w-4 h-4 text-sky-300" />} label="حركة السوق" status={`${store.creators.length} مبدع / ${store.hosts.length} منشأة`} />
                 <InfoChip icon={<KeyRound className="w-4 h-4 text-gold-300" />} label="حماية الحقوق" status={`${store.recipeGrants.length} إذن وصفة`} />
                 <InfoChip icon={<Users className="w-4 h-4 text-fuchsia-300" />} label="الفصل التشغيلي" status={`${roleRows.length} أدوار`} />
@@ -149,7 +149,7 @@ export const SuperAdminDashboard: React.FC = () => {
 
             <section className="glass-panel rounded-3xl p-6 border border-white/10 space-y-4">
               <div className="flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-gold-300" /><h2 className="text-lg font-black">حواجز الحوكمة</h2></div>
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3">
                 {[
                   ['منع رفع الصلاحية', 'لا يمكن للأدمن منح نفسه صلاحية سوبر أدمن.'],
                   ['حماية الوصفة', 'الوصفة الكاملة لا تُعرض للسوبر أدمن افتراضيًا لمجرد امتلاكه الإدارة.'],

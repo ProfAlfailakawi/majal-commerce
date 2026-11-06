@@ -1367,5 +1367,5 @@ button, a, [role="button"], summary, select { touch-action: manipulation; }
 /* Seven-plus sections (host, admin) cannot fit one row with icons between 600 and 1100px:
    drop the icons there so every label stays complete instead of clipping at the edge. */
 @media (min-width: 600px) and (max-width: 1099px) {
-  .majal-section-rail:has(.majal-section-chip:nth-child(7)) .majal-section-chip > svg { display: none; }
+  .majal-section-rail:has(.majal-section-chip:nth-child(6)) .majal-section-chip > svg { display: none; }
 }

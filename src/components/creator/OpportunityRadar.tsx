@@ -105,7 +105,7 @@ export const OpportunityRadar: React.FC<OpportunityRadarProps> = ({ creatorId, o
       </div>
 
       {hasOpportunities ? (
-        <div className="dna-draw-quick grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="dna-draw-quick grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:max-lg:[&>*:last-child:nth-child(odd)]:col-span-2">
           {(compact ? opportunities.slice(0, 3) : opportunities).map(({ product, matchScore, host, key }) => (
             <div key={key} className="rounded-2xl p-5 bg-white/5 border border-white/10 hover:border-gold-300/25 transition-colors space-y-4">
               <div className="flex items-start justify-between gap-3">
