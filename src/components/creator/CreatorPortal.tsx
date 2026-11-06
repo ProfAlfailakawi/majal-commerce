@@ -128,7 +128,7 @@ export const CreatorPortal: React.FC = () => {
 
       {activeTab === 'PRODUCTS' && (
         <div className="space-y-6">
-          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+          <div className="grid sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {myProducts.map(product => (
               <article key={product.id} className={`glass-card rounded-3xl border border-white/10 overflow-hidden ${product.id === settlingProductId ? 'majal-settle-in' : ''}`}>
                 <ProductImage src={product.mediaUrls[0]} alt={product.publicName} loading="lazy" markSize={72} className="w-full h-36 sm:h-48 object-cover" />

@@ -115,7 +115,7 @@ export const ProductDiscovery: React.FC = () => {
       )}
 
       {/* Product Match Cards */}
-      <CapGrid className="dna-draw-quick grid grid-cols-1 md:grid-cols-2 gap-6">
+      <CapGrid className="dna-draw-quick grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-6">
         {[...visibleProducts]
           .sort((a, b) => host ? store.calculateMatchScore(b, host).overallScore - store.calculateMatchScore(a, host).overallScore : 0)
           .slice(0, shown)

@@ -195,7 +195,7 @@ export const SuperAdminDashboard: React.FC = () => {
               aria-label="بحث في الحسابات"
               className="glass-input w-full rounded-xl px-4 py-2.5 text-xs mb-3 outline-none"
             />
-            <div className="grid md:grid-cols-2 gap-3">
+            <div className="grid sm:grid-cols-2 md:grid-cols-2 gap-3">
               {visibleUsers.slice(0, userLimit).map(user => (
                 <div key={user.id} className="rounded-2xl p-4 bg-slate-950/40 border border-white/10 space-y-3">
                   <div className="flex items-center gap-3">

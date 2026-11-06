@@ -206,7 +206,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="text-xl sm:text-2xl font-black majal-wordmark block truncate leading-tight">
                   مجال
                 </span>
-                <span className="majal-brand-tagline max-sm:hidden text-xs text-slate-400 font-medium whitespace-nowrap">
+                <span className="majal-brand-tagline max-lg:hidden text-xs text-slate-400 font-medium whitespace-nowrap">
                   منصة الحاضن التجاري المرخّص
                 </span>
               </div>
@@ -225,7 +225,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={() => resetDemoData()}
                   title="إعادة تعيين البيانات التجريبية"
                   aria-label="إعادة تعيين البيانات التجريبية"
-                  className="relative hidden sm:grid place-items-center w-6 h-6 rounded-full hover:bg-white/15 transition-colors after:content-[''] after:absolute after:-inset-2.5"
+                  className="relative hidden lg:grid place-items-center w-6 h-6 rounded-full hover:bg-white/15 transition-colors after:content-[''] after:absolute after:-inset-2.5"
                 >
                   <RefreshCw className="w-3 h-3" />
                 </button>
@@ -234,7 +234,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={() => exitDemoMode()}
                   title="الخروج من البيئة التجريبية"
                   aria-label="الخروج من البيئة التجريبية"
-                  className="relative hidden sm:grid place-items-center w-6 h-6 rounded-full hover:bg-white/15 transition-colors after:content-[''] after:absolute after:-inset-2.5"
+                  className="relative hidden lg:grid place-items-center w-6 h-6 rounded-full hover:bg-white/15 transition-colors after:content-[''] after:absolute after:-inset-2.5"
                 >
                   <LogOut className="w-3 h-3" />
                 </button>
@@ -314,16 +314,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="مختبر محاكاة التكاملات المحلية"
             >
               <Zap className="w-4 h-4 text-amber-400" />
-              <span className="hidden sm:inline">مختبر الربط</span>
+              <span className="hidden lg:inline">مختبر الربط</span>
             </button>}
 
             {AI_ASSISTANT_ENABLED && <button
               onClick={onOpenAiDrawer}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-2 min-h-10 rounded-xl bg-gold-500/10 text-gold-200 hover:bg-gold-500/15 border border-gold-300/20 text-xs font-medium transition-colors cursor-pointer"
+              className="hidden sm:flex items-center justify-center gap-1.5 px-3 py-2 min-h-11 min-w-11 rounded-xl bg-gold-500/10 text-gold-200 hover:bg-gold-500/15 border border-gold-300/20 text-xs font-medium transition-colors cursor-pointer"
               title="مساعد مجال الذكي"
             >
               <Bot className="w-4 h-4 text-gold-300" />
-              <span className="hidden sm:inline">مساعد مجال</span>
+              <span className="hidden lg:inline">مساعد مجال</span>
             </button>}
 
             <ThemeToggle />
@@ -338,7 +338,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     refreshServerNotifications();
                   }
                 }}
-                className="p-2.5 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-white/5 transition-colors relative"
+                className="grid place-items-center w-11 h-11 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-white/5 transition-colors relative"
                 aria-label={unreadCount > 0 ? `فتح التنبيهات: ${unreadCount} غير مقروء` : "فتح التنبيهات"}
                 aria-expanded={showNotifications}
               >
@@ -397,7 +397,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     هوية العرض: مبدع · منشأة · مورد · أدمن · سوبر أدمن
                   </div>
                   {/* On phones the demo chip is a plain badge; its two actions live here. */}
-                  <div className="sm:hidden grid grid-cols-2 gap-2 p-1 pb-2 mb-1 border-b border-white/10">
+                  <div className="lg:hidden grid grid-cols-2 gap-2 p-1 pb-2 mb-1 border-b border-white/10">
                     <button type="button" role="menuitem" onClick={() => resetDemoData()} className="min-h-11 flex items-center justify-center gap-2 rounded-xl bg-amber-500/10 border border-amber-400/30 text-amber-200 text-sm font-bold"><RefreshCw className="w-4 h-4" aria-hidden="true" />إعادة التعيين</button>
                     <button type="button" role="menuitem" onClick={() => exitDemoMode()} className="min-h-11 flex items-center justify-center gap-2 rounded-xl bg-white/5 border border-white/10 text-slate-200 text-sm font-bold"><LogOut className="w-4 h-4" aria-hidden="true" />خروج من العرض</button>
                   </div>
@@ -431,7 +431,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        <div ref={mobileNavRef} className="xl:hidden flex flex-nowrap sm:flex-wrap items-center gap-2 py-2 sm:py-3 border-t border-white/10 text-xs overflow-x-auto sm:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="أقسام المنصة">
+        <div ref={mobileNavRef} className="majal-section-rail xl:hidden flex flex-nowrap items-center gap-2 py-2 sm:py-2.5 border-t border-white/10 text-xs overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="أقسام المنصة">
           {surfaces.map(s => {
             const isActive = activeSurface === s.id;
             return (
@@ -439,7 +439,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 key={s.id}
                 onClick={() => onSurfaceChange(s.id)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`flex items-center gap-1.5 px-3 py-2 min-h-11 rounded-xl whitespace-nowrap shrink-0 text-sm sm:text-xs font-medium ${
+                className={`majal-section-chip flex items-center justify-center gap-1.5 px-3 py-2 min-h-11 rounded-xl whitespace-nowrap shrink-0 text-sm font-medium ${
                   isActive ? 'bg-gold-500 text-slate-950 font-black' : 'bg-white/5 text-slate-300'
                 }`}
               >

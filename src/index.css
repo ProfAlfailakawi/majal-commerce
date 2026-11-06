@@ -40,6 +40,14 @@
   /* The brand face for both families. `font-sans` on the app root used to resolve to
      Tailwind's system stack (two Arabic typefaces side by side), and `font-mono` broke
      Arabic letter joining («موقّع بالكامل», «د.ك»). Digits stay tabular via the html rule. */
+  /* Duo-aware breakpoints. Tailwind's 640/768/1024 leave the 600-670px band (Split View
+     wide, unfolded portrait) on the phone layout and the 951px unfolded landscape on the
+     tablet one. Layout follows the width the window really has: sm = two columns from
+     600 (620 split, 669 portrait), md from 720, lg from 896 (951 landscape). */
+  --breakpoint-sm: 37.5rem;
+  --breakpoint-md: 45rem;
+  --breakpoint-lg: 56rem;
+
   --font-sans: 'Tajawal', 'Segoe UI', Tahoma, 'Noto Sans Arabic', system-ui, -apple-system, sans-serif;
   --font-mono: 'Tajawal', 'Segoe UI', Tahoma, 'Noto Sans Arabic', system-ui, -apple-system, sans-serif;
 }
@@ -519,10 +527,12 @@ body {
     linear-gradient(180deg, var(--ink-850) 0%, var(--ink-800) 50%, #0b1322 100%);
   color: #f8fafc;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 body, #root {
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 body {
@@ -1330,14 +1340,26 @@ body:has(.majal-ai-fab) footer { padding-bottom: 4.5rem; }
 }
 
 
-/* iPhone Duo folded postures only. Unsupported/disabled Safari preview features
-   leave the existing site styles unchanged on every other device and posture. */
-@media (device-posture: folded) and (horizontal-viewport-segments: 2) {
-  html, body, #root { min-width: 0; max-width: 100%; }
-}
-@media (device-posture: folded) and (vertical-viewport-segments: 2) {
-  html, body, #root { min-width: 0; max-width: 100%; }
-}
-@media (device-posture: folded) and (orientation: landscape) and (max-height: 520px) {
+/* Width-based Duo rules. (Earlier posture-keyed rules were preview-only no-ops:
+   those APIs are null by default in shipping Safari.) */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+button, a, [role="button"], summary, select { touch-action: manipulation; }
+@media (max-height: 480px) and (orientation: landscape) {
   html { scroll-padding-block: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-bottom)); }
+  header.glass-nav { position: static; }
+}
+
+/* Section rail below xl: one complete, non-wrapping row. On phones it scrolls; from 600px
+   (Duo unfolded, wide Split View) the chips share the row equally so every section is
+   visible at once without the old wrapped two-row cluster. */
+.majal-section-rail { scroll-snap-type: x proximity; scroll-padding-inline: 0.5rem; }
+.majal-section-chip { scroll-snap-align: center; transition: background-color var(--dur-base, .2s) ease, color .2s ease; }
+@media (min-width: 600px) {
+  .majal-section-rail { justify-content: stretch; }
+  .majal-section-chip { flex: 1 1 0; min-width: max-content; font-size: 0.8125rem; padding-inline: 0.75rem; }
+}
+@media (min-width: 600px) and (max-width: 719px) {
+  .majal-section-chip { gap: 0.375rem; padding-inline: 0.5rem; font-size: 0.78rem; }
+  /* Six sections (super admin) must all fit in 620px: the label carries the meaning there. */
+  .majal-section-chip > svg { display: none; }
 }

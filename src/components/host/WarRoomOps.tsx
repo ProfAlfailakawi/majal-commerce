@@ -69,7 +69,7 @@ export const WarRoomOps: React.FC = () => {
             <div className="font-black text-slate-100">{l.title}</div>
             <div className="text-slate-300">بانتظار الدفع: {l.pendingPaymentOrders} · مدفوع بانتظار التجهيز: {l.paidAwaitingFulfilment}</div>
           </div>
-          <div className="grid md:grid-cols-2 gap-3">
+          <div className="grid sm:grid-cols-2 md:grid-cols-2 gap-3">
             {l.branches.map(b => {
               const key = `${l.launchId}:${b.branchId}`;
               return (
@@ -96,7 +96,7 @@ export const WarRoomOps: React.FC = () => {
       {data && (
         <div className="space-y-2">
           <h4 className="text-xs font-black text-slate-100 flex items-center gap-2"><MessageSquareText className="w-4 h-4 text-sky-300" aria-hidden="true" /> ردود جاهزة لفريق الدعم</h4>
-          <ul className="grid md:grid-cols-2 gap-2">
+          <ul className="grid sm:grid-cols-2 md:grid-cols-2 gap-2">
             {data.cannedReplies.map(r => (
               <li key={r.id} className="rounded-xl p-3 bg-white/5 border border-white/10 text-xs space-y-1.5">
                 <div className="flex items-center justify-between gap-2"><span className="font-bold text-slate-100">{r.titleAr}</span>

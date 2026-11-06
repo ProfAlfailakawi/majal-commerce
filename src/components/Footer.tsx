@@ -97,7 +97,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
               <span className="flex-1">الأمان والامتثال</span>
               <ChevronDown className="w-4 h-4 text-slate-400 transition-transform group-open:rotate-180" aria-hidden="true" />
             </summary>
-            <div className="px-4 pb-4 grid gap-4 md:grid-cols-2">
+            <div className="px-4 pb-4 grid gap-4 sm:grid-cols-2 md:grid-cols-2">
               <ul className="space-y-2 text-slate-400">
                 <li className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-slate-400" /><span>خزنة الوصفات مقفلة حتى المصادقة</span></li>
                 <li className="flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-slate-400" /><span>التوقيع يُفعّل بعد ربط الهوية</span></li>

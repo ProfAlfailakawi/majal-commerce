@@ -32,7 +32,7 @@ export const SurfaceFallback = () => (
     </div>
 
     {/* Content cards */}
-    <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <div className="grid sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4">
       <Block className="h-56" />
       <Block className="h-56" />
       <Block className="h-56" />

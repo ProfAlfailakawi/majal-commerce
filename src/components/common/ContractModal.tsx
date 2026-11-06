@@ -183,7 +183,7 @@ export const ContractModal: React.FC<ContractModalProps> = ({
           {/* Parties block */}
           <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
             <h4 className="font-bold text-gold-300 text-sm">أطراف الاتفاقية التجارية:</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-3 text-xs">
               <div>
                 <span className="text-slate-400 block">الطرف الأول (المبدع وصاحب الحق):</span>
                 <span className="font-bold text-slate-100 block">{contract.creatorLegalName}</span>
@@ -235,7 +235,7 @@ export const ContractModal: React.FC<ContractModalProps> = ({
           </div>
 
           {/* Signatures status block */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 pt-2">
             
             {/* Creator signature box */}
             <div className={`p-4 rounded-xl border ${creatorSigned ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>

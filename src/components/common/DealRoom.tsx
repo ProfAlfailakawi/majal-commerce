@@ -209,7 +209,7 @@ export const DealRoom: React.FC<DealRoomProps> = ({ collaboration }) => {
       <div className="rounded-2xl p-4 bg-indigo-500/5 border border-indigo-400/15 space-y-3">
         <div className="flex items-center gap-2 text-sm font-black text-indigo-200"><Bot className="w-4 h-4" /> يلخّص ولا يقرّر</div>
         <p className="text-xs text-slate-400 leading-6">{aiNarrative?.narrative || copilot.summary}</p>
-        <div className="grid md:grid-cols-2 gap-3">
+        <div className="grid sm:grid-cols-2 md:grid-cols-2 gap-3">
           <div className="space-y-2">
             <div className="text-xs font-bold text-slate-300">الخيارات</div>
             {copilot.optionSummaries.map((option, idx) => (

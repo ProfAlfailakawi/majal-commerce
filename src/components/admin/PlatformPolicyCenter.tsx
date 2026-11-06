@@ -65,7 +65,7 @@ export const PlatformPolicyCenter: React.FC = () => {
 
       {notice && <div className={`rounded-2xl px-4 py-3 text-xs font-bold border ${notice.startsWith('تم') ? 'bg-emerald-500/10 border-emerald-400/20 text-emerald-300' : 'bg-rose-500/10 border-rose-400/20 text-rose-300'}`}>{notice}</div>}
 
-      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {fields.map(field => (
           <label key={field.key} className="rounded-2xl p-4 bg-slate-950/40 border border-white/10 space-y-3">
             <div className="flex items-center gap-2 text-slate-200 font-bold text-sm">{field.icon}<span>{field.label}</span></div>

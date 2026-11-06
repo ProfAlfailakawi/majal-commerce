@@ -69,7 +69,7 @@ export const UnitEconomicsModal: React.FC<UnitEconomicsModalProps> = ({
         <div className="p-6 overflow-y-auto space-y-6 text-xs">
           
           {/* Inputs Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
             <div>
               <label className="block text-slate-300 font-bold mb-1">
                 سعر البيع الافتراضي للجمهور (د.ك)

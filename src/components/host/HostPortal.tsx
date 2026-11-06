@@ -243,7 +243,7 @@ export const HostPortal: React.FC = () => {
               action={{ label: 'تحدٍ جديد', onClick: () => setShowPublisher(true) }}
             />
           )}
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-2 md:grid-cols-2 gap-4">
             {store.challenges.filter(c => c.hostBusinessId === currentHostId).map(ch => (
               <article key={ch.id} className="glass-card rounded-2xl p-5 border border-white/10 space-y-3">
                 <div className="flex items-center justify-between"><StatusPill status={ch.status} /><span className="text-xs text-slate-400">{ch.estimatedVolumeUnits} وحدة متوقعة</span></div>
