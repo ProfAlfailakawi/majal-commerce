@@ -141,7 +141,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      <section className="grid grid-cols-2 lg:grid-cols-[1.5fr_1.2fr_1fr_1fr_1fr] gap-3 sm:gap-4">
+      <section className="grid grid-cols-2 sm:grid-cols-6 lg:grid-cols-[1.5fr_1.2fr_1fr_1fr_1fr] gap-3 sm:gap-4">
         {[
           { label: 'إجمالي المبيعات (طلبات مكتملة)', value: metrics ? `${totals.totalGmv} د.ك` : '—', icon: <Wallet className="w-5 h-5 text-gold-300" /> },
           { label: 'رسوم المنصة', value: metrics ? `${totals.totalPlatformFees} د.ك` : '—', icon: <BadgeCheck className="w-5 h-5 text-emerald-300" /> },
@@ -149,7 +149,7 @@ export const AdminDashboard: React.FC = () => {
           { label: 'منشآت مرخّصة', value: totals.verifiedHosts, icon: <Building2 className="w-5 h-5 text-fuchsia-300" /> },
           { label: 'نزاعات مفتوحة', value: totals.openDisputes, icon: <AlertTriangle className="w-5 h-5 text-rose-300" /> }
         ].map((card, idx) => (
-          <div key={idx} className={`majal-rise glass-card rounded-2xl p-4 sm:p-5 border border-white/10 min-w-0 ${idx === 0 ? 'col-span-2 sm:col-span-1' : ''}`}>
+          <div key={idx} className={`majal-rise glass-card rounded-2xl p-4 sm:p-5 border border-white/10 min-w-0 ${idx === 0 ? 'col-span-2' : ''} ${idx < 2 ? 'sm:col-span-3' : 'sm:col-span-2'} lg:col-span-1`}>
             <div>{card.icon}</div>
             <div className="mt-3 sm:mt-4 text-xs text-slate-400">{card.label}</div>
             <DnaFlash as="div" value={card.value} className="mt-1 text-xl sm:text-2xl font-black text-slate-100 font-mono break-words">{card.value}</DnaFlash>
