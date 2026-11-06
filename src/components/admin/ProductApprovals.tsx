@@ -50,7 +50,7 @@ export const ProductApprovals: React.FC = () => {
       {pending.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/15 p-8 text-center text-sm text-slate-400">لا توجد منتجات بانتظار الاعتماد الآن.</div>
       ) : (
-        <div className="grid gap-3 md:grid-cols-2 items-start [&>button]:md:col-span-2">
+        <div className="grid gap-3 sm:grid-cols-2 items-start [&>button]:sm:col-span-2">
           {pending.slice(0, shown).map(product => (
             <article key={product.id} className="rounded-2xl p-4 bg-slate-950/40 border border-white/10 space-y-3">
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
