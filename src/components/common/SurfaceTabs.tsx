@@ -60,7 +60,7 @@ export function SurfaceTabs<T extends string>({ tabs, active, onChange, tone = '
       role="tablist"
       aria-label={label}
       onKeyDown={onKeyDown}
-      className={`flex gap-2 overflow-x-auto no-scrollbar max-sm:pe-16 max-sm:scroll-pe-16 border-b border-white/10 pb-3 ${tabs.length >= 6 ? "sm:flex-wrap sm:overflow-x-hidden sm:max-xl:[&>button]:flex-1 sm:max-xl:[&>button]:justify-center sm:max-xl:[&>button]:min-w-0 sm:max-xl:[&>button]:whitespace-normal sm:max-xl:[&>button]:text-center sm:max-xl:[&>button]:px-3" : ""} ${tabs.length >= 7 ? "sm:max-xl:[&>button>svg]:hidden" : ""}`}
+      className={`flex gap-2 overflow-x-auto no-scrollbar max-sm:pe-16 max-sm:scroll-pe-16 border-b border-white/10 pb-3 ${tabs.length >= 6 ? "sm:max-xl:grid sm:max-xl:grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))] sm:max-xl:overflow-x-visible sm:max-xl:[&>button]:justify-center sm:max-xl:[&>button]:whitespace-normal sm:max-xl:[&>button]:text-center" : ""} ${tabs.length >= 7 ? "sm:max-xl:[&>button>svg]:hidden" : ""}`}
     >
       {tabs.map(tab => {
         const isActive = active === tab.id;
