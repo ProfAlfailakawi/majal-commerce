@@ -196,6 +196,7 @@ export const ShowcaseAdmin: React.FC<{ part?: ShowcasePart }> = ({ part }) => {
 
           {showPart('CAMPAIGNS') && <section className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3 content-start items-start">
             <div className="flex items-center gap-2 lg:col-span-2 xl:col-span-3"><Megaphone className="w-5 h-5 text-gold-300" aria-hidden="true" /><h3 className="font-black">حملات الشركات</h3></div>
+            <details className="group rounded-2xl border border-white/10 bg-white/[0.03] lg:col-span-2 xl:col-span-3"><summary className="cursor-pointer list-none min-h-12 px-4 flex items-center justify-between gap-2 text-sm font-black text-slate-100 [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-2"><Plus className="w-4 h-4 text-gold-300" aria-hidden="true" />حملة جديدة</span><ChevronDown className="w-4 h-4 text-slate-400 transition-transform group-open:rotate-180" aria-hidden="true" /></summary><div className="p-3 pt-0">
             <form onSubmit={create} className="glass-card rounded-2xl p-4 border border-white/10 space-y-2">
               <div className="text-xs font-black flex items-center gap-1.5"><Plus className="w-4 h-4" aria-hidden="true" />حملة جديدة</div>
               <div className="grid sm:grid-cols-2 gap-2">
@@ -210,6 +211,8 @@ export const ShowcaseAdmin: React.FC<{ part?: ShowcasePart }> = ({ part }) => {
               <TargetChips audiences={draft.audiences} topics={draft.topics} onChange={(audiences, topics) => setDraft(d => ({ ...d, audiences, topics }))} />
               <button disabled={busy === 'create'} className="w-full py-2.5 rounded-xl bg-gold-500 text-slate-950 text-xs font-black disabled:opacity-50">إنشاء</button>
             </form>
+            </div>
+            </details>
             <div className="space-y-3 min-w-0 sm:grid sm:grid-cols-2 sm:gap-3 sm:space-y-0 sm:items-start sm:[&>*:not(article)]:col-span-full lg:contents lg:[&>*]:!m-0">
             {cam.shown.map(c => {
               const d = dates[c.id] ?? { s: c.startsOn ?? '', e: c.endsOn ?? '' };
