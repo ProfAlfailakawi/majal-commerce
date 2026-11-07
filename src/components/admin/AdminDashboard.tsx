@@ -36,6 +36,8 @@ import { SurfaceTabs } from '../common/SurfaceTabs';
 import { EcosystemApprovals } from './EcosystemApprovals';
 import { ProductApprovals } from './ProductApprovals';
 import { ShowcaseAdmin } from './ShowcaseAdmin';
+
+type ApprovalPane = 'PRODUCTS' | 'ECOSYSTEM' | 'DIRECTORY' | 'LISTINGS' | 'CAMPAIGNS';
 import { AudienceDashboard } from './AudienceDashboard';
 import { kwdFromFils, useAdminMetrics } from '../../lib/adminMetrics';
 import { MetricsStatus } from './MetricsStatus';
@@ -43,6 +45,7 @@ import { MetricsStatus } from './MetricsStatus';
 const GRANTS_VISIBLE = 8;
 
 export const AdminDashboard: React.FC = () => {
+  const [approvalPane, setApprovalPane] = useState<ApprovalPane>('PRODUCTS');
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'APPROVALS' | 'COMPLIANCE' | 'ACCESS' | 'AUDIENCE' | 'SETTLEMENTS' | 'RISK' | 'AUDIT'>('OVERVIEW');
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -215,7 +218,27 @@ export const AdminDashboard: React.FC = () => {
       )}
 
       {activeTab === 'AUDIENCE' && store.activeUser.role === 'SUPER_ADMIN' && <AudienceDashboard />}
-      {activeTab === 'APPROVALS' && <div className="space-y-10"><ProductApprovals /><EcosystemApprovals /><ShowcaseAdmin /></div>}
+      {activeTab === 'APPROVALS' && (
+        <div className="space-y-5">
+          <SurfaceTabs
+            tabs={[
+              { id: 'PRODUCTS' as const, label: 'المنتجات' },
+              { id: 'ECOSYSTEM' as const, label: 'الموردون والوظائف' },
+              { id: 'DIRECTORY' as const, label: 'دليل الموردين' },
+              { id: 'LISTINGS' as const, label: 'مشاريع للبيع' },
+              { id: 'CAMPAIGNS' as const, label: 'حملات الشركات' }
+            ]}
+            active={approvalPane}
+            onChange={setApprovalPane}
+            label="أقسام الاعتمادات"
+          />
+          {approvalPane === 'PRODUCTS' && <ProductApprovals />}
+          {approvalPane === 'ECOSYSTEM' && <EcosystemApprovals />}
+          {approvalPane === 'DIRECTORY' && <ShowcaseAdmin part="DIRECTORY" />}
+          {approvalPane === 'LISTINGS' && <ShowcaseAdmin part="LISTINGS" />}
+          {approvalPane === 'CAMPAIGNS' && <ShowcaseAdmin part="CAMPAIGNS" />}
+        </div>
+      )}
 
       {activeTab === 'COMPLIANCE' && (
         <section className="glass-panel rounded-3xl p-6 border border-white/10 space-y-4">

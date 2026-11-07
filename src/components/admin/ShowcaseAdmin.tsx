@@ -121,7 +121,9 @@ function useFolded<T extends { status: string }>(rows: T[], keep = 3) {
 const kuwaitDay = () => new Date(Date.now() + 3 * 3_600_000).toISOString().slice(0, 10);
 const field = 'w-full glass-input rounded-xl px-3 py-2.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300';
 
-export const ShowcaseAdmin: React.FC = () => {
+export type ShowcasePart = 'DIRECTORY' | 'LISTINGS' | 'CAMPAIGNS';
+export const ShowcaseAdmin: React.FC<{ part?: ShowcasePart }> = ({ part }) => {
+  const showPart = (p: ShowcasePart) => !part || part === p;
   const [listings, setListings] = useState<BusinessListing[]>([]);
   const [campaigns, setCampaigns] = useState<AdCampaign[]>([]);
   const [suppliers, setSuppliers] = useState<DirectorySupplier[]>([]);
@@ -160,7 +162,7 @@ export const ShowcaseAdmin: React.FC = () => {
       {notice && <div role="status" className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 text-xs text-emerald-200 break-all">{notice}</div>}
       {loading ? <div className="text-center py-10 text-sm text-slate-400">جارٍ التحميل…</div> : (
         <>
-        <section className="space-y-3" aria-labelledby="dir-admin-title">
+        {showPart('DIRECTORY') && <section className="space-y-3" aria-labelledby="dir-admin-title">
           <div className="flex items-center gap-2"><Truck className="w-5 h-5 text-gold-300" aria-hidden="true" /><h3 id="dir-admin-title" className="font-black">دليل الموردين</h3></div>
           {suppliers.length ? <div className="grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">{sup.shown.map(s => (
             <article key={s.id} className="glass-card rounded-2xl p-4 border border-white/10 space-y-2.5">
@@ -173,9 +175,9 @@ export const ShowcaseAdmin: React.FC = () => {
               </div>
             </article>))}{sup.toggle && <div className="md:col-span-2 lg:col-span-3">{sup.toggle}</div>}</div>
             : <div className="rounded-2xl p-6 border border-dashed border-white/10 text-center text-xs text-slate-400">لا توجد طلبات موردين.</div>}
-        </section>
+        </section>}
         <div className="space-y-8">
-          <section className="grid sm:grid-cols-2 gap-3 content-start sm:[&>*:not(article)]:col-span-2">
+          {showPart('LISTINGS') && <section className="grid sm:grid-cols-2 gap-3 content-start sm:[&>*:not(article)]:col-span-2">
             <div className="flex items-center gap-2"><Store className="w-5 h-5 text-gold-300" aria-hidden="true" /><h3 className="font-black">مشاريع للبيع</h3></div>
             {listings.length ? lis.shown.map(l => (
               <article key={l.id} className="glass-card rounded-2xl p-5 border border-white/10 space-y-3">
@@ -190,9 +192,9 @@ export const ShowcaseAdmin: React.FC = () => {
               </article>
             )) : <div className="rounded-2xl p-6 border border-dashed border-white/10 text-center text-xs text-slate-400"><BadgeCheck className="w-6 h-6 mx-auto text-gold-300 mb-2" aria-hidden="true" />لا توجد مشاريع.</div>}
           {lis.toggle}
-          </section>
+          </section>}
 
-          <section className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3 content-start items-start">
+          {showPart('CAMPAIGNS') && <section className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3 content-start items-start">
             <div className="flex items-center gap-2 lg:col-span-2 xl:col-span-3"><Megaphone className="w-5 h-5 text-gold-300" aria-hidden="true" /><h3 className="font-black">حملات الشركات</h3></div>
             <form onSubmit={create} className="glass-card rounded-2xl p-4 border border-white/10 space-y-2">
               <div className="text-xs font-black flex items-center gap-1.5"><Plus className="w-4 h-4" aria-hidden="true" />حملة جديدة</div>
@@ -239,7 +241,7 @@ export const ShowcaseAdmin: React.FC = () => {
             })}
           {cam.toggle}
             </div>
-          </section>
+          </section>}
         </div>
         </>
       )}
