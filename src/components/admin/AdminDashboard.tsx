@@ -337,7 +337,7 @@ export const AdminDashboard: React.FC = () => {
               </div>
             );
           })()}
-          <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 md:gap-3 md:[&>*:only-child]:col-span-2">
+          <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-3 sm:[&>*:only-child]:col-span-2">
             {store.settlements.length === 0 ? (
               <EmptyState
                 variant="inline"
