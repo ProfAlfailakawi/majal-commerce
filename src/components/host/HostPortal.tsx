@@ -273,8 +273,8 @@ export const HostPortal: React.FC = () => {
       {activeTab === 'FINANCE' && (
         <section className="glass-panel rounded-3xl p-5 md:p-6 border border-white/10 space-y-5">
           <div className="flex items-center gap-3"><div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-center text-emerald-300"><CircleDollarSign className="w-6 h-6" /></div><div><h3 className="text-lg font-black">المالية والتسويات</h3><p className="text-xs text-slate-400 mt-1">هذه الشاشة تظهر فقط للأدوار المصرح لها ماليًا.</p></div></div>
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,25rem)] items-stretch">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 gap-3 content-start">
+          <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_minmax(0,19rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,25rem)] items-stretch">
+          <div className="grid grid-cols-2 gap-3 content-start">
             {[
               ['إجمالي المبيعات', finance.gmv], ['صافي المنشأة', finance.hostNet], ['حقوق المبدعين', finance.creatorRoyalties], ['رسوم مجال', finance.platformFees]
             ].map(([label, value], idx) => <div key={idx} className="majal-stat rounded-2xl p-4 bg-white/5 border border-white/10"><div className="text-xs text-slate-400 flex items-center gap-1.5">{idx > 0 && <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full ${['', 'bg-emerald-400', 'bg-gold-400', 'bg-sky-400'][idx]}`} />}{label as string}</div><div className="majal-numeral mt-2 text-lg lg:text-xl whitespace-nowrap font-black font-mono">{Number(value).toFixed(3)} د.ك</div></div>)}
