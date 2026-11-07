@@ -45,7 +45,7 @@ export const MarketplaceLiquidity: React.FC = () => {
         <div className="majal-rise rounded-2xl p-3 sm:p-4 bg-white/5 border border-white/10"><SearchCheck className="w-5 h-5 text-gold-300" /><div className="mt-3 text-xs text-slate-400">إشارات المطابقة</div><div className="text-2xl font-black mt-1">{store.matches.length}</div></div>
       </div>
 
-      <div className="grid gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         {categories.length === 0 ? <EmptyState
             variant="inline"
             icon={<Scale className="w-6 h-6" />}
