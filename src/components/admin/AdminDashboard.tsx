@@ -299,7 +299,7 @@ export const AdminDashboard: React.FC = () => {
       )}
 
       {activeTab === 'ACCESS' && (
-        <section className="grid sm:grid-cols-2 gap-6 items-start">
+        <section className="grid lg:grid-cols-2 gap-6 items-start">
           <div className="glass-panel rounded-3xl p-6 border border-white/10 space-y-4">
             <div className="flex items-center gap-2">
               <Lock className="w-5 h-5 text-gold-300" />
