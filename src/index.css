@@ -1115,6 +1115,10 @@ body:has(.majal-ai-fab) footer { padding-bottom: 4.5rem; }
   }
   [role='tablist'].overflow-x-auto > [role='tab'] { scroll-snap-align: center; }
 }
+/* Six-plus tabs lay out as a grid from 600px (SurfaceTabs): nothing scrolls, so no edge fade. */
+@media (min-width: 600px) and (max-width: 639px) {
+  [role='tablist'].sm\:max-xl\:grid { -webkit-mask-image: none; mask-image: none; }
+}
 
 /* r42 · brand tagline: shown at lg only; from xl the 80rem header container leaves no spare width. */
 .majal-brand-tagline { display: none; }
