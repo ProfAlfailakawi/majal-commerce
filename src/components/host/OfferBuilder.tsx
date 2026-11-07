@@ -52,7 +52,7 @@ export const OfferBuilder: React.FC<OfferBuilderProps> = ({ collaboration }) => 
         </p>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 text-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
         <div>
           <label className="block text-slate-300 font-bold mb-1">سعر البيع الافتراضي للجمهور (د.ك):</label>
           <input
