@@ -260,7 +260,7 @@ export const HostPortal: React.FC = () => {
         <div className="space-y-6">
           <DealRoom collaboration={activeCol} />
           {hasPermission(store.activeUser, 'MANAGE_LAB') && <LabWorkspace collaboration={activeCol} />}
-          <div className="grid gap-6 md:grid-cols-2 items-start md:[&>*:only-child]:col-span-2">
+          <div className="grid gap-6 sm:grid-cols-2 items-start sm:[&>*:only-child]:col-span-2">
             {hasPermission(store.activeUser, 'MANAGE_OFFERS') && <OfferBuilder collaboration={activeCol} />}
             <LaunchGateManager collaboration={activeCol} />
           </div>
