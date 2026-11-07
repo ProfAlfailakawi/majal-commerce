@@ -260,8 +260,10 @@ export const HostPortal: React.FC = () => {
         <div className="space-y-6">
           <DealRoom collaboration={activeCol} />
           {hasPermission(store.activeUser, 'MANAGE_LAB') && <LabWorkspace collaboration={activeCol} />}
-          {hasPermission(store.activeUser, 'MANAGE_OFFERS') && <OfferBuilder collaboration={activeCol} />}
-          <LaunchGateManager collaboration={activeCol} />
+          <div className="grid gap-6 md:grid-cols-2 items-start md:[&>*:only-child]:col-span-2">
+            {hasPermission(store.activeUser, 'MANAGE_OFFERS') && <OfferBuilder collaboration={activeCol} />}
+            <LaunchGateManager collaboration={activeCol} />
+          </div>
           {activeCol.contract && <button onClick={() => setSelectedContract(activeCol.contract)} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black">فتح العقد التجاري</button>}
         </div>
       )}
