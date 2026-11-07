@@ -87,7 +87,7 @@ export const LabWorkspace: React.FC<LabWorkspaceProps> = ({ collaboration }) => 
 
       <section className="glass-panel p-6 rounded-3xl border border-white/10 space-y-5 text-xs">
         <div className="flex items-center gap-2"><Plus className="w-4 h-4 text-gold-300" /><h4 className="font-black text-sm">تسجيل دفعة تجريبية جديدة</h4></div>
-        <div className="grid md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-4">
           <label className="space-y-1"><span className="text-slate-400 font-bold">نسخة الوصفة</span><select value={recipeVersion} onChange={e => setRecipeVersion(e.target.value)} className="w-full glass-input rounded-xl p-3 outline-none">{recipeVersions.map(v => <option key={v.id} value={v.versionNumber}>{v.versionNumber}</option>)}</select></label>
           <label className="space-y-1"><span className="text-slate-400 font-bold">إنتاجية الدفعة</span><input type="number" min="1" value={yieldQuantity} onChange={e => setYieldQuantity(Number(e.target.value))} className="w-full glass-input rounded-xl p-3 outline-none" /></label>
           <label className="space-y-1"><span className="text-slate-400 font-bold">التكلفة المقاسة د.ك</span><input type="number" min="0" step="0.001" value={measuredCostKwd} onChange={e => setMeasuredCostKwd(Number(e.target.value))} className="w-full glass-input rounded-xl p-3 outline-none" /></label>
