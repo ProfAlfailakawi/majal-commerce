@@ -47,7 +47,7 @@ export const LaunchCountdown: React.FC<Props> = ({ opensAt, offsetMs = 0, compac
       {shown.map(([key, label]) => (
         <div key={key} className="min-w-[3.6rem] sm:min-w-[4.4rem] rounded-2xl px-2 py-2.5 text-center bg-white/5 border border-gold-300/25">
           <div className="text-2xl sm:text-3xl font-black text-gold-300 tabular-nums leading-none"><bdi dir="ltr">{String(parts[key]).padStart(2, '0')}</bdi></div>
-          <div className="text-[11px] text-slate-400 mt-1.5">{label}</div>
+          <div className="text-xs text-slate-400 mt-1.5">{label}</div>
         </div>
       ))}
     </div>

@@ -18,7 +18,7 @@ export const ThemeToggle: React.FC = () => {
     <button
       type="button"
       onClick={() => setTheme(nextTheme(theme))}
-      className="grid place-items-center w-11 h-11 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
+      className="grid place-items-center w-11 h-11 max-[374px]:w-10 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
       aria-label={`المظهر الحالي: ${current.label}. التبديل إلى ${upcoming.label}`}
       title={`المظهر: ${current.label}`}
     >
