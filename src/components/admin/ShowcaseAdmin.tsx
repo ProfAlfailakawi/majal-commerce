@@ -57,7 +57,7 @@ const BillingEditor: React.FC<{ c: AdCampaign; busy: boolean; onSave: (billing: 
         <select aria-label="حالة الدفع" value={billing} onChange={e => setBilling(e.target.value as typeof billing)} className={k}>{(Object.keys(BILLING_LABEL) as (keyof typeof BILLING_LABEL)[]).map(b => <option key={b} value={b}>{BILLING_LABEL[b]}</option>)}</select>
         {billing === 'PAID' && <input aria-label="المبلغ المدفوع بالدينار" inputMode="numeric" pattern="\d*" dir="ltr" placeholder="المبلغ (د.ك)" value={price} onChange={e => setPrice(e.target.value.replace(/\D/g, ''))} className={k} />}
         <input aria-label="ملاحظة الدفع" maxLength={300} placeholder="مرجع التحويل أو سبب الضيافة" value={note} onChange={e => setNote(e.target.value)} className={k} />
-        <p className="text-[11px] text-slate-400 leading-5">الدفع يتم خارج التطبيق (تحويل أو فاتورة). لا تُعتمد الحملة قبل تسجيل الدفع أو الضيافة.</p>
+        <p className="text-xs text-slate-400 leading-5">الدفع يتم خارج التطبيق (تحويل أو فاتورة). لا تُعتمد الحملة قبل تسجيل الدفع أو الضيافة.</p>
         <button disabled={busy} className="w-full py-2 rounded-xl bg-gold-500 text-slate-950 text-xs font-black disabled:opacity-50">حفظ</button>
       </form>
     </details>
@@ -79,15 +79,15 @@ const CampaignEditor: React.FC<{ c: AdCampaign; busy: boolean; onSave: (input: P
         <input aria-label="العنوان" required minLength={4} maxLength={70} value={f.headline} onChange={e => setF({ ...f, headline: e.target.value })} className={k} />
         <input aria-label="السطر التوضيحي" maxLength={120} value={f.tagline} onChange={e => setF({ ...f, tagline: e.target.value })} className={k} />
         <div className="rounded-xl border border-dashed border-gold-300/25 p-2.5 space-y-2">
-          <div className="text-[11px] font-black text-gold-200">اختبار A/B — نسخة ثانية من النص (اختياري)</div>
+          <div className="text-xs font-black text-gold-200">اختبار A/B — نسخة ثانية من النص (اختياري)</div>
           <input aria-label="عنوان النسخة ب" maxLength={70} placeholder="عنوان النسخة (ب)" value={f.bHeadline} onChange={e => setF({ ...f, bHeadline: e.target.value })} className={k} />
           {f.bHeadline && <input aria-label="سطر النسخة ب" maxLength={120} placeholder="سطر توضيحي للنسخة (ب)" value={f.bTagline} onChange={e => setF({ ...f, bTagline: e.target.value })} className={k} />}
-          <p className="text-[11px] text-slate-400 leading-5">يُعرض كل إعلان بإحدى النسختين عشوائيًا. تعديل أي نص يبدأ اختبارًا جديدًا. الحكم يحتاج 500 ظهور لكل نسخة، والنتيجة توصية فقط.</p>
+          <p className="text-xs text-slate-400 leading-5">يُعرض كل إعلان بإحدى النسختين عشوائيًا. تعديل أي نص يبدأ اختبارًا جديدًا. الحكم يحتاج 500 ظهور لكل نسخة، والنتيجة توصية فقط.</p>
         </div>
         <input aria-label="الرابط" required type="url" dir="ltr" value={f.linkUrl} onChange={e => setF({ ...f, linkUrl: e.target.value })} className={k} />
         <div className="flex flex-wrap items-center gap-2">{AD_ACCENT_KEYS.map(a => <button type="button" key={a} aria-label={`لون ${a}`} aria-pressed={f.accent === a} onClick={() => setF({ ...f, accent: a })} className={`w-6 h-6 rounded-full ${AD_ACCENT_DOT[a]} ${f.accent === a ? 'ring-2 ring-offset-2 ring-gold-300 ring-offset-transparent' : 'opacity-60'}`} />)}
           <span className="w-px h-5 bg-white/10" />{AD_ICON_KEYS.map(i => <button type="button" key={i} aria-label={`أيقونة ${i}`} aria-pressed={f.icon === i} onClick={() => setF({ ...f, icon: i })} className={`w-8 h-8 rounded-lg border grid place-items-center ${f.icon === i ? 'bg-gold-500/20 border-gold-300/60 text-gold-200' : 'bg-white/5 border-white/10 text-slate-300'}`}><AdIcon name={i} className="w-3.5 h-3.5" /></button>)}</div>
-        {c.status === 'APPROVED' && <p className="text-[11px] text-amber-200/90 leading-5">تغيير الرابط أو الموقع يوقف الحملة لإعادة اعتمادها.</p>}
+        {c.status === 'APPROVED' && <p className="text-xs text-amber-200/90 leading-5">تغيير الرابط أو الموقع يوقف الحملة لإعادة اعتمادها.</p>}
         <button disabled={busy} className="w-full py-2 rounded-xl bg-gold-500 text-slate-950 text-xs font-black disabled:opacity-50">حفظ التعديل</button>
       </form>
     </details>

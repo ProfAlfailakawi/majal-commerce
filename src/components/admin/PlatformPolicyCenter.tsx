@@ -91,7 +91,7 @@ export const PlatformPolicyCenter: React.FC = () => {
           {changes.map(item => <span key={item.key} className="px-2.5 py-1 rounded-lg bg-slate-950/40 border border-white/10 text-xs text-slate-300 inline-flex items-center gap-1.5">{item.label}: <bdi>{store.policy[item.key]}</bdi> <ArrowLeft className="w-3 h-3 text-gold-300" aria-label="يصبح" /> <bdi>{draft[item.key]}</bdi></span>)}
         </div>
         <ul className="space-y-1.5 text-xs text-slate-400 leading-5">
-          {impactSignals.map(signal => <li key={signal} className="flex gap-2"><span className="text-sky-300">•</span><span>{signal}</span></li>)}
+          {impactSignals.map(signal => <li key={signal} className="flex items-start gap-2"><span className="mt-2 w-1.5 h-1.5 shrink-0 rounded-full bg-sky-300" aria-hidden="true" /><span>{signal}</span></li>)}
         </ul>
       </div>}
 

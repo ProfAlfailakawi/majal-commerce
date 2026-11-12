@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowRight, BadgeCheck, BriefcaseBusiness, CalendarCheck, ChefHat, Eye, Factory, Handshake, Megaphone, Rocket, ShieldCheck, Sparkles, Store, Target, Truck, Users } from 'lucide-react';
+import { ArrowRight, BadgeCheck, BriefcaseBusiness, CalendarCheck, CircleCheck, ChefHat, Eye, Factory, Handshake, Megaphone, Rocket, ShieldCheck, Sparkles, Store, Target, Truck, Users } from 'lucide-react';
 import { fetchPartnerKit, type PartnerKit } from '../../lib/audienceClient';
 import { MajalMark } from '../brand/MajalMark';
 import { ShareBars, TrendBars, WeekdayBars } from './charts';
@@ -101,16 +101,16 @@ export const PartnerKitPage: React.FC<{ token: string; onClose: () => void }> = 
 
       <section aria-label="خطوات" className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {STEPS.map((s, i) => (
-          <div key={s.t} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-center space-y-2"><span className="mx-auto w-12 h-12 rounded-2xl grid place-items-center bg-gold-500/10 border border-gold-300/25 text-gold-300 relative"><s.icon className="w-6 h-6" aria-hidden="true" /><span className="absolute -top-2 -end-2 w-5 h-5 rounded-full bg-gold-500 text-slate-950 text-[11px] font-black grid place-items-center">{i + 1}</span></span><div className="text-sm font-black">{s.t}</div><div className="text-xs text-slate-400 leading-5">{s.s}</div></div>
+          <div key={s.t} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-center space-y-2"><span className="mx-auto w-12 h-12 rounded-2xl grid place-items-center bg-gold-500/10 border border-gold-300/25 text-gold-300 relative"><s.icon className="w-6 h-6" aria-hidden="true" /><span className="absolute -top-2 -end-2 w-5 h-5 rounded-full bg-gold-500 text-slate-950 text-xs font-black grid place-items-center">{i + 1}</span></span><div className="text-sm font-black">{s.t}</div><div className="text-xs text-slate-400 leading-5">{s.s}</div></div>
         ))}
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-xs text-slate-300 leading-7 space-y-1.5">
+      <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-xs text-slate-300 leading-7 space-y-2">
         <h2 className="font-black text-sm flex items-center gap-2 text-slate-100"><BadgeCheck className="w-4 h-4 text-emerald-300" aria-hidden="true" />شروطنا بوضوح</h2>
-        <p>• الإعلان خدمة مدفوعة: السعر حسب الموقع والمدة والجمهور، نتفق عليه معك مسبقًا، ولا يُنشر شيء قبل الاتفاق.</p>
-        <p>• كل إعلان بوسم «إعلان»، ويمر على الإدارة قبل الظهور، ويقودك إلى رابط https عام تعتمده الإدارة.</p>
-        <p>• الأرقام مجهولة: لا نحفظ IP ولا اسمًا ولا هوية. المتصفح الواحد يُحسب مرة يوميًا لكل صفحة.</p>
-        <p>• {since ? `القياس بدأ يوم ${since} ولا يرجع للماضي.` : 'القياس بدأ حديثًا.'}{young ? ' الأرقام ما زالت في أيامها الأولى، وستنمو مع الوقت.' : ''}</p>
+        <p className="flex items-start gap-2"><CircleCheck className="w-4 h-4 mt-1.5 shrink-0 text-emerald-300" aria-hidden="true" /><span>الإعلان خدمة مدفوعة: السعر حسب الموقع والمدة والجمهور، نتفق عليه معك مسبقًا، ولا يُنشر شيء قبل الاتفاق.</span></p>
+        <p className="flex items-start gap-2"><CircleCheck className="w-4 h-4 mt-1.5 shrink-0 text-emerald-300" aria-hidden="true" /><span>كل إعلان بوسم «إعلان»، ويمر على الإدارة قبل الظهور، ويقودك إلى رابط https عام تعتمده الإدارة.</span></p>
+        <p className="flex items-start gap-2"><CircleCheck className="w-4 h-4 mt-1.5 shrink-0 text-emerald-300" aria-hidden="true" /><span>الأرقام مجهولة: لا نحفظ IP ولا اسمًا ولا هوية. المتصفح الواحد يُحسب مرة يوميًا لكل صفحة.</span></p>
+        <p className="flex items-start gap-2"><CircleCheck className="w-4 h-4 mt-1.5 shrink-0 text-emerald-300" aria-hidden="true" /><span>{since ? `القياس بدأ يوم ${since} ولا يرجع للماضي.` : 'القياس بدأ حديثًا.'}{young ? ' الأرقام ما زالت في أيامها الأولى، وستنمو مع الوقت.' : ''}</span></p>
       </section>
       {form && <AdRequestForm onClose={() => setForm(false)} />}
     </div>
