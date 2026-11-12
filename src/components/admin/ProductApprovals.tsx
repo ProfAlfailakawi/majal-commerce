@@ -44,7 +44,7 @@ export const ProductApprovals: React.FC = () => {
             <p className="text-xs text-slate-400 mt-1">لا يظهر أي منتج جديد للمنشآت قبل اعتماده هنا.</p>
           </div>
         </div>
-        <span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-black text-slate-200">{pending.length} بانتظار القرار</span>
+        <span className="shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-black text-slate-200"><bdi className="tabular-nums">{pending.length}</bdi> بانتظار القرار</span>
       </div>
       {notice && <div role={notice.tone === 'error' ? 'alert' : 'status'} className={`p-3 rounded-xl text-xs font-bold border ${notice.tone === 'ok' ? 'bg-emerald-500/10 border-emerald-400/20 text-emerald-300' : 'bg-rose-500/10 border-rose-400/20 text-rose-200'}`}>{notice.text}</div>}
       {pending.length === 0 ? (

@@ -309,7 +309,7 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
       </nav>
       <article className="glass-panel rounded-[28px] border border-white/10 p-6 sm:p-9 space-y-7">
         <header className="space-y-3 pb-5 border-b border-white/10">
-          <h2 ref={headingRef} tabIndex={-1} className="text-xl sm:text-2xl font-black text-slate-100 outline-none focus-visible:ring-2 focus-visible:ring-gold-300">{doc.title}</h2>
+          <h2 ref={headingRef} tabIndex={-1} data-focus-silent className="text-xl sm:text-2xl font-black text-slate-100 outline-none">{doc.title}</h2>
           <p className="text-xs sm:text-sm text-slate-400 leading-7">{doc.summary}</p>
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-slate-300"><Clock3 className="w-3.5 h-3.5" aria-hidden="true" />قراءة نحو {arCount(readingMinutes, AR.minute)}</span>
         </header>

@@ -155,7 +155,7 @@ export const Overture: React.FC<OvertureProps> = ({ onReveal, onDone }) => {
                 '--inst-d': inst.d
               } as React.CSSProperties}
             >
-              <span className="w-12 h-12 rounded-2xl border border-[#a8843c]/30 bg-white/70 text-[#a8843c] grid place-items-center shadow-[0_10px_30px_rgba(31,26,14,0.08)]">
+              <span className="w-12 h-12 rounded-2xl border border-[#a8843c]/30 bg-[#ffffff]/70 text-[#a8843c] grid place-items-center shadow-[0_10px_30px_rgba(31,26,14,0.08)]">
                 {inst.icon}
               </span>
               <span className="text-xs font-black text-[#4a3d22]">{inst.label}</span>
@@ -171,7 +171,7 @@ export const Overture: React.FC<OvertureProps> = ({ onReveal, onDone }) => {
       {!leaving && (
         <button
           onClick={skip}
-          className="absolute bottom-8 start-8 px-4 py-2 rounded-full border border-[#a8843c]/30 text-[#6b5527] text-xs font-semibold bg-white/60 hover:bg-white transition-colors majal-overture-skip"
+          className="absolute bottom-8 start-8 px-4 py-2 rounded-full border border-[#a8843c]/30 text-[#6b5527] text-xs font-semibold bg-[#ffffff]/70 hover:bg-[#ffffff] min-h-10 transition-colors majal-overture-skip"
         >
           تخطي
         </button>
