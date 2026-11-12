@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>مجال</title>
+<style>
+  :root { --bg: #F7F4EC; --fg: #1c1c1e; --muted: #6e6e73; --accent: #8C6A2F; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #161512; --fg: #f2f2f7; --muted: #aeaeb2; } }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font: -apple-system-body; font-family: -apple-system, "SF Arabic", system-ui, sans-serif;
+    display: grid; place-items: center; text-align: center;
+    padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+  }
+  main { max-width: 26rem; }
+  h1 { font: -apple-system-title2; font-weight: 700; margin: 0 0 .5rem; }
+  p { color: var(--muted); line-height: 1.6; margin: 0 0 1.5rem; }
+  .en { direction: ltr; font-size: .9em; }
+  button {
+    font: -apple-system-headline; border: 0; border-radius: 14px; padding: 14px 28px; min-height: 48px;
+    background: var(--accent); color: #fff; cursor: pointer;
+  }
+  button:active { opacity: .7; }
+  @media (prefers-reduced-motion: no-preference) { button { transition: opacity .15s; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>مجال</h1>
+  <p>تعذّر الوصول إلى الخدمة الآن. تحقّق من اتصالك بالإنترنت ثم أعد المحاولة.<br>
+     <span class="en">Can't reach Majal right now. Check your connection and try again.</span></p>
+  <button id="retry" type="button">إعادة المحاولة · Retry</button>
+</main>
+<script>
+  const target = "https://majal.web.app";
+  const go = () => { location.href = target; };
+  document.getElementById("retry").addEventListener("click", go);
+  window.addEventListener("online", go);
+</script>
+</body>
+</html>
