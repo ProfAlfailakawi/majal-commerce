@@ -1,0 +1,20 @@
+{
+  "repo": "majal-commerce",
+  "appId": "com.dralfailakawi.majal",
+  "nameAr": "مجال",
+  "nameEn": "Majal",
+  "displayName": "مجال",
+  "url": "https://majal.web.app",
+  "allowNavigation": [
+    "*.googleapis.com"
+  ],
+  "icon": "public/icon-512.png",
+  "background": "#F7F4EC",
+  "backgroundDark": "#161512",
+  "accent": "#8C6A2F",
+  "lsCategory": "public.app-category.business",
+  "camera": true,
+  "photos": true,
+  "version": "1.0.0",
+  "build": 1
+}

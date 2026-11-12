@@ -1,0 +1,28 @@
+{
+  "appId": "com.dralfailakawi.majal",
+  "appName": "Majal",
+  "webDir": "www",
+  "server": {
+    "url": "https://majal.web.app",
+    "errorPath": "offline.html",
+    "allowNavigation": [
+      "majal.web.app",
+      "*.googleapis.com"
+    ]
+  },
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#F7F4EC",
+    "scheme": "Majal",
+    "limitsNavigationsToAppBoundDomains": false,
+    "preferredContentMode": "mobile"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 600,
+      "launchAutoHide": true,
+      "backgroundColor": "#F7F4EC",
+      "showSpinner": false
+    }
+  }
+}
