@@ -600,6 +600,18 @@ header button {
   border-radius: 4px;
 }
 
+/* Forward cue: a trailing «next» arrow leans one step toward the reading direction
+   (left, in RTL) on hover or keyboard focus. `translate` is its own property, so it
+   composes with any rotate the icon already carries. Motion-safe only. */
+@media (prefers-reduced-motion: no-preference) {
+  :is(button, a) > svg:is(.lucide-arrow-left, .lucide-chevron-left):last-child {
+    transition: translate var(--dur-fast) var(--ease-out);
+  }
+  :is(button, a):is(:hover, :focus-visible):not(:disabled) > svg:is(.lucide-arrow-left, .lucide-chevron-left):last-child {
+    translate: -3px 0;
+  }
+}
+
 /* Headings inside the onboarding are focused programmatically, purely so a screen
    reader announces each new step. They are not interactive targets, so Chrome's
    :focus-visible ring on them reads as a stray box around the title. */
