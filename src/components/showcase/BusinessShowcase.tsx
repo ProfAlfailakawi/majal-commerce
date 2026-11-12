@@ -201,9 +201,9 @@ export const BusinessShowcase: React.FC<{ onSurfaceChange: (surface: SurfaceType
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card border border-emerald-400/25 text-emerald-300 text-xs font-black"><Gift className="w-4 h-4" aria-hidden="true" />مجانية بالكامل وبلا عمولة</span>
             <h1 className="text-3xl sm:text-4xl font-black leading-tight">عندك مشروع <span className="majal-wordmark">تبي تبيعه؟</span></h1>
             <p className="text-sm sm:text-base text-slate-300 leading-7 max-w-xl">اعرضه أمام جمهور مجال في بطاقة واضحة. نراجع الطلب ثم ينشر. نقدّم الخدمة مجانًا لأنها تعرّف الناس بمنصتنا — وهذا هو سببنا الصريح.</p>
-            <div className="flex flex-wrap gap-3 pt-1">
-              <button type="button" onClick={() => setForm('sell')} className="px-6 py-3.5 rounded-2xl bg-gold-500 hover:bg-gold-400 text-slate-950 font-black text-sm shadow-sm flex items-center gap-2"><Store className="w-4 h-4" aria-hidden="true" />اعرض مشروعك للبيع</button>
-              <button type="button" onClick={() => onSurfaceChange('PUBLIC')} className="px-6 py-3.5 rounded-2xl glass-card border border-slate-700/60 text-slate-200 font-semibold text-sm flex items-center gap-2">تعرّف على مجال<ChevronLeft className="w-4 h-4" aria-hidden="true" /></button>
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 pt-1">
+              <button type="button" onClick={() => setForm('sell')} className="px-6 py-3.5 rounded-2xl bg-gold-500 hover:bg-gold-400 text-slate-950 font-black text-sm shadow-sm flex items-center justify-center gap-2"><Store className="w-4 h-4" aria-hidden="true" />اعرض مشروعك للبيع</button>
+              <button type="button" onClick={() => onSurfaceChange('PUBLIC')} className="px-6 py-3.5 rounded-2xl glass-card border border-slate-700/60 text-slate-200 font-semibold text-sm flex items-center justify-center gap-2">تعرّف على مجال<ChevronLeft className="w-4 h-4" aria-hidden="true" /></button>
             </div>
           </div>
           <ol className="grid grid-cols-3 gap-2 sm:gap-4 relative" aria-label="خطوات العرض">

@@ -126,9 +126,9 @@ export const SupplierDirectory: React.FC<{ onSurfaceChange: (surface: SurfaceTyp
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card border border-emerald-400/25 text-emerald-300 text-xs font-black"><Gift className="w-4 h-4" aria-hidden="true" />مجاني بالكامل</span>
             <h1 className="text-3xl sm:text-4xl font-black leading-tight">دليل <span className="majal-wordmark">الموردين</span></h1>
             <p className="text-sm sm:text-base text-slate-300 leading-7 max-w-xl">تبحث عن مورد تغليف أو بهارات أو لحوم؟ ابحث هنا وتواصل مباشرة. ولو كنت مورّدًا، سجّل نفسك مجانًا.</p>
-            <div className="flex flex-wrap gap-3 pt-1">
-              <button type="button" onClick={() => setForm(true)} className="px-5 py-3 rounded-2xl bg-gold-500 hover:bg-gold-400 text-slate-950 font-black text-sm flex items-center gap-2"><Plus className="w-4 h-4" aria-hidden="true" />سجّل مورّدًا</button>
-              <button type="button" onClick={() => onSurfaceChange('PUBLIC')} className="px-5 py-3 rounded-2xl glass-card border border-slate-700/60 text-slate-200 font-semibold text-sm flex items-center gap-2">ما هو مجال؟<ChevronLeft className="w-4 h-4" aria-hidden="true" /></button>
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 pt-1">
+              <button type="button" onClick={() => setForm(true)} className="px-5 py-3 rounded-2xl bg-gold-500 hover:bg-gold-400 text-slate-950 font-black text-sm flex items-center justify-center gap-2"><Plus className="w-4 h-4" aria-hidden="true" />سجّل مورّدًا</button>
+              <button type="button" onClick={() => onSurfaceChange('PUBLIC')} className="px-5 py-3 rounded-2xl glass-card border border-slate-700/60 text-slate-200 font-semibold text-sm flex items-center justify-center gap-2">ما هو مجال؟<ChevronLeft className="w-4 h-4" aria-hidden="true" /></button>
             </div>
           </div>
           <ul className="grid grid-cols-3 gap-3 text-center text-xs" aria-label="كيف يعمل الدليل">
