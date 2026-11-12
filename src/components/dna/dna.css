@@ -946,6 +946,12 @@ button.dna-hubn:focus-visible .dna-hubt { transform: translateY(-2px); }
   font-weight: 600;
   line-height: 1.3;
   color: var(--dna-ink);
+  /* On narrow hubs the curved connectors run through the captions; a chip of the hub's own
+     surface keeps the words legible while the line still reads as passing behind. */
+  /* (a halo, not padding: the caption keeps its full width and never truncates sooner). */
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--dna-surface) 72%, var(--dna-canvas));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--dna-surface) 72%, var(--dna-canvas));
 }
 .dna-hub[data-tight='true'] .dna-hubl { font-size: 12px; line-height: 1.2; white-space: normal; text-wrap: balance; }
 .dna-hubp {

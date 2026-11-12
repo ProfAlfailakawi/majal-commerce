@@ -67,6 +67,14 @@ html:root {
   .journey-dna .journey-dna-title { font-size: 12px; }
   .journey-dna .journey-dna-actor { font-size: 12px; }
 }
+/* Phones: six stations in one row left ~41-59px per column, so captions broke mid-word
+   ("الوصفا/ت", "المنشأ/ة"). Two rows of three keep every word whole; the connector is
+   dropped only where a row starts (station 4), the reading order stays 1→6. */
+@media (max-width: 479px) {
+  .journey-dna .dna-steps { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 18px; }
+  .journey-dna .dna-stepi:nth-child(3n + 1)::before,
+  .journey-dna .dna-stepi:nth-child(3n + 1)::after { display: none; }
+}
 
 /* Landing reveal: unlit stations keep their labels legible (generic reveal rules live in dna.css). */
 .journey-dna .dna-steps[data-reveal]:not([data-reveal='done']) .dna-stepi[data-state='pending'] .dna-lbl { color: var(--dna-ink); }

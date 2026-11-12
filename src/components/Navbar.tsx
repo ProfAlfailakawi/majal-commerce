@@ -195,15 +195,15 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="sticky top-0 z-40 glass-nav text-slate-100 shadow-xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 max-[374px]:px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between max-sm:flex-wrap max-sm:min-h-16 max-sm:py-2 sm:h-20 gap-2 sm:gap-4">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <button onClick={() => onSurfaceChange('PUBLIC')} className="flex items-center gap-2 sm:gap-3 text-start group focus:outline-none shrink-0 xl:shrink xl:min-w-0 focus-visible:ring-2 focus-visible:ring-gold-300" aria-label="العودة إلى صفحة مجال العامة">
-              <span className="grid place-items-center w-11 h-11 rounded-2xl bg-white/[0.04] border border-gold-300/15 shrink-0 transition-all duration-200 group-hover:border-gold-300/35 group-hover:bg-gold-500/10">
+          <div className="flex items-center gap-2 max-[374px]:gap-1.5 sm:gap-3 min-w-0">
+            <button onClick={() => onSurfaceChange('PUBLIC')} className="flex items-center gap-2 max-[374px]:gap-1.5 sm:gap-3 text-start group focus:outline-none shrink-0 xl:shrink xl:min-w-0 focus-visible:ring-2 focus-visible:ring-gold-300" aria-label="العودة إلى صفحة مجال العامة">
+              <span className="grid place-items-center w-11 h-11 max-[374px]:w-10 max-[374px]:h-10 rounded-2xl bg-white/[0.04] border border-gold-300/15 shrink-0 transition-all duration-200 group-hover:border-gold-300/35 group-hover:bg-gold-500/10">
                 <MajalMark size={26} />
               </span>
               <div className="min-w-0">
-                <span className="text-xl sm:text-2xl font-black majal-wordmark block truncate leading-tight">
+                <span className="text-xl max-[374px]:text-lg sm:text-2xl font-black majal-wordmark block truncate leading-tight">
                   مجال
                 </span>
                 <span className="majal-brand-tagline max-lg:hidden text-xs text-slate-400 font-medium whitespace-nowrap">
@@ -217,7 +217,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                  shared screen should be able to tell that none of this inventory,
                  these orders or these payouts are real. */
               <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-black whitespace-nowrap shrink-0 bg-amber-500/15 text-amber-300 border border-amber-400/35">
-                <FlaskConical className="w-3.5 h-3.5" aria-hidden="true" />
+                <FlaskConical className="w-3.5 h-3.5 max-[374px]:hidden" aria-hidden="true" />
                 <span className="hidden xl:inline">بيئة تجريبية — بيانات مصطنعة</span>
                 <span className="xl:hidden">تجريبي</span>
                 <button
@@ -338,7 +338,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     refreshServerNotifications();
                   }
                 }}
-                className="grid place-items-center w-11 h-11 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-white/5 transition-colors relative"
+                className="grid place-items-center w-11 h-11 max-[374px]:w-10 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-white/5 transition-colors relative"
                 aria-label={unreadCount > 0 ? `فتح التنبيهات: ${unreadCount} غير مقروء` : "فتح التنبيهات"}
                 aria-expanded={showNotifications}
               >
@@ -379,7 +379,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setShowRoleDropdown(next);
                   if (next) setShowNotifications(false);
                 }}
-                className="flex items-center gap-1 sm:gap-2 max-sm:min-h-11 p-1.5 ps-1.5 sm:ps-2.5 rounded-2xl bg-ink-700/80 hover:bg-ink-500 border border-white/10 text-xs font-medium transition-colors"
+                className="flex items-center gap-1 sm:gap-2 max-sm:min-h-11 p-1.5 ps-1.5 max-[374px]:p-1 sm:ps-2.5 rounded-2xl bg-ink-700/80 hover:bg-ink-500 border border-white/10 text-xs font-medium transition-colors"
                 aria-label="تبديل هوية العرض المحلية"
                 aria-expanded={showRoleDropdown}
               >
