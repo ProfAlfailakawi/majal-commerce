@@ -19,7 +19,7 @@
 set -euo pipefail
 
 PROJECT_ID="${PROJECT_ID:-$(gcloud config get-value project 2>/dev/null || true)}"
-REGION="${REGION:-europe-west1}"
+REGION="${REGION:-europe-west2}"
 SQL_INSTANCE="${SQL_INSTANCE:-majal-db}"
 DB_NAME="${DB_NAME:-majal}"
 BACKUP_BUCKET="${BACKUP_BUCKET:-${PROJECT_ID}-majal-backups}"

@@ -15,8 +15,8 @@
 set -euo pipefail
 
 PROJECT_ID="${CLOUD_RUN_PROJECT_ID:-${PROJECT_ID:-$(gcloud config get-value project 2>/dev/null || true)}}"
-REGION="${CLOUD_RUN_REGION:-${REGION:-europe-west1}}"
-SERVICE_NAME="${CLOUD_RUN_SERVICE_NAME:-${SERVICE_NAME:-majal}}"
+REGION="${CLOUD_RUN_REGION:-${REGION:-europe-west2}}"
+SERVICE_NAME="${CLOUD_RUN_SERVICE_NAME:-${SERVICE_NAME:-majal-app}}"
 SQL_INSTANCE="${SQL_INSTANCE:-majal-db}"
 DB_NAME="${DB_NAME:-majal}"
 BUCKET="${BUCKET:-${PROJECT_ID}-majal-vault}"
@@ -134,9 +134,19 @@ if [[ -z "$URL" ]]; then
   echo "نُشرت الخدمة، لكن تعذّر استخراج عنوانها." >&2
   exit 1
 fi
-# AI Studio تحقن APP_URL تلقائياً؛ النشر اليدوي يحتاج تثبيتها صراحةً.
-gcloud run services update "$SERVICE_NAME" --project "$PROJECT_ID" --region "$REGION" \
-  --update-env-vars "APP_URL=$URL" --quiet >/dev/null
+# AI Studio تحقن APP_URL تلقائياً؛ النشر اليدوي يحتاج تثبيتها صراحةً — لكن مرة
+# واحدة فقط. الخدمة الحيّة تُقدَّم عبر Firebase Hosting وAPP_URL فيها مضبوط على
+# ذلك النطاق، فلا يُستبدل برابط run.app إن كان مضبوطاً.
+CURRENT_APP_URL="$(gcloud run services describe "$SERVICE_NAME" --project "$PROJECT_ID" \
+  --region "$REGION" \
+  --format='value(spec.template.spec.containers[0].env.filter(name:APP_URL).extract(value).flatten())' \
+  2>/dev/null || true)"
+if [[ -n "$CURRENT_APP_URL" ]]; then
+  echo "  ✓ APP_URL مضبوط مسبقاً ($CURRENT_APP_URL) — لا تغيير"
+else
+  gcloud run services update "$SERVICE_NAME" --project "$PROJECT_ID" --region "$REGION" \
+    --update-env-vars "APP_URL=$URL" --quiet >/dev/null
+fi
 
 step "٥/٥  ما يبقى عليك"
 cat <<EOM

@@ -149,7 +149,7 @@ npm run dev
 | `npm run seed:dev` | بذر قاعدة التطوير ([scripts/seed-data.ts](scripts/seed-data.ts)) |
 | `npm run simulate:scale` | محاكي حمل ([scripts/simulate-scale.ts](scripts/simulate-scale.ts)) |
 | `npm run audit:production` | `npm audit --omit=dev` |
-| `npm run deploy:cloudrun` | نشر يدوي عبر [scripts/deploy-cloud-run.sh](scripts/deploy-cloud-run.sh) (اضبط `CLOUD_RUN_REGION=europe-west2` و`CLOUD_RUN_SERVICE_NAME=majal-app`؛ الافتراضي في السكربت مختلف) |
+| `npm run deploy:cloudrun` | نشر يدوي عبر [scripts/deploy-cloud-run.sh](scripts/deploy-cloud-run.sh) (الافتراضي: المنطقة `europe-west2` والخدمة `majal-app`؛ اضبط `PROJECT_ID`) |
 | `npm run verify:pwa` / `verify:demo` / `verify:env` | فحوص ثابتة ([scripts/verify-pwa.mjs](scripts/verify-pwa.mjs), [scripts/verify-demo-entry.mjs](scripts/verify-demo-entry.mjs), [scripts/verify-env.mjs](scripts/verify-env.mjs)) |
 | `npm run secrets:generate` | توليد أسرار محلية ([scripts/generate-secrets.mjs](scripts/generate-secrets.mjs)) |
 

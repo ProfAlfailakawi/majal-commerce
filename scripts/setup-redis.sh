@@ -18,7 +18,7 @@
 set -euo pipefail
 
 PROJECT_ID="${PROJECT_ID:-$(gcloud config get-value project 2>/dev/null || true)}"
-REGION="${REGION:-europe-west1}"
+REGION="${REGION:-europe-west2}"
 REDIS_INSTANCE="${REDIS_INSTANCE:-majal-redis}"
 REDIS_SIZE_GB="${REDIS_SIZE_GB:-1}"
 VPC_NETWORK="${VPC_NETWORK:-default}"

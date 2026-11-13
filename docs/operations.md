@@ -5,10 +5,10 @@
 
 > **قيم الخدمة الحيّة** (من `.github/workflows/deploy-cloud-run.yml`):
 > المشروع `tebyan-clean-2026-5f13b` · المنطقة `europe-west2` · الخدمة `majal-app`.
-> السكربتات تفترض `europe-west1` و`majal` ما لم تضبط غير ذلك، فابدأ كل جلسة بـ:
+> السكربتات تفترض هذه المنطقة وهذه الخدمة افتراضياً؛ يبقى ضبط المشروع، فابدأ كل جلسة بـ:
 >
 > ```sh
-> export PROJECT_ID=tebyan-clean-2026-5f13b REGION=europe-west2 SERVICE_NAME=majal-app
+> export PROJECT_ID=tebyan-clean-2026-5f13b
 > ```
 >
 > وإن كانت نسخة Cloud SQL باسم غير `majal-db` فاضبط `SQL_INSTANCE` أيضاً.
