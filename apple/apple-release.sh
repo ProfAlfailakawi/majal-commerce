@@ -13,6 +13,10 @@ PROJ=ios/App/App.xcodeproj
 OUT="$HERE/build"
 mkdir -p "$OUT"
 step=${1:-preflight}
+# Optional API key: source ~/.appstoreconnect/skygate.env (never committed).
+[ -f "$HOME/.appstoreconnect/skygate.env" ] && . "$HOME/.appstoreconnect/skygate.env"
+AUTH=()
+if [ -n "${ASC_KEY_ID:-}" ]; then AUTH=(-authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" -authenticationKeyPath "$ASC_KEY_PATH"); fi
 
 preflight() {
   local fail=0
@@ -42,14 +46,13 @@ case "$step" in
     preflight
     npx cap sync ios
     xcodebuild -project $PROJ -scheme App -configuration Release -destination 'generic/platform=iOS' \
-      -archivePath "$OUT/App.xcarchive" -allowProvisioningUpdates ${APPLE_TEAM_ID:+DEVELOPMENT_TEAM=$APPLE_TEAM_ID} archive | tail -5
+      -archivePath "$OUT/App.xcarchive" -allowProvisioningUpdates ${AUTH[@]+"${AUTH[@]}"} \
+      ${APPLE_TEAM_ID:+DEVELOPMENT_TEAM=$APPLE_TEAM_ID} archive | tail -5
     echo "Archive: $OUT/App.xcarchive" ;;
   upload)
     test -d "$OUT/App.xcarchive" || { echo "Run archive first"; exit 1; }
-    AUTH=()
-    if [ -n "${ASC_KEY_ID:-}" ]; then AUTH=(-authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" -authenticationKeyPath "$ASC_KEY_PATH"); fi
     xcodebuild -exportArchive -archivePath "$OUT/App.xcarchive" -exportOptionsPlist "$HERE/ExportOptions.plist" \
-      -exportPath "$OUT/export" -allowProvisioningUpdates "${AUTH[@]}" | tail -8
+      -exportPath "$OUT/export" -allowProvisioningUpdates ${AUTH[@]+"${AUTH[@]}"} | tail -8
     echo "Uploaded. Next: App Store Connect > TestFlight shows the build after Apple finishes processing (10–60 min)." ;;
   *) echo "unknown step $step"; exit 2 ;;
 esac
