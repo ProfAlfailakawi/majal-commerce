@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ShieldCheck, Search, Filter, Lock, FileText, CheckCircle2, CalendarDays, ChevronDown, MapPin } from 'lucide-react';
 import { store } from '../../lib/store';
 import { arabicTerms } from '../../lib/arabicTerms';
+import { IS_DEMO_MODE } from '../../lib/runtime';
 
 const ACTION_LABELS: Record<string, string> = {
   RECIPE_VIEWED: 'فتح خزنة الوصفة', ACCESS_REQUESTED: 'طلب إذن وصفة', ACCESS_GRANTED: 'منح إذن وصفة', ACCESS_REVOKED: 'سحب إذن وصفة',
@@ -20,6 +21,9 @@ const ENTITY_LABELS: Record<string, string> = { RecipeVersion: 'نسخة وصف�
 export const AdminAuditLogs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [actionFilter, setActionFilter] = useState<string>('ALL');
+
+  // في الإنتاج يُقرأ السجل من الخادم؛ في الوضع التجريبي يبقى السجل المحلي كما هو.
+  useEffect(() => { if (!IS_DEMO_MODE) void store.loadServerAuditLogs(); }, []);
 
   const logs = store.auditLogs;
 

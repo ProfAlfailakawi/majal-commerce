@@ -717,6 +717,49 @@ export class Store {
   }
 
   /**
+   * يحمّل سجل التدقيق الخادمي (domain_audit_events) لشاشة التدقيق — للأدمن والسوبر أدمن فقط.
+   * في الوضع التجريبي لا يفعل شيئًا: السجل المحلي هو المصدر. في الإنتاج يحلّ محل السجل المحلي
+   * لأنه المصدر الموثوق، وأي حدث محلي لم يصل الخادم ليس دليلًا تدقيقيًا.
+   */
+  public async loadServerAuditLogs(): Promise<boolean> {
+    if (IS_DEMO_MODE) return true;
+    if (this.activeUser.role !== 'ADMIN' && this.activeUser.role !== 'SUPER_ADMIN') return false;
+    const generation = this.authGeneration;
+    const userId = this.activeUser.id;
+    const loaded = await this.serverMutation(async () => {
+      const collected: AuditLog[] = [];
+      let before: number | undefined;
+      // سقف صفحات دفاعي: 5 × 100 حدث هي الأحدث؛ ما قبلها يُراجع من قاعدة البيانات مباشرة.
+      for (let page = 0; page < 5; page += 1) {
+        const result = await moderationClient.auditEvents(before);
+        for (const row of result.events) {
+          collected.push({
+            id: `dae_${row.id}`,
+            timestamp: row.createdAt,
+            actorUserId: row.actorUserId ?? '',
+            actorName: row.actorRole,
+            actorRole: row.actorRole as AuditLog['actorRole'],
+            action: row.action as AuditLog['action'],
+            entityType: row.entityType,
+            entityId: row.entityId,
+            details: [row.entityId, row.actorUserId ? `بواسطة ${row.actorUserId} (${row.actorRole})` : row.actorRole, row.organizationId ? `المنشأة ${row.organizationId}` : '']
+              .filter(Boolean).join(' · '),
+            ipAddress: 'غير مسجّل'
+          });
+        }
+        if (!result.nextBefore) break;
+        before = result.nextBefore;
+      }
+      return collected;
+    });
+    if (!loaded) return false;
+    if (generation !== this.authGeneration || userId !== this.activeUser.id) return false;
+    this.auditLogs = loaded;
+    this.notify();
+    return true;
+  }
+
+  /**
    * يحمّل الحسابات القابلة للإدارة من الخادم (السوبر أدمن فقط، مرقّمة). في الوضع التجريبي لا
    * يفعل شيئًا: القائمة المحلية هي المصدر. لا يُستبدل المستخدم الفعّال ولا تُمرَّر أي حقول سرية.
    */
