@@ -22,6 +22,8 @@ const text = (value: unknown, min: number, max: number) =>
   typeof value === 'string' && value.trim().length >= min && value.trim().length <= max ? value.trim() : undefined;
 
 const USER_LIST_MAX = 50;
+const AUDIT_PAGE_DEFAULT = 100;
+const AUDIT_PAGE_MAX = 200;
 const ASSIGNABLE_STATUSES = ['ACTIVE', 'SUSPENDED', 'INVITED'] as const;
 
 type UserRow = { id: string; name: string; email: string; role: string; status: string };
@@ -249,6 +251,34 @@ export function createModerationRouter(db: MajalDatabase, authConfig: AuthConfig
         previousValue: row.previous_value, newValue: row.new_value,
         reason: row.reason, createdAt: row.created_at
       }))
+    });
+  });
+
+  /*
+   * سجل التدقيق الخادمي (domain_audit_events) لشاشة التدقيق في لوحة الإدارة. الأحدث أولًا،
+   * مرقّم بمؤشر على المعرّف التسلسلي. لا تُعاد البصمات ولا بصمة الجلسة: الشاشة تحتاج الحدث
+   * والكيان والفاعل (معرّفه ودوره) فقط، دون أسماء أو بريد.
+   */
+  router.get('/audit-events', requireRoles('ADMIN', 'SUPER_ADMIN'), async (req: AuthenticatedRequest, res) => {
+    const limitRaw = Number(req.query?.limit ?? AUDIT_PAGE_DEFAULT);
+    const limit = Number.isInteger(limitRaw) && limitRaw >= 1 ? Math.min(limitRaw, AUDIT_PAGE_MAX) : AUDIT_PAGE_DEFAULT;
+    const beforeRaw = req.query?.before;
+    const before = beforeRaw === undefined ? undefined : Number(beforeRaw);
+    if (before !== undefined && (!Number.isSafeInteger(before) || before < 1)) return jsonError(res, 400, 'مؤشر الصفحة غير صالح.', 'INVALID_CURSOR');
+    const columns = 'id, actor_user_id, actor_role, organization_id, action, entity_type, entity_id, created_at';
+    const rows = before !== undefined
+      ? await db.prepare(`SELECT ${columns} FROM domain_audit_events WHERE id < ? ORDER BY id DESC LIMIT ?`).all<Record<string, unknown>>(before, limit + 1)
+      : await db.prepare(`SELECT ${columns} FROM domain_audit_events ORDER BY id DESC LIMIT ?`).all<Record<string, unknown>>(limit + 1);
+    const page = rows.slice(0, limit);
+    res.set('Cache-Control', 'no-store');
+    res.json({
+      events: page.map(row => ({
+        id: Number(row.id), createdAt: row.created_at,
+        actorUserId: row.actor_user_id ?? null, actorRole: row.actor_role,
+        organizationId: row.organization_id ?? null,
+        action: row.action, entityType: row.entity_type, entityId: row.entity_id
+      })),
+      nextBefore: rows.length > limit ? Number(page[page.length - 1].id) : null
     });
   });
 
