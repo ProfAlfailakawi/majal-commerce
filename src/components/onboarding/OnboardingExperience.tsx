@@ -220,7 +220,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby={headingId}
-        className="relative min-h-full flex flex-col max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8"
+        className="majal-onb-frame relative min-h-full flex flex-col max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8"
       >
         <div className="flex items-center justify-between gap-4 shrink-0">
           <span className="flex items-center gap-3">
@@ -237,11 +237,11 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           </button>
         </div>
 
-        <div className="flex-1 flex flex-col justify-center py-10 sm:py-14">
+        <div className="majal-onb-stage flex-1 flex flex-col justify-center py-10 sm:py-14">
           {step === 'WELCOME' && (
-            <div className="text-center space-y-8">
+            <div className="majal-onb-welcome text-center space-y-8">
               <div style={rise(0)} className="flex justify-center">
-                <span className="relative grid place-items-center w-44 h-44">
+                <span className="majal-onb-mark relative grid place-items-center w-44 h-44">
                   <span aria-hidden="true" className="absolute inset-0 rounded-full border border-gold-500/15" />
                   <span aria-hidden="true" className="absolute inset-[14%] rounded-full border border-gold-500/10" />
                   <span
@@ -482,7 +482,7 @@ export const OnboardingExperience: React.FC<OnboardingExperienceProps> = ({
           )}
         </div>
 
-        <div className="sticky bottom-0 shrink-0 space-y-4 -mx-4 sm:-mx-8 px-4 sm:px-8 pt-8 pb-3 bg-gradient-to-t from-(--onb-fade) via-(--onb-fade) via-85% to-transparent">
+        <div className="majal-onb-bar sticky bottom-0 shrink-0 space-y-4 -mx-4 sm:-mx-8 px-4 sm:px-8 pt-8 pb-3 bg-gradient-to-t from-(--onb-fade) via-(--onb-fade) via-85% to-transparent">
           {/* A segmented rail, not dots: it shows how much is left, which is the only
               honest way to ask someone to keep going. */}
           <div className="flex items-center gap-1.5" aria-hidden="true">

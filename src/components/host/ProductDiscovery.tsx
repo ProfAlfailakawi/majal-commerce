@@ -83,7 +83,7 @@ export const ProductDiscovery: React.FC = () => {
               aria-label="فئة المنتج"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full glass-input rounded-xl p-2 text-xs text-slate-200 focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
+              className="w-full min-h-11 glass-input rounded-xl px-2 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-gold-500 focus-visible:ring-2 focus-visible:ring-gold-300"
             >
               <option value="ALL">جميع الفئات</option>
               {PRODUCT_CATEGORIES.map(item => (
