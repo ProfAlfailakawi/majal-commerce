@@ -254,7 +254,7 @@ export default function App() {
           backdrop on each scroll. */}
       <div className="ambient-bg" aria-hidden="true" />
 
-      <div className="relative z-10 flex-1 flex flex-col">
+      <div className="majal-shell relative z-10 flex-1 flex flex-col">
         {sessionNotice && <div role="alert" className="bg-amber-500/15 border-b border-amber-400/30 text-amber-200 text-xs font-bold px-4 py-2.5 text-center">{sessionNotice}</div>}
         <Navbar
           activeSurface={activeSurface}
