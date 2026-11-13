@@ -1447,12 +1447,17 @@ footer.majal-footer {
    phone landscape): the header is already static here; it also gets a compact first row and
    the guide sits on one row, so the task starts above the fold instead of under two bands. */
 @media (max-height: 480px) and (orientation: landscape) {
-  header.glass-nav .majal-header-row { height: 3.5rem; min-height: 0; padding-block: 0; flex-wrap: nowrap; }
+  header.glass-nav .majal-header-row { padding-block: 0.375rem; }
   .majal-section-rail { padding-block: 0.375rem; }
   .majal-guide { padding-top: 0.5rem; }
+  .majal-guide-reason { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+}
+/* One compact header row and a one-row guide only where they fit side by side (folded Duo on its side
+   is 594px); narrower landscape windows keep the wrapped two-row header so nothing overlaps. */
+@media (max-height: 480px) and (orientation: landscape) and (min-width: 580px) {
+  header.glass-nav .majal-header-row { height: 3.5rem; min-height: 0; padding-block: 0; flex-wrap: nowrap; }
   .majal-guide > div { flex-direction: row; align-items: center; padding-block: 0.375rem; }
   .majal-guide > div > :last-child { flex-wrap: nowrap; flex-shrink: 0; }
-  .majal-guide-reason { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
 }
 
 /* First-run introduction: a full-screen surface whose controls respect every inset, and
