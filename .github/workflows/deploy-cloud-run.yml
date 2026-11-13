@@ -1,4 +1,5 @@
-# ينشر مجال إلى Cloud Run عند كل دفع إلى main.
+# ينشر مجال إلى Cloud Run عند التشغيل اليدوي فقط (workflow_dispatch) — لا يعمل تلقائيًا
+# عند الدفع أو الدمج إلى main. شغّله من Actions ← «نشر مجال إلى Cloud Run» ← Run workflow.
 #
 # لماذا هذا الملف موجود:
 #   المستودع يحمل سكربت نشر (`scripts/deploy-cloud-run.sh`) لكنه كان يُشغَّل
@@ -82,7 +83,7 @@ jobs:
               echo "الخطوات في \`docs/deploy-majal.md\`، ثم تُضاف القيم في:"
               echo "Settings → Secrets and variables → Actions → **Variables**"
               echo ""
-              echo "وبمجرد إضافتها يمضي النشر تلقائيًا عند الدمج التالي بلا تعديلٍ هنا."
+              echo "وبمجرد إضافتها يمضي النشر عند التشغيل اليدوي التالي لهذا الـworkflow بلا تعديلٍ هنا."
             } >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi

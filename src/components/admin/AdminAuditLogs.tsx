@@ -13,10 +13,30 @@ const ACTION_LABELS: Record<string, string> = {
   ORDER_PLACED: 'حجز طلب',
   ORDER_PAID_SIMULATED: 'دفع طلب (محاكاة)',
   ORDER_CANCELLED_SIMULATED: 'إلغاء طلب (محاكاة)',
-  ORDER_REFUNDED_SIMULATED: 'استرجاع طلب (محاكاة)'
+  ORDER_REFUNDED_SIMULATED: 'استرجاع طلب (محاكاة)',
+  // أحداث يكتبها الخادم في domain_audit_events (server/*.ts)
+  ORDER_CREATED: 'إنشاء طلب', ORDER_FULFILLED: 'تسليم طلب',
+  PRODUCT_CREATED: 'إنشاء منتج', PRODUCT_RESUBMITTED: 'إعادة إرسال منتج للمراجعة', PRODUCT_APPROVED: 'اعتماد منتج',
+  PRODUCT_REJECTED: 'رفض منتج', PRODUCT_RESUMED: 'استئناف منتج',
+  ROLE_CHANGED: 'تغيير دور مستخدم', USER_STATUS_CHANGED: 'تغيير حالة مستخدم',
+  RECIPE_ACCESS_REQUESTED: 'طلب إذن وصفة', RECIPE_ACCESS_APPROVED: 'منح إذن وصفة', RECIPE_ACCESS_REVOKED: 'سحب إذن وصفة',
+  RECIPE_SEALED: 'ختم وصفة', TASTE_DNA_CREATED: 'إنشاء بصمة تذوّق',
+  OFFER_CREATED: 'تقديم عرض تجاري', OFFER_ACCEPTED_CONTRACT_CREATED: 'قبول عرض وإنشاء عقد',
+  SHADOW_LAUNCH_RUN: 'تشغيل إطلاق تجريبي', ZERO_FORM_EXTRACTED: 'استخراج بيانات التسجيل',
+  SUPPLIER_VERIFICATION_SUBMITTED: 'طلب توثيق مورّد', SUPPLIER_OFFERING_CREATED: 'إضافة عرض مورّد', SUPPLIER_REVIEWED: 'مراجعة مورّد',
+  SUPPLIER_DIRECTORY_REVIEWED: 'مراجعة إدراج في دليل الموردين', BUSINESS_LISTING_REVIEWED: 'مراجعة إدراج نشاط تجاري',
+  KUWAIT_JOB_SUBMITTED: 'نشر وظيفة', KUWAIT_JOB_CLOSED: 'إغلاق وظيفة', KUWAIT_JOB_APPLIED: 'تقديم على وظيفة', KUWAIT_JOB_REVIEWED: 'مراجعة وظيفة',
+  AD_CAMPAIGN_CREATED: 'إنشاء حملة إعلانية', AD_CAMPAIGN_STATUS: 'تغيير حالة حملة إعلانية', AD_CAMPAIGN_BILLING: 'تعديل فوترة حملة إعلانية',
+  AD_CAMPAIGN_EDITED: 'تعديل حملة إعلانية', AD_CAMPAIGN_TARGETING: 'تعديل استهداف حملة إعلانية',
+  AD_CREATIVE_UPLOADED: 'رفع تصميم إعلان', AD_CREATIVE_REMOVED: 'حذف تصميم إعلان', AD_REPORT_ROTATED: 'تجديد رابط تقرير الإعلان',
+  TEAM_INVITED: 'دعوة عضو فريق', TEAM_INVITE_REVOKED: 'إلغاء دعوة فريق', TEAM_MEMBER_CHANGED: 'تعديل عضو فريق', TEAM_MEMBER_REMOVED: 'إزالة عضو فريق',
+  PARTNER_KIT_ROTATED: 'تجديد رابط حزمة الشركاء'
 };
 
-const ENTITY_LABELS: Record<string, string> = { RecipeVersion: 'نسخة وصفة', Launch: 'إطلاق', SettlementBatch: 'دفعة تسوية', Collaboration: 'تعاون', ORDER: 'طلب', PRODUCT: 'منتج', CONTRACT: 'عقد', LAUNCH: 'إطلاق', SETTLEMENT: 'تسوية', COLLABORATION: 'تعاون', REVIEW: 'تقييم', RECIPE_ACCESS_GRANT: 'إذن وصفة', RECIPE_ACCESS_REQUEST: 'طلب إذن وصفة', SETTLEMENT_BATCH: 'دفعة تسوية', CHALLENGE: 'تحدٍّ', DEAL_DECISION: 'قرار صفقة', LAB_BATCH: 'دفعة مختبر', OFFER: 'عرض تجاري', PLATFORM_POLICY: 'سياسة المنصة', USER: 'مستخدم', DATABASE: 'قاعدة البيانات' };
+const ENTITY_LABELS: Record<string, string> = { RecipeVersion: 'نسخة وصفة', Launch: 'إطلاق', SettlementBatch: 'دفعة تسوية', Collaboration: 'تعاون', ORDER: 'طلب', PRODUCT: 'منتج', CONTRACT: 'عقد', LAUNCH: 'إطلاق', SETTLEMENT: 'تسوية', COLLABORATION: 'تعاون', REVIEW: 'تقييم', RECIPE_ACCESS_GRANT: 'إذن وصفة', RECIPE_ACCESS_REQUEST: 'طلب إذن وصفة', SETTLEMENT_BATCH: 'دفعة تسوية', CHALLENGE: 'تحدٍّ', DEAL_DECISION: 'قرار صفقة', LAB_BATCH: 'دفعة مختبر', OFFER: 'عرض تجاري', PLATFORM_POLICY: 'سياسة المنصة', USER: 'مستخدم', DATABASE: 'قاعدة البيانات',
+  RECIPE_SEAL: 'ختم وصفة', TASTE_DNA: 'بصمة تذوّق', SHADOW_LAUNCH: 'إطلاق تجريبي', ONBOARDING_EXTRACTION: 'بيانات التسجيل',
+  SUPPLIER: 'مورّد', SUPPLIER_OFFERING: 'عرض مورّد', SUPPLIER_DIRECTORY: 'دليل الموردين', BUSINESS_LISTING: 'إدراج نشاط تجاري',
+  JOB_POST: 'وظيفة', JOB_APPLICATION: 'طلب وظيفة', AD_CAMPAIGN: 'حملة إعلانية', TEAM_MEMBER: 'عضو فريق', PARTNER_KIT: 'حزمة الشركاء' };
 
 export const AdminAuditLogs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');

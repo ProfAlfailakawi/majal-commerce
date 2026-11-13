@@ -23,8 +23,8 @@
 set -euo pipefail
 
 PROJECT_ID="${PROJECT_ID:-$(gcloud config get-value project 2>/dev/null || true)}"
-REGION="${REGION:-europe-west1}"
-SERVICE_NAME="${SERVICE_NAME:-majal}"
+REGION="${REGION:-europe-west2}"
+SERVICE_NAME="${SERVICE_NAME:-majal-app}"
 SQL_INSTANCE="${SQL_INSTANCE:-majal-db}"
 ALERT_EMAIL="${ALERT_EMAIL:-}"
 RENDER_ONLY="${MONITORING_RENDER_ONLY:-}"

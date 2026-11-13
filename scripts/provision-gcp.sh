@@ -23,10 +23,10 @@ set -euo pipefail
 
 # ── اضبط هذه الأربعة ثم شغّل ────────────────────────────────────────────────
 PROJECT_ID="${PROJECT_ID:-}"                 # معرّف مشروعك في Google Cloud
-REGION="${REGION:-europe-west1}"             # نفس منطقة Cloud Run
+REGION="${REGION:-europe-west2}"             # نفس منطقة Cloud Run
 SQL_INSTANCE="${SQL_INSTANCE:-majal-db}"
 SQL_TIER="${SQL_TIER:-db-g1-small}"      # الأرخص. للإنتاج الجاد: db-custom-2-7680
-SERVICE_NAME="${SERVICE_NAME:-majal}"
+SERVICE_NAME="${SERVICE_NAME:-majal-app}"
 # ────────────────────────────────────────────────────────────────────────────
 
 DB_NAME="${DB_NAME:-majal}"
