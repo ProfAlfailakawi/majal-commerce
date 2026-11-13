@@ -11,3 +11,7 @@ var/
 *.log
 *.tsbuildinfo
 .DS_Store
+
+# مخرجات مولَّدة: بناء QA مؤقت، وذاكرة Firebase CLI لرفع الاستضافة
+/tmp/
+.firebase/
