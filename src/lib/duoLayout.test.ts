@@ -99,25 +99,51 @@ test('Duo is not an iPad: the book never matches 744px+ portrait, 1024px+ landsc
   assert.ok(!matches(390, 844) && !matches(367, 740), 'phone portrait / folded outer screen');
 });
 
-test('widget keep-out: only the inner screen in the installed app, header / first-run frame / dialogs step aside', () => {
+// Evaluates the real media-query text (not a re-typed copy of the numbers) for a viewport.
+function mediaMatches(query: string, w: number, h: number): boolean {
+  return query.split(',').some(alt => alt.trim().split(/\s+and\s+/).every(part => {
+    const p = part.trim();
+    if (p === 'screen') return true;
+    const m = p.match(/^\((min|max)-(width|height):\s*(\d+)px\)$/);
+    if (m) { const v = m[2] === 'width' ? w : h; return m[1] === 'min' ? v >= +m[3] : v <= +m[3]; }
+    const o = p.match(/^\(orientation:\s*(landscape|portrait)\)$/);
+    if (o) return o[1] === 'landscape' ? w > h : h >= w;
+    throw new Error(`unsupported media feature in keep-out: ${p}`);
+  }));
+}
+
+test('widget keep-out: inner screen only, in a browser tab AND the installed app (no display-mode), header / first-run frame / dialogs step aside', () => {
   const head = keepOutSection.match(/@media ([^{]+)\{\s*:root \{ --duo-cutout-w: 116px; --duo-cutout-h: 116px; \}/);
   assert.ok(head, 'the variables are defined once, under the media condition');
   const alts = head![1].split(',').map(a => a.trim());
   assert.equal(alts.length, 2);
-  for (const alt of alts) assert.match(alt, /^screen and \(display-mode: standalone\) and /);
-  assert.ok(alts.some(a => a.endsWith(BOOK.replace('screen and ', ''))), 'book branch');
-  assert.ok(alts.some(a => a.endsWith(DUO_PORTRAIT.replace('screen and ', ''))), 'portrait branch');
-  // Nothing outside standalone: no unconditional use of the variables, so browser tabs and tablets are untouched.
-  const outside = keepOutSection.replace(/@media screen and \(display-mode: standalone\)[\s\S]*$/, '');
-  assert.doesNotMatch(outside.replace(/\/\*[\s\S]*?\*\//g, ''), /--duo-cutout/);
+  assert.deepEqual([...alts].sort(), [BOOK, DUO_PORTRAIT].sort());
+  // No display-mode anywhere in the keep-out rules (comments excluded).
+  assert.doesNotMatch(keepOutSection.replace(/\/\*[\s\S]*?\*\//g, ''), /display-mode|standalone/);
+  // Nothing outside a media block: no unconditional use of the variables.
+  const firstMedia = keepOutSection.indexOf('@media');
+  assert.doesNotMatch(keepOutSection.slice(0, firstMedia).replace(/\/\*[\s\S]*?\*\//g, ''), /--duo-cutout/);
   assert.match(keepOutSection, /header\.glass-nav > div \{ padding-right: calc\(var\(--duo-cutout-w\) \+ 0\.5rem\); \}/);
   assert.match(keepOutSection, /\.majal-onb-frame \{ padding-right: calc\(var\(--duo-cutout-w\) \+ 0\.5rem\); \}/);
   assert.match(keepOutSection, /padding-top: calc\(var\(--duo-cutout-h\) \+ 0\.5rem\)/);
   // The book keeps its spine track centred: the left edge gives up the same width, in book only.
-  const bookOnly = keepOutSection.match(/@media screen and \(display-mode: standalone\) and ([^{]+)\{\s*header\.glass-nav > div \{ padding-left/);
-  assert.ok(bookOnly && bookOnly[1].trim() === BOOK.replace('screen and ', ''));
+  const bookOnly = keepOutSection.match(/@media ([^{]+)\{\s*header\.glass-nav > div \{ padding-left/);
+  assert.ok(bookOnly && bookOnly[1].trim() === BOOK);
   // Physical right, never the logical end: the widget does not follow the writing direction.
   assert.doesNotMatch(keepOutSection, /padding-inline-(start|end)/);
+});
+
+test('widget keep-out matches the Duo inner screen and nothing else (real media queries evaluated)', () => {
+  const keep = (w: number, h: number) => mediaMatches(`${BOOK}, ${DUO_PORTRAIT}`, w, h);
+  for (const [w, h] of [[951, 669], [951, 585], [800, 600], [669, 867], [720, 900], [640, 800]]) assert.ok(keep(w, h), `${w}x${h} must keep out`);
+  const never: Array<[number, number, string]> = [
+    [390, 844, 'iPhone portrait'], [844, 390, 'iPhone landscape'], [932, 430, 'iPhone Pro Max landscape'], [430, 932, 'iPhone Pro Max portrait'],
+    [744, 1024, 'iPad portrait'], [820, 1180, 'iPad portrait'], [1024, 768, 'iPad landscape'], [1180, 820, 'iPad landscape'],
+    [1280, 800, 'desktop'], [1440, 900, 'desktop'], [367, 740, 'folded outer'], [382, 580, 'folded outer'], [951, 350, 'laptop posture'], [600, 350, 'laptop posture']
+  ];
+  for (const [w, h, name] of never) assert.ok(!keep(w, h), `${w}x${h} (${name}) must not keep out`);
+  // The evaluator agrees with the book condition too.
+  assert.ok(mediaMatches(BOOK, 951, 585) && !mediaMatches(BOOK, 669, 867));
 });
 
 test('recipe vault header can shrink: its badge wraps below sm so the sheet never overflows at 320px', () => {

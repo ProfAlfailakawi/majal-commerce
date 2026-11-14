@@ -4,9 +4,8 @@
  * Measures per screen: horizontal overflow, interactive/text crossing the spine (book only),
  * anything painted in the widget keep-out box (116x116, top-right; inner screen only).
  *
- * Chromium cannot emulate (display-mode: standalone), so the init script copies every rule that is
- * gated on it into a second stylesheet with that one condition removed. The keep-out numbers are
- * therefore a rule-level emulation, never a real installed-app run.
+ * The keep-out applies on the inner screen in a plain browser tab AND in the installed app (the
+ * rules no longer depend on display-mode), so the audit runs the real stylesheet unmodified.
  *
  * Server (demo comes from a session flag and every /api call is intercepted in the browser):
  *   npm run build:client && npx vite preview --port 5180 --strictPort --host 127.0.0.1
@@ -128,7 +127,7 @@ const SCREENS = [
 async function newContext(browser, vp, opts = {}) {
   const [width, height] = vp.split('x').map(Number);
   const ctx = await browser.newContext({
-    viewport: { width, height }, deviceScaleFactor: 1, hasTouch: true, locale: 'ar', serviceWorkers: 'block',
+    viewport: { width, height }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, locale: 'ar', serviceWorkers: 'block',
     colorScheme: opts.dark ? 'dark' : 'light', reducedMotion: opts.reducedMotion ? 'reduce' : 'no-preference'
   });
   await ctx.addInitScript(({ anon, onboarding, dark }) => {
@@ -137,7 +136,6 @@ async function newContext(browser, vp, opts = {}) {
       else localStorage.removeItem('majal_onboarding_v1');
       if (dark) localStorage.setItem('majal-theme', 'dark');
       sessionStorage.setItem('majal_overture_seen', '1');
-      const inject = () => { if (window.__standaloneRules) return; const out = []; const walk = rules => { for (const r of rules) { if (r.type === 4 && /display-mode:\s*standalone/.test(r.conditionText)) out.push('@media ' + r.conditionText.replace(/\(display-mode:\s*standalone\)\s*(and\s*)?/g, '') + '{' + [...r.cssRules].map(x => x.cssText).join('\n') + '}'); else if (r.cssRules) walk(r.cssRules); } }; for (const sh of document.styleSheets) { try { walk(sh.cssRules); } catch (e) {} } const st = document.createElement('style'); st.textContent = out.join('\n'); document.head.append(st); if (out.length) { window.__standaloneRules = out.length; } }; const iv = setInterval(() => { if (document.head) inject(); if (window.__standaloneRules) clearInterval(iv); }, 100);
       // The branded splash holds the first ~1.2s by design; the audit measures the app under it.
       document.addEventListener('DOMContentLoaded', () => document.getElementById('majal-splash')?.remove(), { once: true });
       if (!anon) {
