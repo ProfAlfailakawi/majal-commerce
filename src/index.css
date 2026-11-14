@@ -1824,18 +1824,19 @@ body { container: majal-page / inline-size; }
     .majal-section-rail { padding-block: 0.375rem; }
   }
 }
-/* ── Widget keep-out: iPhone Duo inner screen, installed app ─────────────────────
-   The installed app shows a system status widget (location arrow, clock, signal ring) floating
+/* ── Widget keep-out: iPhone Duo inner screen (browser tab and installed app) ────
+   The Duo shows a system status widget (location arrow, clock, signal ring) floating
    over the physical top-right corner: about 55-80px wide, from the top edge to roughly 115px
    down. It is system-owned and moves, so a generous corner is reserved instead of its exact box.
-   Every rule here lives under (display-mode: standalone) on the inner screen (book or portrait),
-   so tablets, phones and a browser tab (whose own bars already avoid the widget) are untouched.
+   Every rule here lives under the inner-screen media conditions (book or portrait), in a browser
+   tab and in the installed app alike (display mode is deliberately NOT part of the condition),
+   so tablets, phones, the folded outer screen and desktop are untouched.
    Only content steps aside (physical right, regardless of RTL): backgrounds and the header bar
    still run edge to edge. In the book the box belongs to the right page only; the left page
    header zone is not affected. The folded outer screen (~367x740) cannot be told apart from an
    ordinary iPhone, so it is deliberately not guessed at. */
-@media screen and (display-mode: standalone) and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape),
-       screen and (display-mode: standalone) and (min-width: 640px) and (max-width: 720px) and (min-height: 520px) and (max-height: 960px) and (orientation: portrait) {
+@media screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape),
+       screen and (min-width: 640px) and (max-width: 720px) and (min-height: 520px) and (max-height: 960px) and (orientation: portrait) {
   :root { --duo-cutout-w: 116px; --duo-cutout-h: 116px; }
 
   /* The top bar: brand, demo chip and the whole section rail stop short of the corner. */
@@ -1851,7 +1852,7 @@ body { container: majal-page / inline-size; }
 /* The book's header is a full-width bar over both pages; its section rail keeps a spine track
    on the fold, so the left edge gives up the same width as the right (the track stays centred);
    the first-run introduction's spread is centred the same way. */
-@media screen and (display-mode: standalone) and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape) {
+@media screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape) {
   header.glass-nav > div { padding-left: calc(var(--duo-cutout-w) + 0.5rem); }
   .majal-onb-frame { padding-left: calc(var(--duo-cutout-w) + 0.5rem); }
 }
