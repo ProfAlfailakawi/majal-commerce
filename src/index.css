@@ -1527,8 +1527,8 @@ body { container: majal-page / inline-size; }
    Width rules only: the same DOM at every size, so typing, scroll, open dialogs and
    timers survive folding and unfolding. (No posture or viewport-segment queries: they
    are preview-only in shipping Safari and a test guards against them.) */
-@media (min-width: 640px) and (max-width: 760px) and (min-height: 520px),
-       (min-width: 860px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 760px) {
+@media screen and (min-width: 640px) and (max-width: 760px) and (min-height: 520px),
+       screen and (min-width: 860px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 760px) {
   :root {
     --spine: 2rem;
     --leaf-col: 15rem;
@@ -1769,7 +1769,7 @@ body { container: majal-page / inline-size; }
 }
 /* Landscape book (~951x585): every row of chrome is height the task does not get, so the
    header rows tighten and the sticky offsets follow. */
-@media (min-width: 860px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 760px) {
+@media screen and (min-width: 860px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 760px) {
   :root { --duo-sticky-top: calc(env(safe-area-inset-top, 0px) + 8.25rem); }
   html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 8rem); }
   @container majal-page (min-width: 40rem) {
@@ -1779,7 +1779,7 @@ body { container: majal-page / inline-size; }
 }
 /* Portrait book: each leaf is ~290px — a tighter index, calmer display type, and dialog
    forms in one column. */
-@media (min-width: 640px) and (max-width: 760px) and (min-height: 520px) {
+@media screen and (min-width: 640px) and (max-width: 760px) and (min-height: 520px) {
   /* A dialog on a ~300px leaf stacks its paired fields instead of halving them. */
   .fixed.inset-0 :is(.sm\:grid-cols-2, .sm\:grid-cols-3, [class*='sm:grid-cols-[']) { grid-template-columns: minmax(0, 1fr); }
   .fixed.inset-0 :is(.sm\:grid-cols-2, .sm\:grid-cols-3) > :is(.sm\:col-span-2, .col-span-2) { grid-column: 1 / -1; }
@@ -1796,7 +1796,7 @@ body { container: majal-page / inline-size; }
    side 594x368, phone landscape). The page reads on top; the section rail docks at the
    bottom edge within thumb reach. The footer reserves the dock's height, so the dock
    never covers the last line, and the floating assistant lifts above it. */
-@media (max-height: 480px) and (orientation: landscape) and (min-width: 560px) {
+@media screen and (max-height: 480px) and (orientation: landscape) and (min-width: 560px) {
   :root { --duo-dock: 3.5rem; }
   /* A focused field or a jump target settles above the dock, not under it. */
   html { scroll-padding-bottom: calc(var(--duo-dock) + 0.75rem + env(safe-area-inset-bottom, 0px)); }
@@ -1820,7 +1820,7 @@ body { container: majal-page / inline-size; }
 }
 /* From 640px the assistant's round button docks into the bar's far (left) end, beside the
    sections, instead of floating over the page. */
-@media (max-height: 480px) and (orientation: landscape) and (min-width: 640px) {
+@media screen and (max-height: 480px) and (orientation: landscape) and (min-width: 640px) {
   body:has(.majal-ai-fab) .majal-section-rail { padding-left: calc(max(1rem, env(safe-area-inset-left, 0px)) + 3.75rem); }
   .majal-ai-fab { z-index: 46; bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px)); inset-inline-end: max(1rem, env(safe-area-inset-left, 0px)); }
 }

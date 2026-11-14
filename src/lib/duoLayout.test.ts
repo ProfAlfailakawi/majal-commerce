@@ -52,8 +52,17 @@ test('every surface root opts into the spread', () => {
 });
 
 test('laptop posture docks the section rail at the bottom and reserves its height', () => {
-  const block = css.slice(css.indexOf('@media (max-height: 480px) and (orientation: landscape) and (min-width: 560px) {\n  :root { --duo-dock'));
+  const block = css.slice(css.indexOf('@media screen and (max-height: 480px) and (orientation: landscape) and (min-width: 560px) {\n  :root { --duo-dock'));
   assert.match(block, /\.majal-section-rail \{[^}]*position: fixed;[^}]*bottom: 0;/);
   assert.match(block, /footer\.majal-footer[^{]*\{ padding-bottom: calc\(var\(--duo-dock\)/);
   assert.match(block, /scroll-padding-bottom: calc\(var\(--duo-dock\)/);
+});
+
+test('every @media in the Duo book/laptop section is screen-only (print must stay one column)', () => {
+  const section = css.slice(css.indexOf('Book spread: iPhone Duo inner screen'));
+  const queries = [...section.matchAll(/^@media ([^{]+)\{/gm)].map(m => m[1]);
+  assert.ok(queries.length >= 5);
+  for (const q of queries) {
+    for (const alt of q.split(',')) assert.match(alt.trim(), /^screen and /, alt);
+  }
 });
