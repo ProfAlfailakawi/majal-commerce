@@ -256,8 +256,8 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="majal-spread max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      <div className="majal-leaf-aside flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-2">
           <span className="text-xs font-black text-gold-300">مجال القانوني</span>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-100">المركز القانوني والامتثال</h1>
@@ -268,11 +268,11 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
         </button>
       </div>
 
-      <div className="rounded-2xl border border-gold-300/20 bg-gold-500/[0.06] p-4 text-xs leading-6 text-slate-300">
+      <div className="majal-leaf-aside rounded-2xl border border-gold-300/20 bg-gold-500/[0.06] p-4 text-xs leading-6 text-slate-300">
         هذه المستندات إطار تشغيلي معلن وقابل للمراجعة. اكتمال الاعتماد القانوني والتنظيمي في دولة الكويت شرط مسبق لأي معاملة تجارية حقيقية، ولا تُغني هذه الصفحات عن اعتماد مستشار مختص.
       </div>
 
-      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1" role="tablist" aria-label="المستندات القانونية">
+      <div className="majal-leaf-aside majal-surface-tabs flex gap-2 overflow-x-auto no-scrollbar pb-1" role="tablist" aria-label="المستندات القانونية">
         {documents.map(item => (
           <button
             key={item.id}
@@ -289,7 +289,7 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
         ))}
       </div>
 
-      <details className="lg:hidden rounded-2xl border border-white/10 glass-card group mb-4">
+      <details className="majal-leaf-hide lg:hidden rounded-2xl border border-white/10 glass-card group mb-4">
         <summary className="flex items-center justify-between gap-2 min-h-11 px-4 py-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-xs font-black text-gold-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
           <span>في هذا المستند</span>
           <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180" aria-hidden="true" />
@@ -300,8 +300,8 @@ export const LegalCenter: React.FC<LegalCenterProps> = ({ initialDocument = 'TER
           ))}
         </div>
       </details>
-      <div className="lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-6 lg:items-start">
-      <nav aria-label="فهرس المستند" className="hidden lg:block sticky top-28 rounded-2xl border border-white/10 glass-card p-4 space-y-1">
+      <div className="majal-leaf-contents lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-6 lg:items-start">
+      <nav aria-label="فهرس المستند" className="majal-leaf-index majal-leaf-show hidden lg:block sticky top-28 rounded-2xl border border-white/10 glass-card p-4 space-y-1">
         <div className="text-xs font-black text-gold-300 pb-2">في هذا المستند</div>
         {doc.sections.map((section, index) => (
           <button key={section.heading} type="button" onClick={() => jumpTo(index)} className="w-full text-start text-xs leading-6 text-slate-300 hover:text-gold-300 py-1.5 px-2 rounded-lg hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300">{section.heading}</button>

@@ -193,10 +193,10 @@ export const BusinessShowcase: React.FC<{ onSurfaceChange: (surface: SurfaceType
   const closeDetail = () => setOpen(null);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8 space-y-10">
-      <section className="glass-panel majal-grain rounded-[28px] p-6 sm:p-10 border border-white/10 relative overflow-hidden">
+    <div className="majal-spread max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8 space-y-10">
+      <section className="majal-leaf-opener glass-panel majal-grain rounded-[28px] p-6 sm:p-10 border border-white/10 relative overflow-hidden">
         <div className="majal-glow -top-[16rem] -end-[16rem] w-[40rem] h-[40rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
-        <div className="relative z-10 grid lg:grid-cols-[1.1fr_1fr] gap-8 items-center">
+        <div className="majal-split relative z-10 grid lg:grid-cols-[1.1fr_1fr] gap-8 items-center">
           <div className="space-y-4">
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card border border-emerald-400/25 text-emerald-300 text-xs font-black"><Gift className="w-4 h-4" aria-hidden="true" />مجانية بالكامل وبلا عمولة</span>
             <h1 className="text-3xl sm:text-4xl font-black leading-tight">عندك مشروع <span className="majal-wordmark">تبي تبيعه؟</span></h1>
@@ -219,7 +219,7 @@ export const BusinessShowcase: React.FC<{ onSurfaceChange: (surface: SurfaceType
         </div>
       </section>
 
-      <AdSlotView slot="MARKET" />
+      <AdSlotView slot="MARKET" className="majal-leaf-aside" />
 
       <section className="space-y-5" aria-labelledby="biz-list-title">
         <div className="flex flex-wrap items-end justify-between gap-3">
@@ -239,7 +239,7 @@ export const BusinessShowcase: React.FC<{ onSurfaceChange: (surface: SurfaceType
         )}
       </section>
 
-      <section className="grid md:grid-cols-3 gap-4" aria-label="لماذا هذه البوابة">
+      <section className="majal-leaf-aside grid md:grid-cols-3 gap-4" aria-label="لماذا هذه البوابة">
         {[
           { icon: Gift, title: 'مجانية وصريحة', body: 'لا رسوم ولا عمولة. هدفنا أن تتعرّف على منصتنا.' },
           { icon: Handshake, title: 'تواصل مباشر', body: 'يتواصل المهتم مع البائع بنفسه. لا نتوسط في الصفقة.' },
@@ -249,12 +249,12 @@ export const BusinessShowcase: React.FC<{ onSurfaceChange: (surface: SurfaceType
         ))}
       </section>
 
-      <section className="rounded-3xl border border-gold-300/20 bg-gold-500/[0.05] p-6 sm:p-8 grid md:grid-cols-[1fr_auto] gap-5 items-center">
+      <section className="majal-leaf-aside rounded-3xl border border-gold-300/20 bg-gold-500/[0.05] p-6 sm:p-8 grid md:grid-cols-[1fr_auto] gap-5 items-center">
         <div className="space-y-2"><h2 className="text-lg font-black flex items-center gap-2"><Store className="w-5 h-5 text-gold-300" aria-hidden="true" />جرّب مجال بكامل تفاصيله</h2><p className="text-xs sm:text-sm text-slate-300 leading-7">مبدعون ومنشآت وموردون وسوق في مكان واحد. ادخل واستكشف كيف نحوّل الوصفة إلى منتج تجاري.</p></div>
         <div className="flex flex-wrap gap-3"><button type="button" onClick={() => onSurfaceChange('CONSUMER')} className="px-5 py-3 rounded-xl bg-gold-500 text-slate-950 text-sm font-black">استكشف السوق</button><button type="button" onClick={() => onSurfaceChange('PUBLIC')} className="px-5 py-3 rounded-xl glass-card border border-slate-700/60 text-sm font-semibold">عن مجال</button></div>
       </section>
 
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
+      <section className="majal-leaf-aside flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
         <div className="flex items-center gap-3"><Megaphone className="w-5 h-5 text-gold-300" aria-hidden="true" /><p className="text-xs text-slate-300 leading-6">هل تمثل شركة؟ اعرض دعايتك أمام مبدعين ومنشآت وزبائن مجال، بوسم «إعلان» واضح وتقرير بأرقامك. الأسعار نتفق عليها معك.</p></div>
         <button type="button" onClick={() => setForm('ad')} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-black">اطلب مساحة إعلانية</button>
       </section>

@@ -113,8 +113,8 @@ export const AdminDashboard: React.FC = () => {
   );
 
   return (
-    <div className="majal-admin-overview max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
-      <section className="majal-hero glass-panel rounded-[28px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
+    <div className="majal-admin-overview majal-spread max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-slate-100">
+      <section className="majal-leaf-aside majal-hero glass-panel rounded-[28px] p-6 md:p-8 border border-white/10 relative overflow-hidden">
         <div className="absolute inset-y-0 start-0 w-64 bg-gradient-to-l from-gold-500/10 to-transparent pointer-events-none" />
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="space-y-3 max-w-3xl">
@@ -139,12 +139,12 @@ export const AdminDashboard: React.FC = () => {
       </section>
 
       {notice && (
-        <div className="p-4 bg-emerald-500 text-slate-950 rounded-2xl text-sm font-bold">
+        <div className="majal-leaf-aside p-4 bg-emerald-500 text-slate-950 rounded-2xl text-sm font-bold">
           <CircleCheck className="w-4 h-4 shrink-0" /> {notice}
         </div>
       )}
 
-      <section className="grid grid-cols-2 sm:grid-cols-6 lg:grid-cols-[1.5fr_1.2fr_1fr_1fr_1fr] gap-3 sm:gap-4">
+      <section className="majal-leaf-aside grid grid-cols-2 sm:grid-cols-6 lg:grid-cols-[1.5fr_1.2fr_1fr_1fr_1fr] gap-3 sm:gap-4">
         {[
           { label: 'إجمالي المبيعات (طلبات مكتملة)', value: metrics ? `${totals.totalGmv} د.ك` : '—', icon: <Wallet className="w-5 h-5 text-gold-300" /> },
           { label: 'رسوم المنصة', value: metrics ? `${totals.totalPlatformFees} د.ك` : '—', icon: <BadgeCheck className="w-5 h-5 text-emerald-300" /> },

@@ -20,8 +20,8 @@ export const InviteAcceptPage: React.FC<{ token: string; onDone: () => void }> =
     try { await acceptInvite({ token, name, password }); setDone(true); } catch (err) { setError(err instanceof Error ? err.message : 'تعذّر تفعيل الحساب.'); } finally { setBusy(false); }
   };
   return (
-    <div className="max-w-md mx-auto px-4 py-12 space-y-6">
-      <div className="flex items-center gap-3"><MajalMark size={36} tone="ink" /><h1 className="text-xl font-black">دعوة للانضمام</h1></div>
+    <div className="majal-spread max-w-md mx-auto px-4 py-12 space-y-6">
+      <div className="majal-leaf-aside majal-leaf-title flex items-center gap-3"><MajalMark size={36} tone="ink" /><h1 className="text-xl font-black">دعوة للانضمام</h1></div>
       {done ? (
         <div className="glass-panel rounded-3xl border border-white/10 p-6 text-center space-y-4"><BadgeCheck className="w-12 h-12 mx-auto text-emerald-300" aria-hidden="true" /><p role="status" className="text-sm leading-7">تم تفعيل حسابك. سجّل الدخول بالبريد {info?.email} وكلمة المرور التي اخترتها.</p><button type="button" onClick={onDone} className="px-6 py-3 rounded-xl bg-gold-500 text-slate-950 text-sm font-black">متابعة</button></div>
       ) : !info ? (

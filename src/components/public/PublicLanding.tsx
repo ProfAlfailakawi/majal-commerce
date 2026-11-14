@@ -74,9 +74,9 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
   ];
 
   return (
-    <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-6 space-y-16 ${overture.hold ? 'majal-overture-hold' : ''}`}>
+    <div className={`majal-spread max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-6 space-y-16 ${overture.hold ? 'majal-overture-hold' : ''}`}>
       {overture.mounted && <Overture onReveal={releaseHold} onDone={dismissOverture} />}
-      <div className="glass-panel majal-grain rounded-[28px] p-8 sm:p-12 relative overflow-hidden text-center sm:text-start border border-white/10 elev-3">
+      <div className="majal-leaf-opener glass-panel majal-grain rounded-[28px] p-8 sm:p-12 relative overflow-hidden text-center sm:text-start border border-white/10 elev-3">
         <div className="majal-glow -top-[18rem] -end-[18rem] w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
         <div className="majal-glow -bottom-[18rem] -start-[18rem] w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(75,106,163,0.10)' } as React.CSSProperties} />
 
@@ -102,7 +102,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
           logo's own metaphor — a licensed gate holding a protected idea — is the first
           explanation of the model a visitor gets, before a single paragraph.
         */}
-        <aside aria-label="رحلة مجال المختصرة" className="hidden xl:block absolute end-12 top-1/2 -translate-y-1/2">
+        <aside aria-label="رحلة مجال المختصرة" className="majal-hero-monument hidden xl:block absolute end-12 top-1/2 -translate-y-1/2">
           <div className="relative w-[17rem] h-[17rem] grid place-items-center">
             <span aria-hidden="true" className="absolute inset-0 rounded-full border border-gold-500/12 majal-hero-ring" />
             <span aria-hidden="true" className="absolute inset-[13%] rounded-full border border-gold-500/[0.08] majal-hero-ring" />
@@ -205,7 +205,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
       {/* One panel rather than four floating cards: these are facets of a single claim,
           and a hairline between them reads as a spec plate instead of four unrelated
           numbers competing for the same attention. */}
-      <div className="majal-ledger grid grid-cols-2 lg:grid-cols-4">
+      <div className="majal-leaf-aside majal-ledger grid grid-cols-2 lg:grid-cols-4">
         {stats.map((st, i) => (
           <div key={i} className="majal-ledger-cell flex flex-col sm:flex-row items-center gap-3 sm:gap-4 text-center sm:text-start px-3 sm:px-5 py-5">
             <span className="majal-arch-tile">{st.icon}</span>
@@ -219,7 +219,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
 
       <JourneyInfographic hold={overture.mounted} />
 
-      <section aria-labelledby="landing-showcase" className="rounded-3xl border border-gold-300/20 bg-gold-500/[0.05] p-6 sm:p-8 grid md:grid-cols-[1fr_auto] gap-5 items-center">
+      <section aria-labelledby="landing-showcase" className="majal-leaf-aside rounded-3xl border border-gold-300/20 bg-gold-500/[0.05] p-6 sm:p-8 grid md:grid-cols-[1fr_auto] gap-5 items-center">
         <div className="space-y-2">
           <h2 id="landing-showcase" className="font-display text-xl sm:text-2xl font-black flex items-center gap-2"><Tag className="w-5 h-5 text-gold-300" aria-hidden="true" />عندك مشروع تبي تبيعه؟</h2>
           <p className="text-sm sm:text-base text-slate-300 leading-7 max-w-2xl">بوابة مجانية بلا عمولة: ارفع طلبك، نعتمده، ويظهر للجمهور.</p>
@@ -227,7 +227,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onSurfaceChange })
         <button type="button" onClick={() => onSurfaceChange('SHOWCASE')} className="px-6 py-3.5 rounded-2xl bg-gold-500 hover:bg-gold-400 text-slate-950 font-black text-sm flex items-center justify-center gap-2">تصفّح المشاريع المعروضة<ChevronLeft className="w-4 h-4" aria-hidden="true" /></button>
       </section>
 
-      <div className="grid md:grid-cols-5 gap-5">
+      <div className="majal-leaf-aside grid md:grid-cols-5 gap-5">
         {[
           { icon: <Users className="w-5 h-5" />, title: 'فصل الأدوار', body: 'كل طرف يرى ما يخصه فقط، حتى داخل المنشأة.', chips: ['المالك', 'الشيف', 'المالية', 'التسويق'], cls: 'md:col-span-3 majal-bento-lead p-6 sm:p-8 rounded-[28px]' },
           { icon: <Coins className="w-5 h-5" />, title: 'مستحقات شفافة', body: 'كل طرف يتابع حصته، والأدمن يراقب دورة التسوية.', cls: 'md:col-span-2 majal-bento-card border-s-2 border-s-gold-400/70 border border-white/10 bg-white/[0.03] p-5 sm:p-6 rounded-2xl' },

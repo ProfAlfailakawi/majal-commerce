@@ -18,9 +18,9 @@ export const AdReportPage: React.FC<{ token: string; onClose: () => void }> = ({
   useAutoRefresh(() => { fetchAdReport(token).then(setReport).catch(() => undefined); });
   const max = Math.max(1, ...(report?.days.map(d => d.impressions) ?? [1]));
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10 space-y-6">
-      <button type="button" onClick={onClose} className="inline-flex items-center gap-2 text-xs text-slate-300 hover:text-white"><ArrowRight className="w-4 h-4" aria-hidden="true" />العودة إلى مجال</button>
-      <div className="flex items-center gap-3"><MajalMark size={36} tone="ink" /><h1 className="text-xl font-black">تقرير الحملة</h1></div>
+    <div className="majal-spread max-w-3xl mx-auto px-4 py-10 space-y-6">
+      <button type="button" onClick={onClose} className="majal-leaf-aside inline-flex items-center gap-2 text-xs text-slate-300 hover:text-white"><ArrowRight className="w-4 h-4" aria-hidden="true" />العودة إلى مجال</button>
+      <div className="majal-leaf-aside majal-leaf-title flex items-center gap-3"><MajalMark size={36} tone="ink" /><h1 className="text-xl font-black">تقرير الحملة</h1></div>
       {error && <div role="alert" className="p-4 rounded-2xl bg-rose-500/10 border border-rose-400/20 text-sm text-rose-200">{error}</div>}
       {!report && !error && <div role="status" className="text-sm text-slate-300">جارٍ تحميل التقرير…</div>}
       {report && (
