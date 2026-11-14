@@ -3,12 +3,12 @@
  *
  * Fails when ANY important element (visible text, a, button, input, select, textarea, [role=tab],
  * [role=button], img, svg) has a bounding box that intersects the reserved top-right box:
- *     x >= viewportWidth - 70px   and   y <= clamp(64px, 30vh, 200px)       (physical right)
+ *     x >= viewportWidth - 96px   and   y <= clamp(64px, 31vh, 270px)       (physical right)
  * across the Duo viewports (portrait + landscape), light + dark, 200% text, and the open menus,
  * dialogs, drawers and the signed-out/error/loading screens. It also asserts that the reserved box
  * is ACTIVE on every Duo size and ZERO on ordinary tablets/desktops.
  *
- * The 70/200 numbers are deliberately re-typed here (not read from the CSS) so the guard cannot be
+ * The 96/270 numbers are deliberately re-typed here (not read from the CSS) so the guard cannot be
  * satisfied by shrinking the CSS variables.
  *
  * Usage:   npm run test:duo-widget            (builds the client, serves it, runs the matrix)
@@ -29,12 +29,14 @@ const EXPECT_FAIL = process.env.DUO_GUARD_EXPECT === 'fail';
 const OUT = process.env.DUO_GUARD_OUT || '';
 const ONLY = (process.env.DUO_GUARD_SCREENS || '').split(',').filter(Boolean);
 
-const W = 70;                                   // widget width incl. the ~6pt edge gap
-const H = (vh) => Math.min(200, Math.max(64, vh * 0.3));
+const W = 96;                                   // widget width incl. the ~6pt edge gap
+const H = (vh) => Math.min(270, Math.max(64, vh * 0.31));
 
 const SIZES = ['382x580', '470x780', '594x368', '669x867', '951x585'];
-const VIEWPORTS = SIZES.flatMap(s => { const [w, h] = s.split('x').map(Number); return [`${w}x${h}`, `${h}x${w}`]; });
-const QUICK_VIEWPORTS = ['382x580', '669x867', '951x585', '594x368'];
+// Inferred in-app viewport (~457x678, estimated from owner screenshots) and a taller neighbour.
+const INFERRED = ['457x678', '457x760'];
+const VIEWPORTS = [...SIZES.flatMap(s => { const [w, h] = s.split('x').map(Number); return [`${w}x${h}`, `${h}x${w}`]; }), ...INFERRED];
+const QUICK_VIEWPORTS = ['382x580', '457x678', '669x867', '951x585', '594x368'];
 // Known Duo landscape geometry only: the swapped sizes are exercised for the guard, but the CSS
 // gate lists the real landscape sizes (594x368, 951x585, 780x470, 867x669 and neighbours).
 const TALL = ['382x780', '382x844', '470x900', '669x1000', '951x700']; // app viewports have no browser toolbars
@@ -185,10 +187,10 @@ async function check(p, label, vp, expectActive) {
   await p.setViewportSize({ width: w, height: h });
   await p.waitForTimeout(300);
   await p.evaluate(() => window.scrollTo(0, 0));
-  let r = await p.evaluate(measure, { W, Hmin: 64, Hmax: 200, Hk: 0.3 });
+  let r = await p.evaluate(measure, { W, Hmin: 64, Hmax: 270, Hk: 0.31 });
   // A media-query change can take a frame to reach the style engine after a resize: re-read (and
   // count it) before calling a stale 'active' flag a failure.
-  for (let i = 0; i < 3 && expectActive !== null && (r.active === '1') !== expectActive; i++) { retries++; await p.waitForTimeout(500); r = await p.evaluate(measure, { W, Hmin: 64, Hmax: 200, Hk: 0.3 }); }
+  for (let i = 0; i < 3 && expectActive !== null && (r.active === '1') !== expectActive; i++) { retries++; await p.waitForTimeout(500); r = await p.evaluate(measure, { W, Hmin: 64, Hmax: 270, Hk: 0.31 }); }
   total++;
   // Outside Duo the page uses its normal layout: only the variables are checked there.
   const problems = expectActive === false ? [] : [...r.violations];
