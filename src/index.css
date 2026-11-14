@@ -1841,7 +1841,10 @@ body { container: majal-page / inline-size; }
    The Duo draws a system widget capsule (torch, account/location, clock, status) over the
    PHYSICAL top-right of the screen. It is not part of any safe-area inset, so env(safe-area-*)
    is 0 there. Measured on a 1371x2034 capture: x 82-95% of the width, y 3-30% of the height,
-   i.e. ~58-64pt wide, up to ~200pt tall, ~6pt off the right edge.
+   i.e. ~58-64pt wide, up to ~200pt tall, ~6pt off the right edge. A later re-measure from in-app
+   screenshots (viewport inferred ~457x678, an ESTIMATE, not a device measurement) put the column at
+   ~75-84pt from the right edge and down to ~166-270px: the box is therefore 96px x 31vh (max 270px),
+   and ?duo-debug=1&duo-w=..&duo-h=.. lets the owner calibrate it on the real device.
    Why the earlier keep-out never held (root cause):
      1. it was gated to 640-720px PORTRAIT and the inner-screen book only, so the folded outer
         screen (382x580), 470x780 and the folded landscape 594x368 got nothing;
@@ -1861,15 +1864,15 @@ body { container: majal-page / inline-size; }
    user agent nor the install state, and the height bands are generous because
    the app viewport has no browser toolbars and is taller than the same screen in Safari. */
 @media screen and (orientation: portrait) and (max-width: 700px),
-       screen and (orientation: landscape) and (min-width: 575px) and (max-width: 610px) and (min-height: 340px) and (max-height: 430px),
-       screen and (orientation: landscape) and (min-width: 940px) and (max-width: 960px) and (min-height: 340px) and (max-height: 760px),
-       screen and (orientation: landscape) and (min-width: 770px) and (max-width: 790px) and (min-height: 460px) and (max-height: 560px),
-       screen and (orientation: landscape) and (min-width: 860px) and (max-width: 875px) and (min-height: 660px) and (max-height: 780px),
+       screen and (orientation: landscape) and (min-width: 554px) and (max-width: 634px) and (min-height: 330px) and (max-height: 460px),
+       screen and (orientation: landscape) and (min-width: 911px) and (max-width: 991px) and (min-height: 330px) and (max-height: 800px),
+       screen and (orientation: landscape) and (min-width: 740px) and (max-width: 820px) and (min-height: 440px) and (max-height: 600px),
+       screen and (orientation: landscape) and (min-width: 827px) and (max-width: 907px) and (min-height: 640px) and (max-height: 800px),
        screen and (horizontal-viewport-segments: 2) {
   :root {
-    --duo-widget-w: 70px;
+    --duo-widget-w: 96px;
     --duo-widget-gap: 8px;
-    --duo-widget-h: clamp(64px, 30vh, 200px);
+    --duo-widget-h: clamp(64px, 31vh, 270px);
     --duo-widget-active: 1;
   }
 }

@@ -13,6 +13,13 @@ const PROBE_SIDES = ['top', 'right', 'bottom', 'left'] as const;
 export function startDuoDebug(): void {
   if (document.getElementById('duo-debug-frame')) return;
 
+  // Live calibration on the real device: ?duo-debug=1&duo-w=110&duo-h=270 overrides the box (this page only).
+  const query = new URLSearchParams(window.location.search);
+  const num = (key: string) => { const n = Number(query.get(key)); return Number.isFinite(n) && n > 0 && n <= 600 ? n : null; };
+  const ow = num('duo-w'), oh = num('duo-h');
+  if (ow !== null) document.documentElement.style.setProperty('--duo-widget-w', `${ow}px`);
+  if (oh !== null) document.documentElement.style.setProperty('--duo-widget-h', `${oh}px`);
+
   const frame = document.createElement('div');
   frame.id = 'duo-debug-frame';
   frame.setAttribute('aria-hidden', 'true');
@@ -58,6 +65,8 @@ export function startDuoDebug(): void {
       `Capacitor: ${cap?.isNativePlatform?.() === true ? `native ${cap.getPlatform?.() ?? '?'}` : cap ? 'present, not native' : 'absent (browser)'}`,
       `UA: ${/Safari\//.test(navigator.userAgent) ? 'has Safari/ (browser)' : 'no Safari/ token (WKWebView/app)'}`,
       `zone needs no UA/standalone: width+orientation only`,
+      `override duo-w=${ow ?? '-'} duo-h=${oh ?? '-'}`,
+      'send a screenshot with the frame; adjust duo-w / duo-h until the red frame covers the capsule',
       `orientation ${window.matchMedia('(orientation: portrait)').matches ? 'portrait' : 'landscape'}`,
     ].join('\n');
   };

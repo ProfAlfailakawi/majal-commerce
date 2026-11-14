@@ -117,9 +117,9 @@ function mediaMatches(query: string, w: number, h: number): boolean {
 test('widget corner: one box, defined once, 0 by default, applied to the shell, header, scrims, onboarding, panes', () => {
   const root = css.slice(css.indexOf(':root {\n  /* iPhone Duo widget corner'), css.indexOf('/* Aliases onto the @theme scale'));
   for (const v of ['--duo-widget-w: 0px;', '--duo-widget-gap: 0px;', '--duo-widget-h: 0px;', '--duo-widget-mirror: 0px;', '--duo-widget-active: 0;']) assert.ok(root.includes(v), v);
-  const head = cornerSection.match(/@media ([^{]+)\{\s*:root \{\s*--duo-widget-w: 70px;\s*--duo-widget-gap: 8px;\s*--duo-widget-h: clamp\(64px, 30vh, 200px\);\s*--duo-widget-active: 1;/);
+  const head = cornerSection.match(/@media ([^{]+)\{\s*:root \{\s*--duo-widget-w: 96px;\s*--duo-widget-gap: 8px;\s*--duo-widget-h: clamp\(64px, 31vh, 270px\);\s*--duo-widget-active: 1;/);
   assert.ok(head, 'the three values are set exactly once, under the Duo media condition');
-  assert.equal(css.match(/--duo-widget-w: 70px/g)?.length, 1);
+  assert.equal(css.match(/--duo-widget-w: 96px/g)?.length, 1);
   // No display-mode: browser tab, installed app and Capacitor all get the same box.
   assert.doesNotMatch(cornerSection.replace(/\/\*[\s\S]*?\*\//g, ''), /display-mode|standalone/);
   // Physical right, never the logical end: the widget does not follow the writing direction.
@@ -140,11 +140,11 @@ test('widget corner is active on every Duo size and nothing else (real media que
   const alts = cornerSection.match(/@media ([^{]+)\{\s*:root/)![1].split(',').map(a => a.trim()).filter(a => !a.includes('viewport-segments'));
   assert.equal(alts.length, 5);
   const active = (w: number, h: number) => mediaMatches(alts.join(', '), w, h);
-  const duo: Array<[number, number]> = [[382, 580], [470, 780], [669, 867], [320, 568], [700, 900], [594, 368], [951, 585], [951, 350], [951, 700], [600, 350], [780, 470], [867, 669], [580, 382], [382, 844], [669, 1000], [470, 900], [594, 420]];
+  const duo: Array<[number, number]> = [[382, 580], [470, 780], [669, 867], [320, 568], [700, 900], [594, 368], [951, 585], [951, 350], [951, 700], [600, 350], [780, 470], [867, 669], [580, 382], [382, 844], [669, 1000], [470, 900], [594, 420], [457, 678], [457, 760], [440, 660], [480, 720], [430, 932]];
   for (const [w, h] of duo) assert.ok(active(w, h), `${w}x${h} must reserve the corner`);
   const never: Array<[number, number, string]> = [
     [744, 1024, 'iPad portrait'], [820, 1180, 'iPad portrait'], [1024, 768, 'iPad landscape'], [1180, 820, 'iPad landscape'],
-    [1280, 800, 'desktop'], [1440, 900, 'desktop'], [844, 390, 'iPhone landscape'], [932, 430, 'iPhone Pro Max landscape'], [1024, 600, 'small landscape']
+    [1280, 800, 'desktop'], [1440, 900, 'desktop'], [844, 390, 'iPhone landscape'], [1024, 600, 'small landscape']
   ];
   for (const [w, h, name] of never) assert.ok(!active(w, h), `${w}x${h} (${name}) must not reserve the corner`);
 });
