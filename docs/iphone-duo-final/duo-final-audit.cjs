@@ -1,21 +1,20 @@
 /*
- * iPhone Duo final audit for مجال — Playwright WebKit, presentation only.
+ * iPhone Duo audit for مجال (round 2) — Playwright Chromium, presentation only.
+ * Book = landscape only (721-1000 x 520-960). Portrait inner screen is a normal single column.
+ * Measures per screen: horizontal overflow, interactive/text crossing the spine (book only),
+ * anything painted in the widget keep-out box (116x116, top-right; inner screen only).
  *
- * Server (one at a time; demo comes from a session flag and every /api call is intercepted in
- * the browser, so nothing reaches a real endpoint and no order or payment can be created):
+ * Chromium cannot emulate (display-mode: standalone), so the init script copies every rule that is
+ * gated on it into a second stylesheet with that one condition removed. The keep-out numbers are
+ * therefore a rule-level emulation, never a real installed-app run.
+ *
+ * Server (demo comes from a session flag and every /api call is intercepted in the browser):
  *   npm run build:client && npx vite preview --port 5180 --strictPort --host 127.0.0.1
- *   (or the dev server: DISABLE_HMR=true npx vite --port 5180 --strictPort --host 127.0.0.1)
- *
- * Full run (every screen x the ten pose sizes, then poses J and I on the same page):
- *   NODE_PATH=/opt/node22/lib/node_modules PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers \
- *     node docs/iphone-duo-final/duo-final-audit.cjs --resize --with-ij --out /tmp/duo-audit \
- *       --vps 669x867,951x585,951x350,600x350,594x368,382x580,669x520,1280x800,390x844,844x390
- * Options: --screens id,id  --vps WxH,...  --no-shots  --only-live (detailed pose I)
- *          without --resize every size is a fresh page load (slower, same layout: CSS-only).
- *
- * Writes <out>/report.json (matrix, stress, liveAll) and JPEG screenshots for the review sizes.
+ *   NODE_PATH=$(npm root -g) node docs/iphone-duo-final/duo-final-audit.cjs --resize --out /tmp/duo-audit \
+ *       --vps 951x585,669x867
+ * Options: --screens id,id  --vps WxH,...  --no-shots
  */
-const { webkit } = require('playwright');
+const { chromium: webkit } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
@@ -38,7 +37,7 @@ const POSES = {
   H: ['360x640', '390x844', '844x390', '320x350', '320x600', '320x900', '470x350', '470x600', '470x900', '620x350', '620x600', '620x900']
 };
 const SHOT_VPS = ['669x867', '951x585', '951x350', '600x350', '594x368', '382x580', '669x520', '1280x800'];
-const INNER = vp => vp === '669x867' || vp === '951x585' || vp === '669x520';
+const INNER = vp => { const [w,h]=vp.split('x').map(Number); return w>=721&&w<=1000&&h>=520&&h<=960&&w>h; };
 const SPINE = 32;
 
 const ROLE = {
@@ -138,6 +137,7 @@ async function newContext(browser, vp, opts = {}) {
       else localStorage.removeItem('majal_onboarding_v1');
       if (dark) localStorage.setItem('majal-theme', 'dark');
       sessionStorage.setItem('majal_overture_seen', '1');
+      const inject = () => { if (window.__standaloneRules) return; const out = []; const walk = rules => { for (const r of rules) { if (r.type === 4 && /display-mode:\s*standalone/.test(r.conditionText)) out.push('@media ' + r.conditionText.replace(/\(display-mode:\s*standalone\)\s*(and\s*)?/g, '') + '{' + [...r.cssRules].map(x => x.cssText).join('\n') + '}'); else if (r.cssRules) walk(r.cssRules); } }; for (const sh of document.styleSheets) { try { walk(sh.cssRules); } catch (e) {} } const st = document.createElement('style'); st.textContent = out.join('\n'); document.head.append(st); if (out.length) { window.__standaloneRules = out.length; } }; const iv = setInterval(() => { if (document.head) inject(); if (window.__standaloneRules) clearInterval(iv); }, 100);
       // The branded splash holds the first ~1.2s by design; the audit measures the app under it.
       document.addEventListener('DOMContentLoaded', () => document.getElementById('majal-splash')?.remove(), { once: true });
       if (!anon) {
@@ -271,7 +271,25 @@ async function measure(p, inner) {
       for (const el of document.querySelectorAll('td, th')) if (visible(el) && el.textContent.trim()) { const r = el.getBoundingClientRect(); const c = clipX(el); const l = Math.max(r.left, c[0]), rr = Math.min(r.right, c[1]); if (rr > l && l < hi && rr > lo) hits.add(el); }
       for (const el of hits) spine.push(describe(el));
     }
+    const keepout = [];
+    { const W = window.innerWidth, H = window.innerHeight;
+      const book = W>=721&&W<=1000&&H>=520&&H<=960&&W>H, pin = W>=640&&W<=720&&H>=520&&H<=960&&H>W;
+      if (book || pin) {
+        const bx = W - 116, by = 116; const seen = new Set();
+        const hit = (r, el) => { if (!(r.width > 0 && r.height > 0 && r.right > bx + 1 && r.left < W && r.top < by - 1 && r.bottom > 1)) return false;
+          const x = Math.min(W - 1, Math.max(bx + 2, (Math.max(r.left, bx) + Math.min(r.right, W)) / 2)), y = Math.max(1, Math.min(by - 2, (Math.max(r.top, 0) + Math.min(r.bottom, by)) / 2));
+          const top = document.elementFromPoint(x, y); return !!top && (el.contains(top) || top.contains(el)) && !top.matches('html, body'); };
+        for (const el of interactive) if (hit(el.getBoundingClientRect(), el)) seen.add(describe(el));
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+          if (!n.nodeValue.trim()) continue; const el = n.parentElement; if (!el || !visible(el)) continue;
+          const range = document.createRange(); range.selectNodeContents(n);
+          for (const r of range.getClientRects()) if (hit(r, el)) { seen.add('text ' + describe(el)); break; }
+        }
+        for (const s of seen) keepout.push(s);
+      } }
     return {
+      keepoutHits: keepout.length, keepoutSamples: keepout.slice(0, 8),
       scrollWidth: doc.scrollWidth, clientWidth: doc.clientWidth, overflowX: doc.scrollWidth > doc.clientWidth ? doc.scrollWidth - doc.clientWidth : 0,
       offscreen, smallTargets: smallTargets.length, smallTargetSamples: smallTargets.slice(0, 8), clippedHeadings, spineHits: spine.length, spineSamples: spine.slice(0, 12),
       pageHeight: doc.scrollHeight
@@ -299,7 +317,7 @@ async function runMatrix(browser, screens, vps, shots, report) {
       result.pageErrors = errors;
       report.matrix.push({ screen: s.id, vp, ...result });
       const r = result;
-      process.stdout.write(`${s.id} ${vp} ${r.error ? 'ERROR ' + r.error : `ox=${r.overflowX} off=${r.offscreen.length} spine=${r.spineHits} small=${r.smallTargets}`}\n`);
+      process.stdout.write(`${s.id} ${vp} ${r.error ? 'ERROR ' + r.error : `ox=${r.overflowX} off=${r.offscreen.length} spine=${r.spineHits} keep=${r.keepoutHits} small=${r.smallTargets}`}\n`);
       await ctx.close();
     }
   }
@@ -337,7 +355,7 @@ async function runResizeMatrix(browser, screens, vps, shots, report) {
       } catch (e) { result = { error: String(e.message).split('\n')[0].slice(0, 200) }; }
       result.pageErrors = errors.slice();
       report.matrix.push({ screen: s.id, vp, ...result });
-      process.stdout.write(`${s.id} ${vp} ${result.error ? 'ERROR ' + result.error : `ox=${result.overflowX} off=${result.offscreen.length} spine=${result.spineHits} small=${result.smallTargets}`}\n`);
+      process.stdout.write(`${s.id} ${vp} ${result.error ? 'ERROR ' + result.error : `ox=${result.overflowX} off=${result.offscreen.length} spine=${result.spineHits} keep=${result.keepoutHits} small=${result.smallTargets}`}\n`);
     }
     if (reached === true && flag('--with-ij')) await stressAndLive(p, s, report);
     await ctx.close();
