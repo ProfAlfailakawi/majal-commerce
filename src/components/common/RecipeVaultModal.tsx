@@ -119,16 +119,16 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
 
         {/* Header */}
         <div className="p-5 bg-slate-800/90 border-b border-slate-700 flex items-center justify-between z-20">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-gold-500/20 text-gold-400 rounded-xl border border-gold-500/30">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2.5 bg-gold-500/20 text-gold-400 rounded-xl border border-gold-500/30 shrink-0">
               <Lock className="w-6 h-6" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-x-2 gap-y-1 flex-wrap">
                 <h3 id="recipe-vault-title" className="font-black text-lg text-slate-100">
                   خزنة الوصفة السرية
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-xs font-bold whitespace-nowrap bg-gold-500/20 text-gold-400 border border-gold-500/30">
+                <span className="px-2 py-0.5 rounded-full text-xs font-bold sm:whitespace-nowrap bg-gold-500/20 text-gold-400 border border-gold-500/30">
                   درجة الاطلاع المتاحة: <bdi>{effectiveDisclosureLevel}</bdi> (الحد الأقصى <bdi>3</bdi>)
                 </span>
               </div>
@@ -138,7 +138,7 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
             </div>
           </div>
 
-          <button onClick={onClose} aria-label="إغلاق خزنة الوصفة" className="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-700">
+          <button onClick={onClose} aria-label="إغلاق خزنة الوصفة" className="shrink-0 p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-700">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -297,12 +297,12 @@ export const RecipeVaultModal: React.FC<RecipeVaultModalProps> = ({
 
         {/* Footer */}
         <div className="p-4 bg-slate-800/80 border-t border-slate-700 flex justify-between items-center text-xs z-20">
-          <span className="text-slate-400 font-mono">
+          <span className="text-slate-400 font-mono min-w-0 truncate" dir="ltr">
             ID: {currentRecipe?.id || product.id}
           </span>
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-slate-100 font-bold rounded-xl transition-colors"
+            className="shrink-0 px-5 py-2 bg-slate-700 hover:bg-slate-600 text-slate-100 font-bold rounded-xl transition-colors"
           >
             إغلاق الخزنة
           </button>
