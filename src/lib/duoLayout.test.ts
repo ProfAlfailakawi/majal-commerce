@@ -88,3 +88,11 @@ test('Duo is not an iPad: portrait book is capped at 720px wide, landscape book 
   }
   assert.ok(portrait >= 2 && landscape >= 2);
 });
+
+test('recipe vault header can shrink: its badge wraps below sm so the sheet never overflows at 320px', () => {
+  const vault = readFileSync(new URL('../components/common/RecipeVaultModal.tsx', import.meta.url), 'utf8');
+  // A nowrap badge made the header wider than the sheet; overflow-hidden then clipped it and scrolled the content.
+  assert.doesNotMatch(vault, /rounded-full text-xs font-bold whitespace-nowrap/);
+  assert.match(vault, /sm:whitespace-nowrap/);
+  assert.match(vault, /flex items-center gap-3 min-w-0/);
+});
