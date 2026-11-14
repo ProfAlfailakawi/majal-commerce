@@ -28,7 +28,7 @@ test('section rail is one non-wrapping row below xl and the page uses dynamic vi
 });
 
 test('inner screen composes a two-leaf spread around a centred spine (width rules only)', () => {
-  assert.match(css, /\(min-width: 640px\) and \(max-width: 760px\) and \(min-height: 520px\)/);
+  assert.match(css, /\(min-width: 640px\) and \(max-width: 720px\) and \(min-height: 520px\)/);
   assert.match(css, /\(min-width: 860px\) and \(max-width: 1000px\) and \(min-height: 520px\) and \(max-height: 760px\)/);
   assert.match(css, /\.majal-spread \{[^}]*grid-template-columns: minmax\(0, 1fr\) var\(--spine\) minmax\(0, 1fr\)/);
   // Leaves are gated in rem against the page, so 200% text falls back to one readable column.
@@ -65,4 +65,26 @@ test('every @media in the Duo book/laptop section is screen-only (print must sta
   for (const q of queries) {
     for (const alt of q.split(',')) assert.match(alt.trim(), /^screen and /, alt);
   }
+});
+
+test('Duo is not an iPad: portrait book is capped at 720px wide, landscape book at 1000px', () => {
+  const section = css.slice(css.indexOf('Book spread: iPhone Duo inner screen'));
+  const queries = [...section.matchAll(/^@media ([^{]+)\{/gm)].map(m => m[1]);
+  let portrait = 0;
+  let landscape = 0;
+  for (const q of queries) {
+    for (const alt of q.split(',').map(a => a.trim())) {
+      const min = Number(alt.match(/min-width: (\d+)px/)?.[1] ?? 0);
+      const max = Number(alt.match(/max-width: (\d+)px/)?.[1] ?? Infinity);
+      if (/min-height: 520px/.test(alt)) {
+        // iPad mini portrait is 744 wide, iPad landscape 1024+: width is the only safe discriminator.
+        if (min < 800) { portrait++; assert.ok(min >= 640 && max <= 720, alt); }
+        else { landscape++; assert.ok(max <= 1000, alt); }
+      } else {
+        // Laptop posture: height-gated, so an iPad (never <= 480px tall) cannot match.
+        assert.match(alt, /max-height: 480px/, alt);
+      }
+    }
+  }
+  assert.ok(portrait >= 2 && landscape >= 2);
 });
