@@ -75,7 +75,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/70 backdrop-blur-sm animate-in fade-in" data-fade>
-      <div className="absolute inset-y-0 end-0 max-w-full flex pe-0 sm:pe-10">
+      <div className="majal-duo-pane absolute inset-y-0 end-0 max-w-full flex pe-0 sm:pe-10">
         <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="ai-drawer-title" className="w-full max-w-md max-h-dvh bg-slate-900 border-s border-slate-800 shadow-2xl flex flex-col text-slate-100">
           
           {/* Header */}

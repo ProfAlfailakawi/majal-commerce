@@ -21,7 +21,8 @@
     "verify:pwa": "node scripts/verify-pwa.mjs",
     "verify:demo": "node scripts/verify-demo-entry.mjs",
     "verify:env": "node scripts/verify-env.mjs",
-    "secrets:generate": "node scripts/generate-secrets.mjs"
+    "secrets:generate": "node scripts/generate-secrets.mjs",
+    "test:duo-widget": "npm run build:client && node tests/duo-widget-guard.mjs"
   },
   "engines": {
     "node": "22.x"
@@ -49,6 +50,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
+    "playwright": "1.56.1",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",

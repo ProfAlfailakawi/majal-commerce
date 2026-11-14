@@ -18,8 +18,10 @@ test('zoom is never locked and the viewport covers the camera cutout', () => {
   assert.match(meta, /viewport-fit=cover/);
 });
 
-test('layout does not depend on preview-only posture media features', () => {
-  assert.doesNotMatch(css, /device-posture|viewport-segments/);
+test('layout does not depend on preview-only posture media features (the widget corner may list a two-segment viewport as one extra alternative)', () => {
+  assert.doesNotMatch(css, /device-posture/);
+  const withoutCorner = css.replace(css.slice(css.indexOf('Widget corner: iPhone Duo'), css.indexOf('Laptop posture: wide and short')), '');
+  assert.doesNotMatch(withoutCorner, /viewport-segments/);
 });
 
 test('section rail is one non-wrapping row below xl and the page uses dynamic viewport height', () => {
@@ -29,8 +31,8 @@ test('section rail is one non-wrapping row below xl and the page uses dynamic vi
 
 const BOOK = 'screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape)';
 const DUO_PORTRAIT = 'screen and (min-width: 640px) and (max-width: 720px) and (min-height: 520px) and (max-height: 960px) and (orientation: portrait)';
-const bookSection = css.slice(css.indexOf('Book spread: iPhone Duo inner screen'), css.indexOf('Widget keep-out: iPhone Duo inner screen'));
-const keepOutSection = css.slice(css.indexOf('Widget keep-out: iPhone Duo inner screen'), css.indexOf('Laptop posture: wide and short'));
+const bookSection = css.slice(css.indexOf('Book spread: iPhone Duo inner screen'), css.indexOf('Widget corner: iPhone Duo'));
+const cornerSection = css.slice(css.indexOf('Widget corner: iPhone Duo'), css.indexOf('Laptop posture: wide and short'));
 
 test('book (two pages around a centred spine) is landscape only, with one shared media condition', () => {
   assert.ok(bookSection.includes(`@media ${BOOK} {`));
@@ -112,38 +114,39 @@ function mediaMatches(query: string, w: number, h: number): boolean {
   }));
 }
 
-test('widget keep-out: inner screen only, in a browser tab AND the installed app (no display-mode), header / first-run frame / dialogs step aside', () => {
-  const head = keepOutSection.match(/@media ([^{]+)\{\s*:root \{ --duo-cutout-w: 116px; --duo-cutout-h: 116px; \}/);
-  assert.ok(head, 'the variables are defined once, under the media condition');
-  const alts = head![1].split(',').map(a => a.trim());
-  assert.equal(alts.length, 2);
-  assert.deepEqual([...alts].sort(), [BOOK, DUO_PORTRAIT].sort());
-  // No display-mode anywhere in the keep-out rules (comments excluded).
-  assert.doesNotMatch(keepOutSection.replace(/\/\*[\s\S]*?\*\//g, ''), /display-mode|standalone/);
-  // Nothing outside a media block: no unconditional use of the variables.
-  const firstMedia = keepOutSection.indexOf('@media');
-  assert.doesNotMatch(keepOutSection.slice(0, firstMedia).replace(/\/\*[\s\S]*?\*\//g, ''), /--duo-cutout/);
-  assert.match(keepOutSection, /header\.glass-nav > div \{ padding-right: calc\(var\(--duo-cutout-w\) \+ 0\.5rem\); \}/);
-  assert.match(keepOutSection, /\.majal-onb-frame \{ padding-right: calc\(var\(--duo-cutout-w\) \+ 0\.5rem\); \}/);
-  assert.match(keepOutSection, /padding-top: calc\(var\(--duo-cutout-h\) \+ 0\.5rem\)/);
-  // The book keeps its spine track centred: the left edge gives up the same width, in book only.
-  const bookOnly = keepOutSection.match(/@media ([^{]+)\{\s*header\.glass-nav > div \{ padding-left/);
-  assert.ok(bookOnly && bookOnly[1].trim() === BOOK);
+test('widget corner: one box, defined once, 0 by default, applied to the shell, header, scrims, onboarding, panes', () => {
+  const root = css.slice(css.indexOf(':root {\n  /* iPhone Duo widget corner'), css.indexOf('/* Aliases onto the @theme scale'));
+  for (const v of ['--duo-widget-w: 0px;', '--duo-widget-gap: 0px;', '--duo-widget-h: 0px;', '--duo-widget-mirror: 0px;', '--duo-widget-active: 0;']) assert.ok(root.includes(v), v);
+  const head = cornerSection.match(/@media ([^{]+)\{\s*:root \{\s*--duo-widget-w: 70px;\s*--duo-widget-gap: 8px;\s*--duo-widget-h: clamp\(64px, 30vh, 200px\);\s*--duo-widget-active: 1;/);
+  assert.ok(head, 'the three values are set exactly once, under the Duo media condition');
+  assert.equal(css.match(/--duo-widget-w: 70px/g)?.length, 1);
+  // No display-mode: browser tab, installed app and Capacitor all get the same box.
+  assert.doesNotMatch(cornerSection.replace(/\/\*[\s\S]*?\*\//g, ''), /display-mode|standalone/);
   // Physical right, never the logical end: the widget does not follow the writing direction.
-  assert.doesNotMatch(keepOutSection, /padding-inline-(start|end)/);
+  const shell = css.slice(css.indexOf('.majal-shell {'), css.indexOf('footer.majal-footer {'));
+  assert.match(shell, /padding-right: calc\(env\(safe-area-inset-right, 0px\) \+ var\(--duo-widget-reserve\)\)/);
+  assert.match(shell, /margin-right: calc\(-1 \* \(env\(safe-area-inset-right, 0px\) \+ var\(--duo-widget-reserve\)\)\)/);
+  assert.doesNotMatch(cornerSection.replace(/\/\*[\s\S]*?\*\//g, ''), /padding-inline-(start|end)|margin-inline-(start|end)/);
+  assert.match(css, /\.fixed\.inset-0\.p-4:not\(\[class\*="pt-\["\]\) \{\s*padding:\s*max\(1rem, env\(safe-area-inset-top, 0px\)\)\s*calc\(max\(1rem, env\(safe-area-inset-right, 0px\)\) \+ var\(--duo-widget-reserve\)\)/);
+  assert.match(css, /\.majal-onb-frame \{[^}]*padding-right: calc\(max\(var\(--onb-px\), env\(safe-area-inset-right, 0px\)\) \+ var\(--duo-widget-reserve\)\)/);
+  // The book keeps its fold on the window centre: the left edge gives up the same width, in book only.
+  const mirror = cornerSection.match(/@media ([^{]+)\{\s*:root \{ --duo-widget-mirror: var\(--duo-widget-reserve\); \}/);
+  assert.ok(mirror && mirror[1].trim() === BOOK);
+  // The old, too-small corner is gone.
+  assert.doesNotMatch(css, /--duo-cutout/);
 });
 
-test('widget keep-out matches the Duo inner screen and nothing else (real media queries evaluated)', () => {
-  const keep = (w: number, h: number) => mediaMatches(`${BOOK}, ${DUO_PORTRAIT}`, w, h);
-  for (const [w, h] of [[951, 669], [951, 585], [800, 600], [669, 867], [720, 900], [640, 800]]) assert.ok(keep(w, h), `${w}x${h} must keep out`);
+test('widget corner is active on every Duo size and nothing else (real media queries evaluated)', () => {
+  const alts = cornerSection.match(/@media ([^{]+)\{\s*:root/)![1].split(',').map(a => a.trim()).filter(a => !a.includes('viewport-segments'));
+  assert.equal(alts.length, 5);
+  const active = (w: number, h: number) => mediaMatches(alts.join(', '), w, h);
+  const duo: Array<[number, number]> = [[382, 580], [470, 780], [669, 867], [320, 568], [700, 900], [594, 368], [951, 585], [951, 350], [951, 700], [600, 350], [780, 470], [867, 669], [580, 382], [382, 844], [669, 1000], [470, 900], [594, 420]];
+  for (const [w, h] of duo) assert.ok(active(w, h), `${w}x${h} must reserve the corner`);
   const never: Array<[number, number, string]> = [
-    [390, 844, 'iPhone portrait'], [844, 390, 'iPhone landscape'], [932, 430, 'iPhone Pro Max landscape'], [430, 932, 'iPhone Pro Max portrait'],
     [744, 1024, 'iPad portrait'], [820, 1180, 'iPad portrait'], [1024, 768, 'iPad landscape'], [1180, 820, 'iPad landscape'],
-    [1280, 800, 'desktop'], [1440, 900, 'desktop'], [367, 740, 'folded outer'], [382, 580, 'folded outer'], [951, 350, 'laptop posture'], [600, 350, 'laptop posture']
+    [1280, 800, 'desktop'], [1440, 900, 'desktop'], [844, 390, 'iPhone landscape'], [932, 430, 'iPhone Pro Max landscape'], [1024, 600, 'small landscape']
   ];
-  for (const [w, h, name] of never) assert.ok(!keep(w, h), `${w}x${h} (${name}) must not keep out`);
-  // The evaluator agrees with the book condition too.
-  assert.ok(mediaMatches(BOOK, 951, 585) && !mediaMatches(BOOK, 669, 867));
+  for (const [w, h, name] of never) assert.ok(!active(w, h), `${w}x${h} (${name}) must not reserve the corner`);
 });
 
 test('recipe vault header can shrink: its badge wraps below sm so the sheet never overflows at 320px', () => {

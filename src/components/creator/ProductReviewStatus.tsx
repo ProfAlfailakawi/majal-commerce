@@ -55,7 +55,7 @@ export const ProductReviewStatus: React.FC<{ product: CreatorProduct }> = ({ pro
       )}
       {canEdit && <button type="button" onClick={open} className="min-h-11 w-full rounded-xl bg-white/5 border border-white/10 text-xs font-black text-gold-300 flex items-center justify-center gap-2 hover:bg-white/10"><Pencil className="w-4 h-4" aria-hidden="true" />{status === 'REJECTED' ? 'عدّل وأعد الإرسال' : 'عدّل بيانات المنتج'}</button>}
       {editing && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4" onMouseDown={e => { if (e.target === e.currentTarget) close(); }}>
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 pr-(--duo-widget-reserve) sm:p-4 sm:pr-[calc(1rem+var(--duo-widget-reserve))]" onMouseDown={e => { if (e.target === e.currentTarget) close(); }}>
           <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={`edit-${product.id}`} className="w-full max-w-lg max-h-dvh overflow-y-auto bg-slate-900 border border-white/10 rounded-t-3xl sm:rounded-3xl p-5 space-y-4 text-slate-100">
             <div className="flex items-center justify-between gap-3">
               <h3 id={`edit-${product.id}`} className="font-black">تعديل المنتج وإعادة إرساله للمراجعة</h3>

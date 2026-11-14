@@ -60,6 +60,11 @@ requestAnimationFrame(() => requestAnimationFrame(dismissBootSplash));
 // `load` so it never competes with the first paint or the bundle fetch for bandwidth.
 installMotionReveal();
 
+// Hidden Duo widget-corner diagnostic: nothing loads unless the URL asks for it.
+if (new URLSearchParams(window.location.search).get('duo-debug') === '1') {
+  void import('./lib/duoDebug').then(m => m.startDuoDebug());
+}
+
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch((error) => {
