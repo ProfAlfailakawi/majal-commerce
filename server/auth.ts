@@ -267,7 +267,7 @@ function setSessionCookies(res: Response, config: AuthConfig, token: string, csr
   }
 }
 
-function clearSessionCookies(res: Response, config: AuthConfig) {
+export function clearSessionCookies(res: Response, config: AuthConfig) {
   res.append('Set-Cookie', `${config.cookieName}=; ${cookieOptions(config, true, 0)}`);
   res.append('Set-Cookie', `${config.csrfCookieName}=; ${cookieOptions(config, false, 0)}`);
   if (config.production) {

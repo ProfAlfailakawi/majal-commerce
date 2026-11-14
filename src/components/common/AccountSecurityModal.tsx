@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { CheckCircle2, Copy, KeyRound, ShieldCheck, X } from 'lucide-react';
+import { CheckCircle2, Copy, KeyRound, ShieldCheck, Trash2, X } from 'lucide-react';
 import { AuthApiError, beginMfaEnrollment, confirmMfaEnrollment } from '../../lib/authClient';
+import { SESSION_EXPIRED_EVENT } from '../../lib/apiFetch';
+import { DELETION_NOTICE, DELETION_NOTICE_EN, MODERATION_EMAIL, safetyClient } from '../../lib/safetyClient';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { MajalLoader } from '../brand/MajalLoader';
 
@@ -13,8 +15,27 @@ export const AccountSecurityModal: React.FC<{ isOpen: boolean; onClose: () => vo
   // Set once the server says MFA is already active: re-enrolment then needs the current code.
   const [needsCurrentCode, setNeedsCurrentCode] = useState(false);
   const [currentCode, setCurrentCode] = useState('');
+  // طلب حذف الحساب (5.1.1(v)): تأكيد ثم إعادة إدخال كلمة المرور، ثم يُسجَّل الطلب ويُخرَج المستخدم.
+  const [deletion, setDeletion] = useState<'IDLE' | 'CONFIRM' | 'SENDING' | 'DONE'>('IDLE');
+  const [deletionPassword, setDeletionPassword] = useState('');
+  const [deletionError, setDeletionError] = useState('');
 
   if (!isOpen) return null;
+
+  const requestDeletion = async () => {
+    setDeletionError('');
+    setDeletion('SENDING');
+    try {
+      await safetyClient.requestAccountDeletion(deletionPassword);
+      setDeletionPassword('');
+      setDeletion('DONE');
+    } catch (error) {
+      setDeletion('CONFIRM');
+      setDeletionError(error instanceof Error ? error.message : 'تعذّر تسجيل الطلب.');
+    }
+  };
+  // الخادم أنهى الجلسة فعلًا؛ هذا يُعيد الواجهة إلى حالة الزائر.
+  const finishDeletion = () => { onClose(); window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT)); };
 
   const begin = async () => {
     setNotice('');
@@ -65,6 +86,23 @@ export const AccountSecurityModal: React.FC<{ isOpen: boolean; onClose: () => vo
           <button onClick={confirm} disabled={status === 'LOADING' || code.length !== 6} aria-busy={status === 'LOADING'} className="w-full py-3.5 rounded-2xl bg-emerald-500 text-slate-950 font-black text-sm disabled:opacity-50 flex items-center justify-center gap-2">{status === 'LOADING' ? <><MajalLoader size={16} label="جارٍ التحقق من الرمز…" /><span>جارٍ التحقق…</span></> : 'فعّل المصادقة الثنائية'}</button>
         </div>}
         {notice && <div role="alert" className="rounded-xl bg-rose-500/10 border border-rose-400/20 px-4 py-3 text-xs text-rose-200 leading-6">{notice}</div>}
+
+        <div className="border-t border-white/10 pt-5 space-y-3">
+          {deletion === 'DONE' ? <div role="status" className="rounded-2xl p-4 bg-white/[0.04] border border-white/10 space-y-3">
+            <p className="text-sm font-bold text-slate-100 leading-7">{DELETION_NOTICE}</p>
+            <p dir="ltr" className="text-xs text-slate-400 leading-6">{DELETION_NOTICE_EN}</p>
+            <button onClick={finishDeletion} className="w-full py-3 rounded-2xl bg-gold-500 text-slate-950 font-black text-sm">تم</button>
+          </div> : deletion === 'IDLE' ? <button onClick={() => setDeletion('CONFIRM')} className="w-full py-3 rounded-2xl border border-rose-400/30 text-rose-200 font-black text-sm flex items-center justify-center gap-2 hover:bg-rose-500/10"><Trash2 className="w-4 h-4" aria-hidden="true" />طلب حذف الحساب</button> : <div className="rounded-2xl p-4 bg-rose-500/5 border border-rose-400/20 space-y-3">
+            <p className="text-xs text-slate-200 leading-6">سيُسجَّل طلب حذف حسابك وتُنهى جلستك فورًا ولن تستطيع تسجيل الدخول بعدها. {DELETION_NOTICE}</p>
+            <label className="block space-y-2"><span className="text-xs font-bold text-slate-200">أعد إدخال كلمة المرور للتأكيد</span><input type="password" autoComplete="current-password" value={deletionPassword} onChange={event => setDeletionPassword(event.target.value)} className="w-full rounded-xl bg-slate-950/60 border border-white/10 p-3 text-slate-100 outline-none focus:border-rose-400/40 focus-visible:ring-2 focus-visible:ring-gold-300" /></label>
+            {deletionError && <div role="alert" className="text-xs text-rose-200 leading-6">{deletionError}</div>}
+            <div className="flex gap-2">
+              <button onClick={() => { setDeletion('IDLE'); setDeletionPassword(''); setDeletionError(''); }} disabled={deletion === 'SENDING'} className="flex-1 py-3 rounded-2xl bg-white/5 border border-white/10 text-slate-200 font-black text-sm">إلغاء</button>
+              <button onClick={requestDeletion} disabled={deletion === 'SENDING' || !deletionPassword} aria-busy={deletion === 'SENDING'} className="flex-1 py-3 rounded-2xl bg-rose-500 text-white font-black text-sm disabled:opacity-50">{deletion === 'SENDING' ? 'جارٍ التسجيل…' : 'تأكيد طلب الحذف'}</button>
+            </div>
+          </div>}
+          <p className="text-xs text-slate-400 leading-6">للإبلاغ عن محتوى مخالف أو الاستفسار عن الإشراف: <a href={`mailto:${MODERATION_EMAIL}`} dir="ltr" className="underline font-bold text-slate-200">{MODERATION_EMAIL}</a></p>
+        </div>
       </div>
     </div>
   </div>;
