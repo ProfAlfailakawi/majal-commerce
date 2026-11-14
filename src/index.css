@@ -933,7 +933,7 @@ textarea:disabled {
    44px hit area (WCAG 2.5.5 / Apple HIG). Scoped to narrow coarse-pointer screens
    so the desktop layout does not move. Text links inside running copy are left alone. */
 @media (max-width: 767px), (max-width: 1279px) and (pointer: coarse) {
-  :where(button, [role="tab"], [role="menuitem"], select,
+  :where(button, [role="tab"], [role="menuitem"], select, summary,
          input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]),
          a.inline-flex, a.flex):not(.sr-only) {
     min-height: 44px;
@@ -997,7 +997,8 @@ textarea:disabled {
 
 /* Icon-only and compact square controls get the full 44px width on touch phones too. */
 @media (max-width: 767px), (max-width: 1279px) and (pointer: coarse) {
-  :where(button):has(> svg:only-child),
+  :where(button, summary):has(> svg:only-child),
+  :where(summary):has(> svg):not(:has(> :not(svg))),
   :where(button):where(.p-1, .p-1\.5, .p-2, .p-2\.5, .w-5, .w-6, .w-7, .w-8, .w-9, .w-10) { min-width: 44px; }
 }
 
@@ -1494,4 +1495,332 @@ footer.majal-footer {
   .majal-onb-welcome > :not(:first-child) { grid-column: 2; }
   .majal-onb-welcome > ul:nth-child(n) { justify-content: flex-start; margin-top: 1rem; }
   .majal-onb-welcome p { margin-inline: 0; }
+}
+
+/* Header dropdowns (notifications 24rem, role menu 20rem) hang from their button. When the
+   page is too narrow for that in rem terms — a phone, or any screen with the text enlarged —
+   they become the full-width sheet phones already use, instead of running off the edge. */
+@container majal-page (max-width: 34rem) {
+  header :is([role='menu'].sm\:w-80, .sm\:w-96.sm\:absolute) {
+    position: fixed;
+    inset-inline: 0.75rem;
+    top: 4.5rem;
+    width: auto;
+  }
+}
+
+/* Query container for the book spread below: its leaves are sized against the page in rem. */
+body { container: majal-page / inline-size; }
+
+/* ── Book spread: iPhone Duo inner screen (final pass, 2026-11-14) ──────────────
+   Safari does not report the hinge, so the inner screen is recognised by its size:
+   ~669x867 held as a book, ~951x585 on its side, ~669x520 with the keyboard or
+   pinned media. Tablets (768px+ portrait, 1024px+ landscape) never match.
+   The page becomes two leaves around a calm spine: the task on the right leaf (RTL
+   reading start), its context, identity and index on the left. Nothing interactive or
+   written sits on the spine; only the continuous background crosses it.
+   Markup hooks (presentation only, display-neutral everywhere else):
+     .majal-spread          surface root that becomes the spread
+     .majal-leaf-aside      context block placed on the left leaf, stacked in source order
+     .majal-leaf-index      the section index (tabs / table of contents), held in view
+     .majal-leaf-contents   wrapper whose children join the spread directly
+   Width rules only: the same DOM at every size, so typing, scroll, open dialogs and
+   timers survive folding and unfolding. (No posture or viewport-segment queries: they
+   are preview-only in shipping Safari and a test guards against them.) */
+@media (min-width: 640px) and (max-width: 760px) and (min-height: 520px),
+       (min-width: 860px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 760px) {
+  :root {
+    --spine: 2rem;
+    --leaf-col: 15rem;
+    --leaf-gap: 1.5rem;
+    --duo-sticky-top: calc(env(safe-area-inset-top, 0px) + 9.75rem);
+    --spine-shade: rgb(0 0 0 / 0.16);
+    --spine-line: rgb(232 200 128 / 0.16);
+  }
+  :root[data-theme='light'] { --spine-shade: rgb(11 18 32 / 0.06); --spine-line: rgb(138 106 44 / 0.2); }
+  :root[data-theme='contrast'] { --spine-shade: transparent; --spine-line: rgb(255 255 255 / 0.5); }
+
+  /* Everything below is measured against the page in rem, so a reader who enlarges the text
+     (root font-size) gets the single-column page back instead of two cramped leaves: at 200%
+     text, 40rem is 1280px and no Duo screen qualifies. (body is the query container, so
+     dialogs portalled to body are covered too.) */
+  @container majal-page (min-width: 40rem) {
+    /* Dialogs open on the right leaf; the left leaf stays visible, dimmed, behind the scrim. */
+    .fixed.inset-0:is(.flex, .grid):is(.justify-center, .place-items-center) {
+      padding-left: calc(50% + var(--spine) / 2 + 0.5rem);
+      padding-right: max(1rem, env(safe-area-inset-right, 0px));
+    }
+
+    /* On a leaf-wide panel the title shrinks and wraps; the close control never leaves the panel. */
+    .fixed.inset-0 [role='dialog'] .justify-between > :first-child:not(:only-child) { min-width: 0; flex-shrink: 1; }
+    .fixed.inset-0 [role='dialog'] .justify-between > :last-child:not(:only-child) { flex-shrink: 0; }
+    .fixed.inset-0 [role='dialog'] .whitespace-nowrap { white-space: normal; }
+
+    /* Side sheets and header menus stay on the left leaf, next to the controls that open them. */
+    .fixed.inset-0 > .absolute.inset-y-0.end-0 { padding-inline-end: 0; }
+    .fixed.inset-0 > .absolute.inset-y-0.end-0 > [role='dialog'] { max-width: calc(50vw - var(--spine) / 2); }
+
+    /* First-run introduction as a spread: the words on the right leaf, the choice or the
+       illustration on the left. The mark of the welcome and launch scenes takes the left leaf. */
+    .majal-onb-stage > div {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--spine) minmax(0, 1fr);
+      align-items: center;
+      column-gap: 0;
+      row-gap: 1.5rem;
+      text-align: start;
+    }
+    .majal-onb-stage > div > * { margin-block: 0; min-width: 0; }
+    .majal-onb-stage > div:not(.text-center) > :first-child { grid-column: 1; grid-row: 1 / span 3; text-align: start; }
+    .majal-onb-stage > div:not(.text-center) > :not(:first-child) { grid-column: 3; }
+    .majal-onb-stage > div.text-center > :first-child { grid-column: 3; grid-row: 1 / span 3; }
+    .majal-onb-stage > div.text-center > :not(:first-child) { grid-column: 1; }
+    .majal-onb-stage > div > :first-child > *,
+    .majal-onb-stage > div.text-center > * > * { margin-inline: 0; }
+    .majal-onb-stage > div :is(.justify-center):not(.majal-onb-mark) { justify-content: flex-start; }
+    .majal-onb-stage > div.text-center > :first-child { justify-content: center; }
+    .majal-onb-stage :is(.sm\:grid-cols-2, .md\:grid-cols-3) { grid-template-columns: minmax(0, 1fr); }
+
+    /* Footer: brand and promise on the right leaf, sections and links on the left. */
+    .majal-footer .md\:grid-cols-4 { grid-template-columns: minmax(0, 1fr) var(--spine) minmax(0, 1fr); column-gap: 0; }
+    .majal-footer .md\:grid-cols-4 > :nth-child(odd) { grid-column: 1; }
+    .majal-footer .md\:grid-cols-4 > :nth-child(even) { grid-column: 3; }
+    .majal-footer .md\:flex-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--spine) minmax(0, 1fr);
+      align-items: center;
+      gap: 0;
+    }
+    .majal-footer .md\:flex-row > :first-child { grid-column: 1; text-align: start; }
+    .majal-footer .md\:flex-row > :last-child { grid-column: 3; justify-content: flex-end; }
+
+    /* The fold: a soft shade with one hairline, under the header and every dialog. */
+    #main-content::before {
+      content: '';
+      position: fixed;
+      inset-block: 0;
+      left: 50%;
+      width: var(--spine);
+      margin-left: calc(var(--spine) / -2);
+      pointer-events: none;
+      z-index: 30;
+      background:
+        linear-gradient(90deg, transparent calc(50% - 0.5px), var(--spine-line) calc(50% - 0.5px), var(--spine-line) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+        linear-gradient(90deg, transparent, var(--spine-shade) 50%, transparent);
+    }
+
+    /* Header: brand on the right leaf, account actions on the left; the section rail is
+       split across the spine (the right leaf takes the extra chip when the count is odd), and
+       no track is narrower than its longest word, so a label never breaks inside a word. */
+    .majal-section-rail { display: grid; grid-auto-flow: row; column-gap: 0.5rem; overflow-x: auto; }
+    .majal-section-rail > .majal-section-chip { min-width: 0; white-space: normal; overflow-wrap: normal; text-align: center; line-height: 1.25; }
+    /* Both halves weigh the same (2x3fr = 3x2fr), so the spine track sits on the fold. */
+    .majal-section-rail:has(> :nth-child(3):last-child) { grid-template-columns: repeat(2, minmax(min-content, 1fr)) var(--spine) minmax(min-content, 2fr); }
+    .majal-section-rail:has(> :nth-child(4):last-child) { grid-template-columns: repeat(2, minmax(min-content, 1fr)) var(--spine) repeat(2, minmax(min-content, 1fr)); }
+    .majal-section-rail:has(> :nth-child(5):last-child) { grid-template-columns: repeat(3, minmax(min-content, 2fr)) var(--spine) repeat(2, minmax(min-content, 3fr)); }
+    .majal-section-rail:has(> :nth-child(6):last-child) { grid-template-columns: repeat(3, minmax(min-content, 1fr)) var(--spine) repeat(3, minmax(min-content, 1fr)); }
+    .majal-section-rail:has(> :nth-child(7):last-child) { grid-template-columns: repeat(4, minmax(min-content, 3fr)) var(--spine) repeat(3, minmax(min-content, 4fr)); }
+    .majal-section-rail:has(> :nth-child(8):last-child) { grid-template-columns: repeat(4, minmax(min-content, 1fr)) var(--spine) repeat(4, minmax(min-content, 1fr)); }
+    .majal-section-rail:has(> :nth-child(3):last-child) > :nth-child(3) { grid-column: 4; }
+    .majal-section-rail:has(> :nth-child(4):last-child) > :nth-child(3) { grid-column: 4; }
+    .majal-section-rail:has(> :nth-child(5):last-child) > :nth-child(4) { grid-column: 5; }
+    .majal-section-rail:has(> :nth-child(6):last-child) > :nth-child(4) { grid-column: 5; }
+    .majal-section-rail:has(> :nth-child(7):last-child) > :nth-child(5) { grid-column: 6; }
+    .majal-section-rail:has(> :nth-child(8):last-child) > :nth-child(5) { grid-column: 6; }
+
+    /* The guide is the spread's running head: the next move on the right leaf, its
+       controls on the left, each on its own quiet card. */
+    .majal-guide > div {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--spine) minmax(0, 1fr);
+      align-items: stretch;
+      gap: 0;
+      padding: 0;
+      border: 0;
+      background: none;
+    }
+    .majal-guide > div > * {
+      border: 1px solid color-mix(in oklab, var(--color-gold-300) 15%, transparent);
+      background: color-mix(in oklab, var(--color-gold-500) 5%, transparent);
+      border-radius: 1rem;
+      padding: 0.625rem 0.875rem;
+    }
+    .majal-guide > div > :first-child { grid-column: 1; }
+    .majal-guide > div > :last-child { grid-column: 3; justify-content: flex-end; align-content: center; flex-wrap: wrap; }
+    .majal-guide > div > :last-child kbd { display: none; }
+    .majal-guide-reason { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; max-width: none; }
+    /* A sponsor line between the chrome and the page belongs to the context leaf. */
+    .majal-sponsor-band { padding-inline-start: calc(50% + var(--spine) / 2); }
+
+    /* The spread itself. Main content spans every row on the right leaf; context blocks
+       stack on the left in source order; the index rides the last (flexible) row so it
+       can stay in view while the task scrolls. */
+    .majal-spread {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--spine) minmax(0, 1fr);
+      grid-template-rows: repeat(8, auto) 1fr;
+      align-items: start;
+      row-gap: 0;
+    }
+    .majal-spread > * { grid-column: 1; grid-row: 1 / -1; min-width: 0; margin-block: 0; }
+    .majal-spread > .majal-leaf-aside { grid-column: 3; grid-row: auto; margin-block-end: var(--leaf-gap); }
+    .majal-spread > :is(.majal-leaf-index, .majal-surface-tabs:not(.majal-leaf-aside)) {
+      grid-column: 3;
+      grid-row: -2 / -1;
+      position: sticky;
+      top: var(--duo-sticky-top);
+      align-self: start;
+    }
+    .majal-spread > .majal-leaf-contents { display: contents; }
+    .majal-spread > .majal-leaf-contents > * { grid-column: 1; grid-row: 1 / -1; min-width: 0; }
+    .majal-spread > .majal-leaf-contents > .majal-leaf-index { grid-column: 3; grid-row: -2 / -1; }
+    .majal-spread .majal-leaf-hide { display: none; }
+    .majal-spread .majal-leaf-show { display: block; }
+
+    /* Portal tabs on the context leaf: a two-column index card instead of a strip. */
+    .majal-spread > .majal-surface-tabs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+      overflow: visible;
+      padding: 0.75rem;
+      border: 1px solid rgb(255 255 255 / 0.08);
+      border-radius: 1.5rem;
+      background: rgb(255 255 255 / 0.03);
+    }
+    :root[data-theme='light'] .majal-spread > .majal-surface-tabs { border-color: rgb(11 18 32 / 0.08); background: rgb(255 255 255 / 0.55); }
+    .majal-spread > .majal-surface-tabs > [role='tab'] { justify-content: flex-start; white-space: normal; text-align: start; min-height: 2.75rem; }
+    .majal-spread > .majal-surface-tabs > [role='tab'] > svg { display: inline-block; flex-shrink: 0; }
+    .majal-spread > .majal-surface-tabs > [role='tab'] > span:last-child:not(:first-child) { margin-inline-start: auto; }
+
+    /* Inside a leaf, layouts written for a wide viewport fold to the leaf's own width. */
+    .majal-spread :is(.sm\:grid-cols-2, .sm\:grid-cols-3, .sm\:grid-cols-4, .sm\:grid-cols-6,
+      .md\:grid-cols-2, .md\:grid-cols-3, .md\:grid-cols-4, .md\:grid-cols-5,
+      .lg\:grid-cols-2, .lg\:grid-cols-3, .lg\:grid-cols-4, .xl\:grid-cols-2, .xl\:grid-cols-3,
+      [class*='sm:grid-cols-['], [class*='md:grid-cols-['], [class*='lg:grid-cols-['], [class*='xl:grid-cols-[']) {
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--leaf-col)), 1fr));
+    }
+    .majal-spread :is(.sm\:grid-cols-2, .sm\:grid-cols-3, .sm\:grid-cols-4, .sm\:grid-cols-6,
+      .md\:grid-cols-2, .md\:grid-cols-3, .md\:grid-cols-4, .md\:grid-cols-5,
+      .lg\:grid-cols-2, .lg\:grid-cols-3, .lg\:grid-cols-4, .xl\:grid-cols-2, .xl\:grid-cols-3,
+      [class*='sm:grid-cols-['], [class*='md:grid-cols-['], [class*='lg:grid-cols-['], [class*='xl:grid-cols-[']) > * { grid-column: auto; }
+    /* A grid that already has a phone column count keeps it inside the leaf (stat pairs, triplets). */
+    .majal-spread .grid-cols-2:is(.sm\:grid-cols-3, .sm\:grid-cols-4, .sm\:grid-cols-6, .md\:grid-cols-3, .md\:grid-cols-4, .lg\:grid-cols-3, .lg\:grid-cols-4, [class*='sm:grid-cols-['], [class*='lg:grid-cols-[']) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .majal-spread .grid-cols-3:is(.sm\:grid-cols-4, .sm\:grid-cols-6, .md\:grid-cols-4, .lg\:grid-cols-4) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .majal-spread :is(.sm\:col-span-2, .md\:col-span-2, .lg\:col-span-2, .lg\:col-span-3, .xl\:col-span-3, .col-span-full) { grid-column: 1 / -1; }
+    .majal-spread :is(.sm\:flex-row, .md\:flex-row, .lg\:flex-row, .xl\:flex-row) { flex-direction: column; }
+    .majal-spread :is(.sm\:flex-row, .md\:flex-row, .lg\:flex-row, .xl\:flex-row):is(.sm\:items-center, .sm\:items-end, .md\:items-center, .lg\:items-center, .xl\:items-center, .md\:items-end) { align-items: flex-start; }
+    .majal-spread :is(.lg\:shrink-0, .md\:max-w-xs) { max-width: 100%; }
+    /* Chips and labels written for a wide row may wrap inside a leaf instead of pushing past it. */
+    .majal-spread .whitespace-nowrap { white-space: normal; }
+    /* Column headings break between words, never inside one; a wide matrix scrolls in its own frame. */
+    .majal-spread th { overflow-wrap: normal; word-break: keep-all; }
+    .majal-spread table.mobile-cards:not(.mc-compact):not(.mc-audit) tbody { display: block; }
+    .majal-spread table.mobile-cards:not(.mc-compact):not(.mc-audit) tr { margin-block-end: 0.75rem; }
+
+    .majal-spread > p[role='status'] { grid-column: 3; grid-row: auto; margin-block-end: var(--leaf-gap); }
+
+    /* An opening spread: one panel across both leaves (its background crosses the spine,
+       its content does not), then the task and context leaves below it. */
+    .majal-spread > .majal-leaf-opener { grid-column: 1 / -1; grid-row: 1; margin-block-end: var(--leaf-gap); }
+    .majal-spread:has(> .majal-leaf-opener) > :not(.majal-leaf-aside, .majal-leaf-index, .majal-leaf-opener, p[role='status']) { grid-row: 2 / -1; }
+    .majal-spread .majal-split {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--spine) minmax(0, 1fr);
+      column-gap: 0;
+    }
+    .majal-spread .majal-split > :nth-child(odd of :not([aria-hidden='true'], .absolute)) { grid-column: 1; }
+    .majal-spread .majal-split > :nth-child(even of :not([aria-hidden='true'], .absolute)) { grid-column: 3; }
+
+    /* Short private pages (payment return, invites, private reports) widen to the spread:
+       the left leaf becomes a quiet title page, the right leaf carries the task. */
+    .majal-spread:is(.max-w-md, .max-w-xl, .max-w-3xl) { max-width: none; padding-inline: 1.5rem; }
+    .majal-spread > .majal-leaf-title {
+      flex-direction: column;
+      justify-content: center;
+      gap: 1rem;
+      min-height: 15rem;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      border: 1px solid color-mix(in oklab, var(--color-gold-300) 18%, transparent);
+      border-radius: 28px;
+      background:
+        radial-gradient(120% 80% at 50% 0%, color-mix(in oklab, var(--color-gold-500) 9%, transparent), transparent 70%),
+        color-mix(in oklab, var(--color-gold-500) 3%, transparent);
+    }
+    .majal-spread > .majal-leaf-title > svg { width: 4rem; height: 4rem; }
+    .majal-spread > .majal-leaf-title > h1 { font-size: 1.5rem; }
+    .majal-leaf-solo { max-width: none; padding-left: calc(50% + var(--spine) / 2); padding-right: 1.5rem; }
+
+    /* Landing opener: the promise on the right leaf, the brand monument seated on the left. */
+    .majal-spread > .majal-leaf-opener .majal-hero-copy { max-width: calc(50% - var(--spine) / 2); margin-inline: 0; }
+    .majal-spread > .majal-leaf-opener .majal-hero-monument { display: block; inset-inline-end: auto; left: 25%; translate: -50% -50%; }
+    .majal-spread > .majal-leaf-opener .majal-hero-rings { display: none; }
+
+    header :is([role='menu'].sm\:w-80, .sm\:w-96.sm\:absolute) {
+      position: fixed;
+      top: 4.75rem;
+      left: max(1.5rem, env(safe-area-inset-left, 0px));
+      right: auto;
+      width: calc(50vw - var(--spine) / 2 - 2.5rem);
+      max-width: none;
+    }
+  }
+}
+/* Landscape book (~951x585): every row of chrome is height the task does not get, so the
+   header rows tighten and the sticky offsets follow. */
+@media (min-width: 860px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 760px) {
+  :root { --duo-sticky-top: calc(env(safe-area-inset-top, 0px) + 8.25rem); }
+  html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 8rem); }
+  @container majal-page (min-width: 40rem) {
+    header.glass-nav .majal-header-row { height: 3.75rem; }
+    .majal-section-rail { padding-block: 0.375rem; }
+  }
+}
+/* Portrait book: each leaf is ~290px — a tighter index, calmer display type, and dialog
+   forms in one column. */
+@media (min-width: 640px) and (max-width: 760px) and (min-height: 520px) {
+  /* A dialog on a ~300px leaf stacks its paired fields instead of halving them. */
+  .fixed.inset-0 :is(.sm\:grid-cols-2, .sm\:grid-cols-3, [class*='sm:grid-cols-[']) { grid-template-columns: minmax(0, 1fr); }
+  .fixed.inset-0 :is(.sm\:grid-cols-2, .sm\:grid-cols-3) > :is(.sm\:col-span-2, .col-span-2) { grid-column: 1 / -1; }
+  @container majal-page (min-width: 40rem) {
+    .majal-spread > .majal-surface-tabs { padding: 0.5rem; gap: 0.375rem; }
+    .majal-spread > .majal-surface-tabs > [role='tab'] { padding-inline: 0.625rem; gap: 0.375rem; }
+    .majal-spread > .majal-leaf-opener .majal-hero-copy h1 { font-size: 2rem; }
+    .majal-spread > .majal-leaf-aside.majal-hero h1 { font-size: 1.5rem; line-height: 1.35; }
+    .majal-spread > .majal-leaf-opener .majal-hero-monument { scale: 0.82; }
+  }
+}
+
+/* ── Laptop posture: wide and short (Duo half-open ~951x350 / 600x350, folded on its
+   side 594x368, phone landscape). The page reads on top; the section rail docks at the
+   bottom edge within thumb reach. The footer reserves the dock's height, so the dock
+   never covers the last line, and the floating assistant lifts above it. */
+@media (max-height: 480px) and (orientation: landscape) and (min-width: 560px) {
+  :root { --duo-dock: 3.5rem; }
+  /* A focused field or a jump target settles above the dock, not under it. */
+  html { scroll-padding-bottom: calc(var(--duo-dock) + 0.75rem + env(safe-area-inset-bottom, 0px)); }
+  /* A blurred header would become the dock's containing block; the bar is already opaque. */
+  header.glass-nav { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .majal-section-rail {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 45;
+    margin: 0;
+    padding: 0.375rem max(1rem, env(safe-area-inset-right, 0px)) calc(0.375rem + env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
+    background: rgb(8 14 27 / 0.97);
+    border-top: 1px solid rgb(255 255 255 / 0.08);
+    box-shadow: 0 -8px 24px -16px rgb(0 0 0 / 0.5);
+  }
+  :root[data-theme='light'] .majal-section-rail { background: rgb(255 255 255 / 0.97); border-top-color: rgb(11 18 32 / 0.1); box-shadow: 0 -8px 24px -18px rgb(11 18 32 / 0.25); }
+  :root[data-theme='contrast'] .majal-section-rail { background: #000; border-top-color: #fff; }
+  footer.majal-footer, body:has(.majal-ai-fab) footer.majal-footer { padding-bottom: calc(var(--duo-dock) + 4rem + env(safe-area-inset-bottom, 0px)); }
+  .majal-ai-fab { bottom: calc(var(--duo-dock) + 0.75rem + env(safe-area-inset-bottom, 0px)); }
+}
+/* From 640px the assistant's round button docks into the bar's far (left) end, beside the
+   sections, instead of floating over the page. */
+@media (max-height: 480px) and (orientation: landscape) and (min-width: 640px) {
+  body:has(.majal-ai-fab) .majal-section-rail { padding-left: calc(max(1rem, env(safe-area-inset-left, 0px)) + 3.75rem); }
+  .majal-ai-fab { z-index: 46; bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px)); inset-inline-end: max(1rem, env(safe-area-inset-left, 0px)); }
 }

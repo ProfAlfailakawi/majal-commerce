@@ -191,10 +191,10 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
-      <section className="majal-hero glass-panel rounded-[28px] p-6 md:p-10 border border-white/10 relative overflow-hidden">
+    <div className="majal-spread max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+      <section className="majal-leaf-opener majal-hero glass-panel rounded-[28px] p-6 md:p-10 border border-white/10 relative overflow-hidden">
         <div className="majal-glow -top-80 -end-48 w-[48rem] h-[48rem]" style={{ '--glow': 'rgba(199,165,91,0.10)' } as React.CSSProperties} />
-        <div className="relative z-10 grid lg:grid-cols-[1.05fr_.95fr] gap-8 items-center">
+        <div className="majal-split relative z-10 grid lg:grid-cols-[1.05fr_.95fr] gap-8 items-center">
           <div className="space-y-5">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-400/20 text-rose-300 text-xs font-black"><Flame className="w-4 h-4" /> إطلاقات مجال — منتجات تستحق التجربة</div>
             <h1 className="text-3xl md:text-5xl font-black leading-tight">مو مجرد طلب أكل.<br /><span className="text-gold-300">أنت تشارك في اكتشاف الاسم القادم.</span></h1>
@@ -273,7 +273,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
         )}
       </section>
 
-      <section className="grid md:grid-cols-3 gap-4">
+      <section className="majal-leaf-aside grid md:grid-cols-3 gap-4">
         {[
           { icon: <BadgeCheck className="w-5 h-5 text-emerald-300" />, title: 'هوية المبدع ظاهرة', text: 'تتعرف على صاحب المنتج وقصته بدل منتج مجهول المصدر داخل المنصة.' },
           { icon: <Store className="w-5 h-5 text-sky-300" />, title: 'منشأة مرخّصة', text: 'الإنتاج والبيع التجاري يتمان من خلال الشريك المرخّص.' },
@@ -281,7 +281,7 @@ export const ConsumerDashboard: React.FC<ConsumerDashboardProps> = () => {
         ].map((item, idx) => <div key={idx} className="glass-card rounded-2xl p-4 sm:p-5 border border-white/10"><div className="flex items-center gap-3 sm:block"><span className="shrink-0">{item.icon}</span><h3 className="font-black sm:mt-4">{item.title}</h3></div><p className="text-xs text-slate-400 leading-6 mt-2">{item.text}</p></div>)}
       </section>
 
-      <AdSlot slot="MARKET" topic={featuredProduct?.category} />
+      <AdSlot slot="MARKET" topic={featuredProduct?.category} className="majal-leaf-aside" />
 
       <KuwaitiJobs />
 

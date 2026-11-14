@@ -271,7 +271,7 @@ export default function App() {
 
         {!gateToken && !partnerToken && !adReportToken && !inviteToken && <ExperienceGuide activeSurface={activeSurface} onSurfaceChange={handleSurfaceChange} />}
 
-        {!adReportToken && !inviteToken && !partnerToken && !gateToken && !legalDocument && !['DIRECTORY', 'CREATOR', 'HOST', 'SUPPLIER'].includes(activeSurface) && <AdSlot slot="SPONSOR" />}
+        {!adReportToken && !inviteToken && !partnerToken && !gateToken && !legalDocument && !['DIRECTORY', 'CREATOR', 'HOST', 'SUPPLIER'].includes(activeSurface) && <AdSlot slot="SPONSOR" className="majal-sponsor-band" />}
 
         <main id="main-content" data-surface={paymentReturn ? 'PAYMENT' : (gateToken || partnerToken || inviteToken || adReportToken || legalDocument) ? 'OTHER' : activeSurface} tabIndex={-1} className="animate-in fade-in duration-300 flex-1 pb-[4.5rem] sm:pb-10 outline-none focus-visible:ring-2 focus-visible:ring-gold-300">
           <Suspense fallback={<SurfaceFallback />}>

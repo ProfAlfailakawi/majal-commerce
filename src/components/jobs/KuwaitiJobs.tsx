@@ -63,7 +63,7 @@ export const KuwaitiJobs: React.FC = () => {
   if (!loading && !jobs.length) return null;
 
   return (
-    <section className="glass-panel rounded-[28px] p-5 md:p-6 border border-white/10 space-y-5" aria-labelledby="kuwaiti-jobs-title">
+    <section className="majal-leaf-aside glass-panel rounded-[28px] p-5 md:p-6 border border-white/10 space-y-5" aria-labelledby="kuwaiti-jobs-title">
       <div className="flex items-start justify-between gap-4">
         <div className="flex gap-3">
           <span className="w-11 h-11 rounded-2xl bg-gold-500/10 border border-gold-300/25 grid place-items-center shrink-0">

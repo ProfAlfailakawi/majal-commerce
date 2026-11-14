@@ -32,7 +32,7 @@ export const UpcomingDropStrip: React.FC<Props> = ({ launch, onOpenLaunch, onOpe
   const host = store.hosts.find(h => h.id === launch.hostBusinessId);
 
   return (
-    <section aria-labelledby="upcoming-drop-title" className="relative overflow-hidden rounded-[28px] border border-gold-300/30 glass-panel">
+    <section aria-labelledby="upcoming-drop-title" className="majal-leaf-aside relative overflow-hidden rounded-[28px] border border-gold-300/30 glass-panel">
       <div className="majal-glow -top-60 -start-40 w-[34rem] h-[34rem]" style={{ '--glow': 'rgba(199,165,91,0.16)' } as React.CSSProperties} />
       <div className="relative z-10 grid md:grid-cols-[minmax(0,15rem)_1fr] gap-5 p-5 sm:p-6 items-center">
         <div className="relative h-44 md:h-full min-h-44 rounded-2xl overflow-hidden border border-white/10">

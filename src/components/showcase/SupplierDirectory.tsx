@@ -118,8 +118,8 @@ export const SupplierDirectory: React.FC<{ onSurfaceChange: (surface: SurfaceTyp
   }, [items, category, query]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8 space-y-8">
-      <section className="glass-panel rounded-[28px] p-6 sm:p-9 border border-white/10 relative overflow-hidden">
+    <div className="majal-spread max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8 space-y-8">
+      <section className="majal-leaf-aside glass-panel rounded-[28px] p-6 sm:p-9 border border-white/10 relative overflow-hidden">
         <div className="majal-glow -top-[14rem] -start-[14rem] w-[36rem] h-[36rem]" style={{ '--glow': 'rgba(37,165,138,0.10)' } as React.CSSProperties} />
         <div className="relative z-10 grid lg:grid-cols-[1.2fr_1fr] gap-6 items-center">
           <div className="space-y-3">
@@ -160,7 +160,7 @@ export const SupplierDirectory: React.FC<{ onSurfaceChange: (surface: SurfaceTyp
         )}
       </section>
 
-      <p className="text-xs text-slate-400 leading-6 text-center max-w-2xl mx-auto">الدليل مجاني ليعرّف الناس بمنصة مجال. مراجعتنا شكلية: نتحقق من وضوح البيانات فقط، ولا نضمن جودة المورد أو أسعاره. علامة «موثّق في مجال» تعني حسابًا تحقّقت منه الإدارة بسجله التجاري.</p>
+      <p className="majal-leaf-aside text-xs text-slate-400 leading-6 text-center max-w-2xl mx-auto">الدليل مجاني ليعرّف الناس بمنصة مجال. مراجعتنا شكلية: نتحقق من وضوح البيانات فقط، ولا نضمن جودة المورد أو أسعاره. علامة «موثّق في مجال» تعني حسابًا تحقّقت منه الإدارة بسجله التجاري.</p>
       {form && <SubmitForm onClose={() => setForm(false)} />}
     </div>
   );
