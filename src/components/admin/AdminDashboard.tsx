@@ -35,9 +35,11 @@ import { EmptyState } from '../common/EmptyState';
 import { SurfaceTabs } from '../common/SurfaceTabs';
 import { EcosystemApprovals } from './EcosystemApprovals';
 import { ProductApprovals } from './ProductApprovals';
+import { SafetyQueues } from './SafetyQueues';
+import { IS_DEMO_MODE } from '../../lib/runtime';
 import { ShowcaseAdmin } from './ShowcaseAdmin';
 
-type ApprovalPane = 'PRODUCTS' | 'ECOSYSTEM' | 'DIRECTORY' | 'LISTINGS' | 'CAMPAIGNS';
+type ApprovalPane = 'PRODUCTS' | 'ECOSYSTEM' | 'DIRECTORY' | 'LISTINGS' | 'CAMPAIGNS' | 'SAFETY';
 import { AudienceDashboard } from './AudienceDashboard';
 import { kwdFromFils, useAdminMetrics } from '../../lib/adminMetrics';
 import { MetricsStatus } from './MetricsStatus';
@@ -226,7 +228,8 @@ export const AdminDashboard: React.FC = () => {
               { id: 'ECOSYSTEM' as const, label: 'الموردون والوظائف' },
               { id: 'DIRECTORY' as const, label: 'دليل الموردين' },
               { id: 'LISTINGS' as const, label: 'مشاريع للبيع' },
-              { id: 'CAMPAIGNS' as const, label: 'حملات الشركات' }
+              { id: 'CAMPAIGNS' as const, label: 'حملات الشركات' },
+              { id: 'SAFETY' as const, label: 'البلاغات وطلبات الحذف' }
             ]}
             active={approvalPane}
             onChange={setApprovalPane}
@@ -237,6 +240,7 @@ export const AdminDashboard: React.FC = () => {
           {approvalPane === 'DIRECTORY' && <ShowcaseAdmin part="DIRECTORY" />}
           {approvalPane === 'LISTINGS' && <ShowcaseAdmin part="LISTINGS" />}
           {approvalPane === 'CAMPAIGNS' && <ShowcaseAdmin part="CAMPAIGNS" />}
+          {approvalPane === 'SAFETY' && !IS_DEMO_MODE && <SafetyQueues />}
         </div>
       )}
 

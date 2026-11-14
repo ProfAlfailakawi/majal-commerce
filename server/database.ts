@@ -1731,6 +1731,39 @@ const migrations = [
       ALTER TABLE orders ADD COLUMN fulfilled_at TEXT;
       ALTER TABLE orders ADD COLUMN fulfilled_by_user_id TEXT;
     `
+  },
+  {
+    /*
+     * App Store 1.2 / 5.1.1(v), additive only.
+     *  - review_reports: a signed-in user's report of a published review, for the admin queue.
+     *  - account_deletion_requests: only ids, a timestamp and a status. The request queues the
+     *    operational erasure for the owner; it deletes nothing by itself, and contracts,
+     *    settlements, payments and the audit log are never touched by it.
+     */
+    version: 32,
+    sql: `
+      CREATE TABLE IF NOT EXISTS review_reports (
+        id TEXT PRIMARY KEY,
+        review_id TEXT NOT NULL REFERENCES product_reviews(id) ON DELETE RESTRICT,
+        reporter_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+        reason TEXT NOT NULL CHECK(reason IN ('SPAM','ABUSE','INAPPROPRIATE','OTHER')),
+        note TEXT NOT NULL DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'OPEN' CHECK(status IN ('OPEN','ACTIONED','DISMISSED')),
+        created_at TEXT NOT NULL,
+        UNIQUE(review_id, reporter_user_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_review_reports_status ON review_reports(status, created_at DESC, id);
+
+      CREATE TABLE IF NOT EXISTS account_deletion_requests (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+        requested_at TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'PENDING' CHECK(status IN ('PENDING','COMPLETED','REJECTED')),
+        completed_at TEXT
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_account_deletion_pending ON account_deletion_requests(user_id) WHERE status = 'PENDING';
+      CREATE INDEX IF NOT EXISTS idx_account_deletion_status ON account_deletion_requests(status, requested_at, id);
+    `
   }
 ] as const;
 

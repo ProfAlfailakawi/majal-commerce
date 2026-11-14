@@ -25,6 +25,7 @@ import { createAdminMetricsRouter } from './server/admin-metrics';
 import { msUntilNextLaunchEvent, sweepLaunchSchedule } from './server/launch-schedule';
 import { activityTracker, startAdaptiveLoop } from './server/idle-aware';
 import { createModerationRouter } from './server/moderation';
+import { createSafetyRouter } from './server/safety';
 import { createCommercePublicRouter, createCommerceRouter } from './server/commerce-ops';
 import { expireStaleHolds } from './server/checkout';
 import { deliveryReadiness, startNotificationDeliveryWorker } from './server/delivery';
@@ -208,6 +209,9 @@ async function initializeApplication(app: express.Express) {
   // قائمة الحسابات الإدارية قراءة فقط ومحصورة بالسوبر أدمن؛ حدّ إضافي يمنع كشطها.
   app.get('/api/v1/moderation/users', expressRateLimit(limitOptions(60, 5 * 60_000, 'moderation-users')));
   app.use('/api/v1/moderation', createModerationRouter(db, authConfig));
+  // App Store 1.2 / 5.1.1(v): الإبلاغ عن تقييم، وطلب حذف الحساب (حدّ أضيق لطلب الحذف لأنه يعيد التحقق بكلمة المرور).
+  app.post('/api/v1/safety/account/deletion-request', expressRateLimit(limitOptions(5, 15 * 60_000, 'account-deletion')));
+  app.use('/api/v1/safety', expressRateLimit(limitOptions(60, 15 * 60_000, 'safety')), createSafetyRouter(db, authConfig));
   // تقييمات الإطلاق عامة القراءة (كتالوج عام)، فلا تمرّ بحارس المصادقة.
   app.use('/api/v1/public', createPublicReviewsRouter(db));
   app.use('/api/v1/public', createCommercePublicRouter(db));
