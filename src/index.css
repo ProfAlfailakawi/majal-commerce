@@ -53,6 +53,16 @@
 }
 
 :root {
+  /* iPhone Duo widget corner: ONE reserved box at the physical top-right (the system widget
+     capsule: torch + account + clock + status). Zero everywhere except the Duo screens listed in
+     the "Widget corner" section at the end of this file, which is the only place these are set. */
+  --duo-widget-w: 0px;
+  --duo-widget-gap: 0px;
+  --duo-widget-h: 0px;
+  --duo-widget-reserve: calc(var(--duo-widget-w) + var(--duo-widget-gap));
+  --duo-widget-mirror: 0px;
+  --duo-widget-active: 0;
+
   /* Aliases onto the @theme scale above, so raw CSS can use the same vocabulary
      the utilities expose. One source of truth, two syntaxes. */
   --gold-100: var(--color-gold-100);
@@ -1401,14 +1411,14 @@ button, a, [role="button"], summary, select { touch-action: manipulation; }
 /* Side insets: the shell column is padded, and the sticky header bleeds back out so its
    bar still reaches both edges while its contents stay inside the safe area. */
 .majal-shell {
-  padding-left: env(safe-area-inset-left, 0px);
-  padding-right: env(safe-area-inset-right, 0px);
+  padding-left: calc(env(safe-area-inset-left, 0px) + var(--duo-widget-mirror));
+  padding-right: calc(env(safe-area-inset-right, 0px) + var(--duo-widget-reserve));
 }
 .majal-shell > header.glass-nav {
-  margin-left: calc(-1 * env(safe-area-inset-left, 0px));
-  margin-right: calc(-1 * env(safe-area-inset-right, 0px));
-  padding-left: env(safe-area-inset-left, 0px);
-  padding-right: env(safe-area-inset-right, 0px);
+  margin-left: calc(-1 * (env(safe-area-inset-left, 0px) + var(--duo-widget-mirror)));
+  margin-right: calc(-1 * (env(safe-area-inset-right, 0px) + var(--duo-widget-reserve)));
+  padding-left: calc(env(safe-area-inset-left, 0px) + var(--duo-widget-mirror));
+  padding-right: calc(env(safe-area-inset-right, 0px) + var(--duo-widget-reserve));
 }
 
 /* The footer is the last surface on the page, so it is full-bleed: only a top rule, no side
@@ -1436,10 +1446,12 @@ footer.majal-footer {
 .fixed.inset-0.p-4:not([class*="pt-["]) {
   padding:
     max(1rem, env(safe-area-inset-top, 0px))
-    max(1rem, env(safe-area-inset-right, 0px))
+    calc(max(1rem, env(safe-area-inset-right, 0px)) + var(--duo-widget-reserve))
     max(1rem, env(safe-area-inset-bottom, 0px))
-    max(1rem, env(safe-area-inset-left, 0px));
+    calc(max(1rem, env(safe-area-inset-left, 0px)) + var(--duo-widget-mirror));
 }
+/* The few scrims that set their own top padding (the command palette) still keep the corner clear. */
+.fixed.inset-0.p-4[class*="pt-["] { padding-right: calc(1rem + var(--duo-widget-reserve)); }
 @media (max-width: 639px) {
   .majal-ai-fab { inset-inline-end: env(safe-area-inset-left, 0px); }
 }
@@ -1468,8 +1480,8 @@ footer.majal-footer {
   --onb-px: 1rem;
   --onb-py: 1.5rem;
   padding-top: max(var(--onb-py), env(safe-area-inset-top, 0px));
-  padding-left: max(var(--onb-px), env(safe-area-inset-left, 0px));
-  padding-right: max(var(--onb-px), env(safe-area-inset-right, 0px));
+  padding-left: calc(max(var(--onb-px), env(safe-area-inset-left, 0px)) + var(--duo-widget-mirror));
+  padding-right: calc(max(var(--onb-px), env(safe-area-inset-right, 0px)) + var(--duo-widget-reserve));
 }
 @media (min-width: 640px) { .majal-onb-frame { --onb-px: 2rem; --onb-py: 2rem; } }
 .majal-onb-bar { padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px)); }
@@ -1503,7 +1515,8 @@ footer.majal-footer {
 @container majal-page (max-width: 34rem) {
   header :is([role='menu'].sm\:w-80, .sm\:w-96.sm\:absolute) {
     position: fixed;
-    inset-inline: 0.75rem;
+    left: 0.75rem;
+    right: calc(0.75rem + var(--duo-widget-reserve));
     top: 4.5rem;
     width: auto;
   }
@@ -1548,7 +1561,7 @@ body { container: majal-page / inline-size; }
     /* Dialogs open on the right leaf; the left leaf stays visible, dimmed, behind the scrim. */
     .fixed.inset-0:is(.flex, .grid):is(.justify-center, .place-items-center) {
       padding-left: calc(50% + var(--spine) / 2 + 0.5rem);
-      padding-right: max(1rem, env(safe-area-inset-right, 0px));
+      padding-right: calc(max(1rem, env(safe-area-inset-right, 0px)) + var(--duo-widget-reserve));
     }
 
     /* On a leaf-wide panel the title shrinks and wraps; the close control never leaves the panel. */
@@ -1824,38 +1837,50 @@ body { container: majal-page / inline-size; }
     .majal-section-rail { padding-block: 0.375rem; }
   }
 }
-/* ── Widget keep-out: iPhone Duo inner screen (browser tab and installed app) ────
-   The Duo shows a system status widget (location arrow, clock, signal ring) floating
-   over the physical top-right corner: about 55-80px wide, from the top edge to roughly 115px
-   down. It is system-owned and moves, so a generous corner is reserved instead of its exact box.
-   Every rule here lives under the inner-screen media conditions (book or portrait), in a browser
-   tab and in the installed app alike (display mode is deliberately NOT part of the condition),
-   so tablets, phones, the folded outer screen and desktop are untouched.
-   Only content steps aside (physical right, regardless of RTL): backgrounds and the header bar
-   still run edge to edge. In the book the box belongs to the right page only; the left page
-   header zone is not affected. The folded outer screen (~367x740) cannot be told apart from an
-   ordinary iPhone, so it is deliberately not guessed at. */
-@media screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape),
-       screen and (min-width: 640px) and (max-width: 720px) and (min-height: 520px) and (max-height: 960px) and (orientation: portrait) {
-  :root { --duo-cutout-w: 116px; --duo-cutout-h: 116px; }
-
-  /* The top bar: brand, demo chip and the whole section rail stop short of the corner. */
-  header.glass-nav > div { padding-right: calc(var(--duo-cutout-w) + 0.5rem); }
-  /* The first-run introduction and its skip/progress row. */
-  .majal-onb-frame { padding-right: calc(var(--duo-cutout-w) + 0.5rem); }
-
-  /* Dialogs open below the corner, so a panel's title and close control are never under it.
-     (Specificity matches the safe-area padding rule above, which sets all four sides.) */
-  html:root .fixed.inset-0.inset-0:is(.flex, .grid) { padding-top: calc(var(--duo-cutout-h) + 0.5rem); }
-  .fixed.inset-0 [role='dialog']:not(.fixed) { max-height: calc(100dvh - var(--duo-cutout-h) - 1.5rem); }
+/* ── Widget corner: iPhone Duo (one reserved box, every posture) ────────────────
+   The Duo draws a system widget capsule (torch, account/location, clock, status) over the
+   PHYSICAL top-right of the screen. It is not part of any safe-area inset, so env(safe-area-*)
+   is 0 there. Measured on a 1371x2034 capture: x 82-95% of the width, y 3-30% of the height,
+   i.e. ~58-64pt wide, up to ~200pt tall, ~6pt off the right edge.
+   Why the earlier keep-out never held (root cause):
+     1. it was gated to 640-720px PORTRAIT and the inner-screen book only, so the folded outer
+        screen (382x580), 470x780 and the folded landscape 594x368 got nothing;
+     2. the box was 116x116 (the capsule is ~70x200), so the tabs, the first list items and
+        sheets just below 116px still sat under it;
+     3. it only padded the header's inner div and the onboarding frame: the content column, the
+        dropdowns/sheets/drawer and the skip link were never moved.
+   Now: one box, set once here, 0 elsewhere. The shell column, the sticky header, scrims,
+   sheets, drawers, dropdowns and the first-run frame all read the same variables.
+   Physical right on purpose (left/right, not inline-end): the widget does not follow RTL.
+   Backgrounds and glass still run edge to edge; only content steps aside.
+   Which screens: any portrait screen up to 700px wide (outer screen 382x580, 470x780, the
+   unfolded 669x867) plus the known landscape Duo sizes (594x368, 951x585 and their neighbours),
+   plus a two-segment viewport where the browser reports one. The landscape geometry is NOT
+   verified on a device.
+   Installed app (Capacitor WKWebView): detection uses only width, orientation and size, never the
+   user agent nor the install state, and the height bands are generous because
+   the app viewport has no browser toolbars and is taller than the same screen in Safari. */
+@media screen and (orientation: portrait) and (max-width: 700px),
+       screen and (orientation: landscape) and (min-width: 575px) and (max-width: 610px) and (min-height: 340px) and (max-height: 430px),
+       screen and (orientation: landscape) and (min-width: 940px) and (max-width: 960px) and (min-height: 340px) and (max-height: 760px),
+       screen and (orientation: landscape) and (min-width: 770px) and (max-width: 790px) and (min-height: 460px) and (max-height: 560px),
+       screen and (orientation: landscape) and (min-width: 860px) and (max-width: 875px) and (min-height: 660px) and (max-height: 780px),
+       screen and (horizontal-viewport-segments: 2) {
+  :root {
+    --duo-widget-w: 70px;
+    --duo-widget-gap: 8px;
+    --duo-widget-h: clamp(64px, 30vh, 200px);
+    --duo-widget-active: 1;
+  }
 }
-/* The book's header is a full-width bar over both pages; its section rail keeps a spine track
-   on the fold, so the left edge gives up the same width as the right (the track stays centred);
-   the first-run introduction's spread is centred the same way. */
+/* The book keeps its fold on the window centre: the left edge gives up the same width. */
 @media screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape) {
-  header.glass-nav > div { padding-left: calc(var(--duo-cutout-w) + 0.5rem); }
-  .majal-onb-frame { padding-left: calc(var(--duo-cutout-w) + 0.5rem); }
+  :root { --duo-widget-mirror: var(--duo-widget-reserve); }
 }
+/* Floating panels that are anchored to the screen (not to the shell column) keep the same gap. */
+@media screen and (max-width: 599px) { .majal-duo-pop { right: calc(0.75rem + var(--duo-widget-reserve)); } }
+.majal-duo-pane { max-width: calc(100% - var(--duo-widget-reserve)); }
+.majal-skip:focus { inset-inline-start: auto; right: calc(0.75rem + var(--duo-widget-reserve)); }
 
 /* ── Laptop posture: wide and short (Duo half-open ~951x350 / 600x350, folded on its
    side 594x368, phone landscape). The page reads on top; the section rail docks at the

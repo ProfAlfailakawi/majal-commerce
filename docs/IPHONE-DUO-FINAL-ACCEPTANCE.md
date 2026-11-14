@@ -346,3 +346,92 @@ NODE_PATH=/opt/node22/lib/node_modules PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers
 حدّ معروف: نافذة Split View / Slide Over على الآيباد بعرض ~640–720px لا تُفرَّق عن الدوو بالحجم. المميّز الحقيقي `(horizontal-viewport-segments: 2)` يمنعه اختبار المستودع الحالي ولا يعمل إلا حيث يكشفه المتصفح؛ لم نلتفّ عليه.
 
 الحراسة: `src/lib/duoLayout.test.ts` يفشل إن سمح استعلام كتاب عمودي بعرض >720، أو أفقي >1000، أو لم يُقيَّد بـ `screen`.
+
+---
+
+## ركن الودجت (الجولة الثالثة، فرع `duo-widget-corner-1114`)
+
+> كل ما هنا **محاكاة** في Playwright WebKit على سطح مكتب (محرّك Safari)، وسياق «التطبيق» (Capacitor/WKWebView) **مُحاكى** بوكيل مستخدم وكائن `window.Capacitor` مُعرَّفين في الاختبار. **لم يُجرَّب على جهاز iPhone Duo حقيقي ولا داخل تطبيق TestFlight فعلي.** هندسة الوضع العرضي غير مُتحقَّق منها على جهاز.
+
+### السبب الجذري (من الكود)
+
+على الـDuo يرسم النظام كبسولة ودجت (المصباح، الحساب/الموقع، الساعة، البطارية) فوق **أعلى اليمين الفيزيائي**، وهي ليست جزءًا من safe-area (`env(safe-area-inset-*)` = 0 هناك). القياس: عرض ~58–64pt بُعدها ~6pt عن الحافة، وارتفاع حتى ~200pt (قياس التطبيق: حتى ~142px). قاعدة «keep-out» السابقة لم تعمل لأن:
+
+1. **شرطها ضيّق:** تعمل فقط في الطولي بعرض 640–720 وفي كتاب 951×585؛ فالشاشة الخارجية 382×580 و470×780 والعرضي المطوي 594×368 لم تحصل على شيء.
+2. **المربع صغير:** 116×116 بينما الكبسولة ~70×200، فتبويبات وأول عناصر القوائم تحت 116px ظلّت تحتها.
+3. **التطبيق محدود:** كانت تُوسِّع padding لـ`header > div` وإطار التعريف الأول فقط؛ عمود المحتوى والقوائم المنسدلة والدرج الجانبي ورابط التخطي والأوراق السفلية لم تتحرك.
+4. **تعارض ترتيب الـcascade:** قاعدة حاوية القوائم المنسدلة (`inset-inline: 0.75rem`) كانت ستُبطل أي إزاحة لاحقة، فعُدّلت إلى left/right فيزيائيين.
+
+### المنطقة المحجوزة (متغيرات في جذر `src/index.css`)
+
+| المتغير | القيمة داخل Duo | خارجه |
+|---|---|---|
+| `--duo-widget-w` | `70px` (يشمل ~6pt عن الحافة + ~64) | `0px` |
+| `--duo-widget-gap` | `8px` | `0px` |
+| `--duo-widget-h` | `clamp(64px, 30vh, 200px)` | `0px` |
+| `--duo-widget-reserve` | `calc(w + gap)` = 78px | 0 |
+| `--duo-widget-mirror` | = reserve في الكتاب فقط (يُبقي الكعب في منتصف النافذة) | 0 |
+| `--duo-widget-active` | `1` | `0` |
+
+تُطبَّق على **اليمين الفيزيائي** (`left/right`، لا `inline-end`)، وتُعرَّف مرة واحدة في قسم «Widget corner». المعادلة: المنطقة = `x ≥ vw − 70` و`y ≤ clamp(64, 30vh, 200)`.
+
+**تحديد الجهاز (عرض واتجاه فقط، بلا وكيل مستخدم ولا `navigator.standalone` ولا `display-mode`)، فيعمل في Safari وCapacitor والتطبيق المثبّت معًا:** طولي بعرض ≤700px (382×580، 470×780، 669×867…)، وعرضي 575–610×340–430 (594×368)، و940–960×340–760 (951×350 و951×585 وأطول)، و770–790×460–560، و860–875×660–780، و`horizontal-viewport-segments: 2`. نطاقات الارتفاع متسامحة عمدًا لأن ارتفاع التطبيق أكبر من Safari (بلا أشرطة). **ثمن معروف:** الهواتف العادية الطولية بعرض ≤700 تفقد 78px من العرض أيضًا (الخيار الآمن الذي طلبه التكليف)؛ الآيباد وسطح المكتب وهواتف الوضع العرضي لا تتأثر.
+
+### التطبيق (Capacitor) مقابل Safari
+
+| | Safari | التطبيق (WKWebView) |
+|---|---|---|
+| وكيل المستخدم | يحوي `Safari/` | بلا `Safari/` |
+| `navigator.standalone` / `display-mode` | قد تُعرَّف | غير معرَّفة / false |
+| الارتفاع | أقل (أشرطة المتصفح) | كامل الشاشة (أطول) |
+| `window.Capacitor` | غير موجود | موجود (`isNativePlatform()` = true) |
+| safe-area | 0 في الركن | 0 (`contentInset: "never"` + `viewport-fit=cover`) |
+
+الأثر على الكود: لا شيء من الكشف يعتمد على ما سبق؛ الشرط عرض/اتجاه فقط وارتفاعاته متسامحة. صفحتا غلاف التطبيق المحزّمتان (`apple/www/index.html` و`offline.html`) أُضيف لهما padding يميني فيزيائي 78px في الطولي ≤700px. لم أجد في هذا الريبو شريط «أضف للشاشة الرئيسية» داخل التطبيق ولا أي كود خاص بـ Capacitor في `src/` (لا إخفاء مطلوب). `public/updating.html` لم يُعدَّل ولم يُقَس. حارس التقاطع يشغّل المصفوفة كاملة في سياقين: Safari، و**APP** (وكيل WKWebView، `window.Capacitor` أصلي ios، `navigator.standalone` غير معرَّف، DPR=2، ومقاسات أطول: 382×780، 382×844، 470×900، 669×1000، 951×700). **هذه محاكاة في WebKit سطح المكتب وليست WKWebView حقيقيًا؛ على المالك التأكيد بـ `?duo-debug=1` داخل TestFlight.**
+
+### جرد الأسطح (grep على `fixed|sticky|top-0|inset-x-0|right-0|end-0|inset-0` في tsx وcss وhtml: نحو 57 موضعًا)
+
+| الملف / المحدد | ما فُعل |
+|---|---|
+| `.majal-shell` + `header.glass-nav` (Navbar.tsx:197 `sticky top-0`) | عمود المحتوى كله والهيدر اللاصق يحجزان `padding-right` فيزيائيًا (الخلفية تبقى كاملة العرض) + مرآة يسار في الكتاب |
+| مظلات الحوارات `.fixed.inset-0.p-4` (ConsumerDashboard، ContractModal، UnitEconomicsModal، RecipeVaultModal، AuthModal، AccountSecurityModal، JobComposer، JobApplications، KuwaitiJobs، BusinessShowcase، SupplierDirectory، ProductSubmissionWizard، ChallengePublisher، IntegrationHubModal) | قاعدة واحدة عامة تضيف `reserve` إلى padding اليمين (وتشمل قاعدة الكتاب) |
+| `ExperienceGuide.tsx:101` (لوحة البحث `pt-[12vh]`) | قاعدة `p-4[class*="pt-["]` |
+| `ProductReviewStatus.tsx:58` (ورقة سفلية `p-0`) | `pr-(--duo-widget-reserve)` / `sm:pr-[calc(1rem+…)]` |
+| `AiAssistantDrawer.tsx:77-78` (درج جانبي) | صنف `majal-duo-pane` (`max-width: 100% − reserve`) |
+| Navbar.tsx:350 و395 (قائمة التنبيهات وقائمة الهوية `fixed inset-x-3`) | صنف `majal-duo-pop` + تعديل قاعدة الحاوية إلى left/right فيزيائيين |
+| `App.tsx:248` (رابط التخطي `focus:fixed focus:start-3`) | صنف `majal-skip` (يبتعد عن الركن عند التركيز) |
+| `OnboardingExperience.tsx` (`majal-onb-frame`) | padding يمين + مرآة الكتاب بالمتغيرات |
+| `JobComposer.tsx:40`، `LegalCenter.tsx:304` (sticky داخل لوحات) | داخل العمود/اللوحة المُزاحة؛ لا يحتاج إجراءً مستقلًا |
+| `ConnectionSentinel.tsx:18`، `ExperienceGuide.tsx:174` (toasts)، `majal-ai-fab`، `DropCheckout.tsx` (sticky bottom)، شريط الأقسام السفلي | أسفل/يسار؛ لا يتقاطع (يتحقق منه الحارس) |
+| `Overture.tsx:137`، `#majal-splash`، `#majal-boot-failed` في `index.html` | تُقاس في الحارس (`overture`، `boot-splash`)؛ انظر النتيجة |
+| `.ambient-bg`، `inset-0` الزخرفية (SectorArt، SupplierArt، MatchMeter، ShareDonut، Viz، سطوح التدرّج) | خلفيات/زخارف داخل اللوحات أو بلا نص؛ لا تحتاج |
+| `apple/www/index.html`، `apple/www/offline.html` | padding يميني في الطولي ≤700px |
+
+### نتيجة حارس التقاطع
+
+الحارس سكربت محلي (`npm run test:duo-widget`) ولا يعمل في CI عمدًا: تثبيت WebKit بـ`playwright install --with-deps` يفشل على ubuntu-latest الحالي.
+
+**Playwright WebKit 26.0 (ليس Chromium)، محاكاة على سطح مكتب:** 2390 حالة، **0 مخالفة، 0 حالة غير قابلة للوصول، 0 إعادة قراءة لعلم التفعيل.** 30 حالة (الدخول والرئيسية والقوائم الجانبية والحوارات وقائمة الهوية والتنبيهات ولوحة البحث ودرج المساعد وصفحات الدخول والخطأ والتحميل ورابط التخطي والبوابات والـsplash والـoverture) × 10 مقاسات (382×580، 470×780، 594×368، 669×867، 951×585 طوليًا وعرضيًا) × 6 تمريرات: Safari فاتح/داكن/نص 200%، وAPP فاتح/داكن/نص 200% (والـAPP يضيف 382×780، 382×844، 470×900، 669×1000، 951×700). إضافة لحالات ضابطة خارج Duo (1280×800، 1024×768، 744×1024، 820×1180، 1440×900) تتأكد أن المتغيرات 0 فيها.
+
+الاستثناءات المسجَّلة: 112 زخرفة SVG بـ`aria-hidden` تتقاطع مع المنطقة (خلفيات/زخارف بلا نص، لا تُعدّ مخالفة). اختبار ضابط على البناء القديم (بلا الإصلاح) وجد مخالفات (شعار، أول تبويب، قائمة الهوية عند 382×580 و594×368) فالحارس يلتقط العطل فعلًا. لقطات قبل/بعد (الإطار الأحمر = 70×المنطقة) في `docs/iphone-duo-widget-corner/`: في `before-382x580.png` يقع زر الشعار وأول رقاقة تحت الإطار؛ في `after-382x580.png` ينزل الشعار والعنوان ويبقى الإطار فارغًا والخلفية تكمل تحته، وكذلك `after-669x867.png` و`after-951x585.png` (الكتاب: الهيدر والصفحتان خارج الإطار والكعب في المنتصف).
+
+الأوامر: `npm run lint` ✓، `npm test` ✓ (280 اختبارًا، 279 نجح، 1 تخطّي سابق)، `npm run build` ✓، `npm run test:duo-widget` ✓ (0 مخالفة). **تغطية التمرير:** القياس عند أعلى الصفحة فقط.
+
+### فحص المالك على الجهاز
+
+1. افتح الموقع (Safari) ثم **التطبيق في TestFlight** مضافًا إلى عنوانه المعامل `?duo-debug=1`، طوليًا ثم الكتاب ثم عرضيًا.
+2. تأكد أن **الإطار الأحمر لا يغطي أي نص أو زر أو شعار أو تبويب**، وأن اللوحة السفلية اليسرى تقول `duo widget active: YES` وفي التطبيق `Capacitor: native ios` و`UA: no Safari/ token`.
+3. افتح القائمة الجانبية (مساعد مجال)، وقائمة الهوية، وحوارًا (تسجيل الدخول)، وأرسل لقطة لكل حالة.
+4. إن كان الإطار الأحمر أصغر أو أكبر من الكبسولة الفعلية فأرسل لقطة لنعدّل `--duo-widget-w/h`.
+
+### دخول Google داخل التطبيق: **غير موجود في هذا الريبو**
+
+- لا `signInWithPopup` ولا `signInWithRedirect` ولا `GoogleAuthProvider` ولا Apple sign-in في `src` أو `server`. الدخول بريد وكلمة مرور + MFA عبر `src/components/common/AuthModal.tsx` و`src/lib/authClient.ts`. المطابقة الوحيدة `server/secure-storage.ts:29` (`GOOGLE_OAUTH_ACCESS_TOKEN` لتخزين الخادم، ليس دخول مستخدم). لا إضافة دخول اجتماعي في `apple/package.json`.
+- غلاف Capacitor **يفتح الموقع عبر `server.url`** (`apple/capacitor.config.json` → `https://majal.web.app`)، لذا خطأ «Unable to process request due to missing initial state» (Safari خارج التطبيق + `disallowed_useragent` في WKWebView) **سيظهر** إن أُضيف دخول Google بالطريقة الويبية. غير موجود الآن.
+- توصية P0 (لم تُنفَّذ، وتتطلب قرار المالك لأنها تمس المصادقة): `@capgo/capacitor-social-login` في `apple/package.json`؛ إضافة iOS client ID وURL scheme المعكوس في `apple/ios/App/App/Info.plist` (`CFBundleURLTypes`)؛ استدعاء الدخول الأصلي من `AuthModal.tsx`/`authClient.ts` وإرسال الـID token إلى مسار الدخول في الخادم للتحقق وإصدار الجلسة (لا يوجد Firebase Auth في هذا الريبو)؛ ثم `npx cap sync ios` في `apple/`؛ ثم بناء/أرشفة iOS جديد (`apple/apple-release.sh`) ورفعه إلى TestFlight.
+
+### قيود
+
+لم يُجرَّب على جهاز حقيقي. سياق التطبيق مُحاكى. الحارس يقيس عند أعلى الصفحة فقط (التمرير تحت الودجت الثابت غير مغطّى). الوضع العرضي مبني على مقاسات معروفة غير متحقَّق منها.
+
+الصور: [قبل 382×580](iphone-duo-widget-corner/before-382x580.png) · [بعد 382×580](iphone-duo-widget-corner/after-382x580.png) · [قبل 669×867](iphone-duo-widget-corner/before-669x867.png) · [بعد 669×867](iphone-duo-widget-corner/after-669x867.png) · [قبل 951×585](iphone-duo-widget-corner/before-951x585.png) · [بعد 951×585](iphone-duo-widget-corner/after-951x585.png)
