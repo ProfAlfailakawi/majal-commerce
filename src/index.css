@@ -1856,18 +1856,16 @@ body { container: majal-page / inline-size; }
    sheets, drawers, dropdowns and the first-run frame all read the same variables.
    Physical right on purpose (left/right, not inline-end): the widget does not follow RTL.
    Backgrounds and glass still run edge to edge; only content steps aside.
-   Which screens: any portrait screen up to 700px wide (outer screen 382x580, 470x780, the
-   unfolded 669x867) plus the known landscape Duo sizes (594x368, 951x585 and their neighbours),
+   Which screens: any portrait screen up to 720px wide (outer screen 382x580, 470x780, the
+   unfolded 669x867, the 720x900 portrait book) and any landscape screen 540-1000px wide and
+   300-960px tall (594x368, 780x470, 867x669, 951x585, 951x669 and taller),
    plus a two-segment viewport where the browser reports one. The landscape geometry is NOT
    verified on a device.
    Installed app (Capacitor WKWebView): detection uses only width, orientation and size, never the
    user agent nor the install state, and the height bands are generous because
    the app viewport has no browser toolbars and is taller than the same screen in Safari. */
-@media screen and (orientation: portrait) and (max-width: 700px),
-       screen and (orientation: landscape) and (min-width: 554px) and (max-width: 634px) and (min-height: 330px) and (max-height: 460px),
-       screen and (orientation: landscape) and (min-width: 911px) and (max-width: 991px) and (min-height: 330px) and (max-height: 800px),
-       screen and (orientation: landscape) and (min-width: 740px) and (max-width: 820px) and (min-height: 440px) and (max-height: 600px),
-       screen and (orientation: landscape) and (min-width: 827px) and (max-width: 907px) and (min-height: 640px) and (max-height: 800px),
+@media screen and (orientation: portrait) and (max-width: 720px) and (min-height: 360px),
+       screen and (orientation: landscape) and (min-width: 540px) and (max-width: 1000px) and (min-height: 300px) and (max-height: 960px),
        screen and (horizontal-viewport-segments: 2) {
   :root {
     --duo-widget-w: 96px;
