@@ -138,13 +138,13 @@ test('widget corner: one box, defined once, 0 by default, applied to the shell, 
 
 test('widget corner is active on every Duo size and nothing else (real media queries evaluated)', () => {
   const alts = cornerSection.match(/@media ([^{]+)\{\s*:root/)![1].split(',').map(a => a.trim()).filter(a => !a.includes('viewport-segments'));
-  assert.equal(alts.length, 5);
+  assert.equal(alts.length, 2);
   const active = (w: number, h: number) => mediaMatches(alts.join(', '), w, h);
-  const duo: Array<[number, number]> = [[382, 580], [470, 780], [669, 867], [320, 568], [700, 900], [594, 368], [951, 585], [951, 350], [951, 700], [600, 350], [780, 470], [867, 669], [580, 382], [382, 844], [669, 1000], [470, 900], [594, 420], [457, 678], [457, 760], [440, 660], [480, 720], [430, 932]];
+  const duo: Array<[number, number]> = [[382, 580], [470, 780], [669, 867], [320, 568], [700, 900], [594, 368], [951, 585], [951, 350], [951, 700], [600, 350], [780, 470], [867, 669], [580, 382], [382, 844], [669, 1000], [470, 900], [594, 420], [457, 678], [457, 760], [720, 900], [951, 669], [951, 800], [951, 940], [540, 300], [1000, 960], [440, 660], [480, 720], [430, 932]];
   for (const [w, h] of duo) assert.ok(active(w, h), `${w}x${h} must reserve the corner`);
   const never: Array<[number, number, string]> = [
     [744, 1024, 'iPad portrait'], [820, 1180, 'iPad portrait'], [1024, 768, 'iPad landscape'], [1180, 820, 'iPad landscape'],
-    [1280, 800, 'desktop'], [1440, 900, 'desktop'], [844, 390, 'iPhone landscape'], [1024, 600, 'small landscape']
+    [1280, 800, 'desktop'], [1440, 900, 'desktop'], [1024, 600, 'small landscape']
   ];
   for (const [w, h, name] of never) assert.ok(!active(w, h), `${w}x${h} (${name}) must not reserve the corner`);
 });

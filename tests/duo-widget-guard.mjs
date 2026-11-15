@@ -34,7 +34,7 @@ const H = (vh) => Math.min(270, Math.max(64, vh * 0.31));
 
 const SIZES = ['382x580', '470x780', '594x368', '669x867', '951x585'];
 // Inferred in-app viewport (~457x678, estimated from owner screenshots) and a taller neighbour.
-const INFERRED = ['457x678', '457x760'];
+const INFERRED = ['457x678', '457x760', '720x900', '951x669', '951x800', '951x940']; // + the portrait book and the tall landscape book that earlier rounds protected
 const VIEWPORTS = [...SIZES.flatMap(s => { const [w, h] = s.split('x').map(Number); return [`${w}x${h}`, `${h}x${w}`]; }), ...INFERRED];
 const QUICK_VIEWPORTS = ['382x580', '457x678', '669x867', '951x585', '594x368'];
 // Known Duo landscape geometry only: the swapped sizes are exercised for the guard, but the CSS
