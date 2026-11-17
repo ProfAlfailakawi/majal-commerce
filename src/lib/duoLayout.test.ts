@@ -164,7 +164,8 @@ test('large text reflows the Duo header and keeps every section reachable withou
   const zoomHeader = css.slice(css.indexOf('@container majal-page (max-width: 22rem)'), css.indexOf('/* Query container for the book spread below'));
   assert.match(zoomHeader, /grid-template-areas: 'brand actions' 'demo actions'/);
   assert.match(zoomHeader, /\.majal-header-wordmark,[\s\S]*\.majal-brand-tagline \{ display: none; \}/);
-  assert.match(zoomHeader, /width: 40px; height: 40px; min-width: 40px; min-height: 40px/);
+  assert.match(zoomHeader, /width: 44px; height: 44px; min-width: 44px; min-height: 44px/);
   assert.match(zoomHeader, /\.majal-section-rail \{[\s\S]*display: flex;[\s\S]*overflow-x: auto;/);
   assert.match(zoomHeader, /flex: 0 0 auto;[\s\S]*white-space: nowrap;/);
+  assert.match(zoomHeader, /\.majal-header-actions > div\.flex \{ gap: 2px; padding: 0; flex-wrap: wrap;/);
 });
