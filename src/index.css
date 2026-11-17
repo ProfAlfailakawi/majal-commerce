@@ -1561,6 +1561,36 @@ footer.majal-footer {
     padding: 0.375rem 0.75rem;
     white-space: nowrap;
   }
+
+  /* At 200% text size the physical Duo widget still needs its pixel reservation, while
+     rem-based page and card padding doubles. Keep the enlarged type, then recover the
+     reading column by tightening only presentation spacing. Without this reflow the hero
+     has an 84px text column and Arabic words break into individual letters. */
+  .majal-spread {
+    padding-inline: 0.5rem;
+    padding-block-start: 1rem;
+  }
+  .majal-guide { padding-inline: 0.5rem; }
+  .majal-guide > div { padding: 0.5rem; }
+  .majal-guide > div > .flex { flex-wrap: wrap; }
+  .majal-guide :is(span, button, [role='button']) {
+    overflow-wrap: normal;
+    word-break: keep-all;
+  }
+  .majal-spread > .majal-leaf-opener,
+  .majal-spread > .majal-leaf-aside,
+  .majal-leaf-aside > * {
+    padding: 0.75rem;
+  }
+  .majal-spread > .majal-leaf-opener { border-radius: 1rem; }
+  .majal-leaf-aside > * > .relative.flex.items-center {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .majal-spread :is(h1, h2, h3, h4, button, [role='button']) {
+    overflow-wrap: normal;
+    word-break: keep-all;
+  }
 }
 
 /* Query container for the book spread below: its leaves are sized against the page in rem. */
