@@ -12,7 +12,7 @@
   },
   "ios": {
     "contentInset": "never",
-    "backgroundColor": "#F7F4EC",
+    "backgroundColor": "#0D1525",
     "scheme": "Majal",
     "limitsNavigationsToAppBoundDomains": false,
     "preferredContentMode": "mobile"
@@ -21,7 +21,7 @@
     "SplashScreen": {
       "launchShowDuration": 600,
       "launchAutoHide": true,
-      "backgroundColor": "#F7F4EC",
+      "backgroundColor": "#0D1525",
       "showSpinner": false
     }
   }
