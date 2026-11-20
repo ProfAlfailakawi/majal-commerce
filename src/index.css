@@ -2002,7 +2002,9 @@ body { container: majal-page / inline-size; }
   --duo-widget-mirror: 0px;
   --duo-widget-active: 0;
 }
-:root[data-device='duo'] .majal-duo-pop { right: calc(0.75rem + env(safe-area-inset-right, 0px)); left: calc(0.75rem + env(safe-area-inset-left, 0px)); }
+@media screen and (max-width: 599px) {
+  :root[data-device='duo'] .majal-duo-pop { right: calc(0.75rem + env(safe-area-inset-right, 0px)); left: calc(0.75rem + env(safe-area-inset-left, 0px)); }
+}
 :root[data-device='duo'] .majal-duo-pane { max-width: calc(100% - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)); margin-top: env(safe-area-inset-top, 0px); }
 :root[data-device='duo'] .majal-skip:focus { right: calc(0.75rem + env(safe-area-inset-right, 0px)); top: calc(0.75rem + env(safe-area-inset-top, 0px)); }
 /* Toasts keep clear of the side widget column. */
@@ -2010,8 +2012,6 @@ body { container: majal-page / inline-size; }
 /* Scrims with their own top padding (the guide/tour, the command palette) start below the clock strip. */
 :root[data-device='duo'] .fixed.inset-0.p-4[class*='pt-['] {
   padding-top: max(12vh, calc(env(safe-area-inset-top, 0px) + 1rem));
-  padding-left: max(1rem, env(safe-area-inset-left, 0px));
-  padding-right: max(1rem, env(safe-area-inset-right, 0px));
 }
 /* Bottom sheets (p-0 on the phone) keep their content inside every edge. */
 :root[data-device='duo'] .fixed.inset-0.p-0 {
@@ -2038,26 +2038,17 @@ body { container: majal-page / inline-size; }
   :root[data-device='duo'] main h2 { font-size: clamp(1.05rem, 4.4vw, 1.3rem); line-height: 1.3; }
 }
 
-/* 3. Glass floating toolbars: the docked section rail and the assistant button read as glass
-      over the page, in the page colour, never as an opaque slab. */
-:root[data-device='duo'] .majal-section-rail {
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  backdrop-filter: blur(18px) saturate(1.4);
-}
-@media screen and (max-height: 480px) and (orientation: landscape) and (min-width: 560px) {
-  :root[data-device='duo'] .majal-section-rail {
-    background: rgb(8 14 27 / 0.72);
-    padding-left: calc(max(1rem, env(safe-area-inset-left, 0px)));
-    padding-right: calc(max(1rem, env(safe-area-inset-right, 0px)));
-  }
-  :root[data-device='duo'][data-theme='light'] .majal-section-rail { background: rgb(255 255 255 / 0.72); }
-  :root[data-device='duo'][data-theme='contrast'] .majal-section-rail { background: #000; }
-}
+/* 3. The floating assistant button stays clear of the side widget column. */
 :root[data-device='duo'] .majal-ai-fab {
   margin-left: env(safe-area-inset-left, 0px);
   margin-right: env(safe-area-inset-right, 0px);
 }
 
-/* 4. Inside the app the outer screen's widget column is a safe-area side inset: the sticky
-      header and its menus follow it after rotation (data-widget-side). */
-:root[data-device='duo'][data-shell='app'][data-widget-side='left'] .majal-duo-pop { left: calc(0.75rem + env(safe-area-inset-left, 0px)); }
+
+/* 4. A fixed bar or menu must never sit inside a blurred, filtered or transformed ancestor (it would
+      be positioned against that ancestor instead of the screen): the Duo header is opaque, not blurred. */
+:root[data-device='duo'] header.glass-nav { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgb(8 14 27 / 0.985); }
+:root[data-device='duo'][data-theme='light'] header.glass-nav { background: rgb(255 255 255 / 0.985); }
+:root[data-device='duo'][data-theme='contrast'] header.glass-nav { background: #000; }
+/* Headers and footers of a dialog laid out as a flex column keep their height; only the body scrolls. */
+:root[data-device='duo'] [role='dialog'].flex-col > :is(:first-child, :last-child):not(:only-child) { flex-shrink: 0; }

@@ -6,6 +6,7 @@ import './components/dna/dna-theme.css';
 import './motion.css';
 import {installMotionReveal} from './lib/motionReveal';
 import {installAppUpdate} from './lib/app-update';
+import {installDuoMarkers} from './lib/duo-markers';
 
 /**
  * Lifts the boot screen painted by index.html.
@@ -41,36 +42,7 @@ function dismissBootSplash() {
   }, remaining);
 }
 
-/* Where the page runs: "app" inside a native shell or a home-screen install, else "browser". */
-{
-  const nav = navigator as Navigator & { standalone?: boolean };
-  const cap = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
-  const isApp = Boolean(cap?.isNativePlatform?.()) || nav.standalone === true
-    || window.matchMedia('(display-mode: standalone)').matches;
-  document.documentElement.dataset.shell = isApp ? 'app' : 'browser';
-}
-/* "duo": an almost-square screen (iPhone Duo outer 466x678, inner 669x951; ratio <= 1.48).
-   Every iPhone is >= 1.7 and every iPad wider than 700, so Duo rules never touch them.
-   Re-checked on resize because folding swaps the screen. */
-const markDevice = () => {
-  const lo = Math.min(screen.width, screen.height), hi = Math.max(screen.width, screen.height);
-  document.documentElement.dataset.device = lo >= 440 && lo <= 700 && hi / lo <= 1.48 ? 'duo' : 'other';
-};
-markDevice();
-window.addEventListener('resize', markDevice);
-/* Which side the widget column is on, as iOS reports it through the safe area (0 in Safari).
-   Watched with a ResizeObserver: resize can fire before the insets update. */
-const sideProbe = document.createElement('div');
-sideProbe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;visibility:hidden;pointer-events:none;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)';
-document.documentElement.appendChild(sideProbe);
-const markWidgetSide = () => {
-  const cs = getComputedStyle(sideProbe), l = parseFloat(cs.paddingLeft) || 0, r = parseFloat(cs.paddingRight) || 0;
-  document.documentElement.dataset.widgetSide = l > 20 && l > r ? 'left' : r > 20 ? 'right' : 'none';
-};
-markWidgetSide();
-if (typeof ResizeObserver !== 'undefined') new ResizeObserver(markWidgetSide).observe(sideProbe);
-window.addEventListener('resize', () => { requestAnimationFrame(markWidgetSide); window.setTimeout(markWidgetSide, 400); });
-window.addEventListener('orientationchange', () => window.setTimeout(markWidgetSide, 400));
+installDuoMarkers();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
