@@ -1986,3 +1986,69 @@ body { container: majal-page / inline-size; }
   body:has(.majal-ai-fab) .majal-section-rail { padding-left: calc(max(1rem, env(safe-area-inset-left, 0px)) + 3.75rem); }
   .majal-ai-fab { z-index: 46; bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px)); inset-inline-end: max(1rem, env(safe-area-inset-left, 0px)); }
 }
+
+/* ── iPhone Duo, detected (owner-approved pattern, 2026-11-19) ──────────────────
+   main.tsx marks <html> with data-device="duo" only on an almost-square screen, data-shell
+   (app / browser) and data-widget-side from the safe area. Every rule below is scoped to
+   data-device="duo", so iPhone and iPad keep their layout untouched.
+   1. The widget column is reported by iOS as a safe-area inset inside the app and lives in
+      Safari's own bar in the browser, so the older fixed 96px x 31vh box is retired here:
+      env(safe-area-inset-*) (already added beside every --duo-widget-* use) is the only
+      reservation. Backgrounds stay full-bleed; content stops before the clock. */
+:root[data-device='duo'] {
+  --duo-widget-w: 0px;
+  --duo-widget-gap: 0px;
+  --duo-widget-h: 0px;
+  --duo-widget-mirror: 0px;
+  --duo-widget-active: 0;
+}
+@media screen and (max-width: 599px) {
+  :root[data-device='duo'] .majal-duo-pop { right: calc(0.75rem + env(safe-area-inset-right, 0px)); left: calc(0.75rem + env(safe-area-inset-left, 0px)); }
+}
+:root[data-device='duo'] .majal-duo-pane { max-width: calc(100% - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)); margin-top: env(safe-area-inset-top, 0px); }
+:root[data-device='duo'] .majal-skip:focus { right: calc(0.75rem + env(safe-area-inset-right, 0px)); top: calc(0.75rem + env(safe-area-inset-top, 0px)); }
+/* Toasts keep clear of the side widget column. */
+:root[data-device='duo'] .majal-duo-toast { margin-left: env(safe-area-inset-left, 0px); margin-right: env(safe-area-inset-right, 0px); }
+/* Scrims with their own top padding (the guide/tour, the command palette) start below the clock strip. */
+:root[data-device='duo'] .fixed.inset-0.p-4[class*='pt-['] {
+  padding-top: max(12vh, calc(env(safe-area-inset-top, 0px) + 1rem));
+}
+/* Bottom sheets (p-0 on the phone) keep their content inside every edge. */
+:root[data-device='duo'] .fixed.inset-0.p-0 {
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px);
+}
+:root[data-device='duo'] .fixed.inset-0.p-0 > * { padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px)); }
+/* Dialog panels never run taller than the screen between the clock and the home indicator. */
+:root[data-device='duo'] .fixed.inset-0 [role='dialog'] {
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+/* The intro's skip button and the first-run frame sit inside the safe area. */
+:root[data-device='duo'] .majal-overture-skip {
+  bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+  margin-right: env(safe-area-inset-right, 0px);
+  margin-left: env(safe-area-inset-left, 0px);
+}
+:root[data-device='duo'] .majal-onb { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* 2. Compact one-line page headings on the small (outer) screen and in short landscape. */
+@media screen and (max-width: 599px), screen and (max-height: 480px) {
+  :root[data-device='duo'] main h1 { font-size: clamp(1.25rem, 5.2vw, 1.6rem); line-height: 1.25; }
+  :root[data-device='duo'] main h2 { font-size: clamp(1.05rem, 4.4vw, 1.3rem); line-height: 1.3; }
+}
+
+/* 3. The floating assistant button stays clear of the side widget column. */
+:root[data-device='duo'] .majal-ai-fab {
+  margin-left: env(safe-area-inset-left, 0px);
+  margin-right: env(safe-area-inset-right, 0px);
+}
+
+
+/* 4. A fixed bar or menu must never sit inside a blurred, filtered or transformed ancestor (it would
+      be positioned against that ancestor instead of the screen): the Duo header is opaque, not blurred. */
+:root[data-device='duo'] header.glass-nav { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgb(8 14 27 / 0.985); }
+:root[data-device='duo'][data-theme='light'] header.glass-nav { background: rgb(255 255 255 / 0.985); }
+:root[data-device='duo'][data-theme='contrast'] header.glass-nav { background: #000; }
+/* Headers and footers of a dialog laid out as a flex column keep their height; only the body scrolls. */
+:root[data-device='duo'] [role='dialog'].flex-col > :is(:first-child, :last-child):not(:only-child) { flex-shrink: 0; }

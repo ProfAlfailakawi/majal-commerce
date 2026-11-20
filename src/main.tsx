@@ -6,6 +6,7 @@ import './components/dna/dna-theme.css';
 import './motion.css';
 import {installMotionReveal} from './lib/motionReveal';
 import {installAppUpdate} from './lib/app-update';
+import {installDuoMarkers} from './lib/duo-markers';
 
 /**
  * Lifts the boot screen painted by index.html.
@@ -40,6 +41,8 @@ function dismissBootSplash() {
     window.setTimeout(() => splash.remove(), FADE_MS);
   }, remaining);
 }
+
+installDuoMarkers();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
