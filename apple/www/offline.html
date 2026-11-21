@@ -16,8 +16,8 @@
     display: grid; place-items: center; text-align: center;
     padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
   }
-  /* iPhone Duo: keep clear of the system widget capsule at the physical top-right (70px + 8px gap). */
-  @media screen and (orientation: portrait) and (max-width: 720px) { body { padding-right: calc(max(24px, env(safe-area-inset-right)) + 104px); } }
+  /* No fixed widget gutter here: a width-only rule also caught every ordinary iPhone. The safe-area
+     padding above is the only reservation (iOS reports the Duo widget column as an inset). */
   main { max-width: 26rem; }
   h1 { font: -apple-system-title2; font-weight: 700; margin: 0 0 .5rem; }
   p { color: var(--muted); line-height: 1.6; margin: 0 0 1.5rem; }

@@ -136,17 +136,41 @@ test('widget corner: one box, defined once, 0 by default, applied to the shell, 
   assert.doesNotMatch(css, /--duo-cutout/);
 });
 
-test('widget corner is active on every Duo size and nothing else (real media queries evaluated)', () => {
+test('widget corner media layer still lists the Duo sizes, but it also matches ordinary screens (so it must be reset off the Duo)', () => {
   const alts = cornerSection.match(/@media ([^{]+)\{\s*:root/)![1].split(',').map(a => a.trim()).filter(a => !a.includes('viewport-segments'));
   assert.equal(alts.length, 2);
-  const active = (w: number, h: number) => mediaMatches(alts.join(', '), w, h);
-  const duo: Array<[number, number]> = [[382, 580], [470, 780], [669, 867], [320, 568], [700, 900], [594, 368], [951, 585], [951, 350], [951, 700], [600, 350], [780, 470], [867, 669], [580, 382], [382, 844], [669, 1000], [470, 900], [594, 420], [457, 678], [457, 760], [720, 900], [951, 669], [951, 800], [951, 940], [540, 300], [1000, 960], [440, 660], [480, 720], [430, 932]];
-  for (const [w, h] of duo) assert.ok(active(w, h), `${w}x${h} must reserve the corner`);
-  const never: Array<[number, number, string]> = [
-    [744, 1024, 'iPad portrait'], [820, 1180, 'iPad portrait'], [1024, 768, 'iPad landscape'], [1180, 820, 'iPad landscape'],
-    [1280, 800, 'desktop'], [1440, 900, 'desktop'], [1024, 600, 'small landscape']
-  ];
-  for (const [w, h, name] of never) assert.ok(!active(w, h), `${w}x${h} (${name}) must not reserve the corner`);
+  const matches = (w: number, h: number) => mediaMatches(alts.join(', '), w, h);
+  for (const [w, h] of [[382, 580], [470, 780], [669, 867], [594, 368], [951, 585], [457, 678]] as Array<[number, number]>) assert.ok(matches(w, h), `${w}x${h}`);
+  // Width alone cannot tell a Duo from an iPhone, a narrow iPad window or a desktop window: these match too.
+  for (const [w, h] of [[390, 844], [402, 874], [430, 932], [700, 900], [844, 390]] as Array<[number, number]>) assert.ok(matches(w, h), `${w}x${h} is caught by size alone`);
+});
+
+test('fixed widget reservation is unreachable outside a real Duo: a higher-specificity reset follows every activation', () => {
+  const noComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const reset = noComments.match(/:root:not\(\[data-device='duo'\]\) \{([^}]*)\}/);
+  assert.ok(reset, 'reset rule for every screen that is not the Duo');
+  const resetAt = noComments.indexOf(reset![0]);
+  // Every variable any activation block sets to a non-zero value is zeroed by the reset, and the reset comes after it.
+  const sets = [...noComments.matchAll(/(--duo-widget-(?:w|gap|h|mirror|active)):\s*([^;]+);/g)];
+  const live = sets.filter(m => !/^(0|0px)$/.test(m[2].trim()));
+  assert.ok(live.length >= 4, 'the activation blocks are still present (the reset neutralises them)');
+  for (const m of live) {
+    assert.ok(m.index! < resetAt, `${m[1]}: ${m[2]} must come before the reset`);
+    assert.match(reset![1], new RegExp(`${m[1]}:\\s*0(px)?;`), `${m[1]} reset to 0`);
+  }
+  // Only ":root" (specificity 0,1,0) sets the live values, so ":root:not([data-device='duo'])" (0,2,0) always wins.
+  for (const m of noComments.matchAll(/([^{}]+)\{[^{}]*--duo-widget-w:\s*96px/g)) assert.equal(m[1].trim(), ':root');
+  assert.equal(noComments.match(/--duo-widget-w:\s*96px/g)?.length, 1);
+  // On the Duo itself the fixed box is retired too (env(safe-area-inset-*) is the reservation there).
+  assert.match(noComments, /:root\[data-device='duo'\] \{\s*--duo-widget-w: 0px;\s*--duo-widget-gap: 0px;\s*--duo-widget-h: 0px;/);
+});
+
+test('the native shell fallback pages carry no width-only widget gutter', () => {
+  for (const name of ['index.html', 'offline.html']) {
+    const page = readFileSync(new URL(`../../apple/www/${name}`, import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    assert.doesNotMatch(page, /104px|96px/, name);
+    assert.doesNotMatch(page, /@media[^{]*max-width:\s*720px/, name);
+  }
 });
 
 test('recipe vault header can shrink: its badge wraps below sm so the sheet never overflows at 320px', () => {
