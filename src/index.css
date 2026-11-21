@@ -1949,6 +1949,19 @@ body { container: majal-page / inline-size; }
 @media screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape) {
   :root { --duo-widget-mirror: var(--duo-widget-reserve); }
 }
+/* The two blocks above match by size alone, so they also caught every ordinary iPhone in
+   portrait (390/402/430 wide), narrow iPad/desktop windows and phone landscape, leaving an
+   empty ~120px strip on the right. The fixed box is for a real iPhone Duo only (and there the
+   Duo section below replaces it with env(safe-area-inset-*)), so everything else is reset here.
+   Higher specificity than ":root" inside the media blocks; the native shell's inline values
+   (real occlusion regions on <html style>) still win. */
+:root:not([data-device='duo']) {
+  --duo-widget-w: 0px;
+  --duo-widget-gap: 0px;
+  --duo-widget-h: 0px;
+  --duo-widget-mirror: 0px;
+  --duo-widget-active: 0;
+}
 /* Floating panels that are anchored to the screen (not to the shell column) keep the same gap. */
 @media screen and (max-width: 599px) { .majal-duo-pop { right: calc(0.75rem + var(--duo-widget-reserve)); } }
 .majal-duo-pane { max-width: calc(100% - var(--duo-widget-reserve)); }
