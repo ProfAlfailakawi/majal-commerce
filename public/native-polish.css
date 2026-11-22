@@ -1,0 +1,17 @@
+/* native-polish.css — applies only when <html> has .np-native (set inside the native app) */
+.np-native{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.np-native body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+/* no long-press callout / text selection on controls; inputs stay fully selectable */
+.np-native :is(button,[role=button],[role=tab],[role=menuitem],nav,a,label,summary,img,svg){-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.np-native :is(input,textarea,select,[contenteditable=true],[contenteditable=""]){-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+.np-native :is(button,[role=button],[role=tab],a,input,select,label,summary){touch-action:manipulation}
+/* press feedback (class toggled by JS; transform only on small elements) */
+.np-native .np-press{transition:transform .18s cubic-bezier(.2,.8,.2,1),opacity .18s ease,filter .18s ease}
+.np-native .np-press.np-down{transform:scale(.965);opacity:.82}
+.np-native .np-press-soft.np-down{opacity:.7}
+.np-native :focus:not(:focus-visible){outline:none}
+.np-native ::selection{background:rgba(10,132,255,.25)}
+/* gentle fade-in for newly navigated views */
+@keyframes npFadeIn{from{opacity:.0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.np-native .np-enter{animation:npFadeIn .28s cubic-bezier(.2,.8,.2,1) both}
+@media (prefers-reduced-motion:reduce){.np-native .np-press,.np-native .np-enter{transition:none!important;animation:none!important}.np-native .np-press.np-down{transform:none}}
