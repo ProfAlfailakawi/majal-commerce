@@ -2015,6 +2015,16 @@ body { container: majal-page / inline-size; }
   --duo-widget-mirror: 0px;
   --duo-widget-active: 0;
 }
+/* Inside the app the native shell writes the real occlusion region into <html style> as
+   --duo-widget-w/h/gap. Those inline values beat the block above, so the column was reserved a
+   second time on top of env(safe-area-inset-right) (content stopped near 60% of the width).
+   Important author declarations beat inline ones: env(safe-area-inset-*) stays the only reservation. */
+:root[data-device='duo'][data-shell='app'] {
+  --duo-widget-w: 0px !important;
+  --duo-widget-gap: 0px !important;
+  --duo-widget-h: 0px !important;
+  --duo-widget-mirror: 0px !important;
+}
 @media screen and (max-width: 599px) {
   :root[data-device='duo'] .majal-duo-pop { right: calc(0.75rem + env(safe-area-inset-right, 0px)); left: calc(0.75rem + env(safe-area-inset-left, 0px)); }
 }

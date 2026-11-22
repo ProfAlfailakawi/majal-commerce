@@ -152,7 +152,7 @@ test('fixed widget reservation is unreachable outside a real Duo: a higher-speci
   const resetAt = noComments.indexOf(reset![0]);
   // Every variable any activation block sets to a non-zero value is zeroed by the reset, and the reset comes after it.
   const sets = [...noComments.matchAll(/(--duo-widget-(?:w|gap|h|mirror|active)):\s*([^;]+);/g)];
-  const live = sets.filter(m => !/^(0|0px)$/.test(m[2].trim()));
+  const live = sets.filter(m => !/^(0|0px)(\s*!important)?$/.test(m[2].trim()));
   assert.ok(live.length >= 4, 'the activation blocks are still present (the reset neutralises them)');
   for (const m of live) {
     assert.ok(m.index! < resetAt, `${m[1]}: ${m[2]} must come before the reset`);
