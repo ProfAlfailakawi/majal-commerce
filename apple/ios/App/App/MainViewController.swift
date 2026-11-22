@@ -18,6 +18,7 @@ final class MainViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
         guard let webView = webView else { return }
+        NativePrint.install(on: webView, host: self)
 
         view.backgroundColor = UIColor(named: "ShellBackground") ?? .systemBackground
         webView.isOpaque = false
@@ -176,4 +177,44 @@ final class MainViewController: CAPBridgeViewController {
     }
 
     deinit { webView?.removeObserver(self, forKeyPath: #keyPath(WKWebView.url)) }
+}
+
+/// window.print() is a silent no-op inside WKWebView. The page keeps calling it
+/// (print stylesheets, dossiers, receipts); this bridges it to the native iOS
+/// print sheet, which prints the page with its @media print rules and offers
+/// "Save as PDF" through the share button.
+enum NativePrint {
+    static let handlerName = "nativePrint"
+    private static var handler: Handler?
+
+    static func install(on webView: WKWebView, host: UIViewController) {
+        let controller = webView.configuration.userContentController
+        controller.removeScriptMessageHandler(forName: handlerName)
+        let h = Handler(webView: webView, host: host)
+        handler = h
+        controller.add(h, name: handlerName)
+        let js = "window.print = function () { try { window.webkit.messageHandlers.\(handlerName).postMessage(1); } catch (e) {} };"
+        controller.addUserScript(WKUserScript(source: js, injectionTime: .atDocumentStart, forMainFrameOnly: false))
+    }
+
+    private final class Handler: NSObject, WKScriptMessageHandler {
+        weak var webView: WKWebView?
+        weak var host: UIViewController?
+        init(webView: WKWebView, host: UIViewController) { self.webView = webView; self.host = host }
+
+        func userContentController(_ c: WKUserContentController, didReceive message: WKScriptMessage) {
+            guard let webView, let host else { return }
+            let controller = UIPrintInteractionController.shared
+            let info = UIPrintInfo(dictionary: nil)
+            info.outputType = .general
+            info.jobName = (webView.title?.isEmpty == false ? webView.title! : "Document")
+            controller.printInfo = info
+            controller.printFormatter = webView.viewPrintFormatter()
+            let done: UIPrintInteractionController.CompletionHandler = { [weak webView] _, _, _ in
+                webView?.evaluateJavaScript("window.dispatchEvent(new Event('afterprint'))", completionHandler: nil)
+            }
+            let anchor = CGRect(x: host.view.bounds.midX, y: host.view.safeAreaInsets.top + 8, width: 1, height: 1)
+            controller.present(from: anchor, in: host.view, animated: true, completionHandler: done)
+        }
+    }
 }
