@@ -1,0 +1,44 @@
+name: Native parity
+
+# Every pull request must say what was done for the Apple app, the Google app
+# and iPhone Duo. See the standing rule in this repository.
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions: {}
+
+jobs:
+  parity-section:
+    name: Apple / Google / iPhone Duo section
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require the section in the pull request description
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          python3 - <<'PY'
+          import os, re, sys
+          author = os.environ.get("PR_AUTHOR", "")
+          if author.endswith("[bot]"):
+              print("Automated dependency pull request: section not required.")
+              sys.exit(0)
+          body = re.sub(r"<!--.*?-->", "", os.environ.get("PR_BODY", "") or "", flags=re.S)
+          lines = body.splitlines()
+          head = re.compile(r"^\s{0,3}#{1,6}\s*.*apple\s*/\s*google\s*/\s*iphone\s*duo", re.I)
+          start = next((i for i, l in enumerate(lines) if head.search(l)), None)
+          if start is None:
+              print("::error::وصف طلب الدمج يخلو من قسم «Apple / Google / iPhone Duo». أضف عنوانًا بهذا الاسم واذكر تحته ما فُحص وما عُدّل وما لم يُنفَّذ ولماذا.")
+              sys.exit(1)
+          section = []
+          for l in lines[start + 1:]:
+              if re.match(r"^\s{0,3}#{1,6}\s", l):
+                  break
+              section.append(l)
+          text = re.sub(r"\s+", "", "".join(section))
+          if len(text) < 20:
+              print("::error::قسم «Apple / Google / iPhone Duo» فارغ. اذكر ما فُحص وبأي وضعية، وما عُدّل في التطبيقين، أو سبب عدم الحاجة.")
+              sys.exit(1)
+          print("✓ قسم Apple / Google / iPhone Duo موجود.")
+          PY
