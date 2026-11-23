@@ -39,6 +39,8 @@
 	<string>يُستخدم عند اختيارك التقاط صورة أو مسح رمز داخل التطبيق فقط.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>يُستخدم لحفظ الصور أو الملفات التي تختار حفظها فقط.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>يُستخدم للوصول إلى الصور والملفات التي تختارها بنفسك لرفعها داخل التطبيق، ولا يُقرأ شيء آخر من مكتبتك.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
