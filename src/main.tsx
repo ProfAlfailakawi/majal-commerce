@@ -7,6 +7,8 @@ import './motion.css';
 import {installMotionReveal} from './lib/motionReveal';
 import {installAppUpdate} from './lib/app-update';
 import {installDuoMarkers} from './lib/duo-markers';
+import {installDockMotion} from './lib/dockMotion';
+import './dock-motion.css';
 
 /**
  * Lifts the boot screen painted by index.html.
@@ -62,6 +64,11 @@ requestAnimationFrame(() => requestAnimationFrame(dismissBootSplash));
 // only: a SW in dev would cache Vite's HMR chunks and fight live reload. Registered after
 // `load` so it never competes with the first paint or the bundle fetch for bandwidth.
 installMotionReveal();
+
+// حركة شريط الأقسام (بصرية فقط): على الهاتف والدوو وحدهما؛ iPad وسطح المكتب كما هما.
+if (document.documentElement.dataset.device === 'duo' || window.matchMedia('(max-width: 743px)').matches) {
+  installDockMotion({dock: '.majal-section-rail', link: '.majal-section-chip', active: '.majal-section-chip[aria-current="page"]'});
+}
 
 // Hidden Duo widget-corner diagnostic: nothing loads unless the URL asks for it.
 if (new URLSearchParams(window.location.search).get('duo-debug') === '1') {
