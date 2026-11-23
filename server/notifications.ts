@@ -4,6 +4,7 @@ import { AuthConfig, AuthenticatedRequest, requireAuth, requireCsrf } from './au
 import { MajalDatabase, withTransaction } from './database';
 import { createHash } from 'node:crypto';
 import { deleteEncryptedObject, putEncryptedJson } from './secure-storage';
+import { notificationUrl, pushToUser, registerNativeToken, removeNativeToken } from './apns-push';
 
 export type NotificationPriority = 'URGENT' | 'NOW' | 'SOON' | 'WATCH';
 
@@ -77,7 +78,7 @@ function deliveryTime(now: Date, quietStart: string | null, quietEnd: string | n
 export async function createOrCoalesceNotification(db: MajalDatabase, input: CreateNotificationInput) {
   const now = new Date().toISOString();
   const dedupeKey = input.dedupeKey?.trim() || null;
-  return withTransaction(db, async tx => {
+  const result = await withTransaction(db, async tx => {
     if (dedupeKey) {
       const existing = await tx.prepare(`
         SELECT id FROM notification_inbox WHERE user_id = ? AND dedupe_key = ? LIMIT 1
@@ -143,6 +144,11 @@ export async function createOrCoalesceNotification(db: MajalDatabase, input: Cre
     }
     return { id, coalesced: false };
   });
+  // Every new personal notification also reaches the user's iPhone (no-op until APNS_* is set).
+  if (!result.coalesced) {
+    void pushToUser(db, input.userId, { title: input.title, body: input.body, url: notificationUrl(input.actionSurface, result.id), tag: input.category }, input.dedupeKey || result.id);
+  }
+  return result;
 }
 
 export function createNotificationRouter(db: MajalDatabase, authConfig: AuthConfig) {
@@ -233,6 +239,21 @@ export function createNotificationRouter(db: MajalDatabase, authConfig: AuthConf
     `).run(id, req.auth.user.id, tokenHash, receipt.objectKey, platform, changed, changed);
     if (existing?.token_object_key && existing.token_object_key !== receipt.objectKey) await deleteEncryptedObject(existing.token_object_key);
     return res.status(existing ? 200 : 201).json({ id, platform, active: true });
+  });
+
+  // Native iOS app: the APNs device token (hex) from @capacitor/push-notifications.
+  router.post('/push/subscribe-native', csrfProtected, async (req: AuthenticatedRequest, res) => {
+    if (!req.auth) return jsonError(res, 401, 'يلزم تسجيل الدخول.');
+    const token = textValue(req.body?.token, 64, 200);
+    if (!token || !(await registerNativeToken(db, req.auth.user.id, token))) return jsonError(res, 400, 'رمز الجهاز غير صالح.');
+    return res.status(201).json({ active: true });
+  });
+
+  router.post('/push/unsubscribe-native', csrfProtected, async (req: AuthenticatedRequest, res) => {
+    if (!req.auth) return jsonError(res, 401, 'يلزم تسجيل الدخول.');
+    const token = textValue(req.body?.token, 64, 200);
+    if (token) await removeNativeToken(db, req.auth.user.id, token);
+    return res.status(204).end();
   });
 
   router.delete('/push-subscriptions/:id', csrfProtected, async (req: AuthenticatedRequest, res) => {

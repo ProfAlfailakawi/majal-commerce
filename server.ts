@@ -29,6 +29,7 @@ import { createSafetyRouter } from './server/safety';
 import { createCommercePublicRouter, createCommerceRouter } from './server/commerce-ops';
 import { expireStaleHolds } from './server/checkout';
 import { deliveryReadiness, startNotificationDeliveryWorker } from './server/delivery';
+import { apnsReadiness } from './server/apns-push';
 import { installProcessSafetyHandlers, reportError, reportSweeperError, requestTelemetry, resolveTrustProxyHops, structuredLog } from './server/observability';
 import { secureStorageReadiness } from './server/secure-storage';
 import { closeRateLimitStore, initRateLimitStore, rateLimitBackend, rateLimitStore } from './server/rate-limit-store';
@@ -175,6 +176,7 @@ async function initializeApplication(app: express.Express) {
         paci: paciReady.configured ? 'READY' : 'NOT_CONFIGURED',
         secureStorage: secureStorageReadiness(),
         notifications: deliveryReadiness(),
+        nativePush: apnsReadiness(),
         rateLimit: rateLimitBackend()
       }
     });
