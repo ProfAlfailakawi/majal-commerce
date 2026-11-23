@@ -1,0 +1,25 @@
+{
+  "appId": "kw.edu.majal.app",
+  "appName": "مجال",
+  "webDir": "www",
+  "server": {
+    "url": "https://majal.web.app",
+    "errorPath": "offline.html",
+    "allowNavigation": [
+      "majal.web.app",
+      "*.googleapis.com"
+    ]
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 600,
+      "launchAutoHide": true,
+      "backgroundColor": "#F7F4EC",
+      "showSpinner": false
+    }
+  },
+  "android": {
+    "backgroundColor": "#F7F4EC",
+    "allowMixedContent": false
+  }
+}
