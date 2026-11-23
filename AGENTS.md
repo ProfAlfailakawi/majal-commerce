@@ -26,3 +26,31 @@ This repository operates on a phased architecture for its production environment
 - **Object Storage / KMS:** Intended for Recipe Vault contents, contracts, compliance documents, and proofs.
 - **Redis / Distributed Systems:** Distributed rate limiting is implemented (see above). Sessions stay in the database, which is already shared across instances; caching is not implemented.
 - **Event / Worker Infrastructure:** A dedicated event/worker platform remains outstanding. Backups, monitoring/alerting and the incident runbook are covered under Operations above but must be activated per project.
+
+<!-- native-parity-rule:start -->
+## قاعدة إلزامية: أي تحديث للموقع يُستكمل في Apple وGoogle وعلى iPhone Duo
+
+تسري على كل وكيل (Claude، Codex، Gemini وغيرها) وكل مساهم. لا يُعدّ أي تغيير في الموقع منجزًا، ولا يُدمج ولا يُنشر، قبل استيفاء البنود التالية.
+
+تطبيقات مجال:
+
+| المنصة | المعرّف | المكان |
+|---|---|---|
+| Apple (Capacitor: iPhone / iPad / Mac) | `com.dralfailakawi.majal` | `apple/` في هذا المستودع |
+| Google Play (Capacitor Android) | `kw.edu.majal.app` | `~/android-build/kw.edu.majal.app/` على جهاز المالك (خارج Git) |
+
+الموقع الحي: https://majal.web.app. قشرة Capacitor تحمّله مباشرة عبر `server.url`، فكل ما يُنشر على الموقع يصل إلى مستخدمي التطبيق فورًا دون مراجعة متجر.
+
+1. **افحص داخل القشرة لا في المتصفح فقط.** كل تغيير في الواجهة أو السلوك يُجرَّب داخل WebView التطبيق (WKWebView في Apple وAndroid WebView في Google). انتبه خصوصًا لما يختلف عن المتصفح: الطباعة، التنزيل، المشاركة، النوافذ المنبثقة، تسجيل الدخول الخارجي، العودة من بوابة الدفع، الكاميرا والميكروفون، الإشعارات، والروابط الخارجية.
+
+2. **حدّث المشروع الأصلي عندما يمسّه التغيير.** يلزم تحديث القشرتين معًا إذا أضاف التغيير أو عدّل: نطاقًا جديدًا يتنقل إليه التطبيق (`allowNavigation`)، إذنًا (كاميرا، ميكروفون، صور، موقع، إشعارات)، إضافة Capacitor أو جسرًا أصليًا، الاسم أو الأيقونة أو الألوان أو شاشة الإطلاق، الروابط العميقة، أو ما يغيّر بيانات المتجر والخصوصية.
+   - Apple: عدّل `apple/app.config.json` و`apple/capacitor.config.json` وما يلزم في `apple/ios`، ثم `npx cap sync ios`، وارفع رقم البناء، وتحقق بـ `apple/apple-release.sh preflight` و`apple/apple-release.sh build-sim`. حدّث `apple-release/` إن تغيّرت بيانات المتجر أو الخصوصية.
+   - Google: طبّق التغيير نفسه في `~/android-build/kw.edu.majal.app/` (`capacitor.config.json` و`AndroidManifest.xml`)، ثم `npx cap sync android`، وارفع `versionCode`، وابنِ بـ `~/android-build/build.sh kw.edu.majal.app`.
+   - مشروع Android ليس في هذا المستودع. إن لم يكن الوصول إليه متاحًا في جلستك فاذكر ذلك صراحة في التقرير واترك البند مفتوحًا، ولا تدّعِ أنه أُنجز.
+
+3. **iPhone Duo بكل الوضعيات.** كل تغيير يظهر للمستخدم يُفحص على محاكي iPhone Duo في: الوضع المغلق (الشاشة الخارجية)، نصف المفتوح (وضع الطاولة ووضع الكتاب)، والمفتوح (الشاشة الداخلية) طولًا وعرضًا، وفي المظهرين الفاتح والداكن وباتجاه RTL. المطلوب: لا تمرير أفقي، لا محتوى أو أزرار تحت المفصل أو خارج المنطقة الآمنة، ولا نص مقطوع، وتبقى الحالة محفوظة عند الطي والفتح. احفظ لقطات الإثبات في `docs/iphone-duo/`. إن تعذّر المحاكي فاستخدم المقاسات المكافئة الموثّقة في `docs/` واذكر ذلك.
+
+4. **التقرير إلزامي.** كل PR وكل تقرير نهائي يتضمن قسمًا بعنوان «Apple / Google / iPhone Duo» يذكر: ما فُحص وبأي وضعية، ما عُدّل في المشروعين الأصليين، وما لم يُنفَّذ ولماذا. ممنوع تخطّي أي بند بصمت؛ التغيير الذي لا يمسّ التطبيقات يُكتب فيه ذلك مع السبب.
+
+5. **حدود ثابتة.** الإرسال لمراجعة App Store أو لإنتاج Google Play قرار المالك وحده. الرفع إلى TestFlight أو الاختبار الداخلي يكون بطلب منه. لا تُرفع مفاتيح التوقيع أو كلمات المرور إلى Git أبدًا.
+<!-- native-parity-rule:end -->
