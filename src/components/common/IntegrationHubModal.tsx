@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { openCheckout } from '../../lib/nativeShell';
 import {
   CheckCircle2,
   CreditCard,
@@ -58,7 +59,7 @@ export const IntegrationHubModal: React.FC<{ isOpen: boolean; onClose: () => voi
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'تعذّر إنشاء عملية الدفع');
       setPaymentResult({ ...data, requestedProviderLabel: selectedProvider });
-      if (data.checkoutUrl) window.open(data.checkoutUrl, '_blank', 'noopener,noreferrer');
+      if (data.checkoutUrl) void openCheckout(data.checkoutUrl, () => undefined, u => { window.open(u, '_blank', 'noopener,noreferrer'); });
     } catch (e: any) {
       alert('خطأ في إطلاق بوابة الدفع: ' + e.message);
     } finally {

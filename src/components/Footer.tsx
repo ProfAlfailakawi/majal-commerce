@@ -6,6 +6,7 @@ import { store } from '../lib/store';
 import { canAccessSurface } from '../lib/permissions';
 import type { LegalDocumentId } from './legal/LegalCenter';
 import { legalPath } from '../lib/legalRoutes';
+import { legalLinkProps } from '../lib/nativeShell';
 
 interface FooterProps {
   onSurfaceChange: (surface: SurfaceType) => void;
@@ -63,8 +64,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
               </button>
               <a
                 href="/presentation/majal-deck.html"
-                target="_blank"
-                rel="noopener noreferrer"
+                {...legalLinkProps}
                 className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl glass-card border border-gold-400/20 text-xs font-bold text-gold-300 hover:text-gold-200 hover:border-gold-300/40 transition-colors"
               >
                 <FileText className="w-3.5 h-3.5 text-gold-400" />
@@ -72,8 +72,7 @@ export const Footer: React.FC<FooterProps> = ({ onSurfaceChange, onOpenLegal, on
               </a>
               <a
                 href="/presentation/majal-deck.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
+                {...legalLinkProps}
                 className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl glass-card border border-white/10 text-xs font-bold text-slate-300 hover:text-gold-300 hover:border-gold-300/25 transition-colors"
               >
                 <FileText className="w-3.5 h-3.5" />

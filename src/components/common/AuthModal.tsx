@@ -2,6 +2,7 @@ import React, { FormEvent, useState } from 'react';
 import { Building2, Eye, EyeOff, KeyRound, LogIn, RefreshCcw, ShieldCheck, Sparkles, Store, Truck, UserPlus, X } from 'lucide-react';
 import { AuthApiError, AuthSession, login, register } from '../../lib/authClient';
 import { MajalLoader } from '../brand/MajalLoader';
+import { legalLinkProps } from '../../lib/nativeShell';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { UserRole } from '../../types/majal';
 import { DemoEntryButton } from './DemoEntryButton';
@@ -341,8 +342,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthent
                 className="mt-1 accent-amber-400"
               />
               <span>
-                أوافق على <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-gold-300 underline">الشروط والأحكام</a>
-                {' '}و<a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-gold-300 underline">سياسة الخصوصية</a>، وأفهم أن بيانات الحساب تُستخدم لتشغيل المنصة وحمايتها.
+                أوافق على <a href="/terms" {...legalLinkProps} className="text-gold-300 underline">الشروط والأحكام</a>
+                {' '}و<a href="/privacy" {...legalLinkProps} className="text-gold-300 underline">سياسة الخصوصية</a>، وأفهم أن بيانات الحساب تُستخدم لتشغيل المنصة وحمايتها.
               </span>
             </label>
           )}
