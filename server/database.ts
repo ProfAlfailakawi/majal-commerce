@@ -1764,6 +1764,22 @@ const migrations = [
       CREATE UNIQUE INDEX IF NOT EXISTS idx_account_deletion_pending ON account_deletion_requests(user_id) WHERE status = 'PENDING';
       CREATE INDEX IF NOT EXISTS idx_account_deletion_status ON account_deletion_requests(status, requested_at, id);
     `
+  },
+  {
+    /*
+     * Native iOS push (APNs). One row per device token, owned by the user who registered it last.
+     * Tokens are dropped when Apple answers 410 / BadDeviceToken / Unregistered.
+     */
+    version: 33,
+    sql: `
+      CREATE TABLE IF NOT EXISTS apns_device_tokens (
+        token TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_apns_device_tokens_user ON apns_device_tokens(user_id, updated_at DESC);
+    `
   }
 ] as const;
 

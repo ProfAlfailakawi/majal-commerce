@@ -30,6 +30,8 @@ import { store } from '../lib/store';
 import { AI_ASSISTANT_ENABLED, INTEGRATION_SIMULATORS_ENABLED, IS_DEMO_MODE, DEMO_AVAILABLE, enterDemoMode, exitDemoMode, resetDemoData } from '../lib/runtime';
 import { fetchNotifications, markAllNotificationsRead, markNotificationRead, NotificationItem } from '../lib/notificationClient';
 import { usePopoverDismiss } from '../hooks/usePopoverDismiss';
+import { NativePushSwitch } from './common/NativePushSwitch';
+import { initNativePush } from '../lib/nativePush';
 import { Avatar } from './common/Avatar';
 import { ThemeToggle } from './common/ThemeToggle';
 
@@ -168,6 +170,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   useEffect(() => {
     refreshServerNotifications();
   }, [authStatus, activeUser.id]);
+
+  // iOS app only: refresh the device token and open the page a tapped notification points to.
+  useEffect(() => {
+    if (!IS_DEMO_MODE && authStatus === 'AUTHENTICATED') void initNativePush().catch(() => undefined);
+  }, [authStatus]);
 
   const notificationCards = IS_DEMO_MODE
     ? demoNotifications.map((body, index) => ({
@@ -355,6 +362,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <span className="text-xs text-slate-400">{unreadCount} غير مقروء</span>
                     </div>
                   </div>
+                  {!IS_DEMO_MODE && authStatus === 'AUTHENTICATED' && <NativePushSwitch />}
                   <div className="space-y-2.5">
                     {notificationCards.length ? notificationCards.map(item => (
                       <button key={item.id} onClick={() => openNotification(item)} className={`w-full p-3 rounded-xl border text-start transition-colors ${item.status === 'UNREAD' ? 'bg-white/7 border-gold-300/20' : 'bg-white/[0.03] border-white/5 opacity-75'}`}>

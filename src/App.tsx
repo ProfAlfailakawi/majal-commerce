@@ -153,6 +153,17 @@ export default function App() {
     if (new URLSearchParams(window.location.search).get('drop')) { setActiveSurface('CONSUMER'); store.setSurface('CONSUMER'); }
   }, [authStatus]);
 
+  // A tapped iOS notification opens `/?surface=<SURFACE>&notification=<id>`: same as tapping it in the bell.
+  useEffect(() => {
+    if (authStatus !== 'AUTHENTICATED') return;
+    const params = new URLSearchParams(window.location.search);
+    const surface = params.get('surface') as SurfaceType | null;
+    if (!surface || !['CREATOR', 'HOST', 'SUPPLIER', 'CONSUMER', 'ADMIN', 'SUPER_ADMIN', 'SHOWCASE', 'DIRECTORY', 'PUBLIC'].includes(surface)) return;
+    setActiveSurface(surface);
+    store.setSurface(surface);
+    window.history.replaceState(null, '', '/');
+  }, [authStatus]);
+
   // Any authenticated API call that answers 401 ends the signed-in state here.
   const [sessionNotice, setSessionNotice] = useState('');
   const authStatusRef = React.useRef(authStatus);
