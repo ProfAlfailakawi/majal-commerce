@@ -19,6 +19,7 @@ final class MainViewController: CAPBridgeViewController {
         super.capacitorDidLoad()
         guard let webView = webView else { return }
         NativePrint.install(on: webView, host: self)
+        NativeBridge.install(on: webView, host: self)
 
         view.backgroundColor = UIColor(named: "ShellBackground") ?? .systemBackground
         webView.isOpaque = false

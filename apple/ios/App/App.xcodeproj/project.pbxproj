@@ -10,6 +10,7 @@
 		52291BD97167DCE56A902628 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 85CCDB3732489B8EDB267EF7 /* PrivacyInfo.xcprivacy */; };
 		BED86A6F05E4EA98FF599AC8 /* OfflineBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEE3A01CC0DC2267B3D9593 /* OfflineBanner.swift */; };
 		66970D0902F466AF04B45B56 /* NetworkWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02EF54D2459FC995898D20A8 /* NetworkWatcher.swift */; };
+		E8F60AFF1B0C7C985F9D337F /* NativeBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65BB74AADBDE703F175982FE /* NativeBridge.swift */; };
 		6CA183D59E46AD669B8E7186 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2047B674A9A0E164288AD79D /* MainViewController.swift */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
 		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
@@ -26,6 +27,7 @@
 		85CCDB3732489B8EDB267EF7 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		0CEE3A01CC0DC2267B3D9593 /* OfflineBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineBanner.swift; sourceTree = "<group>"; };
 		02EF54D2459FC995898D20A8 /* NetworkWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkWatcher.swift; sourceTree = "<group>"; };
+		65BB74AADBDE703F175982FE /* NativeBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeBridge.swift; sourceTree = "<group>"; };
 		2047B674A9A0E164288AD79D /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
@@ -76,6 +78,7 @@
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				2047B674A9A0E164288AD79D /* MainViewController.swift */,
 				02EF54D2459FC995898D20A8 /* NetworkWatcher.swift */,
+				65BB74AADBDE703F175982FE /* NativeBridge.swift */,
 				0CEE3A01CC0DC2267B3D9593 /* OfflineBanner.swift */,
 				85CCDB3732489B8EDB267EF7 /* PrivacyInfo.xcprivacy */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
@@ -173,6 +176,7 @@
 			files = (
 				BED86A6F05E4EA98FF599AC8 /* OfflineBanner.swift in Sources */,
 				66970D0902F466AF04B45B56 /* NetworkWatcher.swift in Sources */,
+				E8F60AFF1B0C7C985F9D337F /* NativeBridge.swift in Sources */,
 				6CA183D59E46AD669B8E7186 /* MainViewController.swift in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
