@@ -51,6 +51,7 @@ import {
 } from '../data/seedData';
 
 import { canAccessSurface, hasPermission } from './permissions';
+import { openCheckout, pollUntil } from './nativeShell';
 import { DEMO_STORAGE_KEY, IS_DEMO_MODE } from './runtime';
 import { buildDemoUniverse } from '../data/demoUniverse';
 import { domainClient, moderationClient, DomainApiError } from './domainClient';
@@ -1528,7 +1529,10 @@ export class Store {
       return this.serverMutation(async () => {
         const result = await domainClient.placeOrder(launchId, unitsCount, { contactPhone: customerPhone, branchId });
         // الدفع يتم لدى المزوّد؛ حالة الطلب تتحدث عبر webhook لا من هنا.
-        if (result.checkoutUrl) window.location.assign(result.checkoutUrl);
+        if (result.checkoutUrl) {
+          // داخل التطبيق يُفتح الدفع في نافذة التطبيق نفسه، وعند الإغلاق نحدّث الطلبات حتى تظهر النتيجة.
+          void openCheckout(result.checkoutUrl, () => { void pollUntil(async () => { await this.hydrateFromServer(); return false; }, 4); });
+        }
         return result;
       });
     }

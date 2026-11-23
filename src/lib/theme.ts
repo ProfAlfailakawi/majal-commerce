@@ -24,6 +24,15 @@ export function readTheme(): MajalTheme {
   } catch { return DEFAULT_THEME; }
 }
 
+/** داخل التطبيق: شريط الحالة يوافق السمة (نص فاتح على الداكن، داكن على الفاتح). لا أثر في المتصفح. */
+export function statusBarStyleFor(theme: MajalTheme): 'LIGHT' | 'DARK' { return theme === 'light' ? 'DARK' : 'LIGHT'; }
+function syncStatusBar(theme: MajalTheme) {
+  try {
+    const sb = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean; Plugins?: { StatusBar?: { setStyle?: (o: { style: string }) => Promise<unknown> } } } }).Capacitor;
+    if (sb?.isNativePlatform?.()) void sb.Plugins?.StatusBar?.setStyle?.({ style: statusBarStyleFor(theme) })?.catch?.(() => undefined);
+  } catch { /* لا شيء */ }
+}
+
 export function applyTheme(theme: MajalTheme) {
   const root = document.documentElement;
   if (theme === 'dark') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', theme);
@@ -31,6 +40,7 @@ export function applyTheme(theme: MajalTheme) {
   if (meta) meta.setAttribute('content', THEME_COLOR[theme]);
   const scheme = document.querySelector('meta[name="color-scheme"]');
   if (scheme) scheme.setAttribute('content', theme === 'light' ? 'light' : 'dark');
+  syncStatusBar(theme);
   try { window.localStorage.setItem(KEY, theme); } catch { /* private mode: session-only */ }
 }
 
