@@ -2141,3 +2141,102 @@ body { container: majal-page / inline-size; }
   :root[data-device='duo'] .majal-spread > .majal-leaf-aside:has(> .majal-bento-lead) > :nth-child(3) > .relative.flex { min-width: 0; }
   :root[data-device='duo'] .majal-spread > .majal-leaf-aside:has(> .majal-bento-lead) > :nth-child(3) > p { margin-top: 0.75rem; }
 }
+
+/* ── iPhone Duo, the header's buttons under the clock (owner decision 2026-11-26) ───────────────────
+   Inside the app, in every posture with a clock column (outer screen upright and on its side, inner
+   screen held sideways, also when iOS reports a zero right inset and the side is taken as "right"), the
+   header's own buttons (sign in, try the demo, the account, the assistant, the theme, notifications,
+   the demo identity) leave the brand row and stand in one dark vertical capsule under the clock, the
+   same look and place as the other apps. The same buttons, in the same order, still following the
+   sign-in state: nothing is added or removed. Icons only; every button keeps its accessible name (its
+   label, title or visually hidden text). The inner screen upright (clock as a top bar), Safari (no clock
+   column) and the iPhone keep the bar as it was. */
+html[data-device="duo"][data-shell="app"] { --duo-clock-end: 176px; --duo-col-r: env(safe-area-inset-right, 0px); --duo-col-l: env(safe-area-inset-left, 0px); }
+@media screen and (orientation: landscape) and (max-width: 1000px) {
+  html[data-device="duo"][data-shell="app"] { --duo-clock-end: 124px; }
+}
+@media screen and (orientation: landscape) and (min-width: 860px) and (max-width: 1000px) and (min-height: 500px) and (max-height: 760px) {
+  html[data-device="duo"][data-shell="app"][data-widget-side="right"] { --duo-col-r: max(env(safe-area-inset-right, 0px), 84px); }
+}
+@media screen and (orientation: portrait) and (max-width: 560px), screen and (orientation: landscape) and (max-width: 1000px) and (min-height: 421px) {
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) .majal-header-actions {
+    position: fixed;
+    z-index: 46;
+    top: var(--duo-clock-end);
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 4px;
+    max-width: none;
+    padding: 5px;
+    border-radius: 999px;
+    background: rgb(15 23 42 / 0.92);
+    border: 1px solid rgb(255 255 255 / 0.1);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 12px 30px rgb(10 14 12 / 0.28);
+    color: rgb(255 255 255 / 0.86);
+  }
+  html[data-device="duo"][data-shell="app"][data-widget-side="right"] .majal-header-actions { right: calc((var(--duo-col-r) - 56px) / 2); left: auto; }
+  html[data-device="duo"][data-shell="app"][data-widget-side="left"] .majal-header-actions { left: calc((var(--duo-col-l) - 56px) / 2); right: auto; }
+  html[data-device="duo"][data-theme="contrast"][data-shell="app"] .majal-header-actions { background: #000; border-color: #fff; }
+
+  /* Every button is a 44px round icon in the capsule. */
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) :is(.majal-header-actions > button, .majal-header-actions > div > button, .majal-header-actions > span) {
+    width: 44px; height: 44px; min-width: 44px; min-height: 44px; max-width: none;
+    padding: 0; gap: 0;
+    justify-content: center; align-items: center; place-items: center;
+    border: 0; border-radius: 50%;
+    background: none; box-shadow: none;
+    color: rgb(255 255 255 / 0.86);
+  }
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) :is(.majal-header-actions > button, .majal-header-actions > div > button):is(:hover, :focus-visible) { background: rgb(255 255 255 / 0.12); color: #fff; }
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) :is(.majal-header-actions > button, .majal-header-actions > div > button)[aria-expanded="true"] { background: rgb(255 255 255 / 0.16); color: #fff; }
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) :is(.majal-header-actions > button, .majal-header-actions > div > button) > svg { width: 20px; height: 20px; color: inherit; }
+  /* Text beside an icon is kept for screen readers only. */
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) :is(.majal-header-actions > button, .majal-header-actions > div > button) > svg + span:not([aria-hidden="true"]) {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
+  /* Sign in keeps its gold so it still reads as the first step; the demo keeps its amber. */
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) .majal-header-actions > button:has(> svg.lucide-log-in) { order: -1; background: #c7a55b; color: #0b1220; }
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) .majal-header-actions > button[aria-label="تجربة العرض"] { color: #fcd34d; }
+  /* The unread count stays a small badge on the bell's corner. */
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) :is(.majal-header-actions > button, .majal-header-actions > div > button) > span[aria-hidden="true"].absolute { top: 3px; inset-inline-end: 3px; }
+
+  /* The signed-in account: its initial, then the admin board, security and sign out, one under another. */
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) .majal-header-actions > div.flex {
+    flex-direction: column; align-items: center; gap: 4px; padding: 0; margin: 0;
+    background: none; border: 0; border-radius: 0;
+  }
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) .majal-header-actions > div.flex > span[aria-hidden="true"] { width: 32px; height: 32px; margin-block: 4px; }
+  /* The name and role beside the initial stay for screen readers only (they were shown on wider screens). */
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) .majal-header-actions > div.flex > div {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
+  /* «لوحة الإدارة» is a word, not an icon: its text stays as its name, a dashboard mark is drawn in its place. */
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) .majal-header-actions > div.flex > button[title="الانتقال المباشر للوحة التحكم"] {
+    display: grid; font-size: 0; line-height: 0; color: #e7cf8f;
+  }
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) .majal-header-actions > div.flex > button[title="الانتقال المباشر للوحة التحكم"]::before {
+    content: ""; width: 20px; height: 20px; background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='7' height='9' x='3' y='3' rx='1'/%3E%3Crect width='7' height='5' x='14' y='3' rx='1'/%3E%3Crect width='7' height='9' x='14' y='12' rx='1'/%3E%3Crect width='7' height='5' x='3' y='16' rx='1'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='7' height='9' x='3' y='3' rx='1'/%3E%3Crect width='7' height='5' x='14' y='3' rx='1'/%3E%3Crect width='7' height='9' x='14' y='12' rx='1'/%3E%3Crect width='7' height='5' x='3' y='16' rx='1'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  /* The demo identity: just its avatar in the capsule. */
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) .majal-header-actions > div > button[aria-label="تبديل هوية العرض المحلية"] > :first-child { width: 32px; height: 32px; }
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) .majal-header-actions > div > button[aria-label="تبديل هوية العرض المحلية"] > :not(:first-child) { display: none; }
+
+  /* Their menus (notifications, demo identities) open beside the capsule, below the clock. */
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) .majal-header-actions .majal-duo-pop {
+    position: fixed; top: var(--duo-clock-end); margin-top: 0;
+    width: min(24rem, calc(100vw - var(--duo-col-r) - var(--duo-col-l) - 1.5rem));
+    max-width: none; max-height: calc(100dvh - var(--duo-clock-end) - 1rem - env(safe-area-inset-bottom, 0px));
+  }
+  html[data-device="duo"][data-shell="app"][data-widget-side="right"] .majal-header-actions .majal-duo-pop { right: calc(var(--duo-col-r) + 0.5rem); left: auto; }
+  html[data-device="duo"][data-shell="app"][data-widget-side="left"] .majal-header-actions .majal-duo-pop { left: calc(var(--duo-col-l) + 0.5rem); right: auto; }
+}
+/* On the outer screen held sideways the section rail docks at the bottom: the signed-in capsule drops the account's
+   decorative initial and tightens its gaps, so it ends above the rail. */
+@media screen and (orientation: landscape) and (max-width: 1000px) and (min-height: 421px) and (max-height: 480px) {
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) .majal-header-actions,
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) .majal-header-actions > div.flex { gap: 2px; }
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) .majal-header-actions > div.flex > span[aria-hidden="true"] { display: none; }
+}
