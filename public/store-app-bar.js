@@ -4,15 +4,17 @@
  * يظهر فقط حين:
  *  - الجهاز أندرويد والصفحة مفتوحة في المتصفح (لا داخل تطبيق Capacitor، ولا مثبّتة على الشاشة الرئيسية)؛
  *  - ولم يضغط الزائر «لاحقاً» خلال آخر ٧ أيام.
- * الإعداد من وسم السكربت نفسه: data-play (رابط Google Play) و data-name (اسم التطبيق).
+ * الإعداد من وسم السكربت نفسه: data-package (رقم حزمة التطبيق في Google Play) و data-name (اسم التطبيق).
+ * الرابط يُبنى من بادئة ثابتة ورقم حزمة مُتحقَّق منه، فلا يُدرج نص من الصفحة في رابط مباشرة.
  * ملف مستقل لا سكربت مضمّن، كي يعمل تحت سياسات CSP التي تمنع السكربتات المضمّنة.
  */
 (function () {
   var script = document.currentScript;
   if (!script) return;
-  var play = script.getAttribute('data-play') || '';
+  var pkg = script.getAttribute('data-package') || '';
   var name = script.getAttribute('data-name') || 'التطبيق';
-  if (!/^https:\/\/play\.google\.com\//.test(play)) return;
+  if (!/^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$/.test(pkg)) return;
+  var play = 'https://play.google.com/store/apps/details?id=' + encodeURIComponent(pkg);
 
   var ua = navigator.userAgent || '';
   if (!/Android/i.test(ua)) return;
