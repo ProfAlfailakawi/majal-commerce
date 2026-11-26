@@ -56,5 +56,17 @@
       "form_factor": "wide",
       "label": "مجال — MAJAL Platform"
     }
-  ]
+  ],
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=kw.edu.majal.app",
+      "id": "kw.edu.majal.app"
+    },
+    {
+      "platform": "itunes",
+      "url": "https://apps.apple.com/app/id6834582570"
+    }
+  ],
+  "prefer_related_applications": false
 }
