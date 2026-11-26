@@ -2163,8 +2163,11 @@ body { container: majal-page / inline-size; }
    sign-in state: nothing is added or removed. Icons only; every button keeps its accessible name (its
    label, title or visually hidden text). The inner screen upright (clock as a top bar), Safari (no clock
    column) and the iPhone keep the bar as it was. */
-html[data-device="duo"][data-shell="app"] { --duo-clock-end: 212px; --duo-col-r: env(safe-area-inset-right, 0px); --duo-col-l: env(safe-area-inset-left, 0px); }
-@media screen and (orientation: landscape) and (max-width: 1000px) {
+/* On the real outer screen the clock box runs from the top pill down to the battery ring (~235pt, owner's device
+   shots 2026-11-26), taller than in emulation: the capsule starts at 244pt, or below the widget height the native
+   shell publishes when that is larger, upright and sideways. The inner screen held sideways keeps its short corner. */
+html[data-device="duo"][data-shell="app"] { --duo-clock-end: max(244px, calc(var(--duo-widget-h, 0px) + 8px)); --duo-col-r: env(safe-area-inset-right, 0px); --duo-col-l: env(safe-area-inset-left, 0px); }
+@media screen and (orientation: landscape) and (max-width: 1000px) and (min-height: 481px) {
   html[data-device="duo"][data-shell="app"] { --duo-clock-end: 124px; }
 }
 @media screen and (orientation: landscape) and (min-width: 860px) and (max-width: 1000px) and (min-height: 500px) and (max-height: 760px) {
@@ -2189,7 +2192,13 @@ html[data-device="duo"][data-shell="app"] { --duo-clock-end: 212px; --duo-col-r:
     -webkit-backdrop-filter: blur(20px) saturate(1.5);
     backdrop-filter: blur(20px) saturate(1.5);
     color: rgb(255 250 240 / 0.8);
+    /* too tall for the screen under the clock (signed in, held sideways): it scrolls inside itself */
+    max-height: calc(100dvh - var(--duo-clock-end) - 8px - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
   }
+  /* while one of its menus is open the capsule lets it out */
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) .majal-header-actions:has(.majal-duo-pop) { overflow: visible; max-height: none; }
+  html[data-device="duo"][data-shell="app"]:is([data-widget-side="right"], [data-widget-side="left"]) .majal-header-actions > * { flex: none; }
   html[data-device="duo"][data-shell="app"][data-widget-side="right"] .majal-header-actions { right: calc((var(--duo-col-r) - 58px) / 2); left: auto; }
   html[data-device="duo"][data-shell="app"][data-widget-side="left"] .majal-header-actions { left: calc((var(--duo-col-l) - 58px) / 2); right: auto; }
   html[data-device="duo"][data-theme="contrast"][data-shell="app"] .majal-header-actions { background: #000; border-color: #fff; }
