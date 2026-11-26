@@ -52,7 +52,12 @@ probe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;visibility:h
 
 const markWidgetSide = () => {
   const cs = getComputedStyle(probe), l = parseFloat(cs.paddingLeft) || 0, r = parseFloat(cs.paddingRight) || 0;
-  root.dataset.widgetSide = l > 20 && l > r ? 'left' : r > 20 ? 'right' : 'none';
+  let side = l > 20 && l > r ? 'left' : r > 20 ? 'right' : 'none';
+  /* الداخلية عرضاً داخل التطبيق: قد يبلغ iOS حدوداً صفرية والساعة قائمةٌ في الركن الأعلى الأيمن، فكان الشعار يقع تحتها.
+     نحجز الركن دائماً (المرجع ProfAlfailakawi/schedule-kw#654). */
+  if (side === 'none' && root.dataset.shell === 'app' && root.dataset.device === 'duo' &&
+    window.matchMedia?.('screen and (orientation: landscape) and (min-width: 860px) and (max-width: 1000px) and (min-height: 500px) and (max-height: 760px)').matches) side = 'right';
+  root.dataset.widgetSide = side;
 };
 
 export function installDuoMarkers(): void {

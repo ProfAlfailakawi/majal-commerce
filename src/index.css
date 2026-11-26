@@ -1972,6 +1972,16 @@ body { container: majal-page / inline-size; }
     padding-right: calc(env(safe-area-inset-right, 0px) + var(--duo-widget-reserve));
   }
 }
+/* Held sideways inside the app, iOS can report a zero right inset while the clock sits in the top-right corner
+   (duo-markers.ts then calls the side "right"): the clock column is kept there, and the left edge gives up the same
+   width, so the leaves still meet at the window centre (owner notes 2026-11-26). */
+@media screen and (orientation: landscape) and (min-width: 860px) and (max-width: 1000px) and (min-height: 500px) and (max-height: 760px) {
+  :root[data-device='duo'][data-shell='app'][data-widget-side='right'] {
+    --duo-widget-w: max(0px, calc(84px - env(safe-area-inset-right, 0px))) !important;
+    --duo-widget-gap: 0px !important;
+    --duo-widget-mirror: calc(max(0px, calc(env(safe-area-inset-right, 0px) - env(safe-area-inset-left, 0px))) + max(0px, calc(84px - env(safe-area-inset-right, 0px)))) !important;
+  }
+}
 /* The two blocks above match by size alone, so they also caught every ordinary iPhone in
    portrait (390/402/430 wide), narrow iPad/desktop windows and phone landscape, leaving an
    empty ~120px strip on the right. The fixed box is for a real iPhone Duo only (and there the
@@ -2102,3 +2112,32 @@ body { container: majal-page / inline-size; }
 /* Headers and footers of a dialog laid out as a flex column keep their height; only the body scrolls. */
 :root[data-device='duo'] [role='dialog'].flex-col > :is(:first-child, :last-child):not(:only-child) { flex-shrink: 0; }
 
+
+/* ── iPhone Duo, owner notes 2026-11-26 ───────────────────────────────────────────────────────────
+   1. Full screen is not a book: no hairline and no fold shade in the middle. The leaves keep their gap
+      on the window centre (the device's own hinge is the line).
+   2. Inside the app, held sideways, iOS can report a zero right inset while the clock sits in the
+      top-right corner (duo-markers.ts then calls the side "right"): the clock column is kept there, and
+      the left edge gives up the same width so the leaves still meet at the centre.
+   3. The landing's «منظومة بلا تداخل» card wrapped one word per line (its title and text sat side by
+      side in a leaf ~370px wide), and the right leaf was empty under the journey while three context
+      blocks stacked on the left. The three principle cards now open below both leaves as one spread:
+      the lead card on the right leaf, the other two stacked on the left, the text under its title. */
+@media screen and (min-width: 721px) and (max-width: 1000px) and (min-height: 520px) and (max-height: 960px) and (orientation: landscape) {
+  :root[data-device='duo'] #main-content::before { display: none; }
+  :root[data-device='duo'] .majal-spread > .majal-leaf-aside:has(> .majal-bento-lead) {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--spine) minmax(0, 1fr);
+    column-gap: 0;
+    row-gap: 1.25rem;
+    align-items: stretch;
+  }
+  :root[data-device='duo'] .majal-spread > .majal-leaf-aside:has(> .majal-bento-lead) > * { grid-column: 3; min-width: 0; }
+  :root[data-device='duo'] .majal-spread > .majal-leaf-aside:has(> .majal-bento-lead) > .majal-bento-lead { grid-column: 1; grid-row: 1 / span 2; }
+  :root[data-device='duo'] .majal-spread > .majal-leaf-aside:has(> .majal-bento-lead) > :nth-child(2) { grid-row: 1; }
+  :root[data-device='duo'] .majal-spread > .majal-leaf-aside:has(> .majal-bento-lead) > :nth-child(3) { grid-row: 2; display: block; }
+  :root[data-device='duo'] .majal-spread > .majal-leaf-aside:has(> .majal-bento-lead) > :nth-child(3) > .relative.flex { min-width: 0; }
+  :root[data-device='duo'] .majal-spread > .majal-leaf-aside:has(> .majal-bento-lead) > :nth-child(3) > p { margin-top: 0.75rem; }
+}
