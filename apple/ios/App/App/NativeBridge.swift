@@ -513,12 +513,32 @@ enum NativeBridge {
         }
 
         func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (String?) -> Void) {
+            // Capacitor's bridge uses prompt() as a silent synchronous channel
+            // ({"type":"CapacitorCookies.isEnabled"}, "CapacitorCookies.get/set", "CapacitorHttp").
+            // Those must reach Capacitor's own handler and never be shown to the user.
+            if NativeBridge.isCapacitorBridgePrompt(prompt) {
+                if let capacitorHandler = original.webView(_:runJavaScriptTextInputPanelWithPrompt:defaultText:initiatedByFrame:completionHandler:) {
+                    capacitorHandler(webView, prompt, defaultText, frame, completionHandler)
+                } else {
+                    completionHandler(nil)
+                }
+                return
+            }
             let a = UIAlertController(title: nil, message: prompt, preferredStyle: .alert)
             a.addTextField { $0.text = defaultText }
             a.addAction(UIAlertAction(title: "حسناً", style: .default) { _ in completionHandler(a.textFields?.first?.text) })
             a.addAction(UIAlertAction(title: "إلغاء", style: .cancel) { _ in completionHandler(nil) })
             present(a, fallback: { completionHandler(nil) })
         }
+    }
+
+    /// True for the JSON messages Capacitor's native bridge sends through prompt().
+    static func isCapacitorBridgePrompt(_ prompt: String) -> Bool {
+        guard prompt.hasPrefix("{"),
+              let data = prompt.data(using: .utf8),
+              let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let type = payload["type"] as? String else { return false }
+        return type.hasPrefix("Capacitor")
     }
 
     fileprivate static func topController(from vc: UIViewController) -> UIViewController {
