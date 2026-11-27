@@ -97,10 +97,14 @@ export async function initNativePush(navigate: (url: string) => void = url => wi
   const plugin = getPlugin();
   if (!plugin || wired) return;
   wired = true;
-  await plugin.addListener('pushNotificationActionPerformed', (action: { notification?: { data?: { url?: unknown } } }) => {
-    const url = action?.notification?.data?.url;
-    if (typeof url === 'string' && url.startsWith('/') && !url.startsWith('//')) navigate(url);
-  }).catch(() => undefined);
+  // داخل غلاف iOS قد يعيد addListener مقبضاً لا وعداً؛ ربطُ ‎.catch‎ عليه مباشرةً كان يرمي
+  // فيتوقف ما بعده (تجديد توكن التنبيهات) بصمت عند كل تشغيل. Promise.resolve يقبل الحالتين.
+  try {
+    await Promise.resolve(plugin.addListener('pushNotificationActionPerformed', (action: { notification?: { data?: { url?: unknown } } }) => {
+      const url = action?.notification?.data?.url;
+      if (typeof url === 'string' && url.startsWith('/') && !url.startsWith('//')) navigate(url);
+    })).catch(() => undefined);
+  } catch { /* اللمس ميزة إضافية؛ لا يوقف تجديد التوكن */ }
   if (nativePushEnabledLocally() && (await readNativePushPermission()) === 'granted') {
     const token = await registerToken(plugin);
     if (token) {
