@@ -46,7 +46,7 @@ case "$step" in
     preflight
     npx cap sync ios
     xcodebuild -project $PROJ -scheme App -configuration Release -destination 'generic/platform=iOS' \
-      -archivePath "$OUT/App.xcarchive" -allowProvisioningUpdates ${AUTH[@]+"${AUTH[@]}"} \
+      -archivePath "$OUT/App.xcarchive" -allowProvisioningUpdates -allowProvisioningDeviceRegistration ${AUTH[@]+"${AUTH[@]}"} \
       ${APPLE_TEAM_ID:+DEVELOPMENT_TEAM=$APPLE_TEAM_ID} archive | tail -5
     echo "Archive: $OUT/App.xcarchive" ;;
   upload)
